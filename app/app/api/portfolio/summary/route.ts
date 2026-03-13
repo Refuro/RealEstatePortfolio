@@ -1,0 +1,44 @@
+import { NextResponse } from "next/server";
+import { getAppUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
+
+export async function GET() {
+  const user = await getAppUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const properties = await prisma.property.findMany({
+    where: { userId: user.id },
+    include: { mortgages: true },
+  });
+
+  const portfolioInput = properties.map((p) => {
+    const totalMortgageBalance = p.mortgages.reduce(
+      (sum, m) => sum + Number(m.currentBalance),
+      0
+    );
+    const totalMonthlyPayment = p.mortgages.reduce(
+      (sum, m) => sum + Number(m.monthlyPayment),
+      0
+    );
+    return {
+      id: p.id,
+      monthlyRent: Number(p.currentMonthlyRent),
+      monthlyExpenses: Number(p.currentMonthlyExpenses),
+      estimatedValue: Number(p.currentEstimatedValue),
+      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+      totalMortgageBalance,
+      totalMonthlyPayment,
+    };
+  });
+
+  const metrics = computePortfolioMetrics(portfolioInput);
+
+  return NextResponse.json({
+    ...metrics,
+    weightedCapRate: metrics.weightedCapRate != null ? metrics.weightedCapRate : null,
+    portfolioLtv: metrics.portfolioLtv != null ? metrics.portfolioLtv : null,
+  });
+}

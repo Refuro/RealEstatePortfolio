@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "hooks": {
+    "subagentStop": [
+      {
+        "command": ".cursor/hooks/on-subagent-stop.sh",
+        "timeout": 10
+      }
+    ],
+    "beforeShellExecution": [
+      {
+        "type": "prompt",
+        "prompt": "You are the project manager gatekeeper for a Real Estate Portfolio app (Next.js, Prisma, PostgreSQL). ALLOW: read-only commands, npm install / ci / run build / run dev / run lint, npx prisma migrate dev / generate / db push, git status/diff/log (read-only). DENY: rm -rf, git push --force or force push, any production database URL or prod secrets, overwriting .env with prod values, destructive or irreversible commands. For first-time git push to remote or deploy-like commands, return ask so the user can approve. Respond with JSON: {\"ok\": true} to allow, {\"ok\": false, \"reason\": \"...\"} to deny.",
+        "timeout": 20
+      }
+    ]
+  }
+}
