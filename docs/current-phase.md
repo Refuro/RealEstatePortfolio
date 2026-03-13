@@ -76,3 +76,16 @@
 2. Create a webhook endpoint pointing to `https://<your-app>/api/billing/webhook`; subscribe to `customer.subscription.*` and `checkout.session.completed`. Set `STRIPE_WEBHOOK_SECRET` from the endpoint’s signing secret.
 3. Set `STRIPE_SECRET_KEY` and optionally `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` from Stripe Dashboard.
 4. For production, use live keys and configure production webhook URL in Vercel (or host) env.
+
+---
+
+## Handoff (tasks.md — middleware + Prisma)
+
+**Done:** Middleware → proxy migration; Prisma config + adapter for client.
+
+- **Proxy:** `app/middleware.ts` removed; `app/proxy.ts` added (same Clerk logic, default export). Deprecation warning should be gone.
+- **Prisma:** Connection URL is in `app/prisma.config.ts` (datasource.url) for migrate/CLI. `app/lib/db.ts` uses `@prisma/adapter-pg` (PrismaPg) and passes `adapter` to `PrismaClient`. Seed uses shared `prisma` from `lib/db`. Schema still has `url = env("DATABASE_URL")` because Prisma 6 requires it for `prisma generate`; to remove it and clear the schema diagnostic you need Node 20.19+ and Prisma 7 (see [Prisma v7 upgrade](https://www.prisma.io/docs/guides/upgrade-prisma-orm/v7)).
+
+**New deps:** `@prisma/adapter-pg`, `pg` (in `app/`).
+
+**Commands:** From `app/`: `npm run db:generate`, `npm run db:migrate`, `npm run db:seed` unchanged. Ensure `DATABASE_URL` is set when running migrate/generate (e.g. from `.env`).

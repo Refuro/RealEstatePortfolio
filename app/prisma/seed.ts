@@ -1,6 +1,4 @@
-import { PrismaClient } from "@prisma/client";
-
-const prisma = new PrismaClient();
+import { prisma } from "../lib/db";
 
 async function main() {
   // Create a dev user (replace with real Clerk ID when testing with auth)

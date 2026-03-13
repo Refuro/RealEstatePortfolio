@@ -30,6 +30,7 @@ When the user treats this agent as the **project manager** for a builder agent w
 
 - **PM review every time:** `docs/pm-review-checklist.md`.
 - **Current phase (resume from here):** `docs/current-phase.md` — builder updates this and adds a Handoff when they finish work.
+- **Builder task list:** `docs/tasks.md` — you add tasks here when the user asks; run the builder with "complete tasks in tasks.md" when the user says so.
 - Phase list and scope: `docs/engineering-spec.md` §8 (Prioritized Build Order).
 - Full PM workflow: `docs/pm-agent-workflow.md`.
 - Manual steps (do not ask the builder to do these): `docs/manual-steps.md`.

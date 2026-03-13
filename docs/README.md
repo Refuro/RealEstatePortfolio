@@ -11,3 +11,4 @@
 | [pm-review-checklist.md](pm-review-checklist.md) | PM review checklist (use every phase approval) |
 | [security-notes.md](security-notes.md) | Security notes (recorded as we go) |
 | [run-and-smoke-test.md](run-and-smoke-test.md) | How to run the app, what works without envs, smoke-test checklist |
+| [tasks.md](tasks.md) | Builder tasks (PM adds when you ask; run builder to complete them) |
