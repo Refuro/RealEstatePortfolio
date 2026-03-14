@@ -181,6 +181,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             name="addressLine1"
             type="text"
             required
+            autoComplete="street-address"
             defaultValue={values.addressLine1}
             className={inputClass}
           />
@@ -194,6 +195,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             id="addressLine2"
             name="addressLine2"
             type="text"
+            autoComplete="address-line2"
             defaultValue={values.addressLine2}
             className={inputClass}
           />
@@ -209,6 +211,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               name="city"
               type="text"
               required
+              autoComplete="address-level2"
               defaultValue={values.city}
               className={inputClass}
             />
@@ -241,6 +244,8 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               name="zipCode"
               type="text"
               required
+              inputMode="numeric"
+              autoComplete="postal-code"
               defaultValue={values.zipCode}
               className={inputClass}
             />
@@ -274,6 +279,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 type="number"
                 min={1}
                 max={999}
+                inputMode="numeric"
                 defaultValue={values.units}
                 className={inputClass}
               />
@@ -294,6 +300,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             type="number"
             min={1}
             max={100}
+            inputMode="numeric"
             defaultValue={values.ownershipPercent}
             className={inputClass}
           />

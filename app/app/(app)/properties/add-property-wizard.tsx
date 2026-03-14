@@ -101,6 +101,7 @@ function StepAddressBasics({
           id="addressLine1"
           type="text"
           required
+          autoComplete="street-address"
           value={data.addressLine1}
           onChange={(e) => update("addressLine1", e.target.value)}
           className={inputClass}
@@ -116,6 +117,7 @@ function StepAddressBasics({
         <input
           id="addressLine2"
           type="text"
+          autoComplete="address-line2"
           value={data.addressLine2}
           onChange={(e) => update("addressLine2", e.target.value)}
           className={inputClass}
@@ -130,6 +132,7 @@ function StepAddressBasics({
             id="city"
             type="text"
             required
+            autoComplete="address-level2"
             value={data.city}
             onChange={(e) => update("city", e.target.value)}
             className={inputClass}
@@ -168,6 +171,8 @@ function StepAddressBasics({
             id="zipCode"
             type="text"
             required
+            inputMode="numeric"
+            autoComplete="postal-code"
             value={data.zipCode}
             onChange={(e) => update("zipCode", e.target.value)}
             className={inputClass}
@@ -209,6 +214,7 @@ function StepAddressBasics({
               type="number"
               min={1}
               max={999}
+              inputMode="numeric"
               value={data.units}
               onChange={(e) => update("units", e.target.value)}
               className={inputClass}
@@ -308,6 +314,7 @@ function StepPurchase({
           type="number"
           min={1}
           max={100}
+          inputMode="numeric"
           value={data.ownershipPercent}
           onChange={(e) => update("ownershipPercent", e.target.value)}
           className={inputClass}

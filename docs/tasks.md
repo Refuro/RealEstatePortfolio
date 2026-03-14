@@ -61,6 +61,56 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 - [x] **Property detail page readability:** Improve typography and layout on the property detail page for better readability on large monitors. (1) **Mortgage section:** Bump section header, labels, values, buttons, empty state to text-base; values use text-lg; card padding p-4→p-5, gap-y-2→gap-y-3; display original loan amount, loan type (formatted), loan start date when available. (2) **Property details section:** Labels text-sm→text-base; values text-base/text-lg; Edit property link text-base. (3) **Property metrics section:** Labels text-base; values text-base. (4) **Breadcrumb:** ← Properties link text-base. Run `npm run check` when done.
 
+- [x] **Mobile responsive layout (hamburger + slide-out drawer):** Make the app usable on mobile. On viewports below `md` (768px), hide the fixed sidebar and use a hamburger menu that opens a slide-out drawer. Update `app/(app)/layout.tsx` and related components. See acceptance criteria below.
+
+  **Implementation approach:**
+  - On mobile (< md): Sidebar hidden; show a top bar with hamburger icon (left) + "Portfolio" logo (center or left) + UserButton (right).
+  - Hamburger opens a slide-out drawer from the left containing the full nav (Dashboard, Properties, Pricing, Settings) and Account area — same structure as desktop sidebar.
+  - Drawer overlays content with a semi-transparent backdrop; tapping backdrop or a nav link closes the drawer.
+  - On md and up: Keep current layout (sidebar always visible, no hamburger).
+  - Main content area uses full width on mobile; reduce padding if needed (e.g. p-4 instead of p-6).
+
+  **Acceptance criteria:**
+  - [x] On viewport width < 768px, sidebar is hidden and a mobile top bar is visible with hamburger + logo + UserButton.
+  - [x] Tapping hamburger opens a slide-out drawer from the left with the same nav links and Account section as the desktop sidebar.
+  - [x] Tapping a nav link navigates and closes the drawer.
+  - [x] Tapping the backdrop (outside the drawer) closes the drawer.
+  - [x] On viewport width ≥ 768px, layout matches current desktop behavior (sidebar visible, no hamburger).
+  - [x] Main content is readable and usable on mobile (no horizontal overflow, adequate touch targets).
+  - [x] Follow docs/design-spec.md; use semantic tokens. Run `npm run check` when done.
+
+- [x] **Mobile-friendly input attributes (keyboard & autocomplete):** Ensure form inputs use appropriate `inputmode` and `autocomplete` so mobile devices show the correct keyboard and autofill works. CurrencyInput already has `inputMode="decimal"` ✓. Add the following per industry standard (MDN, WCAG, mobile UX best practices):
+
+  **1. ZIP code** (add-property-wizard.tsx, property-form.tsx):
+  - Add `inputMode="numeric"` — shows numeric keypad on mobile (ZIP is digits only)
+  - Add `autoComplete="postal-code"` — enables address autofill
+
+  **2. Address fields** (add-property-wizard.tsx, property-form.tsx):
+  - addressLine1: `autoComplete="street-address"`
+  - addressLine2: `autoComplete="address-line2"`
+  - city: `autoComplete="address-level2"`
+  - state: (select — no change; autocomplete for selects is less standard)
+  - zipCode: as above
+
+  **3. Mortgage form** (mortgage-form-fields.tsx):
+  - Interest rate (type="number"): add `inputMode="decimal"` — ensures numeric keypad with decimal on Android (some show full keyboard for type="number")
+  - Term years (type="number"): add `inputMode="numeric"` — integer numeric keypad
+
+  **4. Add property wizard** (add-property-wizard.tsx):
+  - Units (type="number"): add `inputMode="numeric"`
+  - Ownership % (type="number"): add `inputMode="numeric"` (integer 1–100)
+
+  **5. Property form** (property-form.tsx):
+  - Units (type="number"): add `inputMode="numeric"`
+  - Ownership %: add `inputMode="numeric"` if present
+
+  **Acceptance criteria:**
+  - [x] ZIP inputs have inputMode="numeric" and autoComplete="postal-code"
+  - [x] Address inputs have appropriate autoComplete values
+  - [x] Numeric inputs (interest rate, term, units, ownership %) have inputMode="decimal" or "numeric" as appropriate
+  - [x] CurrencyInput unchanged (already has inputMode="decimal")
+  - [x] Run `npm run check` when done
+
 ---
 
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*

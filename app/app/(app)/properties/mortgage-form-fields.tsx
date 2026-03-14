@@ -81,6 +81,7 @@ export function MortgageFormFields({
             min={0}
             max={30}
             required
+            inputMode="decimal"
             placeholder="e.g. 6.25"
             value={value.interestRatePercent}
             onChange={(e) => update("interestRatePercent", e.target.value)}
@@ -97,6 +98,7 @@ export function MortgageFormFields({
             min={1}
             max={50}
             required
+            inputMode="numeric"
             value={value.termYears}
             onChange={(e) => update("termYears", e.target.value)}
             className={inputClass}

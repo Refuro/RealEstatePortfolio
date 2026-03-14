@@ -16,7 +16,11 @@ const nav = [
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
-export function AppNav() {
+interface AppNavProps {
+  onClose?: () => void;
+}
+
+export function AppNav({ onClose }: AppNavProps) {
   const pathname = usePathname();
 
   return (
@@ -27,6 +31,7 @@ export function AppNav() {
           <Link
             key={href}
             href={href}
+            onClick={onClose}
             className={`flex items-center gap-2 rounded-md px-4 py-2.5 text-base hover:bg-subtle ${
               isActive ? "bg-subtle font-medium text-foreground" : "text-muted hover:text-foreground"
             }`}
