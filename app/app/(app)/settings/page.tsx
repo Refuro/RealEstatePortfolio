@@ -47,10 +47,6 @@ export default async function SettingsPage() {
               <dt className="text-sm font-medium text-muted">Email</dt>
               <dd className="text-base font-medium text-foreground">{user.email || "—"}</dd>
             </div>
-            <div className="flex flex-col gap-0.5 sm:col-span-2 sm:flex-row sm:items-center sm:gap-4">
-              <dt className="text-sm font-medium text-muted">Account ID</dt>
-              <dd className="font-mono text-xs text-muted">{user.clerkUserId}</dd>
-            </div>
           </dl>
         </div>
       </section>
