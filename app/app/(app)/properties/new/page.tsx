@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PropertyForm } from "../property-form";
+import { AddPropertyWizard } from "../add-property-wizard";
 
 export default function NewPropertyPage() {
   return (
@@ -7,16 +7,18 @@ export default function NewPropertyPage() {
       <div className="mb-6 flex items-center gap-4">
         <Link
           href="/properties"
-          className="text-sm text-zinc-600 hover:text-zinc-900"
+          className="text-sm text-muted hover:text-foreground"
         >
           ← Properties
         </Link>
       </div>
-      <h1 className="text-2xl font-semibold text-zinc-900">Add property</h1>
-      <p className="mt-1 text-zinc-600">
-        Enter the property details below.
+      <h1 className="text-2xl font-semibold text-foreground">Add property</h1>
+      <p className="mt-1 text-sm text-muted">
+        Follow the steps below to add your property.
       </p>
-      <PropertyForm className="mt-6" />
+      <div className="mt-6">
+        <AddPropertyWizard />
+      </div>
     </div>
   );
 }

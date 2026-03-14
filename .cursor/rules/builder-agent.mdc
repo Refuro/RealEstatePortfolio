@@ -10,21 +10,24 @@ When the PM (or user) instructs you to work on a phase or tasks:
 
 1. **Stay in scope** — Work only on items from `docs/current-phase.md` and `docs/engineering-spec.md` §8 for the current phase. Do not add out-of-scope features.
 
-2. **Update progress** — When done (or when stopping mid-phase), update `docs/current-phase.md`: check off completed items, note what's left, set next phase if the phase is complete.
+2. **Follow the design spec** — All UI work (layouts, components, styling, charts) must align with `docs/design-spec.md`. Use semantic color tokens, typography scale, spacing, and component patterns from the spec. Do not introduce styles that conflict with the design direction (e.g. heavy shadows, decorative gradients, inconsistent spacing). When in doubt, prefer the design spec over ad-hoc styling.
 
-3. **Add Handoff** — When you finish a phase, add a **Handoff** section at the bottom of `docs/current-phase.md` with:
+3. **Update progress** — When done (or when stopping mid-phase), update `docs/current-phase.md`: check off completed items, note what's left, set next phase if the phase is complete.
+
+4. **Add Handoff** — When you finish a phase, add a **Handoff** section at the bottom of `docs/current-phase.md` with:
    - New env vars (and ensure they're in `app/.env.example` and `docs/manual-steps.md`)
    - Commands to run (e.g. `npm run db:migrate`)
    - Manual steps for the user/PM (Vercel, Clerk, Stripe Dashboard, etc.)
 
-4. **Never do manual steps** — Do not create Vercel projects, Clerk apps, Stripe products, or production databases. See `docs/manual-steps.md`. Document what the user must do instead.
+5. **Never do manual steps** — Do not create Vercel projects, Clerk apps, Stripe products, or production databases. See `docs/manual-steps.md`. Document what the user must do instead.
 
-5. **Lint before stopping** — Before finishing a phase or stopping for PM review, run `npm run check` from `app/` and fix any TypeScript or ESLint errors. **Ignore** the Prisma `schema.prisma` datasource URL warning (required for Prisma 6). Do not approve or hand off until `npm run check` passes.
+6. **Lint before stopping** — Before finishing a phase or stopping for PM review, run `npm run check` from `app/` and fix any TypeScript or ESLint errors. **Ignore** the Prisma `schema.prisma` datasource URL warning (required for Prisma 6). Do not approve or hand off until `npm run check` passes.
 
-6. **Tasks** — If the PM says "complete tasks in tasks.md", work through `docs/tasks.md` and check off items when done.
+7. **Tasks** — If the PM says "complete tasks in tasks.md", work through `docs/tasks.md` and check off items when done.
 
 ## References
 
 - Current phase and checklist: `docs/current-phase.md`
 - Phase scope: `docs/engineering-spec.md` §8
+- **Design spec (UI compliance):** `docs/design-spec.md`
 - Manual steps (do not do these): `docs/manual-steps.md`

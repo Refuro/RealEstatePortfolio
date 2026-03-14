@@ -37,8 +37,8 @@ Use this as a planning guide. Pricing changes; check each provider’s site for 
 ## Billing (Stripe) — Phase 4
 
 - [ ] **Stripe account:** Create at [stripe.com](https://stripe.com). Use test mode for development.
-- [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro") each with a recurring price (monthly). Copy each price ID (`price_...`).
-- [ ] **Env vars (from `app/.env.example`):** Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_INVESTOR`, `STRIPE_PRICE_ID_PRO`.
+- [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro"). For each product, create a monthly recurring price and an annual recurring price. Copy all four price IDs (`price_...`).
+- [ ] **Env vars (from `app/.env.example`):** Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_INVESTOR_MONTHLY`, `STRIPE_PRICE_ID_INVESTOR_YEARLY`, `STRIPE_PRICE_ID_PRO_MONTHLY`, `STRIPE_PRICE_ID_PRO_YEARLY`.
 - [ ] **Webhook:** In Stripe Dashboard → Developers → Webhooks, add endpoint URL: `https://<your-app>/api/billing/webhook`. Select events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `checkout.session.completed`. Copy the signing secret and set as `STRIPE_WEBHOOK_SECRET`. Webhook signatures are verified in code (see docs/security-notes.md).
 - [ ] **Stripe production:** For production, use live keys and add production webhook URL in Vercel env.
 

@@ -7,6 +7,7 @@ import { computePropertyMetrics, type PropertyMetricsInput } from "./property-me
 
 export type PortfolioPropertyInput = PropertyMetricsInput & {
   id: string;
+  ownershipPercent?: number;
 };
 
 export type PortfolioMetrics = {
@@ -47,10 +48,11 @@ export function computePortfolioMetrics(properties: PortfolioPropertyInput[]): P
 
   for (const p of properties) {
     const metrics = computePropertyMetrics(p);
-    totalMarketValue += p.estimatedValue;
-    totalDebt += p.totalMortgageBalance;
-    totalMonthlyRent += p.monthlyRent;
-    totalMonthlyExpenses += p.monthlyExpenses;
+    const scale = (p.ownershipPercent ?? 100) / 100;
+    totalMarketValue += p.estimatedValue * scale;
+    totalDebt += p.totalMortgageBalance * scale;
+    totalMonthlyRent += p.monthlyRent * scale;
+    totalMonthlyExpenses += p.monthlyExpenses * scale;
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
     totalNoi += metrics.noi;
   }

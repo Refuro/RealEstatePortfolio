@@ -53,7 +53,7 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
       emptyMessage="Add a mortgage to this property to see the amortization schedule."
     >
       {loading && (
-        <div className="flex h-full items-center justify-center text-sm text-zinc-500">
+        <div className="flex h-full items-center justify-center text-sm text-muted">
           Loading…
         </div>
       )}
@@ -63,7 +63,7 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
             data={chartData}
             margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               dataKey="displayDate"
               tick={{ fontSize: 10 }}
@@ -93,7 +93,7 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
               type="monotone"
               dataKey="balance"
               name="Remaining balance"
-              stroke="#3b82f6"
+              stroke="var(--chart-1)"
               strokeWidth={2}
               dot={false}
             />

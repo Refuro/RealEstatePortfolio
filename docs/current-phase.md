@@ -50,6 +50,7 @@
 
 ## Phase 5 — Polishing (current)
 
+- [x] **Visual facelift:** Apply design system from `docs/design-spec.md` (Robinhood-inspired minimal + progressive disclosure). Typography, color tokens, spacing, component patterns, charts. See engineering-spec §20.
 - [ ] Onboarding (Module K): welcome screen, prompt first property, example metric explanations — *deferred until after facelift*
 - [x] Settings/account (Module L): profile info display, data export placeholder, delete account placeholder
 - [x] Error handling and better empty states
@@ -65,8 +66,10 @@
 - `STRIPE_SECRET_KEY` — Stripe secret key (server-only).
 - `STRIPE_WEBHOOK_SECRET` — Webhook signing secret (`whsec_...`); used to verify webhook signatures.
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` — Stripe publishable key (optional for current server-side checkout).
-- `STRIPE_PRICE_ID_INVESTOR` — Stripe price ID for Investor plan (5 properties).
-- `STRIPE_PRICE_ID_PRO` — Stripe price ID for Pro plan (20 properties).
+- `STRIPE_PRICE_ID_INVESTOR_MONTHLY` — Stripe price ID for Investor plan, monthly billing.
+- `STRIPE_PRICE_ID_INVESTOR_YEARLY` — Stripe price ID for Investor plan, annual billing.
+- `STRIPE_PRICE_ID_PRO_MONTHLY` — Stripe price ID for Pro plan, monthly billing.
+- `STRIPE_PRICE_ID_PRO_YEARLY` — Stripe price ID for Pro plan, annual billing.
 
 **Commands:** None. No new migrations (Subscription/User schema already present).
 
@@ -89,3 +92,9 @@
 **New deps:** `@prisma/adapter-pg`, `pg` (in `app/`).
 
 **Commands:** From `app/`: `npm run db:generate`, `npm run db:migrate`, `npm run db:seed` unchanged. Ensure `DATABASE_URL` is set when running migrate/generate (e.g. from `.env`).
+
+---
+
+## Handoff (Phase 5 — Visual facelift)
+
+**Facelift complete.** Color scheme can be changed by editing semantic tokens in `app/app/globals.css`.

@@ -35,7 +35,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
             data={data}
             margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis
               tickFormatter={(v) => `$${v}`}
@@ -53,7 +53,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
               }
               contentStyle={{ fontSize: 12 }}
             />
-            {!allZero && <ReferenceLine y={0} stroke="#a1a1aa" />}
+            {!allZero && <ReferenceLine y={0} stroke="var(--foreground-muted)" />}
             <Bar
               dataKey="monthlyCashFlow"
               name="Monthly cash flow"
@@ -62,7 +62,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
               {data.map((d, i) => (
                 <Cell
                   key={i}
-                  fill={d.monthlyCashFlow >= 0 ? "#10b981" : "#ef4444"}
+                  fill={d.monthlyCashFlow >= 0 ? "var(--positive)" : "var(--negative)"}
                 />
               ))}
             </Bar>

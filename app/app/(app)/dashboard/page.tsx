@@ -67,18 +67,18 @@ export default async function DashboardPage() {
   if (metrics.propertyCount === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Dashboard</h1>
-        <p className="mt-2 text-zinc-600">
+        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+        <p className="mt-2 text-base text-muted">
           Your portfolio summary will appear here once you add properties.
         </p>
-        <div className="mt-8 rounded-lg border border-zinc-200 bg-white p-8 text-center">
-          <h2 className="text-lg font-medium text-zinc-900">No properties yet</h2>
-          <p className="mt-2 text-zinc-600">
+        <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center">
+          <h2 className="text-lg font-medium text-foreground">No properties yet</h2>
+          <p className="mt-2 text-base text-muted">
             Add your first property to see total value, equity, cash flow, and more.
           </p>
           <Link
             href="/properties/new"
-            className="mt-4 inline-block rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+            className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add your first property
           </Link>
@@ -89,59 +89,78 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-zinc-900">Dashboard</h1>
-      <p className="mt-2 text-zinc-600">
+      <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+      <p className="mt-2 text-base text-muted">
         Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
       </p>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <MetricCard
           label="Total property value"
           value={formatCurrency(metrics.totalMarketValue)}
+          primary
         />
         <MetricCard
           label="Total debt"
           value={formatCurrency(metrics.totalDebt)}
+          primary
         />
         <MetricCard
           label="Total equity"
           value={formatCurrency(metrics.totalEquity)}
+          primary
         />
         <MetricCard
           label="Monthly cash flow"
           value={formatCurrency(metrics.totalMonthlyCashFlow)}
-          valueClassName={metrics.totalMonthlyCashFlow >= 0 ? "text-emerald-700" : "text-red-700"}
+          cashFlow={metrics.totalMonthlyCashFlow}
         />
         {metrics.weightedCapRate != null && (
           <MetricCard
             label="Portfolio cap rate"
             value={`${(metrics.weightedCapRate * 100).toFixed(2)}%`}
+            primary={false}
           />
         )}
         {metrics.portfolioLtv != null && (
           <MetricCard
             label="Portfolio LTV"
             value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+            primary={false}
           />
         )}
       </div>
 
-      <DashboardCharts data={chartData} />
+      <DashboardCharts data={chartData} propertyCount={metrics.propertyCount} />
+
+      {metrics.propertyCount === 1 && (
+        <div className="mt-6 rounded-lg border border-border bg-card p-5">
+          <p className="text-lg text-muted">
+            Add another property to compare performance across your portfolio.
+          </p>
+          <Link
+            href="/properties/new"
+            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+          >
+            Add another property
+          </Link>
+        </div>
+      )}
 
       <div className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
           Quick actions
         </h2>
         <div className="mt-3 flex flex-wrap gap-3">
           <Link
             href="/properties/new"
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
           >
             Add property
           </Link>
           <Link
             href="/properties"
-            className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
           >
             View all properties
           </Link>
@@ -154,16 +173,25 @@ export default async function DashboardPage() {
 function MetricCard({
   label,
   value,
-  valueClassName = "text-zinc-900",
+  primary = true,
+  cashFlow,
 }: {
   label: string;
   value: string;
-  valueClassName?: string;
+  primary?: boolean;
+  cashFlow?: number;
 }) {
+  const valueClassName =
+    cashFlow !== undefined
+      ? `text-2xl font-semibold ${cashFlow >= 0 ? "text-positive" : "text-negative"}`
+      : primary
+        ? "text-2xl sm:text-3xl font-semibold text-foreground"
+        : "text-lg font-medium text-foreground";
+
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <dt className="text-sm font-medium text-zinc-500">{label}</dt>
-      <dd className={`mt-1 text-xl font-semibold ${valueClassName}`}>{value}</dd>
+    <div className="rounded-lg border border-border bg-card p-5">
+      <dt className="text-base font-medium text-muted">{label}</dt>
+      <dd className={`mt-1 ${valueClassName}`}>{value}</dd>
     </div>
   );
 }

@@ -12,6 +12,8 @@ export type PropertyMetricsInput = {
   totalMortgageBalance: number;
   /** Sum of monthly payment across all mortgages for this property */
   totalMonthlyPayment: number;
+  /** Ownership percentage (1-100). Metrics scaled by this for partial ownership. */
+  ownershipPercent?: number;
 };
 
 export type PropertyMetrics = {
@@ -27,7 +29,17 @@ export type PropertyMetrics = {
 };
 
 export function computePropertyMetrics(input: PropertyMetricsInput): PropertyMetrics {
-  const { monthlyRent, monthlyExpenses, estimatedValue, cashInvested, totalMortgageBalance, totalMonthlyPayment } = input;
+  const {
+    monthlyRent,
+    monthlyExpenses,
+    estimatedValue,
+    cashInvested,
+    totalMortgageBalance,
+    totalMonthlyPayment,
+    ownershipPercent = 100,
+  } = input;
+
+  const scale = ownershipPercent / 100;
 
   const grossAnnualRent = monthlyRent * 12;
   const annualExpenses = monthlyExpenses * 12;
@@ -41,13 +53,13 @@ export function computePropertyMetrics(input: PropertyMetricsInput): PropertyMet
     cashInvested != null && cashInvested > 0 ? annualCashFlow / cashInvested : null;
 
   return {
-    grossAnnualRent,
-    annualExpenses,
-    noi,
+    grossAnnualRent: grossAnnualRent * scale,
+    annualExpenses: annualExpenses * scale,
+    noi: noi * scale,
     capRate,
-    monthlyCashFlow,
-    annualCashFlow,
-    equity,
+    monthlyCashFlow: monthlyCashFlow * scale,
+    annualCashFlow: annualCashFlow * scale,
+    equity: equity * scale,
     ltv,
     cashOnCashReturn,
   };

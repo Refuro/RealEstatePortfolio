@@ -31,6 +31,7 @@ export async function GET(
     0
   );
 
+  const ownershipPercent = property.ownershipPercent ?? 100;
   const metrics = computePropertyMetrics({
     monthlyRent: Number(property.currentMonthlyRent),
     monthlyExpenses: Number(property.currentMonthlyExpenses),
@@ -38,6 +39,7 @@ export async function GET(
     cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
     totalMortgageBalance,
     totalMonthlyPayment,
+    ownershipPercent,
   });
 
   return NextResponse.json(metrics);

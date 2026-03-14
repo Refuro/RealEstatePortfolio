@@ -18,6 +18,7 @@ function serializeMortgage(m: {
   termYears: number;
   startDate: Date;
   monthlyPayment: { toString(): string };
+  paymentEffectiveDate: Date | null;
   escrowIncluded: boolean;
   lenderName: string | null;
   loanType: string | null;
@@ -31,6 +32,9 @@ function serializeMortgage(m: {
     interestRate: m.interestRate.toString(),
     monthlyPayment: m.monthlyPayment.toString(),
     startDate: m.startDate.toISOString().slice(0, 10),
+    paymentEffectiveDate: m.paymentEffectiveDate
+      ? m.paymentEffectiveDate.toISOString().slice(0, 10)
+      : null,
   };
 }
 
@@ -98,6 +102,7 @@ export async function POST(
       termYears: data.termYears,
       startDate: data.startDate,
       monthlyPayment: data.monthlyPayment,
+      paymentEffectiveDate: data.paymentEffectiveDate ?? null,
       escrowIncluded: data.escrowIncluded,
       lenderName: data.lenderName ?? null,
       loanType: data.loanType ?? null,

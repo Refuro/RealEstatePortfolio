@@ -859,6 +859,10 @@ Project cashflow and equity over time (5–30 years). Model rent escalation, exp
 
 **UX:** Single view with essential inputs prominent; optional inputs (vacancy, appreciation, CapEx) in expandable "More assumptions" section. Avoid separate Simple/Advanced modes—one flexible view with clear organization and full transparency on assumptions.
 
+## Mortgage payment history / snapshots
+
+Monthly mortgage payments can change over time (e.g. annual escrow adjustments for taxes and insurance). Extend the snapshot model (PropertySnapshot or a new MortgageSnapshot) to store historical monthly payment values by date. Enables: accurate cash flow timelines, historical charts, and projections that account for payment changes. Complements the cashflow simulator and any future "payment as of date" feature.
+
 ---
 
 # 21. External API Integration Opportunities

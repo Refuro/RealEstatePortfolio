@@ -24,13 +24,13 @@ export default async function EditPropertyPage({
       <div className="mb-6">
         <Link
           href={`/properties/${id}`}
-          className="text-sm text-zinc-600 hover:text-zinc-900"
+          className="text-sm text-muted hover:text-foreground"
         >
           ← Property detail
         </Link>
       </div>
-      <h1 className="text-2xl font-semibold text-zinc-900">Edit property</h1>
-      <p className="mt-1 text-zinc-600">
+      <h1 className="text-2xl font-semibold text-foreground">Edit property</h1>
+      <p className="mt-1 text-sm text-muted">
         Update the property details below.
       </p>
       <PropertyForm
@@ -45,6 +45,7 @@ export default async function EditPropertyPage({
           zipCode: property.zipCode,
           propertyType: property.propertyType,
           units: property.units,
+          ownershipPercent: property.ownershipPercent ?? 100,
           purchasePrice: property.purchasePrice.toString(),
           purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
           currentEstimatedValue: property.currentEstimatedValue.toString(),

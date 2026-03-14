@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getStripe, getPriceIds } from "@/lib/stripe-config";
+import { getStripe, getPriceIdForPlan, type BillingCycle } from "@/lib/stripe-config";
 
 export async function POST(request: NextRequest) {
   const user = await getAppUser();
@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { plan?: string };
+  let body: { plan?: string; billingCycle?: string };
   try {
     body = await request.json();
   } catch {
@@ -24,8 +24,9 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const priceIds = getPriceIds();
-  const priceId = plan === "investor" ? priceIds.investor : priceIds.pro;
+  const billingCycle: BillingCycle =
+    body.billingCycle === "yearly" ? "yearly" : "monthly";
+  const priceId = getPriceIdForPlan(plan, billingCycle);
   if (!priceId) {
     return NextResponse.json(
       { error: `Price ID for plan '${plan}' is not configured` },

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
+import { ThemeToggle } from "./theme-toggle";
 
 export default async function SettingsPage() {
   const user = await getAppUser();
@@ -18,58 +19,65 @@ export default async function SettingsPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-zinc-900">Settings</h1>
-      <p className="mt-2 text-zinc-600">
+      <h1 className="text-2xl font-semibold text-foreground">Settings</h1>
+      <p className="mt-2 text-base text-muted">
         Account and billing settings.
       </p>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium text-zinc-900">Profile</h2>
-        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
-          <dl className="grid gap-2 text-sm">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Appearance</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <ThemeToggle />
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Profile</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             {(user.firstName || user.lastName) && (
-              <div className="flex justify-between">
-                <dt className="text-zinc-500">Name</dt>
-                <dd className="font-medium text-zinc-900">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+                <dt className="text-sm font-medium text-muted">Name</dt>
+                <dd className="text-base font-medium text-foreground">
                   {[user.firstName, user.lastName].filter(Boolean).join(" ")}
                 </dd>
               </div>
             )}
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">Email</dt>
-              <dd className="font-medium text-zinc-900">{user.email || "—"}</dd>
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+              <dt className="text-sm font-medium text-muted">Email</dt>
+              <dd className="text-base font-medium text-foreground">{user.email || "—"}</dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">Account ID</dt>
-              <dd className="font-mono text-xs text-zinc-600">{user.clerkUserId}</dd>
+            <div className="flex flex-col gap-0.5 sm:col-span-2 sm:flex-row sm:items-center sm:gap-4">
+              <dt className="text-sm font-medium text-muted">Account ID</dt>
+              <dd className="font-mono text-xs text-muted">{user.clerkUserId}</dd>
             </div>
           </dl>
         </div>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium text-zinc-900">Plan & billing</h2>
-        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
-          <dl className="grid gap-2 text-sm">
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">Current plan</dt>
-              <dd className="font-medium capitalize text-zinc-900">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Plan & billing</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+              <dt className="text-sm font-medium text-muted">Current plan</dt>
+              <dd className="text-base font-medium capitalize text-foreground">
                 {user.subscriptionTier}
               </dd>
             </div>
-            <div className="flex justify-between">
-              <dt className="text-zinc-500">Properties</dt>
-              <dd className="text-zinc-900">
+            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+              <dt className="text-sm font-medium text-muted">Properties</dt>
+              <dd className="text-base text-foreground">
                 {propertyCount} / {limit}
                 {!canAddMore && (
-                  <span className="ml-1 text-amber-600">(limit reached)</span>
+                  <span className="ml-1 text-negative">(limit reached)</span>
                 )}
               </dd>
             </div>
             {subscription?.currentPeriodEnd && (
-              <div className="flex justify-between">
-                <dt className="text-zinc-500">Period end</dt>
-                <dd className="text-zinc-900">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+                <dt className="text-sm font-medium text-muted">Period end</dt>
+                <dd className="text-base text-foreground">
                   {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
                 </dd>
               </div>
@@ -78,7 +86,7 @@ export default async function SettingsPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/pricing"
-              className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
               {user.subscriptionTier === "free" ? "Upgrade plan" : "Change plan"}
             </Link>
@@ -90,19 +98,19 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium text-zinc-900">Export your data</h2>
-        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-sm text-zinc-600">
-            Coming soon — you&apos;ll be able to download your properties and metrics.
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Export your data</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <p className="text-base text-muted">
+            Coming soon — you&apos;ll be able to download your properties and metrics as CSV or JSON.
           </p>
         </div>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-lg font-medium text-zinc-900">Delete account</h2>
-        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
-          <p className="text-sm text-zinc-600">
-            Coming soon — contact support to delete your account.
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Delete account</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <p className="text-base text-muted">
+            Coming soon — contact support to permanently delete your account and data.
           </p>
         </div>
       </section>

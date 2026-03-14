@@ -22,6 +22,15 @@ const dateString = z
   .refine((s) => !Number.isNaN(Date.parse(s)), "Invalid date")
   .transform((s) => new Date(s));
 
+const optionalDateString = z
+  .union([
+    z.null(),
+    z.undefined(),
+    z.literal(""),
+    z.string().refine((s) => !Number.isNaN(Date.parse(s)), "Invalid date"),
+  ])
+  .transform((s) => (s == null || s === "" ? null : new Date(s as string)));
+
 export const createMortgageSchema = z.object({
   originalLoanAmount: decimalString,
   currentBalance: decimalString,
@@ -29,6 +38,7 @@ export const createMortgageSchema = z.object({
   termYears: z.coerce.number().int().min(1).max(50),
   startDate: dateString,
   monthlyPayment: decimalString,
+  paymentEffectiveDate: optionalDateString.optional().nullable(),
   escrowIncluded: z.boolean().default(false),
   lenderName: z.string().max(200).optional().nullable(),
   loanType: loanTypeSchema.optional(),

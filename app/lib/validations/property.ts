@@ -24,6 +24,7 @@ const propertySchemaBase = z.object({
   zipCode: z.string().min(1, "ZIP is required").max(20),
   propertyType: z.enum(["single_family", "multi_family"]).default("single_family"),
   units: z.coerce.number().int().min(1).max(999).default(1),
+  ownershipPercent: z.coerce.number().int().min(1).max(100).default(100),
   purchasePrice: decimalString,
   purchaseDate: dateString,
   currentEstimatedValue: decimalString,

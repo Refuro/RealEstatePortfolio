@@ -7,8 +7,8 @@ export default async function PricingPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-zinc-900">Pricing</h1>
-      <p className="mt-1 text-zinc-600">
+      <h1 className="text-2xl font-semibold text-foreground">Pricing</h1>
+      <p className="mt-1 text-base text-muted">
         Choose a plan based on how many properties you track.
       </p>
       <PricingCards currentTier={user.subscriptionTier} className="mt-8" />

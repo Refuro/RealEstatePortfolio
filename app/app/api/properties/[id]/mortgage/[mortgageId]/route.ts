@@ -21,6 +21,7 @@ function serializeMortgage(m: {
   termYears: number;
   startDate: Date;
   monthlyPayment: { toString(): string };
+  paymentEffectiveDate: Date | null;
   escrowIncluded: boolean;
   lenderName: string | null;
   loanType: string | null;
@@ -34,6 +35,9 @@ function serializeMortgage(m: {
     interestRate: m.interestRate.toString(),
     monthlyPayment: m.monthlyPayment.toString(),
     startDate: m.startDate.toISOString().slice(0, 10),
+    paymentEffectiveDate: m.paymentEffectiveDate
+      ? m.paymentEffectiveDate.toISOString().slice(0, 10)
+      : null,
   };
 }
 
@@ -75,6 +79,7 @@ export async function PATCH(
   if (data.termYears !== undefined) updatePayload.termYears = data.termYears;
   if (data.startDate !== undefined) updatePayload.startDate = data.startDate;
   if (data.monthlyPayment !== undefined) updatePayload.monthlyPayment = data.monthlyPayment;
+  if (data.paymentEffectiveDate !== undefined) updatePayload.paymentEffectiveDate = data.paymentEffectiveDate;
   if (data.escrowIncluded !== undefined) updatePayload.escrowIncluded = data.escrowIncluded;
   if (data.lenderName !== undefined) updatePayload.lenderName = data.lenderName;
   if (data.loanType !== undefined) updatePayload.loanType = data.loanType;

@@ -32,6 +32,7 @@ export async function GET() {
       cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
       totalMortgageBalance,
       totalMonthlyPayment,
+      ownershipPercent: p.ownershipPercent ?? 100,
     };
   });
 

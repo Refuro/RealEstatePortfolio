@@ -28,7 +28,7 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 ### 2. After each phase
 
 - When the builder finishes a phase, the **subagentStop** hook can send a follow-up so the PM is prompted to review.
-- I (the PM) follow **`docs/pm-review-checklist.md`** every time: build, lint (errors must be cleaned up before approval; ignore Prisma schema URL), tests, scope, docs/handoff, then approve or request changes.
+- I (the PM) follow **`docs/pm-review-checklist.md`** every time: build, lint (errors must be cleaned up before approval; ignore Prisma schema URL), tests, scope, **design compliance** (for UI phases; see checklist), docs/handoff, then approve or request changes.
 - **Builder handoff:** The builder adds a **Handoff** section at the bottom of `docs/current-phase.md` when they finish a phase: new env vars, commands to run (e.g. `npm run db:migrate`), and manual steps. The PM checks this and ensures `manual-steps.md` / `.env.example` are updated if needed.
 - **Pause after Phase 3:** After Phase 3 is approved, the project is **paused**. I do not resume the builder with Phase 4 unless you explicitly say to continue (e.g. “Start the builder at the stage the last builder left off at”). You can run Phase 4 when you’re ready.
 - **Phase 4 (Stripe) gate:** When we reach Phase 4, I do not auto-advance to Phase 5 after approval. I report “Phase 4 ready for approval” and wait for you to explicitly approve (or run a quick smoke test) before sending the builder to Phase 5.
@@ -68,7 +68,7 @@ The PM uses these phases when approving and when instructing the builder (“pro
 
 ## Summary
 
-- **PM (this agent):** Follows `docs/pm-review-checklist.md` every review. Keeps the builder moving through phases by approving and resuming with “proceed to Phase N” or with fixes. Uses `docs/engineering-spec.md` and `docs/manual-steps.md` as reference.
+- **PM (this agent):** Follows `docs/pm-review-checklist.md` every review. Keeps the builder moving through phases by approving and resuming with “proceed to Phase N” or with fixes. Uses `docs/engineering-spec.md`, `docs/design-spec.md`, and `docs/manual-steps.md` as reference. Design compliance is part of PM approval for UI work.
 - **Builder handoff:** Builder adds a Handoff at the bottom of `docs/current-phase.md` when done; PM ensures manual-steps and env example are updated.
 - **Pause after Phase 3:** After Phase 3 is approved, the project pauses; Phase 4 starts only when you say to continue.
 - **Phase 4 gate:** After Phase 4 approval, PM does not auto-advance to Phase 5; waits for your explicit approval.

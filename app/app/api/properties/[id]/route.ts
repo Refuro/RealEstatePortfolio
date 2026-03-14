@@ -21,6 +21,7 @@ function serializeProperty(p: {
   zipCode: string;
   propertyType: string;
   units: number;
+  ownershipPercent?: number;
   purchasePrice: { toString(): string };
   purchaseDate: Date;
   currentEstimatedValue: { toString(): string };
@@ -37,6 +38,7 @@ function serializeProperty(p: {
     interestRate: { toString(): string };
     monthlyPayment: { toString(): string };
     startDate: Date;
+    paymentEffectiveDate: Date | null;
     [key: string]: unknown;
   }>;
 }) {
@@ -48,6 +50,7 @@ function serializeProperty(p: {
     currentMonthlyRent: p.currentMonthlyRent.toString(),
     currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
     cashInvested: p.cashInvested?.toString() ?? null,
+    ownershipPercent: p.ownershipPercent ?? 100,
     mortgages: p.mortgages.map((m) => ({
       ...m,
       originalLoanAmount: m.originalLoanAmount.toString(),
@@ -55,6 +58,7 @@ function serializeProperty(p: {
       interestRate: m.interestRate.toString(),
       monthlyPayment: m.monthlyPayment.toString(),
       startDate: m.startDate.toISOString().slice(0, 10),
+      paymentEffectiveDate: m.paymentEffectiveDate?.toISOString().slice(0, 10) ?? null,
     })),
   };
 }
@@ -123,6 +127,7 @@ export async function PATCH(
   if (data.zipCode !== undefined) updatePayload.zipCode = data.zipCode;
   if (data.propertyType !== undefined) updatePayload.propertyType = data.propertyType;
   if (data.units !== undefined) updatePayload.units = data.units;
+  if (data.ownershipPercent !== undefined) updatePayload.ownershipPercent = data.ownershipPercent;
   if (data.purchasePrice !== undefined) updatePayload.purchasePrice = data.purchasePrice;
   if (data.purchaseDate !== undefined) updatePayload.purchaseDate = data.purchaseDate;
   if (data.currentEstimatedValue !== undefined) updatePayload.currentEstimatedValue = data.currentEstimatedValue;

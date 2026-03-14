@@ -6,24 +6,24 @@ export default async function BillingSuccessPage() {
   if (!user) return null;
 
   return (
-    <div className="max-w-md">
-      <h1 className="text-2xl font-semibold text-zinc-900">
+    <div className="py-8">
+      <h1 className="text-3xl font-semibold text-foreground">
         Subscription active
       </h1>
-      <p className="mt-2 text-zinc-600">
-        Thank you for subscribing. Your plan is now active and property limits
-        have been updated.
+      <p className="mt-4 text-base text-muted">
+        Thank you for subscribing. Your plan is now active and your property limits
+        have been updated. You can manage your subscription anytime in Settings.
       </p>
-      <div className="mt-6 flex gap-3">
+      <div className="mt-8 flex gap-3">
         <Link
           href="/settings"
-          className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
         >
           Go to Settings
         </Link>
         <Link
           href="/dashboard"
-          className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+          className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
         >
           Dashboard
         </Link>

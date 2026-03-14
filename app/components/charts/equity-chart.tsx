@@ -18,7 +18,13 @@ export type EquityDatum = {
   propertyId: string;
 };
 
-const COLORS = ["#3b82f6", "#8b5cf6", "#06b6d4", "#10b981", "#f59e0b"];
+const CHART_COLORS = [
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+];
 
 export function EquityChart({ data }: { data: EquityDatum[] }) {
   const isEmpty = data.length === 0 || data.every((d) => d.equity === 0);
@@ -36,7 +42,7 @@ export function EquityChart({ data }: { data: EquityDatum[] }) {
             margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
             layout="vertical"
           >
-            <CartesianGrid strokeDasharray="3 3" stroke="#e4e4e7" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis type="number" tickFormatter={(v) => `$${v / 1000}k`} />
             <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
             <Tooltip
@@ -52,7 +58,7 @@ export function EquityChart({ data }: { data: EquityDatum[] }) {
             />
             <Bar dataKey="equity" radius={[0, 4, 4, 0]} maxBarSize={32}>
               {data.map((_, i) => (
-                <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
               ))}
             </Bar>
           </BarChart>

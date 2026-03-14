@@ -19,12 +19,12 @@ export function ChartWrapper({
   children,
 }: ChartWrapperProps) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">
+    <div className="rounded-lg border border-border bg-card p-5">
+      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
         {title}
       </h3>
       {isEmpty ? (
-        <div className="mt-4 flex h-[240px] items-center justify-center rounded border border-dashed border-zinc-200 bg-zinc-50/50 text-sm text-zinc-500">
+        <div className="mt-4 flex h-[240px] items-center justify-center rounded border border-dashed border-border bg-subtle/50 text-sm text-muted">
           {emptyMessage}
         </div>
       ) : (

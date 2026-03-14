@@ -1,26 +1,111 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #fafafa;
+  --background-subtle: #f4f4f5;
+  --card: #ffffff;
+  --foreground: #0a0a0a;
+  --foreground-muted: #71717a;
+  --border: #e4e4e7;
+  --accent: #0a0a0a;
+  --accent-hover: #262626;
+  --accent-foreground: #ffffff;
+  --positive: #059669;
+  --negative: #dc2626;
+  /* Chart palette: restrained blues/teals/greens */
+  --chart-1: #0ea5e9;
+  --chart-2: #14b8a6;
+  --chart-3: #10b981;
+  --chart-4: #3b82f6;
+  --chart-5: #06b6d4;
+}
+
+/* System preference: dark when user hasn't set explicit theme */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --background: #0a0a0a;
+    --background-subtle: #171717;
+    --card: #18181b;
+    --foreground: #fafafa;
+    --foreground-muted: #a1a1aa;
+    --border: #27272a;
+    --accent: #fafafa;
+    --accent-hover: #e4e4e7;
+    --accent-foreground: #0a0a0a;
+    --positive: #34d399;
+    --negative: #f87171;
+    --chart-1: #38bdf8;
+    --chart-2: #2dd4bf;
+    --chart-3: #34d399;
+    --chart-4: #60a5fa;
+    --chart-5: #22d3ee;
+  }
+}
+
+/* Explicit light mode (override system) */
+[data-theme="light"] {
+  --background: #fafafa;
+  --background-subtle: #f4f4f5;
+  --card: #ffffff;
+  --foreground: #0a0a0a;
+  --foreground-muted: #71717a;
+  --border: #e4e4e7;
+  --accent: #0a0a0a;
+  --accent-hover: #262626;
+  --accent-foreground: #ffffff;
+  --positive: #059669;
+  --negative: #dc2626;
+  --chart-1: #0ea5e9;
+  --chart-2: #14b8a6;
+  --chart-3: #10b981;
+  --chart-4: #3b82f6;
+  --chart-5: #06b6d4;
+}
+
+/* Explicit dark mode (override system) */
+[data-theme="dark"] {
+  --background: #0a0a0a;
+  --background-subtle: #171717;
+  --card: #18181b;
+  --foreground: #fafafa;
+  --foreground-muted: #a1a1aa;
+  --border: #27272a;
+  --accent: #fafafa;
+  --accent-hover: #e4e4e7;
+  --accent-foreground: #0a0a0a;
+  --positive: #34d399;
+  --negative: #f87171;
+  --chart-1: #38bdf8;
+  --chart-2: #2dd4bf;
+  --chart-3: #34d399;
+  --chart-4: #60a5fa;
+  --chart-5: #22d3ee;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-muted: var(--foreground-muted);
+  --color-subtle: var(--background-subtle);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-default: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-positive: var(--positive);
+  --color-negative: var(--negative);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }

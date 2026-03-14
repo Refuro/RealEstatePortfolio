@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createPropertySchema } from "@/lib/validations/property";
+import { createMortgageSchema } from "@/lib/validations/mortgage";
 import { canAddProperty } from "@/lib/plans";
 
 export async function GET() {
@@ -27,6 +28,7 @@ export async function GET() {
       currentMonthlyRent: p.currentMonthlyRent.toString(),
       currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
       cashInvested: p.cashInvested?.toString() ?? null,
+      ownershipPercent: p.ownershipPercent ?? 100,
       mortgages: p.mortgages.map((m: MortgageItem) => ({
         ...m,
         originalLoanAmount: m.originalLoanAmount.toString(),
@@ -34,6 +36,7 @@ export async function GET() {
         interestRate: m.interestRate.toString(),
         monthlyPayment: m.monthlyPayment.toString(),
         startDate: m.startDate.toISOString().slice(0, 10),
+        paymentEffectiveDate: m.paymentEffectiveDate?.toISOString().slice(0, 10) ?? null,
       })),
     }))
   );
@@ -52,7 +55,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const parsed = createPropertySchema.safeParse(body);
+  const bodyObj = typeof body === "object" && body !== null ? (body as Record<string, unknown>) : {};
+  const { mortgage: mortgagePayload, ...propertyBody } = bodyObj;
+
+  const parsed = createPropertySchema.safeParse(propertyBody);
   if (!parsed.success) {
     return NextResponse.json(
       { error: "Validation failed", details: parsed.error.flatten() },
@@ -61,6 +67,41 @@ export async function POST(request: NextRequest) {
   }
 
   const data = parsed.data;
+
+  let mortgageData: {
+    originalLoanAmount: string;
+    currentBalance: string;
+    interestRate: string;
+    termYears: number;
+    startDate: Date;
+    monthlyPayment: string;
+    paymentEffectiveDate: Date | null;
+    escrowIncluded: boolean;
+    lenderName: string | null;
+    loanType: string | null;
+  } | null = null;
+  if (mortgagePayload != null && typeof mortgagePayload === "object") {
+    const mortgageParsed = createMortgageSchema.safeParse(mortgagePayload);
+    if (!mortgageParsed.success) {
+      return NextResponse.json(
+        { error: "Mortgage validation failed", details: mortgageParsed.error.flatten() },
+        { status: 400 }
+      );
+    }
+    const m = mortgageParsed.data;
+    mortgageData = {
+      originalLoanAmount: m.originalLoanAmount,
+      currentBalance: m.currentBalance,
+      interestRate: m.interestRate,
+      termYears: m.termYears,
+      startDate: m.startDate,
+      monthlyPayment: m.monthlyPayment,
+      paymentEffectiveDate: m.paymentEffectiveDate ?? null,
+      escrowIncluded: m.escrowIncluded,
+      lenderName: m.lenderName ?? null,
+      loanType: m.loanType ?? null,
+    };
+  }
 
   const currentCount = await prisma.property.count({
     where: { userId: user.id },
@@ -86,6 +127,7 @@ export async function POST(request: NextRequest) {
       zipCode: data.zipCode,
       propertyType: data.propertyType,
       units: data.units,
+      ownershipPercent: data.ownershipPercent ?? 100,
       purchasePrice: data.purchasePrice,
       purchaseDate: data.purchaseDate,
       currentEstimatedValue: data.currentEstimatedValue,
@@ -95,6 +137,15 @@ export async function POST(request: NextRequest) {
       notes: data.notes ?? null,
     },
   });
+
+  if (mortgageData) {
+    await prisma.mortgage.create({
+      data: {
+        propertyId: property.id,
+        ...mortgageData,
+      },
+    });
+  }
 
   return NextResponse.json({
     ...property,
