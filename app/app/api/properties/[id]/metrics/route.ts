@@ -23,11 +23,11 @@ export async function GET(
   }
 
   const totalMortgageBalance = property.mortgages.reduce(
-    (sum, m) => sum + Number(m.currentBalance),
+    (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
     0
   );
   const totalMonthlyPayment = property.mortgages.reduce(
-    (sum, m) => sum + Number(m.monthlyPayment),
+    (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
     0
   );
 

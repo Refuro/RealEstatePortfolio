@@ -8,9 +8,9 @@ This doc describes how the Cursor AI agent setup is structured in this repo so y
 
 The project uses:
 
-1. **A PM (project manager) rule** — tells Cursor how to act as the PM: review phases, advance the builder, pause after Phase 3, gate Phase 4→5.
+1. **PM and builder rules** — PM rule (`pm-agent.mdc`) tells Cursor how to act as the PM; builder rule (`builder-agent.mdc`) reinforces phase scope, Handoff, and manual-step boundaries.
 2. **Two Cursor hooks** — one runs when a subagent stops (optional follow-up to the PM); one runs before every shell command (allow/deny/ask by risk).
-3. **Docs the PM and builder rely on** — phase list, current phase, review checklist, workflow, manual steps, tasks.
+3. **Docs the PM and builder rely on** — phase list, current phase, review checklist, workflow, manual steps, tasks, shell risk policy.
 
 Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning the repo and ensuring the hook script is executable is enough for the infrastructure to work.
 
@@ -23,8 +23,10 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | Path | Purpose |
 |------|--------|
 | **`.cursor/rules/pm-agent.mdc`** | Rule that defines the PM agent. `alwaysApply: true` so it’s active in any chat. Tells the agent to use the phase workflow, the review checklist, and when to pause or gate phases. |
+| **`.cursor/rules/builder-agent.mdc`** | Rule that reinforces builder behavior: stay in scope, update `current-phase.md`, add Handoff, never do manual steps. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
-| **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. |
+| **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
+| **`.cursor/hooks/on-subagent-stop.ps1`** | PowerShell variant for Windows when Git Bash/WSL is not available. Edit `hooks.json` to use this path instead of the `.sh` script if needed. |
 
 ### 2. Docs the PM rule and workflow reference
 
@@ -38,6 +40,7 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/pm-agent-workflow.md` | How to start the builder, when to pause, Phase 4 gate, command-level risk. |
 | `docs/manual-steps.md` | Steps that stay manual (Vercel, Clerk, DB, Stripe); builder must not do these. |
 | `docs/tasks.md` | Optional task list for the builder (“complete tasks in tasks.md”). |
+| `docs/shell-risk-policy.md` | Canonical shell risk policy (allow/deny/ask). The `beforeShellExecution` hook implements this; keep them in sync. |
 
 If any of these are missing, the PM rule or workflow doc will reference them; add minimal stubs or copy from this repo.
 
@@ -52,8 +55,10 @@ Do this in the project root (same level as `app/` and `docs/`).
 - Ensure the repo has the `.cursor` directory and the `docs` files above (they’re committed).
 - Clone or pull so you have:
   - `.cursor/rules/pm-agent.mdc`
+  - `.cursor/rules/builder-agent.mdc`
   - `.cursor/hooks.json`
   - `.cursor/hooks/on-subagent-stop.sh`
+  - `.cursor/hooks/on-subagent-stop.ps1` (optional, for Windows)
   - The `docs/` files listed above.
 
 ### Step 2: Make the hook script executable (Linux/macOS)
@@ -62,7 +67,7 @@ Do this in the project root (same level as `app/` and `docs/`).
 chmod +x .cursor/hooks/on-subagent-stop.sh
 ```
 
-On Windows, Cursor usually runs shell scripts via Git Bash or WSL; if the hook doesn’t run, confirm the script is in the right place and that your environment can execute it.
+**Windows:** Cursor usually runs `.sh` scripts via Git Bash or WSL. If the hook doesn’t run, edit `.cursor/hooks.json` and change the `subagentStop` command from `.cursor/hooks/on-subagent-stop.sh` to `.cursor/hooks/on-subagent-stop.ps1` to use the PowerShell variant.
 
 ### Step 3: No extra Cursor app config required
 

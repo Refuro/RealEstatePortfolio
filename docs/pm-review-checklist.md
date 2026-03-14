@@ -6,12 +6,11 @@ Use this checklist every time you review a phase (builder finished or user asked
 
 ## Before approving a phase
 
-- [ ] **Build:** From `app/` run `npm run build`. It must pass. If it fails, resume the builder with the failure output and request fixes; do not approve.
-- [ ] **Lint:** From `app/` run `npm run lint`. It must pass. If it fails, same as above.
+- [ ] **Build & lint:** From `app/` run `npm run check`. Both build and lint must pass. Lint errors must be cleaned up before approval. If either fails, resume the builder with the failure output and request fixes; do not approve. (Ignore Prisma `schema.prisma` datasource URL warning — required for Prisma 6.)
 - [ ] **Tests (if present):** If the project has `npm test`, run it. Failures → request fixes, then re-review.
 - [ ] **Scope:** Compare builder output and code changes to `docs/current-phase.md` and `docs/engineering-spec.md` for this phase. All phase items must be done; no significant out-of-scope work.
 - [ ] **Docs:** If the builder added env vars, new commands, or setup steps, confirm they are in `app/.env.example` and/or `docs/manual-steps.md`. If the builder noted security or manual steps, confirm `docs/security-notes.md` or `docs/manual-steps.md` is updated.
-- [ ] **Builder handoff:** If the builder added a **Handoff** section (in `docs/current-phase.md` or `docs/builder-handoff.md`), read it and ensure any required manual steps are recorded in `docs/manual-steps.md` and that you’ve noted any follow-ups.
+- [ ] **Builder handoff:** If the builder added a **Handoff** section at the bottom of `docs/current-phase.md`, read it and ensure any required manual steps are recorded in `docs/manual-steps.md` and that you’ve noted any follow-ups.
 
 ---
 

@@ -834,3 +834,102 @@ The plan is set up to build in a **smart, scalable** way:
 * When adding features (e.g. expense categories), extend schema and APIs incrementally rather than big-bang rewrites.
 
 Overall: the plan supports **incremental, scalable** building—ship a narrow v1, then extend schema, metrics, and UI without redoing the foundation.
+
+---
+
+# 20. Planned Features (Post-MVP)
+
+Larger initiatives beyond the current phase. Not yet scheduled; captured here as a backlog of planned work.
+
+## Property evaluation tool
+
+Enter property specs (address, purchase price, estimated value, rent, expenses, mortgage terms, etc.) and get an evaluation of key statistics (cap rate, cash-on-cash, NOI, etc.) to help determine if it's a good investment. Useful for analyzing deals before adding them to the portfolio. May be a standalone "Evaluate" flow or a pre-add step.
+
+## Visual refresh & unified aesthetic
+
+Major face-lift to the site: improved visual fidelity, cohesive design system, and a unified aesthetic across all pages. Includes typography, color palette, spacing, component styling, and overall polish.
+
+## Cashflow / profitability timeline simulator
+
+Project cashflow and equity over time (5–30 years). Model rent escalation, expense inflation, and mortgage paydown to show how profitability evolves. Users can adjust inputs to explore scenarios and make decisions.
+
+**Core (v1):** Single property; rent escalation, expense inflation, time horizon; monthly cashflow chart, equity chart, key milestones (e.g. year cashflow turns positive). **Always show the assumptions used** so users understand where numbers come from. Inputs editable so users can try different scenarios.
+
+**Future expansion:** Portfolio view, refinance scenarios, sale scenarios, conservative vs. optimistic presets.
+
+**UX:** Single view with essential inputs prominent; optional inputs (vacancy, appreciation, CapEx) in expandable "More assumptions" section. Avoid separate Simple/Advanced modes—one flexible view with clear organization and full transparency on assumptions.
+
+---
+
+# 21. External API Integration Opportunities
+
+Ways to enhance UX by pulling data from third-party APIs. MLS excluded (expensive, legal barriers). Existing mentions: mvp-spec §Optional Post-MVP Integrations; engineering-spec §11 Nice-to-Have.
+
+## 1. Address validation & confirmation
+
+**Purpose:** Normalize and validate addresses as users type; reduce bad data.
+
+**APIs:** USPS Address Validation (free for US), Smarty (SmartyStreets), Google Places Autocomplete, Mapbox Geocoding.
+
+**UX:** Autocomplete, suggested corrections ("Did you mean…?"), lat/lng for future map use.
+
+## 2. Rental estimates
+
+**Purpose:** Suggest rent when adding a property or in the property evaluation tool.
+
+**APIs:** RentCast, Rentometer, HouseCanary (often paid).
+
+**UX:** "Estimated rent: $2,200/mo" as a hint; user can accept or override.
+
+## 3. Property valuation (AVM)
+
+**Purpose:** Suggest estimated value.
+
+**APIs:** HouseCanary, Clear Capital, ATTOM (often paid). Zillow public API deprecated.
+
+**UX:** "Estimated value: $280,000" as a starting point; user can override.
+
+## 4. Geocoding / maps
+
+**Purpose:** Map view of portfolio, distance/area context.
+
+**APIs:** Mapbox, Google Maps.
+
+**UX:** Map of properties, clustering, spatial context.
+
+## 5. Market trends
+
+**Purpose:** Market-level context for portfolio.
+
+**APIs:** Census, FHFA House Price Index.
+
+**UX:** "Market up 5% YoY" or similar context.
+
+## 6. Walk Score / neighborhood
+
+**Purpose:** Walkability, transit, neighborhood context.
+
+**APIs:** Walk Score API.
+
+**UX:** Extra context for property evaluation.
+
+## 7. Mortgage rates (refinance / evaluation)
+
+**Purpose:** Current rate context for refinance scenarios.
+
+**APIs:** Freddie Mac PMMS, Federal Reserve.
+
+**UX:** "Current 30-year rate: 6.5%" in evaluation or refinance flows.
+
+---
+
+## Suggested priority (cost vs. value)
+
+| Priority | API type | Cost / complexity | UX impact |
+|----------|----------|------------------|-----------|
+| High | Address validation | Low (USPS free) | Fewer bad addresses, better data |
+| High | Rental estimates | Medium | Strong for property evaluation |
+| Medium | Geocoding / maps | Medium | Map view, clearer context |
+| Medium | Market trends | Low (Census/FHFA) | Portfolio-level context |
+| Lower | AVM valuation | High | Nice-to-have; manual value works |
+| Lower | Walk Score | Low–medium | Extra context for evaluation |

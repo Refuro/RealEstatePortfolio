@@ -1,5 +1,17 @@
 import { z } from "zod";
 
+export const LOAN_TYPE_OPTIONS = ["conventional", "FHA", "VA", "USDA", "jumbo", "other"] as const;
+export type LoanType = (typeof LOAN_TYPE_OPTIONS)[number];
+
+const loanTypeSchema = z
+  .union([
+    z.enum(LOAN_TYPE_OPTIONS),
+    z.literal(""),
+    z.null(),
+    z.undefined(),
+  ])
+  .transform((v) => (v === "" || v == null ? null : v));
+
 const decimalString = z
   .string()
   .refine((s) => !Number.isNaN(parseFloat(s)) && parseFloat(s) >= 0, "Must be a non-negative number")
@@ -19,7 +31,7 @@ export const createMortgageSchema = z.object({
   monthlyPayment: decimalString,
   escrowIncluded: z.boolean().default(false),
   lenderName: z.string().max(200).optional().nullable(),
-  loanType: z.string().max(100).optional().nullable(),
+  loanType: loanTypeSchema.optional(),
 });
 
 export const updateMortgageSchema = createMortgageSchema.partial();

@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { LOAN_TYPE_OPTIONS } from "@/lib/validations/mortgage";
 
 type Mortgage = {
   id: string;
@@ -102,7 +103,19 @@ export function MortgageSection({
       )}
 
       {!showForm && !editingId && mortgages.length === 0 && (
-        <p className="mt-4 text-sm text-zinc-500">No mortgage on file.</p>
+        <div className="mt-4 rounded-md border border-dashed border-zinc-200 bg-zinc-50/50 p-6 text-center">
+          <p className="text-sm text-zinc-600">No mortgage on file.</p>
+          <p className="mt-1 text-xs text-zinc-500">
+            Add a mortgage to see equity, LTV, and amortization.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="mt-4 rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white hover:bg-zinc-800"
+          >
+            Add mortgage
+          </button>
+        </div>
       )}
 
       {!showForm && !editingId && mortgages.length > 0 && (
@@ -204,16 +217,18 @@ function MortgageForm({
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    const interestPercent = formData.get("interestRate") as string;
+    const interestDecimal = (Number(interestPercent) / 100).toString();
     const payload = {
       originalLoanAmount: formData.get("originalLoanAmount") as string,
       currentBalance: formData.get("currentBalance") as string,
-      interestRate: formData.get("interestRate") as string,
+      interestRate: interestDecimal,
       termYears: Number(formData.get("termYears")),
       startDate: formData.get("startDate") as string,
       monthlyPayment: formData.get("monthlyPayment") as string,
       escrowIncluded: formData.get("escrowIncluded") === "on",
       lenderName: (formData.get("lenderName") as string) || null,
-      loanType: (formData.get("loanType") as string) || null,
+      loanType: (formData.get("loanType") as string).trim() || null,
     };
 
     try {
@@ -266,7 +281,7 @@ function MortgageForm({
             min="0"
             required
             defaultValue={mortgage?.originalLoanAmount}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
@@ -280,22 +295,23 @@ function MortgageForm({
             min="0"
             required
             defaultValue={mortgage?.currentBalance}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-zinc-500">
-            Interest rate (e.g. 0.065 for 6.5%)
+            Interest rate (%)
           </label>
           <input
             name="interestRate"
             type="number"
-            step="0.0001"
+            step="0.01"
             min="0"
-            max="1"
+            max="30"
             required
-            defaultValue={mortgage?.interestRate}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            placeholder="e.g. 6.25"
+            defaultValue={mortgage ? (Number(mortgage.interestRate) * 100).toString() : undefined}
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
@@ -309,7 +325,7 @@ function MortgageForm({
             max="50"
             required
             defaultValue={mortgage?.termYears}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
@@ -321,7 +337,7 @@ function MortgageForm({
             type="date"
             required
             defaultValue={mortgage?.startDate}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
@@ -335,7 +351,7 @@ function MortgageForm({
             min="0"
             required
             defaultValue={mortgage?.monthlyPayment}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
@@ -346,20 +362,29 @@ function MortgageForm({
             name="lenderName"
             type="text"
             defaultValue={mortgage?.lenderName ?? ""}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 placeholder:text-zinc-500 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           />
         </div>
         <div>
           <label className="block text-xs font-medium text-zinc-500">
             Loan type
           </label>
-          <input
+          <select
             name="loanType"
-            type="text"
-            placeholder="e.g. conventional, FHA"
-            defaultValue={mortgage?.loanType ?? ""}
-            className="mt-0.5 block w-full rounded border border-zinc-300 px-2 py-1.5 text-sm"
-          />
+            defaultValue={
+              mortgage?.loanType && LOAN_TYPE_OPTIONS.includes(mortgage.loanType as (typeof LOAN_TYPE_OPTIONS)[number])
+                ? mortgage.loanType
+                : ""
+            }
+            className="mt-0.5 block w-full rounded border border-zinc-300 bg-white px-2 py-1.5 text-sm text-zinc-900 focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+          >
+            <option value="">—</option>
+            {LOAN_TYPE_OPTIONS.map((opt) => (
+              <option key={opt} value={opt}>
+                {opt === "FHA" || opt === "VA" || opt === "USDA" ? opt : opt.charAt(0).toUpperCase() + opt.slice(1)}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
       <div className="flex items-center gap-3">

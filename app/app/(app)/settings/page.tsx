@@ -24,6 +24,30 @@ export default async function SettingsPage() {
       </p>
 
       <section className="mt-8">
+        <h2 className="text-lg font-medium text-zinc-900">Profile</h2>
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
+          <dl className="grid gap-2 text-sm">
+            {(user.firstName || user.lastName) && (
+              <div className="flex justify-between">
+                <dt className="text-zinc-500">Name</dt>
+                <dd className="font-medium text-zinc-900">
+                  {[user.firstName, user.lastName].filter(Boolean).join(" ")}
+                </dd>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <dt className="text-zinc-500">Email</dt>
+              <dd className="font-medium text-zinc-900">{user.email || "—"}</dd>
+            </div>
+            <div className="flex justify-between">
+              <dt className="text-zinc-500">Account ID</dt>
+              <dd className="font-mono text-xs text-zinc-600">{user.clerkUserId}</dd>
+            </div>
+          </dl>
+        </div>
+      </section>
+
+      <section className="mt-8">
         <h2 className="text-lg font-medium text-zinc-900">Plan & billing</h2>
         <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
           <dl className="grid gap-2 text-sm">
@@ -62,6 +86,24 @@ export default async function SettingsPage() {
               <BillingPortalButton />
             )}
           </div>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-medium text-zinc-900">Export your data</h2>
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
+          <p className="text-sm text-zinc-600">
+            Coming soon — you&apos;ll be able to download your properties and metrics.
+          </p>
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-lg font-medium text-zinc-900">Delete account</h2>
+        <div className="mt-3 rounded-lg border border-zinc-200 bg-white p-4">
+          <p className="text-sm text-zinc-600">
+            Coming soon — contact support to delete your account.
+          </p>
         </div>
       </section>
     </div>

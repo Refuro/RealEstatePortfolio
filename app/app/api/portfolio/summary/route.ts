@@ -14,13 +14,14 @@ export async function GET() {
     include: { mortgages: true },
   });
 
-  const portfolioInput = properties.map((p) => {
+  type PropertyWithMortgages = (typeof properties)[number];
+  const portfolioInput = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum, m) => sum + Number(m.currentBalance),
+      (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(
-      (sum, m) => sum + Number(m.monthlyPayment),
+      (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
       0
     );
     return {

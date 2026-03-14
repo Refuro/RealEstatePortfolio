@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { US_STATES } from "@/lib/us-states";
 
 type PropertyFormData = {
   nickname?: string;
@@ -48,6 +49,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [propertyType, setPropertyType] = useState(property?.propertyType ?? "single_family");
 
   const isEdit = !!property;
   const values = property
@@ -86,7 +88,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       state: formData.get("state") as string,
       zipCode: formData.get("zipCode") as string,
       propertyType: formData.get("propertyType") as string,
-      units: Number(formData.get("units")),
+      units: propertyType === "single_family" ? 1 : Number(formData.get("units")),
       purchasePrice: formData.get("purchasePrice") as string,
       purchaseDate: formData.get("purchaseDate") as string,
       currentEstimatedValue: formData.get("currentEstimatedValue") as string,
@@ -200,14 +202,20 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           <label htmlFor="state" className="block text-sm font-medium text-zinc-700">
             State *
           </label>
-          <input
+          <select
             id="state"
             name="state"
-            type="text"
             required
-            defaultValue={values.state}
+            defaultValue={values.state || ""}
             className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-          />
+          >
+            <option value="">Select state</option>
+            {US_STATES.map((abbr) => (
+              <option key={abbr} value={abbr}>
+                {abbr}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label htmlFor="zipCode" className="block text-sm font-medium text-zinc-700">
@@ -233,26 +241,32 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             id="propertyType"
             name="propertyType"
             defaultValue={values.propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
             className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
           >
             <option value="single_family">Single family</option>
             <option value="multi_family">Multi family</option>
           </select>
         </div>
-        <div>
-          <label htmlFor="units" className="block text-sm font-medium text-zinc-700">
-            Units
-          </label>
-          <input
-            id="units"
-            name="units"
-            type="number"
-            min={1}
-            max={999}
-            defaultValue={values.units}
-            className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
-          />
-        </div>
+        {propertyType === "multi_family" && (
+          <div>
+            <label htmlFor="units" className="block text-sm font-medium text-zinc-700">
+              Units
+            </label>
+            <input
+              id="units"
+              name="units"
+              type="number"
+              min={1}
+              max={999}
+              defaultValue={values.units}
+              className="mt-1 block w-full rounded-md border border-zinc-300 px-3 py-2 text-zinc-900 shadow-sm focus:border-zinc-500 focus:outline-none focus:ring-1 focus:ring-zinc-500"
+            />
+          </div>
+        )}
+        {propertyType === "single_family" && (
+          <input type="hidden" name="units" value="1" />
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

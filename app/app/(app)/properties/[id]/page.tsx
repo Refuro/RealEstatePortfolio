@@ -23,8 +23,15 @@ export default async function PropertyDetailPage({
 
   if (!property) notFound();
 
-  const totalMortgageBalance = property.mortgages.reduce((sum, m) => sum + Number(m.currentBalance), 0);
-  const totalMonthlyPayment = property.mortgages.reduce((sum, m) => sum + Number(m.monthlyPayment), 0);
+  type MortgageItem = (typeof property.mortgages)[number];
+  const totalMortgageBalance = property.mortgages.reduce(
+    (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
+    0
+  );
+  const totalMonthlyPayment = property.mortgages.reduce(
+    (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
+    0
+  );
   const metrics = computePropertyMetrics({
     monthlyRent: Number(property.currentMonthlyRent),
     monthlyExpenses: Number(property.currentMonthlyExpenses),
@@ -116,7 +123,7 @@ export default async function PropertyDetailPage({
 
         <MortgageSection
           propertyId={property.id}
-          mortgages={property.mortgages.map((m) => ({
+          mortgages={property.mortgages.map((m: MortgageItem) => ({
             id: m.id,
             originalLoanAmount: m.originalLoanAmount.toString(),
             currentBalance: m.currentBalance.toString(),

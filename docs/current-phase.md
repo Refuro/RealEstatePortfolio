@@ -50,9 +50,9 @@
 
 ## Phase 5 — Polishing (current)
 
-- [ ] Onboarding (Module K): welcome screen, prompt first property, example metric explanations
-- [ ] Settings/account (Module L): profile info display, data export placeholder, delete account placeholder
-- [ ] Error handling and better empty states
+- [ ] Onboarding (Module K): welcome screen, prompt first property, example metric explanations — *deferred until after facelift*
+- [x] Settings/account (Module L): profile info display, data export placeholder, delete account placeholder
+- [x] Error handling and better empty states
 
 *Full build order: [engineering-spec.md §8](engineering-spec.md).*
 

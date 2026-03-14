@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
+import {
+  computePortfolioMetrics,
+  type PortfolioPropertyInput,
+} from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 
@@ -14,13 +17,14 @@ export default async function DashboardPage() {
     include: { mortgages: true },
   });
 
-  const portfolioInput = properties.map((p) => {
+  type PropertyWithMortgages = (typeof properties)[number];
+  const portfolioInput = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum, m) => sum + Number(m.currentBalance),
+      (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(
-      (sum, m) => sum + Number(m.monthlyPayment),
+      (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
       0
     );
     return {
@@ -37,19 +41,20 @@ export default async function DashboardPage() {
 
   const metrics = computePortfolioMetrics(portfolioInput);
 
+  type PortfolioInputItem = PortfolioPropertyInput & { name: string };
   // Chart data from same metrics engine (Module I — data must match metrics engine)
   const chartData: DashboardChartData = {
-    equity: portfolioInput.map((p) => {
+    equity: portfolioInput.map((p: PortfolioInputItem) => {
       const m = computePropertyMetrics(p);
       return { name: p.name, equity: m.equity, propertyId: p.id };
     }),
-    debtVsValue: portfolioInput.map((p) => ({
+    debtVsValue: portfolioInput.map((p: PortfolioInputItem) => ({
       name: p.name,
       value: p.estimatedValue,
       debt: p.totalMortgageBalance,
       propertyId: p.id,
     })),
-    cashFlow: portfolioInput.map((p) => {
+    cashFlow: portfolioInput.map((p: PortfolioInputItem) => {
       const m = computePropertyMetrics(p);
       return {
         name: p.name,

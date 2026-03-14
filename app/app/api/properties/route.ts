@@ -16,8 +16,10 @@ export async function GET() {
     include: { mortgages: true },
   });
 
+  type PropertyWithMortgages = (typeof properties)[number];
+  type MortgageItem = PropertyWithMortgages["mortgages"][number];
   return NextResponse.json(
-    properties.map((p) => ({
+    properties.map((p: PropertyWithMortgages) => ({
       ...p,
       purchasePrice: p.purchasePrice.toString(),
       purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
@@ -25,7 +27,7 @@ export async function GET() {
       currentMonthlyRent: p.currentMonthlyRent.toString(),
       currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
       cashInvested: p.cashInvested?.toString() ?? null,
-      mortgages: p.mortgages.map((m) => ({
+      mortgages: p.mortgages.map((m: MortgageItem) => ({
         ...m,
         originalLoanAmount: m.originalLoanAmount.toString(),
         currentBalance: m.currentBalance.toString(),

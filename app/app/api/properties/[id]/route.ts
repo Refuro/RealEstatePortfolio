@@ -108,6 +108,12 @@ export async function PATCH(
   }
 
   const data = parsed.data;
+  if (data.units !== undefined && data.propertyType === undefined && existing.propertyType === "single_family" && data.units !== 1) {
+    return NextResponse.json(
+      { error: "Units must be 1 for single-family properties" },
+      { status: 400 }
+    );
+  }
   const updatePayload: Record<string, unknown> = {};
   if (data.nickname !== undefined) updatePayload.nickname = data.nickname;
   if (data.addressLine1 !== undefined) updatePayload.addressLine1 = data.addressLine1;
