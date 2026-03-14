@@ -111,6 +111,49 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
   - [x] CurrencyInput unchanged (already has inputMode="decimal")
   - [x] Run `npm run check` when done
 
+- [x] **Onboarding (welcome + first property prompt + metric help):** Add onboarding for new users with 0 properties. (1) **When:** After sign-up, user lands on dashboard. If propertyCount === 0, show onboarding state instead of empty dashboard. (2) **Welcome screen:** Brief "Welcome to Portfolio" heading, one-sentence value prop ("Track your rental properties and see equity, cash flow, and more at a glance."), primary CTA "Add your first property" linking to /properties/new. (3) **Metric help:** Add "What do these mean?" link near dashboard "Portfolio summary" or chart section. Clicking opens a modal/panel with short definitions: Total property value, Total debt, Total equity, Monthly cash flow, Portfolio cap rate, Portfolio LTV. (4) Once user has 1+ properties, normal dashboard shows; onboarding is not shown again.
+
+  **Acceptance criteria:**
+  - [x] User with 0 properties sees onboarding welcome (not empty dashboard with "No properties yet").
+  - [x] Onboarding has "Add your first property" CTA that links to /properties/new.
+  - [x] Dashboard (when 1+ properties) has "What do these mean?" link that opens metric definitions.
+  - [x] Metric definitions cover: Total property value, Total debt, Total equity, Monthly cash flow, Portfolio cap rate, Portfolio LTV.
+  - [x] Onboarding is not shown when user has 1+ properties.
+  - [x] Follow docs/design-spec.md. Run `npm run check` when done.
+
+- [x] **Data export (CSV):** Implement CSV export in Settings. (1) **Location:** Existing "Export your data" section in Settings. (2) **Format:** CSV only. (3) **Content:** One CSV with flattened rows. Each row = one property. Columns: address, nickname, property type, units, purchase price, purchase date, value, rent, expenses, cash invested, ownership %, mortgage balance, mortgage rate, mortgage term, monthly payment, lender, equity, monthly cash flow, cap rate, LTV. Include header row. (4) **Serving:** API route (e.g. GET /api/export/portfolio) that queries user's properties + mortgages, computes metrics, builds CSV in memory, returns with `Content-Disposition: attachment; filename="portfolio-export.csv"` and `Content-Type: text/csv`. (5) **UI:** "Download CSV" button in Settings → Export section; triggers fetch to API, then client creates blob and triggers download.
+
+  **Acceptance criteria:**
+  - [x] Settings export section has "Download CSV" button.
+  - [x] Clicking downloads a CSV file with filename portfolio-export.csv.
+  - [x] CSV includes property details, mortgage details (one mortgage per property if present), and computed metrics (equity, cash flow, cap rate, LTV).
+  - [x] CSV has header row.
+  - [x] Empty portfolio: CSV has headers only or empty file; no error.
+  - [x] Run `npm run check` when done.
+
+- [x] **Delete account (soft delete + restore):** Implement self-service account deletion with password confirmation and restore capability. (1) **Schema:** Add `deletedAt DateTime?` to User model. Migration required. (2) **Auth flow:** When user requests delete, require password re-entry. Use Clerk's `clerkClient.users.verifyPassword` or equivalent to verify before proceeding. (3) **Delete flow:** On confirm: (a) Set `user.deletedAt = new Date()`. (b) Cancel Stripe subscription if active (call Stripe API to cancel). (c) Clear or null `stripeCustomerId` to avoid billing. (d) Keep properties and mortgages (soft delete only; data stays for restore). (e) Sign user out and redirect to landing with message "Your account has been deactivated." (4) **Auth guard:** Update `getAppUser` (or equivalent): if user exists and `deletedAt` is set, return user with a `deleted: true` flag. App layout or middleware: when user is deleted, show "Restore account" screen instead of dashboard. (5) **Restore flow:** "Restore account" button clears `deletedAt`; user returns to dashboard with data intact. (6) **UI:** Settings → Delete account section: replace "Coming soon" with "Delete account" button. Two-step: (a) Click "Delete account" → modal with password field + warning. (b) Submit → verify password → perform delete → sign out. (7) **Restore screen:** When deleted user signs in, show full-screen "Your account was deactivated" with "Restore account" button. No access to dashboard/properties until restored.
+
+  **Acceptance criteria:**
+  - [x] User model has `deletedAt` field; migration applied.
+  - [x] Delete account flow requires password; Clerk verifies before delete.
+  - [x] On delete: deletedAt set, Stripe subscription canceled, stripeCustomerId cleared, user signed out, redirect to landing.
+  - [x] Properties and mortgages remain in DB (soft delete).
+  - [x] Deleted user signing in sees "Restore account" screen, not dashboard.
+  - [x] Restore clears deletedAt; user returns to dashboard with data intact.
+  - [x] All app queries (dashboard, properties, etc.) exclude or handle deleted users; no data leakage.
+  - [x] Run `npm run check` when done.
+
+- [x] **Permanent account deletion (GDPR/CCPA compliance):** Add a separate "Permanently delete" option alongside the existing "Deactivate" flow. Users need both choices for privacy law compliance (right to erasure). (1) **UI:** In Settings → Delete account section, show two distinct options: (a) **Deactivate account** — "Pause your account and hide your data. You can restore it later by signing in." Button opens existing deactivate modal (password, soft delete). (b) **Permanently delete account** — "Permanently delete all your data. This cannot be undone." Button opens a separate modal with stronger confirmation: password + require user to type "DELETE" (or check "I understand this cannot be undone") before enabling Confirm. (2) **API:** Create POST /api/account/delete-permanent (or add `permanent: true` to existing delete). Verify password via Clerk. Then: (a) Cancel Stripe subscription if active. (b) Delete user from DB (cascade deletes properties, mortgages, subscription). (c) Optionally delete user from Clerk via `clerkClient.users.deleteUser(clerkUserId)` for full erasure. (d) Sign user out, redirect to /?deleted=permanent. (3) **Landing:** When ?deleted=permanent, show "Your account and data have been permanently deleted." (4) **Copy:** Ensure deactivate vs permanent are clearly labeled; deactivate says "restore later," permanent says "cannot be undone."
+
+  **Acceptance criteria:**
+  - [x] Settings Delete account section shows two options: Deactivate and Permanently delete.
+  - [x] Deactivate: existing flow (password, soft delete, restore possible).
+  - [x] Permanently delete: separate modal, password + type "DELETE" (or equivalent) confirmation, then hard delete.
+  - [x] Permanent delete: Stripe subscription canceled, user + properties + mortgages + subscription deleted from DB.
+  - [x] Optional: delete user from Clerk for full erasure.
+  - [x] User signed out and redirected; landing shows appropriate message for permanent vs deactivate.
+  - [x] Run `npm run check` when done.
+
 ---
 
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*

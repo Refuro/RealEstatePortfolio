@@ -7,6 +7,7 @@ import {
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
+import { MetricHelpLink } from "./metric-help-link";
 
 export default async function DashboardPage() {
   const user = await getAppUser();
@@ -67,18 +68,17 @@ export default async function DashboardPage() {
   if (metrics.propertyCount === 0) {
     return (
       <div>
-        <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-        <p className="mt-2 text-base text-muted">
-          Your portfolio summary will appear here once you add properties.
-        </p>
-        <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center">
-          <h2 className="text-lg font-medium text-foreground">No properties yet</h2>
+        <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <h1 className="text-2xl font-semibold text-foreground">
+            Welcome to Portfolio
+          </h1>
           <p className="mt-2 text-base text-muted">
-            Add your first property to see total value, equity, cash flow, and more.
+            Track your rental properties and see equity, cash flow, and more at a
+            glance.
           </p>
           <Link
             href="/properties/new"
-            className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            className="mt-6 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add your first property
           </Link>
@@ -90,9 +90,14 @@ export default async function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-      <p className="mt-2 text-base text-muted">
-        Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
-      </p>
+      <div className="mt-2 space-y-1">
+        <p className="text-base text-muted">
+          Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
+        </p>
+        <div>
+          <MetricHelpLink />
+        </div>
+      </div>
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
         <MetricCard

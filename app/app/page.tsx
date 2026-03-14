@@ -1,8 +1,14 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ deleted?: string }>;
+}) {
   const { userId } = await auth();
+  const params = await searchParams;
+  const deletedParam = params.deleted;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-8 bg-background px-4">
@@ -12,6 +18,16 @@ export default async function HomePage() {
       <p className="max-w-md text-center text-sm text-muted">
         Track and analyze your rental property portfolio.
       </p>
+      {deletedParam === "1" && (
+        <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-center text-sm text-foreground">
+          Your account has been deactivated. You can sign in again to restore it.
+        </p>
+      )}
+      {deletedParam === "permanent" && (
+        <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-center text-sm text-foreground">
+          Your account and data have been permanently deleted.
+        </p>
+      )}
       <div className="flex gap-4">
         {userId ? (
           <Link

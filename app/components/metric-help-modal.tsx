@@ -1,0 +1,87 @@
+"use client";
+
+import { X } from "lucide-react";
+
+const METRIC_DEFINITIONS = [
+  {
+    term: "Total property value",
+    definition:
+      "Sum of current estimated values across all your properties. This reflects your best estimate of what each property is worth today.",
+  },
+  {
+    term: "Total debt",
+    definition:
+      "Sum of outstanding mortgage balances across all properties. This is what you still owe to lenders.",
+  },
+  {
+    term: "Total equity",
+    definition:
+      "Total property value minus total debt. This is your ownership stake — the portion of your properties you truly own.",
+  },
+  {
+    term: "Monthly cash flow",
+    definition:
+      "Rent minus expenses minus mortgage payments, summed across all properties. Positive means you're making money each month; negative means you're subsidizing the properties.",
+  },
+  {
+    term: "Portfolio cap rate",
+    definition:
+      "Weighted capitalization rate across your portfolio. Net operating income (rent minus expenses) divided by total property value. Higher cap rate generally means better yield.",
+  },
+  {
+    term: "Portfolio LTV",
+    definition:
+      "Loan-to-value ratio for your portfolio. Total debt divided by total property value. Lower LTV means more equity and less leverage.",
+  },
+];
+
+export function MetricHelpModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="metric-help-title"
+    >
+      <div
+        className="absolute inset-0 bg-foreground/20"
+        onClick={onClose}
+        aria-hidden="true"
+      />
+      <div className="relative max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-card p-6 shadow-lg">
+        <div className="flex items-center justify-between gap-4">
+          <h2
+            id="metric-help-title"
+            className="text-lg font-semibold text-foreground"
+          >
+            What do these mean?
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-md p-1 text-muted hover:bg-subtle hover:text-foreground"
+            aria-label="Close"
+          >
+            <X size={20} />
+          </button>
+        </div>
+        <dl className="mt-4 space-y-4">
+          {METRIC_DEFINITIONS.map(({ term, definition }) => (
+            <div key={term}>
+              <dt className="text-sm font-medium text-foreground">{term}</dt>
+              <dd className="mt-1 text-sm text-muted">{definition}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </div>
+  );
+}

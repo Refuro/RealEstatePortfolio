@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
+import { DeleteAccountSection } from "./delete-account-section";
+import { DownloadCsvButton } from "./download-csv-button";
 import { ThemeToggle } from "./theme-toggle";
 
 export default async function SettingsPage() {
@@ -96,18 +98,17 @@ export default async function SettingsPage() {
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Export your data</h2>
         <div className="rounded-lg border border-border bg-card p-6">
-          <p className="text-base text-muted">
-            Coming soon — you&apos;ll be able to download your properties and metrics as CSV or JSON.
+          <p className="text-base text-muted mb-4">
+            Download your properties and metrics as a CSV file.
           </p>
+          <DownloadCsvButton />
         </div>
       </section>
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Delete account</h2>
         <div className="rounded-lg border border-border bg-card p-6">
-          <p className="text-base text-muted">
-            Coming soon — contact support to permanently delete your account and data.
-          </p>
+          <DeleteAccountSection />
         </div>
       </section>
     </div>
