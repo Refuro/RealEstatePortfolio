@@ -51,7 +51,7 @@
 ## Phase 5 — Polishing (current)
 
 - [x] **Visual facelift:** Apply design system from `docs/design-spec.md` (Robinhood-inspired minimal + progressive disclosure). Typography, color tokens, spacing, component patterns, charts. See engineering-spec §20.
-- [ ] Onboarding (Module K): welcome screen, prompt first property, example metric explanations — *deferred until after facelift*
+- [x] Onboarding (Module K): welcome screen, prompt first property, example metric explanations
 - [x] Settings/account (Module L): profile info display, data export placeholder, delete account placeholder
 - [x] Error handling and better empty states
 

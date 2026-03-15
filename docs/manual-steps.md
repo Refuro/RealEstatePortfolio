@@ -52,6 +52,12 @@ Use this as a planning guide. Pricing changes; check each provider’s site for 
 
 ---
 
+## Rent estimate (RentCast — optional)
+
+- [ ] **RentCast API key:** To enable "Estimate rent" when adding or editing properties, create an API key at [RentCast API Dashboard](https://app.rentcast.io/app/api). Add `RENTCAST_API_KEY` to `app/.env` (and Vercel env for production). Free tier includes 50 calls/month.
+
+---
+
 ## Later / as needed
 
 - [ ] **Custom domain** (Vercel): Add domain in Vercel project settings.

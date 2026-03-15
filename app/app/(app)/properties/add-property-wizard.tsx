@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
@@ -339,8 +339,42 @@ function StepIncomeExpenses({
   onChange: (d: WizardData) => void;
   errors: Record<string, string>;
 }) {
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
+
   function update<K extends keyof WizardData>(key: K, val: WizardData[K]) {
     onChange({ ...data, [key]: val });
+  }
+
+  async function handleEstimateRent() {
+    if (!data.addressLine1?.trim() || !data.city?.trim() || !data.state?.trim() || !data.zipCode?.trim()) {
+      setEstimateError("Enter address in Step 1 first");
+      return;
+    }
+    setEstimateError(null);
+    setEstimateLoading(true);
+    try {
+      const params = new URLSearchParams({
+        addressLine1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+      });
+      if (data.addressLine2?.trim()) params.set("addressLine2", data.addressLine2);
+      if (data.propertyType) params.set("propertyType", data.propertyType);
+      if (data.propertyType === "multi_family" && data.units) params.set("units", data.units);
+      const res = await fetch(`/api/estimates/rent?${params.toString()}`);
+      const json = (await res.json()) as { rent?: number; error?: string };
+      if (json.rent != null && Number.isFinite(json.rent)) {
+        update("currentMonthlyRent", String(Math.round(json.rent)));
+      } else {
+        setEstimateError(json.error ?? "Estimate unavailable for this address");
+      }
+    } catch {
+      setEstimateError("Estimate unavailable for this address");
+    } finally {
+      setEstimateLoading(false);
+    }
   }
 
   return (
@@ -350,13 +384,28 @@ function StepIncomeExpenses({
           <label htmlFor="currentMonthlyRent" className={labelClass}>
             Monthly rent *
           </label>
-          <CurrencyInput
-            id="currentMonthlyRent"
-            value={data.currentMonthlyRent}
-            onChange={(v) => update("currentMonthlyRent", v)}
-            required
-            className={inputClass}
-          />
+          <div className="flex gap-2">
+            <div className="min-w-0 flex-1">
+              <CurrencyInput
+                id="currentMonthlyRent"
+                value={data.currentMonthlyRent}
+                onChange={(v) => update("currentMonthlyRent", v)}
+                required
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleEstimateRent}
+              disabled={estimateLoading}
+              className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+            >
+              {estimateLoading ? "Estimating…" : "Estimate rent"}
+            </button>
+          </div>
+          {estimateError && (
+            <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+          )}
           {errors.currentMonthlyRent && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyRent}</p>
           )}
@@ -695,6 +744,14 @@ export function AddPropertyWizard() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const stepContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const first = stepContainerRef.current?.querySelector<HTMLElement>(
+      'input:not([type="hidden"]), select, textarea, button'
+    );
+    first?.focus();
+  }, [step]);
 
   function goNext() {
     const stepErrors =
@@ -791,8 +848,14 @@ export function AddPropertyWizard() {
   const notesValue = data.notes;
   const setNotes = (notes: string) => setData((d) => ({ ...d, notes }));
 
+  function handleFormSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (step < 5) goNext();
+    else handleSubmit();
+  }
+
   return (
-    <div className="rounded-lg border border-border bg-card p-6">
+    <form onSubmit={handleFormSubmit} className="rounded-lg border border-border bg-card p-6">
       {/* Progress indicator */}
       <div className="mb-6">
         <p className="text-sm font-medium text-muted">
@@ -825,22 +888,23 @@ export function AddPropertyWizard() {
       )}
 
       {/* Step content */}
-      {step === 1 && (
-        <StepAddressBasics data={data} onChange={setData} errors={errors} />
-      )}
-      {step === 2 && (
-        <StepPurchase data={data} onChange={setData} errors={errors} />
-      )}
-      {step === 3 && (
-        <StepIncomeExpenses data={data} onChange={setData} errors={errors} />
-      )}
-      {step === 4 && (
-        <StepMortgage data={data} onChange={setData} errors={errors} />
-      )}
-      {step === 5 && (
-        <>
-          <StepReview data={data} onEditStep={handleEditStep} />
-          <div className="mt-6">
+      <div ref={stepContainerRef} key={step}>
+        {step === 1 && (
+          <StepAddressBasics data={data} onChange={setData} errors={errors} />
+        )}
+        {step === 2 && (
+          <StepPurchase data={data} onChange={setData} errors={errors} />
+        )}
+        {step === 3 && (
+          <StepIncomeExpenses data={data} onChange={setData} errors={errors} />
+        )}
+        {step === 4 && (
+          <StepMortgage data={data} onChange={setData} errors={errors} />
+        )}
+        {step === 5 && (
+          <>
+            <StepReview data={data} onEditStep={handleEditStep} />
+            <div className="mt-6">
             <label htmlFor="wizard-notes" className={labelClass}>
               Notes (optional)
             </label>
@@ -853,7 +917,8 @@ export function AddPropertyWizard() {
             />
           </div>
         </>
-      )}
+        )}
+      </div>
 
       {/* Navigation */}
       <div className="mt-8 flex items-center justify-between gap-4">
@@ -878,16 +943,14 @@ export function AddPropertyWizard() {
         <div>
           {step < 5 ? (
             <button
-              type="button"
-              onClick={goNext}
+              type="submit"
               className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
               Next
             </button>
           ) : (
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={submitting}
               className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
             >
@@ -896,6 +959,6 @@ export function AddPropertyWizard() {
           )}
         </div>
       </div>
-    </div>
+    </form>
   );
 }

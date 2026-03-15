@@ -7,6 +7,7 @@
 | [setup.md](setup.md) | Local setup and deployment notes |
 | [manual-steps.md](manual-steps.md) | Manual steps to do yourself (Vercel, Clerk, Stripe, etc.) |
 | [current-phase.md](current-phase.md) | **Current phase** and what’s done / next |
+| [architecture-and-build-practices.md](architecture-and-build-practices.md) | Architecture principles, security, anti-spaghetti, value-add roadmap |
 | [pm-agent-workflow.md](pm-agent-workflow.md) | PM agent: keep builder moving through phases and gate risk |
 | [pm-review-checklist.md](pm-review-checklist.md) | PM review checklist (use every phase approval) |
 | [security-notes.md](security-notes.md) | Security notes (recorded as we go) |

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
 
@@ -50,8 +50,11 @@ type PropertyFormProps = {
 
 export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [estimateLoading, setEstimateLoading] = useState(false);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
   const [propertyType, setPropertyType] = useState(property?.propertyType ?? "single_family");
   const [purchasePrice, setPurchasePrice] = useState(property?.purchasePrice ?? "");
   const [currentEstimatedValue, setCurrentEstimatedValue] = useState(property?.currentEstimatedValue ?? "");
@@ -80,6 +83,48 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         notes: property.notes ?? "",
       }
     : defaultValues;
+
+  async function handleEstimateRent() {
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const addressLine1 = (fd.get("addressLine1") as string)?.trim();
+    const city = (fd.get("city") as string)?.trim();
+    const state = (fd.get("state") as string)?.trim();
+    const zipCode = (fd.get("zipCode") as string)?.trim();
+    if (!addressLine1 || !city || !state || !zipCode) {
+      setEstimateError("Enter address first");
+      return;
+    }
+    setEstimateError(null);
+    setEstimateLoading(true);
+    try {
+      const params = new URLSearchParams({
+        addressLine1,
+        city,
+        state,
+        zipCode,
+      });
+      const addressLine2 = (fd.get("addressLine2") as string)?.trim();
+      if (addressLine2) params.set("addressLine2", addressLine2);
+      params.set("propertyType", propertyType);
+      if (propertyType === "multi_family") {
+        const units = fd.get("units");
+        if (units) params.set("units", String(units));
+      }
+      const res = await fetch(`/api/estimates/rent?${params.toString()}`);
+      const json = (await res.json()) as { rent?: number; error?: string };
+      if (json.rent != null && Number.isFinite(json.rent)) {
+        setCurrentMonthlyRent(String(Math.round(json.rent)));
+      } else {
+        setEstimateError(json.error ?? "Estimate unavailable for this address");
+      }
+    } catch {
+      setEstimateError("Estimate unavailable for this address");
+    } finally {
+      setEstimateLoading(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -141,6 +186,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
 
   return (
     <form
+      ref={formRef}
       onSubmit={handleSubmit}
       className={`space-y-6 rounded-lg border border-border bg-card p-6 ${className}`}
     >
@@ -368,13 +414,28 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             <label htmlFor="currentMonthlyRent" className={labelClass}>
               Monthly rent *
             </label>
-            <CurrencyInput
-              id="currentMonthlyRent"
-              value={currentMonthlyRent}
-              onChange={setCurrentMonthlyRent}
-              required
-              className={inputClass}
-            />
+            <div className="flex gap-2">
+              <div className="min-w-0 flex-1">
+                <CurrencyInput
+                  id="currentMonthlyRent"
+                  value={currentMonthlyRent}
+                  onChange={setCurrentMonthlyRent}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleEstimateRent}
+                disabled={estimateLoading}
+                className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+              >
+                {estimateLoading ? "Estimating…" : "Estimate rent"}
+              </button>
+            </div>
+            {estimateError && (
+              <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+            )}
           </div>
           <div>
             <label htmlFor="currentMonthlyExpenses" className={labelClass}>

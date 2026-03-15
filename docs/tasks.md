@@ -154,6 +154,43 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
   - [x] User signed out and redirected; landing shows appropriate message for permanent vs deactivate.
   - [x] Run `npm run check` when done.
 
+- [x] **Rent estimate integration (RentCast):** Add rent estimate capability so users can get market-based rent suggestions when adding or editing properties. Follow `docs/architecture-and-build-practices.md` integration pattern.
+
+  **Architecture:**
+  - Create `lib/integrations/rentcast.ts` — adapter that accepts address, city, state, zipCode, propertyType, units; calls RentCast API; handles errors, rate limits, timeouts; returns typed result `{ rent: number }` or error.
+  - Create `GET /api/estimates/rent` — auth via `getAppUser()`, validate query params with Zod (addressLine1, city, state, zipCode required; addressLine2, propertyType, units optional), call RentCast adapter, return estimate or error. Never expose API key to client.
+  - Env: `RENTCAST_API_KEY` — add to `.env.example` and `docs/manual-steps.md`.
+
+  **UI — Add Property wizard (Step 3, Income & expenses):**
+  - Add "Estimate rent" button/link next to Monthly rent field.
+  - On click: call API with address from Step 1 (addressLine1, city, state, zipCode) and propertyType/units from Step 1.
+  - Loading state while fetching.
+  - On success: populate rent field with estimate; optionally show "Estimate: $X" or similar.
+  - On error: show "Estimate unavailable for this address" or similar; user can still enter manually.
+  - Estimate is optional; user can always enter rent manually.
+
+  **UI — Edit property form:**
+  - Same "Estimate rent" control next to Monthly rent field.
+  - Use existing property address.
+
+  **Acceptance criteria:**
+  - [x] `lib/integrations/rentcast.ts` exists; fetches rent estimate; handles errors gracefully.
+  - [x] `GET /api/estimates/rent` exists; auth + Zod validation; returns `{ rent: number }` or `{ error: string }`.
+  - [x] Add Property wizard Step 3 has "Estimate rent" that populates rent field.
+  - [x] Edit property form has "Estimate rent" that populates rent field.
+  - [x] API key in env; documented in `.env.example` and `docs/manual-steps.md`.
+  - [x] Graceful failure: API error or address not found shows clear message; manual entry still works.
+  - [x] Run `npm run check` when done.
+
+- [x] **Add Property wizard: tabbing and Enter-key UX:** Make the add-property wizard behave industry-standard for keyboard users. (1) **Tab order:** Ensure logical tab order through all inputs in each step (no skips, no reverse order). (2) **Enter key:** When user presses Enter in any input field, advance to the next step (same as clicking Next). On the last step, Enter submits the form. Do not submit on Enter in the middle of a step (e.g. Enter in ZIP should go to next step, not submit). (3) **Focus:** After advancing, focus the first input of the next step so user can continue typing without clicking. (4) **Scope:** Apply to add-property-wizard.tsx; reuse pattern for property-form.tsx if applicable. Follow WCAG 2.1 keyboard interaction guidelines.
+
+  **Acceptance criteria:**
+  - [x] Tab moves through fields in logical order within each step
+  - [x] Enter in any input advances to next step (or submits on final step)
+  - [x] Focus moves to first input of next step after advancing
+  - [x] No accidental form submission when Enter is pressed mid-step
+  - [x] Run `npm run check` when done
+
 ---
 
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*
