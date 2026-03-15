@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PLAN_PROPERTY_LIMITS } from "@/lib/plans";
+import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
 
 type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
@@ -10,26 +10,30 @@ type BillingCycle = "monthly" | "yearly";
 const PLANS: {
   tier: PlanTier;
   name: string;
-  limit: number;
+  propertyLimit: number;
+  dealLimit: number;
   description: string;
 }[] = [
   {
     tier: "free",
     name: "Free",
-    limit: PLAN_PROPERTY_LIMITS.free,
-    description: "Get started with one property.",
+    propertyLimit: PLAN_PROPERTY_LIMITS.free,
+    dealLimit: PLAN_DEAL_LIMITS.free,
+    description: "1 property · 5 saved deals",
   },
   {
     tier: "investor",
     name: "Investor",
-    limit: PLAN_PROPERTY_LIMITS.investor,
-    description: "Track up to 5 properties.",
+    propertyLimit: PLAN_PROPERTY_LIMITS.investor,
+    dealLimit: PLAN_DEAL_LIMITS.investor,
+    description: "5 properties · 20 saved deals",
   },
   {
     tier: "pro",
     name: "Pro",
-    limit: PLAN_PROPERTY_LIMITS.pro,
-    description: "Track up to 20 properties.",
+    propertyLimit: PLAN_PROPERTY_LIMITS.pro,
+    dealLimit: PLAN_DEAL_LIMITS.pro,
+    description: "20 properties · 50 saved deals",
   },
 ];
 
@@ -135,12 +139,6 @@ export function PricingCards({
           >
             <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
             <p className="mt-2 text-base text-muted">{plan.description}</p>
-            <p className="mt-2 font-medium text-foreground">
-              {plan.limit} {plan.limit === 1 ? "property" : "properties"}
-            </p>
-            {plan.tier === "free" && (
-              <p className="mt-2 text-lg font-semibold text-foreground">Default</p>
-            )}
             {plan.tier === "investor" && (
               <p className="mt-2 text-lg font-semibold text-foreground">
                 {billingCycle === "monthly"

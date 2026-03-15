@@ -39,6 +39,7 @@ export default async function DashboardPage() {
       totalMortgageBalance,
       totalMonthlyPayment,
       ownershipPercent: p.ownershipPercent ?? 100,
+      vacancyPercent: p.vacancyPercent ?? 5,
     };
   });
 
@@ -89,6 +90,13 @@ export default async function DashboardPage() {
           >
             Add your first property
           </Link>
+          <p className="mt-4 text-sm text-muted">
+            Have a spreadsheet?{" "}
+            <Link href="/settings#export" className="font-medium text-foreground hover:underline">
+              Import from CSV
+            </Link>{" "}
+            in Settings.
+          </p>
         </div>
       </div>
     );

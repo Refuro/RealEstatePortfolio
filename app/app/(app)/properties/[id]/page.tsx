@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
+import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { PropertyActions } from "../property-actions";
 import { MortgageSection } from "../mortgage-section";
 import { PropertyMetricsSection } from "../property-metrics-section";
+import { ScenarioSection } from "./scenario-section";
 import { AmortizationChart } from "@/components/charts/amortization-chart";
 
 export default async function PropertyDetailPage({
@@ -46,6 +48,7 @@ export default async function PropertyDetailPage({
       totalMortgageBalance,
       totalMonthlyPayment,
       ownershipPercent,
+      vacancyPercent: property.vacancyPercent ?? 5,
     },
     displayMode
   );
@@ -73,9 +76,17 @@ export default async function PropertyDetailPage({
 
       <div className="mt-8 grid gap-6 sm:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-6">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
-            Property details
-          </h2>
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Property details
+            </h2>
+            <p className="text-xs text-muted">
+              Last updated {formatTimeAgo(property.updatedAt)}
+              {isDataStale(property.updatedAt instanceof Date ? property.updatedAt : new Date(property.updatedAt)) && (
+                <span className="ml-1">· Consider updating</span>
+              )}
+            </p>
+          </div>
           <dl className="space-y-3">
             <div>
               <dt className="text-base font-medium text-muted">Property type</dt>
@@ -147,6 +158,14 @@ export default async function PropertyDetailPage({
                 </dd>
               </div>
             )}
+            {property.vacancyPercent != null && property.vacancyPercent !== 5 && (
+              <div>
+                <dt className="text-base font-medium text-muted">Vacancy</dt>
+                <dd className="text-base font-medium text-foreground">
+                  {property.vacancyPercent}%
+                </dd>
+              </div>
+            )}
             {property.cashInvested != null && (
               <div>
                 <dt className="text-base font-medium text-muted">Cash invested</dt>
@@ -190,7 +209,22 @@ export default async function PropertyDetailPage({
 
       <PropertyMetricsSection metrics={metrics} />
 
-      <section className="mt-8">
+      <ScenarioSection
+        monthlyRent={totalRent}
+        monthlyExpenses={Number(property.currentMonthlyExpenses)}
+        estimatedValue={Number(property.currentEstimatedValue)}
+        cashInvested={property.cashInvested != null ? Number(property.cashInvested) : null}
+        totalMortgageBalance={totalMortgageBalance}
+        totalMonthlyPayment={totalMonthlyPayment}
+        ownershipPercent={ownershipPercent}
+        vacancyPercent={property.vacancyPercent ?? 5}
+        displayMode={displayMode}
+      />
+
+      <section className="mt-10 rounded-lg border border-border bg-card p-6">
+        <p className="mb-4 text-sm text-muted">
+          Original mortgage schedule. Not affected by scenario changes above.
+        </p>
         <AmortizationChart propertyId={property.id} />
       </section>
     </div>

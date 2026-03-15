@@ -20,8 +20,14 @@ function formatCurrency(n: number): string {
   }).format(n);
 }
 
-export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
-  const [showMore, setShowMore] = useState(false);
+export function PropertyMetricsSection({
+  metrics,
+  defaultExpanded,
+}: {
+  metrics: Metrics;
+  defaultExpanded?: boolean;
+}) {
+  const [showMore, setShowMore] = useState(defaultExpanded ?? false);
   const hasAdvanced =
     metrics.capRate != null || metrics.ltv != null || metrics.cashOnCashReturn != null;
 

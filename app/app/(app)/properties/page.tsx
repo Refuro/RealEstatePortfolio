@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
+import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -90,6 +91,7 @@ export default async function PropertiesPage() {
         totalMortgageBalance,
         totalMonthlyPayment,
         ownershipPercent: p.ownershipPercent ?? 100,
+        vacancyPercent: p.vacancyPercent ?? 5,
       };
     }
   );
@@ -168,6 +170,7 @@ export default async function PropertiesPage() {
                   totalMortgageBalance,
                   totalMonthlyPayment,
                   ownershipPercent: p.ownershipPercent ?? 100,
+                  vacancyPercent: p.vacancyPercent ?? 5,
                 },
                 displayMode
               );
@@ -190,6 +193,12 @@ export default async function PropertiesPage() {
                       {p.addressLine1}
                       {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
                     </div>
+                    <p className="mt-1 text-xs text-muted">
+                      Updated {formatTimeAgo(p.updatedAt)}
+                      {isDataStale(p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)) && (
+                        <span className="ml-1">· Consider updating</span>
+                      )}
+                    </p>
                     <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
                       <div>
                         <dt className="font-medium text-muted">Value</dt>

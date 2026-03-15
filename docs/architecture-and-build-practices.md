@@ -122,14 +122,27 @@ Post-MVP features, in suggested order:
 
 | Priority | Feature | Rationale |
 |----------|---------|-----------|
-| 1 | **Rent estimate integration** (RentCast or similar) | Reduces manual entry; increases perceived value |
-| 2 | **Property value estimate** (Zillow API or similar) | Same; keeps data fresh |
-| 3 | **Rent gap email notifications** | Periodically compare each user's stored rent to freshly fetched rent estimates (RentCast). If the difference exceeds a configurable threshold (e.g. 10–15%), send an email: "Your rent at [address] may be below market. Current: $X. Market estimate: $Y." Drives retention, brings users back, and surfaces value of the rent estimate integration. |
-| 4 | **Refinance / payoff insights** | Differentiator; "When to refinance" or "Payoff timeline" |
-| 5 | **Report section** (PDF/print portfolio summary) | Professional output; share with partners/lenders |
-| 6 | **Referral system** (if realtor validation positive) | Growth lever |
+| 1 | ~~**Rent estimate integration**~~ (RentCast) | ✅ Done |
+| 2 | **Vacancy assumption** | Add vacancy % field (e.g. 5% default). Adjusts cash flow and NOI for more realistic projections. Low effort, high impact. |
+| 3 | **Scenario modeling** | "What if rent +10%?" or "What if rates 8%?" — sliders/inputs that recalculate cash flow, cap rate, cash-on-cash. Uses existing metrics; strong differentiator. |
+| 4 | **Data staleness nudges** | "Last updated X months ago" on property cards/dashboard. Drives engagement with value and rent estimates. |
+| 5 | **Property value estimate** (Zillow API or similar) | Keeps data fresh; reduces manual updates |
+| 6 | **Rent gap email notifications** | Periodically compare stored rent to RentCast. If gap exceeds threshold (e.g. 10–15%), email user. Drives retention. |
+| 7 | **CSV import** | Import properties from spreadsheet. Onboarding lever for users with existing data. |
+| 8 | **Deal analyzer / scratchpad** | "Analyze a deal" without adding to portfolio. Enter address, rent, price, expenses, mortgage → instant metrics. Acquisition evaluation; can drive sign-ups. |
+| 9 | **Benchmarking** | "Your rent is X% above/below market" (RentCast). "Your cap rate vs market" if API supports. Differentiator. |
+| 10 | **Refinance / payoff insights** | "When to refinance" or "Payoff timeline" |
+| 11 | **Simulation page** | Full modeling page: adjust all inputs (rent, value, expenses, mortgage), add hypothetical property to portfolio, see impact on totals. Dense but powerful. Extends scenario concept. |
+| 12 | **Report section** (PDF/print portfolio summary) | Professional output; share with partners/lenders |
+| 13 | **Referral system** (if realtor validation positive) | Growth lever |
 
-Defer until validated: referral incentives, advanced analytics, mobile app.
+Defer until validated: referral incentives, advanced analytics, mobile app, Plaid (bank integration — see §5.1).
+
+### 5.1 Plaid (Bank Integration) — Deferred
+
+**Use case:** Connect bank accounts to pull *actual* transaction data — rent deposits, mortgage payments, expenses. Would show *actual* cash flow vs *projected* (e.g. "You projected $1,500/mo but actual averaged $1,200 over 6 months"). High value for investors who want reality-check on their numbers.
+
+**Why deferred:** Large lift — security/compliance (Plaid handles auth but you store/process financial data), transaction categorization (rent vs mortgage vs maintenance), bank connection UX, and scope creep into bookkeeping. Better suited after core analytics and estimates are proven.
 
 ---
 

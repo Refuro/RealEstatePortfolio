@@ -54,6 +54,7 @@ export default async function EditPropertyPage({
             ? (property.unitRents as number[]).map((n) => String(n))
             : undefined,
           currentMonthlyExpenses: property.currentMonthlyExpenses.toString(),
+          vacancyPercent: property.vacancyPercent ?? 5,
           cashInvested: property.cashInvested?.toString(),
           bedrooms: property.bedrooms ?? undefined,
           bathrooms: property.bathrooms?.toString(),
