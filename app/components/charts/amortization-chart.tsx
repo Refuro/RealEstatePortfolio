@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatCurrency } from "@/lib/format-currency";
 import {
   LineChart,
   Line,
@@ -74,14 +75,7 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
               tick={{ fontSize: 11 }}
             />
             <Tooltip
-              formatter={(value: number) =>
-                new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(value)
-              }
+              formatter={(value: number) => formatCurrency(value)}
               labelFormatter={(_, payload) =>
                 payload?.[0]?.payload?.date
                   ? formatDate(payload[0].payload.date)

@@ -3,21 +3,13 @@
 import { EquityChart, type EquityDatum } from "@/components/charts/equity-chart";
 import { DebtVsValueChart, type DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
 import { CashFlowChart, type CashFlowDatum } from "@/components/charts/cash-flow-chart";
+import { formatCurrency } from "@/lib/format-currency";
 
 export type DashboardChartData = {
   equity: EquityDatum[];
   debtVsValue: DebtValueDatum[];
   cashFlow: CashFlowDatum[];
 };
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export function DashboardCharts({
   data,

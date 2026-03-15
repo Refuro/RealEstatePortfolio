@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { useDraft, hasAnyWizardData } from "../draft-context";
 import { CurrencyInput } from "@/components/currency-input";
+import { formatCurrency } from "@/lib/format-currency";
 import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
@@ -766,8 +767,8 @@ function StepReview({
     .filter(Boolean)
     .join(", ");
 
-  const formatCurrency = (val: string) =>
-    val ? `$${Number(val).toLocaleString()}` : "—";
+  const formatCurrencyVal = (val: string) =>
+    val ? formatCurrency(Number(val)) : "—";
   const formatDate = (val: string) => (val ? val : "—");
 
   return (
@@ -824,7 +825,7 @@ function StepReview({
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
             <dt className="text-muted">Purchase price</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(data.purchasePrice)}</dd>
+            <dd className="font-medium text-foreground">{formatCurrencyVal(data.purchasePrice)}</dd>
           </div>
           <div>
             <dt className="text-muted">Purchase date</dt>
@@ -832,12 +833,12 @@ function StepReview({
           </div>
           <div>
             <dt className="text-muted">Current value</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(data.currentEstimatedValue)}</dd>
+            <dd className="font-medium text-foreground">{formatCurrencyVal(data.currentEstimatedValue)}</dd>
           </div>
           {data.cashInvested && (
             <div>
               <dt className="text-muted">Cash invested</dt>
-              <dd className="font-medium text-foreground">{formatCurrency(data.cashInvested)}</dd>
+              <dd className="font-medium text-foreground">{formatCurrencyVal(data.cashInvested)}</dd>
             </div>
           )}
           {data.ownershipPercent && Number(data.ownershipPercent) !== 100 && (
@@ -872,14 +873,14 @@ function StepReview({
                 ? (() => {
                     const rents = data.unitRents.slice(0, Number(data.units) || 1);
                     const total = rents.reduce((s, r) => s + (Number(r) || 0), 0);
-                    return `${rents.map((r, i) => `Unit ${i + 1}: ${formatCurrency(r)}`).join(", ")} (Total: ${formatCurrency(String(total))})`;
+                    return `${rents.map((r, i) => `Unit ${i + 1}: ${formatCurrency(Number(r))}`).join(", ")} (Total: ${formatCurrency(total)})`;
                   })()
-                : formatCurrency(data.currentMonthlyRent)}
+                : formatCurrencyVal(data.currentMonthlyRent)}
             </dd>
           </div>
           <div>
             <dt className="text-muted">Monthly expenses</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(data.currentMonthlyExpenses)}</dd>
+            <dd className="font-medium text-foreground">{formatCurrencyVal(data.currentMonthlyExpenses)}</dd>
           </div>
           {data.vacancyPercent && Number(data.vacancyPercent) !== 5 && (
             <div>
@@ -909,7 +910,7 @@ function StepReview({
               <div>
                 <dt className="text-muted">Balance</dt>
                 <dd className="font-medium text-foreground">
-                  {formatCurrency(data.mortgage.currentBalance)}
+                  {formatCurrencyVal(data.mortgage.currentBalance)}
                 </dd>
               </div>
               <div>
@@ -927,7 +928,7 @@ function StepReview({
               <div>
                 <dt className="text-muted">Monthly payment</dt>
                 <dd className="font-medium text-foreground">
-                  {formatCurrency(data.mortgage.monthlyPayment)}
+                  {formatCurrencyVal(data.mortgage.monthlyPayment)}
                 </dd>
               </div>
             </dl>

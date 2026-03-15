@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/format-currency";
 import {
   BarChart,
   Bar,
@@ -46,14 +47,7 @@ export function EquityChart({ data }: { data: EquityDatum[] }) {
             <XAxis type="number" tickFormatter={(v) => `$${v / 1000}k`} />
             <YAxis type="category" dataKey="name" width={100} tick={{ fontSize: 12 }} />
             <Tooltip
-              formatter={(value: number) =>
-                new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(value)
-              }
+              formatter={(value: number) => formatCurrency(value)}
               contentStyle={{ fontSize: 12 }}
             />
             <Bar dataKey="equity" radius={[0, 4, 4, 0]} maxBarSize={32}>

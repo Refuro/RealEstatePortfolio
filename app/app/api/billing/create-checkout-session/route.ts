@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStripe, getPriceIdForPlan, type BillingCycle } from "@/lib/stripe-config";
 
 export async function POST(request: NextRequest) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

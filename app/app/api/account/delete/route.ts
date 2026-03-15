@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStripe } from "@/lib/stripe-config";
+import { deleteAccountSchema } from "@/lib/validations/account";
 
 export async function POST(request: NextRequest) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { password?: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
@@ -20,13 +21,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const password = body.password;
-  if (!password || typeof password !== "string") {
-    return NextResponse.json(
-      { error: "Password is required" },
-      { status: 400 }
-    );
+  const parsed = deleteAccountSchema.safeParse(body);
+  if (!parsed.success) {
+    const msg = parsed.error.issues[0]?.message ?? "Invalid request";
+    return NextResponse.json({ error: msg }, { status: 400 });
   }
+  const { password } = parsed.data;
 
   try {
     const client = await clerkClient();

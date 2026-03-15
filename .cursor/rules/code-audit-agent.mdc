@@ -1,0 +1,38 @@
+---
+description: Code audit command — run a codebase audit and report to docs/code_audits
+alwaysApply: false
+---
+
+# Code Audit Command
+
+When the user says **"run code audit"**, **"code audit"**, or **"do a code audit"**:
+
+## What to do
+
+1. **Launch a subagent** (generalPurpose or explore) with a prompt that:
+   - Instructs the agent to follow `docs/code-audit-process.md` in full
+   - Tells the agent to audit the codebase under `app/` (lib, components, API routes, pages)
+   - Requires the agent to output the report to `docs/code_audits/YYYY-MM-DD-code-audit.md` (use today's date in ISO format)
+   - States: **Audit only. Do not make code changes.** The user reviews the report and creates tasks from findings as needed.
+
+2. **Single agent** — Use one subagent for the full audit, not multiple.
+
+3. **After the agent completes** — Summarize for the user: report location, top findings. The user will review `docs/code_audits/` and create tasks in `docs/tasks.md` for any items they want addressed.
+
+## Example prompt for subagent
+
+```
+Perform a code audit following docs/code-audit-process.md.
+
+1. Read docs/code-audit-process.md, docs/design-spec.md, docs/architecture-and-build-practices.md, and docs/security-notes.md.
+2. Systematically audit the codebase under app/ (lib, components, API routes, pages) across all dimensions in the process: design compliance, architecture compliance, efficiency, technical debt/corners, security, product mantra.
+3. Write the report to docs/code_audits/YYYY-MM-DD-code-audit.md (use today's date).
+4. Do NOT make any code changes. Audit only. Document findings with file paths where helpful.
+
+Return a brief summary of top findings when done.
+```
+
+## References
+
+- **Process:** `docs/code-audit-process.md`
+- **Reports folder:** `docs/code_audits/`

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
 import { US_STATES } from "@/lib/us-states";
@@ -27,7 +27,7 @@ const rentEstimateQuerySchema = z.object({
 });
 
 export async function GET(req: NextRequest) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

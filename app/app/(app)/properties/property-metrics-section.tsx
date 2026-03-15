@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { formatCurrency } from "@/lib/format-currency";
 
 type Metrics = {
   monthlyCashFlow: number;
@@ -10,15 +11,6 @@ type Metrics = {
   ltv: number | null;
   cashOnCashReturn: number | null;
 };
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export function PropertyMetricsSection({
   metrics,
