@@ -1,0 +1,61 @@
+import { NextResponse } from "next/server";
+import { getAppUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { getStripe } from "@/lib/stripe-config";
+
+/**
+ * Re-sync subscription state from Stripe.
+ * Called on app load when user has stripeCustomerId and tier !== free.
+ * If Stripe shows no active subscription (canceled, unpaid, etc.), downgrade user to free.
+ */
+export async function GET() {
+  const user = await getAppUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const tier = (user.subscriptionTier ?? "free").toLowerCase();
+  if (!user.stripeCustomerId || tier === "free") {
+    return NextResponse.json({ synced: false, tier: user.subscriptionTier });
+  }
+
+  try {
+    const stripe = getStripe();
+    const subscriptions = await stripe.subscriptions.list({
+      customer: user.stripeCustomerId,
+      limit: 1,
+      status: "all",
+      expand: ["data.status"],
+    });
+
+    const sub = subscriptions.data[0];
+    const status = sub?.status;
+
+    // Active or trialing = OK, keep current tier
+    if (status === "active" || status === "trialing") {
+      return NextResponse.json({ synced: false, tier: user.subscriptionTier });
+    }
+
+    // No subscription, or canceled/unpaid/past_due (for too long) = downgrade to free
+    if (!sub || ["canceled", "unpaid", "incomplete_expired"].includes(status ?? "")) {
+      await prisma.$transaction([
+        prisma.subscription.updateMany({
+          where: { userId: user.id },
+          data: { status: "canceled", planName: null, currentPeriodEnd: null, cancelAtPeriodEnd: null },
+        }),
+        prisma.user.update({
+          where: { id: user.id },
+          data: { subscriptionTier: "free" },
+        }),
+      ]);
+      return NextResponse.json({ synced: true, tier: "free" });
+    }
+
+    // past_due: don't downgrade here — webhook or user action handles it
+    // Keep current tier; past_due banner will show
+    return NextResponse.json({ synced: false, tier: user.subscriptionTier });
+  } catch (err) {
+    console.error("Billing sync error:", err);
+    return NextResponse.json({ synced: false, tier: user.subscriptionTier });
+  }
+}

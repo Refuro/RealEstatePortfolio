@@ -4,6 +4,8 @@
 
 **Status:** Active — builder and PM must follow these practices.
 
+**Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
+
 ---
 
 ## 1. Current Architecture Summary
@@ -135,6 +137,7 @@ Post-MVP features, in suggested order:
 | 11 | **Simulation page** | Full modeling page: adjust all inputs (rent, value, expenses, mortgage), add hypothetical property to portfolio, see impact on totals. Dense but powerful. Extends scenario concept. |
 | 12 | **Report section** (PDF/print portfolio summary) | Professional output; share with partners/lenders |
 | 13 | **Referral system** (if realtor validation positive) | Growth lever |
+| 14 | **Admin membership override** | Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill. |
 
 Defer until validated: referral incentives, advanced analytics, mobile app, Plaid (bank integration — see §5.1).
 
