@@ -8,6 +8,10 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ## Current tasks (open)
 
+*None. Code audit tasks (2025-03-15) completed.*
+
+## Code audit tasks (completed 2025-03-15)
+
 | # | Task | Focus |
 |---|------|-------|
 | 1 | Permanent delete server-side confirmText | Security |

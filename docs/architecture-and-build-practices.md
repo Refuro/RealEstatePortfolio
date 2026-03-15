@@ -125,13 +125,13 @@ Post-MVP features, in suggested order:
 | Priority | Feature | Rationale |
 |----------|---------|-----------|
 | 1 | ~~**Rent estimate integration**~~ (RentCast) | ✅ Done |
-| 2 | **Vacancy assumption** | Add vacancy % field (e.g. 5% default). Adjusts cash flow and NOI for more realistic projections. Low effort, high impact. |
-| 3 | **Scenario modeling** | "What if rent +10%?" or "What if rates 8%?" — sliders/inputs that recalculate cash flow, cap rate, cash-on-cash. Uses existing metrics; strong differentiator. |
-| 4 | **Data staleness nudges** | "Last updated X months ago" on property cards/dashboard. Drives engagement with value and rent estimates. |
-| 5 | **Property value estimate** (Zillow API or similar) | Keeps data fresh; reduces manual updates |
-| 6 | **Rent gap email notifications** | Periodically compare stored rent to RentCast. If gap exceeds threshold (e.g. 10–15%), email user. Drives retention. |
-| 7 | **CSV import** | Import properties from spreadsheet. Onboarding lever for users with existing data. |
-| 8 | **Deal analyzer / scratchpad** | "Analyze a deal" without adding to portfolio. Enter address, rent, price, expenses, mortgage → instant metrics. Acquisition evaluation; can drive sign-ups. |
+| 2 | ~~**Vacancy assumption**~~ | ✅ Done — vacancy % in schema, forms, metrics, import/export. |
+| 3 | ~~**Scenario modeling**~~ | ✅ Done — ScenarioSection on property detail with rent/value/mortgage sliders. |
+| 4 | ~~**Data staleness nudges**~~ | ✅ Done — formatTimeAgo, isDataStale (6mo threshold) on properties list and detail. |
+| 5 | ~~**Property value estimate**~~ (RentCast AVM) | ✅ Done — Estimate value in add-property wizard and property form. |
+| 6 | **Rent gap email notifications** | *Deferred — cost scales with users; revisit when user base justifies.* Periodically compare stored rent to RentCast. If gap exceeds threshold (e.g. 10–15%), email user. Drives retention. |
+| 7 | ~~**CSV import**~~ | ✅ Done — Import from CSV in Settings; template, validation, selection when over limit. |
+| 8 | ~~**Deal analyzer / scratchpad**~~ | ✅ Done — Analyze page; save deals; add to portfolio. |
 | 9 | **Benchmarking** | "Your rent is X% above/below market" (RentCast). "Your cap rate vs market" if API supports. Differentiator. |
 | 10 | **Refinance / payoff insights** | "When to refinance" or "Payoff timeline" |
 | 11 | **Simulation page** | Full modeling page: adjust all inputs (rent, value, expenses, mortgage), add hypothetical property to portfolio, see impact on totals. Dense but powerful. Extends scenario concept. |
@@ -167,6 +167,7 @@ Before marking task complete:
 - [ ] New API routes follow auth + validation pattern
 - [ ] Update `docs/security-notes.md` if new security behavior
 - [ ] Update `docs/manual-steps.md` if new env vars or manual steps
+- [ ] **If this task implements a value-add roadmap feature** (§5 above): mark it done in this doc’s roadmap table.
 
 ### 6.3 Task Scoping (PM/User)
 When adding tasks to `docs/tasks.md`:
