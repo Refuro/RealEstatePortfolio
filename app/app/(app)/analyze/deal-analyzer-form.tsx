@@ -164,7 +164,7 @@ export function DealAnalyzerForm({
       if (!res.ok) {
         setSaveError(
           data.code === "PLAN_LIMIT_REACHED"
-            ? "Deal limit reached. Upgrade to save more."
+            ? "Deal limit reached. Upgrade your plan or remove a deal to save more."
             : data.error ?? "Failed to save deal"
         );
         setSaveStatus("error");
@@ -433,7 +433,17 @@ export function DealAnalyzerForm({
           </div>
         </div>
         {saveError && (
-          <p className="text-sm text-negative">{saveError}</p>
+          <p className="text-sm text-negative">
+            {saveError}
+            {(saveError.includes("Upgrade") || saveError.includes("limit")) && (
+              <>
+                {" "}
+                <Link href="/pricing" className="font-medium text-accent hover:underline">
+                  Upgrade plan
+                </Link>
+              </>
+            )}
+          </p>
         )}
         <PropertyMetricsSection
           defaultExpanded

@@ -261,7 +261,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       if (!res.ok) {
         setError(
           data.code === "PLAN_LIMIT_REACHED"
-            ? "Property limit reached. Upgrade your plan to add more properties."
+            ? "Property limit reached. Upgrade your plan or remove a property to add more."
             : data.error || "Something went wrong"
         );
         setSubmitting(false);
@@ -288,12 +288,12 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       {error && (
         <div className="rounded-md px-4 py-2 text-sm text-negative">
           {error}
-          {error.includes("Upgrade") && (
+          {(error.includes("Upgrade") || error.includes("limit")) && (
             <Link
               href="/pricing"
               className="ml-1 font-medium underline hover:no-underline"
             >
-              View plans
+              Upgrade plan
             </Link>
           )}
         </div>

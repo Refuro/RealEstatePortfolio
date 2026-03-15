@@ -3,6 +3,7 @@ import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { getDealLimit } from "@/lib/plans";
+import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DealsList } from "./deals-list";
 
@@ -10,13 +11,15 @@ export default async function DealsPage() {
   const user = await getAppUser();
   if (!user) redirect("/sign-in");
 
-  const deals = await prisma.savedDeal.findMany({
+  const allDeals = await prisma.savedDeal.findMany({
     where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
   });
 
   const dealLimit = getDealLimit(user.subscriptionTier);
-  const atLimit = deals.length >= dealLimit;
+  const deals = takeFirstNByUpdatedAt(allDeals, dealLimit);
+  const totalCount = allDeals.length;
+  const overLimit = totalCount > dealLimit;
+  const atLimit = totalCount >= dealLimit;
 
   const dealsWithMetrics = deals.map((d) => {
     const value = d.currentEstimatedValue
@@ -71,6 +74,15 @@ export default async function DealsPage() {
           </>
         )}
       </p>
+
+      {overLimit && (
+        <p className="mt-1 text-sm text-muted">
+          Showing {deals.length} of {totalCount} saved deals (plan limit).{" "}
+          <Link href="/pricing" className="font-medium text-foreground hover:underline">
+            Upgrade to see all
+          </Link>
+        </p>
+      )}
 
       {dealsWithMetrics.length === 0 ? (
         <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center">

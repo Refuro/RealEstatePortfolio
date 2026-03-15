@@ -6,6 +6,7 @@ import Link from "next/link";
 type ImportResult = {
   imported: number;
   errors: { row: number; message: string }[];
+  code?: string;
 };
 
 type ImportRow = {
@@ -72,6 +73,7 @@ export function ImportCsvSection() {
       });
       const json = (await res.json()) as ImportResult & {
         error?: string;
+        code?: string;
         requiresSelection?: boolean;
         validRows?: ImportRow[];
         slotsRemaining?: number;
@@ -79,9 +81,12 @@ export function ImportCsvSection() {
         validationErrors?: { row: number; message: string }[];
       };
       if (!res.ok) {
+        const errors =
+          json.errors?.length ? json.errors : [{ row: 0, message: json.error ?? "Import failed" }];
         setResult({
           imported: 0,
-          errors: [{ row: 0, message: json.error ?? "Import failed" }],
+          errors,
+          code: json.code,
         });
         setPendingFile(null);
       } else if (json.requiresSelection && json.validRows && json.slotsRemaining != null) {
@@ -257,6 +262,15 @@ export function ImportCsvSection() {
                 <li key={i}>
                   {err.row > 0 ? `Row ${err.row}: ` : ""}
                   {err.message}
+                  {(result.code === "PLAN_LIMIT_REACHED" ||
+                    err.message.toLowerCase().includes("limit")) && (
+                    <>
+                      {" "}
+                      <Link href="/pricing" className="font-medium text-accent hover:underline">
+                        Upgrade plan
+                      </Link>
+                    </>
+                  )}
                 </li>
               ))}
             </ul>

@@ -93,6 +93,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
         status,
         planName,
         currentPeriodEnd,
+        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
       },
       create: {
         userId: appUserId,
@@ -100,6 +101,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
         status,
         planName,
         currentPeriodEnd,
+        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
       },
     }),
     prisma.user.update({
@@ -118,7 +120,7 @@ async function setSubscriptionCanceled(stripeSubscriptionId: string) {
   await prisma.$transaction([
     prisma.subscription.update({
       where: { id: sub.id },
-      data: { status: "canceled", planName: null, currentPeriodEnd: null },
+      data: { status: "canceled", planName: null, currentPeriodEnd: null, cancelAtPeriodEnd: null },
     }),
     prisma.user.update({
       where: { id: sub.userId },

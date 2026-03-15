@@ -2,13 +2,15 @@
 
 Tasks you want the **builder** agent to do. The PM adds tasks here when you ask; you can say "have the builder complete the tasks in tasks.md" and the PM will run the builder with these tasks.
 
+**Product mantra (all tasks):** Thoughtful, robust, modern, frictionless. See `docs/architecture-and-build-practices.md`.
+
 ---
 
 ## Current tasks (open)
 
 | # | Task | Focus |
 |---|------|-------|
-| *(none)* | | |
+| — | *None* | Cancel-at-period-end completed ✓ |
 
 ---
 
@@ -669,6 +671,72 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
   - [x] Live metrics as user edits.
   - [x] /deals/[id] redirects to /analyze?deal=id (or remove; no orphan).
   - [x] Add to portfolio still works from Analyze when editing deal.
+  - [x] Run `npm run check` when done.
+
+---
+
+## Membership lapse handling
+
+**Context:** When a user's subscription lapses (e.g. 5 properties, downgrades to Free with limit 1), we currently: (1) set tier to "free" via webhook; (2) block adding new properties/deals; (3) allow full access to all data. Gaps: no over-limit banner, no re-sync if webhook fails, no past_due handling, no restriction of stats when over limit. Follow docs/architecture-and-build-practices.md product mantra: thoughtful, robust, modern, frictionless.
+
+- [x] **Membership lapse: full hardening (5 items):** Implement over-limit restriction, banner, re-sync, past_due banner, and clear block messaging.
+
+  **1. Restrict stats when over limit (Option A)**
+  - When `propertyCount > limit` or `dealCount > dealLimit`: only the first N properties/deals count for stats and display. N = limit.
+  - **"First N" rule:** Order by `updatedAt` descending; take the N most recently updated. So user sees their most active properties.
+  - **Dashboard:** Portfolio metrics (total value, equity, cash flow, etc.) computed from only the first N properties. Charts (equity, cash flow, debt vs value) use only those N.
+  - **Properties list:** Show only the first N properties. Add note: "Showing X of Y properties (plan limit). Upgrade to see all."
+  - **Property detail:** Allow viewing any property (user owns it). Excess properties don't contribute to portfolio totals. No 403 — user can still open any property page.
+  - **Deals list:** Show only the first N deals when over deal limit. Same note pattern.
+  - **Export:** Restrict to first N properties (consistent with view). Deals export: restrict to first N if we have deal export; else N/A.
+  - **Helper:** Add `getActivePropertyIds(userId, limit)` or similar — returns IDs of first N properties by updatedAt desc. Use everywhere we need "active" set. Same for deals.
+  - **Implementation:** Create `lib/plans.ts` helper `getActiveIds<T>(items: T[], limit: number, orderBy: (a:T,b:T)=>number): T[]` or integrate into data-fetching. Dashboard, properties page, portfolio summary API, export API must all filter to active set when over limit.
+
+  **2. Over-limit banner**
+  - When over limit (properties or deals): show banner above main content in app layout.
+  - Copy: "You're over your plan limit (X properties, Y saved deals). Portfolio shows your first N. Upgrade to see all, or remove some to stay within your plan."
+  - Link to /pricing. Dismissible per session (sessionStorage key `over-limit-banner-dismissed`).
+  - App layout (server) passes propertyCount, dealCount, limits, overLimit boolean to client `OverLimitBanner`. Banner only renders when overLimit.
+
+  **3. Subscription re-sync on app load**
+  - Add `GET /api/billing/sync`: auth via getAppUser(). If user has stripeCustomerId and subscriptionTier !== "free", fetch Stripe subscriptions for customer (limit 1, status in ['active','trialing']). If none found or status canceled/past_due for too long, update User.subscriptionTier to "free" and Subscription status. Return { synced: boolean, tier: string }.
+  - Call from app layout client (e.g. AppLayoutClient) on mount. Use sessionStorage key `billing-sync-last` with timestamp; skip if last sync < 5 minutes.
+  - Only call when user has stripeCustomerId and tier !== free. No-op for free users.
+
+  **4. past_due banner**
+  - When subscription.status === "past_due": show banner "Payment issue — update your payment method to avoid losing access." Link to billing portal.
+  - Fetch subscription status from GET /api/billing/status (or include in layout). Show banner above or below over-limit banner. Dismissible per session.
+  - past_due takes precedence in messaging (payment issue is more urgent than over-limit).
+
+  **5. Clear error messaging when blocked**
+  - POST /api/properties when blocked: return message "Property limit reached. Upgrade your plan or remove a property to add more." Include link or code so UI can show CTA to /pricing.
+  - POST /api/deals when blocked: "Deal limit reached. Upgrade to save more deals."
+  - Import when at limit: ensure message includes upgrade CTA.
+  - UI: when these errors surface, show upgrade link/button prominently.
+
+  **Acceptance criteria:**
+  - [x] When over property limit: dashboard, properties list, portfolio summary API, export use only first N properties (by updatedAt desc). Same for deals when over deal limit.
+  - [x] Over-limit banner shown when over limit; dismissible; links to /pricing; copy explains "Portfolio shows your first N."
+  - [x] GET /api/billing/sync verifies Stripe; downgrades if invalid. Called on app load, max once per 5 min.
+  - [x] past_due banner when subscription.status === "past_due"; links to billing portal; dismissible.
+  - [x] All block responses (property, deal, import) include clear message + upgrade CTA.
+  - [x] Property detail remains viewable for any property (no 403 on excess).
+  - [x] Run `npm run check` when done.
+
+- [x] **Cancel-at-period-end confirmation in Plan & billing:** When a user cancels their subscription (cancel at period end), show clear confirmation in Settings → Plan & billing so they know it worked. No new webhook events needed — we already receive `customer.subscription.updated` when they cancel; extend sync to store `cancel_at_period_end`.
+
+  **Implementation:**
+  1. Add `cancelAtPeriodEnd Boolean?` to Subscription model. Migration.
+  2. Webhook `syncSubscriptionToDb`: read `sub.cancel_at_period_end` from Stripe, store in DB. `setSubscriptionCanceled` already clears subscription; ensure cancelAtPeriodEnd is null when canceled.
+  3. Settings Plan & billing: when `subscription?.currentPeriodEnd` exists:
+     - If `cancelAtPeriodEnd`: "Plan ends [date]. You have access until then."
+     - Else: "Next billing: [date]" or "Renews [date]"
+
+  **Acceptance criteria:**
+  - [x] Schema has cancelAtPeriodEnd; migration applied.
+  - [x] Webhook syncs cancel_at_period_end from Stripe subscription.updated.
+  - [x] Plan & billing shows "Plan ends [date]. You have access until then." when canceled.
+  - [x] Plan & billing shows "Next billing: [date]" when renewing.
   - [x] Run `npm run check` when done.
 
 ---
