@@ -31,3 +31,15 @@ export async function getAppUser() {
 
   return user;
 }
+
+/**
+ * Check if the user is an admin based on ADMIN_EMAILS env (comma-separated).
+ * Returns false if ADMIN_EMAILS is empty or unset.
+ */
+export function isAdmin(user: { email: string }): boolean {
+  const emails = process.env.ADMIN_EMAILS;
+  if (!emails?.trim()) return false;
+  const allowed = emails.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+  const userEmail = user.email?.toLowerCase() ?? "";
+  return allowed.includes(userEmail);
+}

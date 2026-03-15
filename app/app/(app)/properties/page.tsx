@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -49,10 +50,7 @@ function PropertyTypeBadge({
   propertyType: string;
   units: number;
 }) {
-  const label =
-    propertyType === "multi_family"
-      ? `Multi family (${units} units)`
-      : "Single family";
+  const label = formatPropertyType(propertyType, units);
   return (
     <span className="inline-flex items-center rounded-md border border-border bg-subtle px-2 py-0.5 text-xs font-medium text-muted">
       {label}
@@ -85,7 +83,7 @@ export default async function PropertiesPage() {
       );
       return {
         id: p.id,
-        monthlyRent: Number(p.currentMonthlyRent),
+        monthlyRent: getPropertyTotalRent(p),
         monthlyExpenses: Number(p.currentMonthlyExpenses),
         estimatedValue: Number(p.currentEstimatedValue),
         cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
@@ -96,7 +94,8 @@ export default async function PropertiesPage() {
     }
   );
 
-  const portfolioMetrics = computePortfolioMetrics(portfolioInput);
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const portfolioMetrics = computePortfolioMetrics(portfolioInput, displayMode);
 
   return (
     <div>
@@ -160,15 +159,18 @@ export default async function PropertiesPage() {
                   sum + Number(m.monthlyPayment),
                 0
               );
-              const metrics = computePropertyMetrics({
-                monthlyRent: Number(p.currentMonthlyRent),
-                monthlyExpenses: Number(p.currentMonthlyExpenses),
-                estimatedValue: Number(p.currentEstimatedValue),
-                cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-                totalMortgageBalance,
-                totalMonthlyPayment,
-                ownershipPercent: p.ownershipPercent ?? 100,
-              });
+              const metrics = computePropertyMetrics(
+                {
+                  monthlyRent: getPropertyTotalRent(p),
+                  monthlyExpenses: Number(p.currentMonthlyExpenses),
+                  estimatedValue: Number(p.currentEstimatedValue),
+                  cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+                  totalMortgageBalance,
+                  totalMonthlyPayment,
+                  ownershipPercent: p.ownershipPercent ?? 100,
+                },
+                displayMode
+              );
               return (
                 <li key={p.id}>
                   <Link

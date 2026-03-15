@@ -26,6 +26,10 @@ export async function GET() {
       purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
       currentEstimatedValue: p.currentEstimatedValue.toString(),
       currentMonthlyRent: p.currentMonthlyRent.toString(),
+      unitRents: p.unitRents as number[] | null,
+      bedrooms: p.bedrooms,
+      bathrooms: p.bathrooms?.toString() ?? null,
+      unitMix: p.unitMix,
       currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
       cashInvested: p.cashInvested?.toString() ?? null,
       ownershipPercent: p.ownershipPercent ?? 100,
@@ -116,6 +120,22 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const unitRents = data.unitRents;
+  const totalRent: number =
+    Array.isArray(unitRents) && unitRents.length > 0
+      ? unitRents.reduce((a: number, b: number) => a + b, 0)
+      : Number(data.currentMonthlyRent) || 0;
+  let unitRentsJson: number[] | null;
+  if (Array.isArray(unitRents) && unitRents.length > 0) {
+    unitRentsJson = unitRents;
+  } else if (["single_family", "condo", "townhouse", "manufactured"].includes(data.propertyType)) {
+    unitRentsJson = [Number(totalRent)];
+  } else {
+    const n = data.units || 1;
+    const perUnit = Math.round((Number(totalRent) / n) * 100) / 100;
+    unitRentsJson = Array(n).fill(perUnit);
+  }
+
   const property = await prisma.property.create({
     data: {
       userId: user.id,
@@ -131,7 +151,11 @@ export async function POST(request: NextRequest) {
       purchasePrice: data.purchasePrice,
       purchaseDate: data.purchaseDate,
       currentEstimatedValue: data.currentEstimatedValue,
-      currentMonthlyRent: data.currentMonthlyRent,
+      currentMonthlyRent: totalRent,
+      unitRents: unitRentsJson,
+      bedrooms: data.bedrooms ?? null,
+      bathrooms: data.bathrooms ?? null,
+      unitMix: data.unitMix ?? null,
       currentMonthlyExpenses: data.currentMonthlyExpenses,
       cashInvested: data.cashInvested ?? null,
       notes: data.notes ?? null,
@@ -153,6 +177,10 @@ export async function POST(request: NextRequest) {
     purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
     currentEstimatedValue: property.currentEstimatedValue.toString(),
     currentMonthlyRent: property.currentMonthlyRent.toString(),
+    unitRents: property.unitRents as number[] | null,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms?.toString() ?? null,
+    unitMix: property.unitMix,
     currentMonthlyExpenses: property.currentMonthlyExpenses.toString(),
     cashInvested: property.cashInvested?.toString() ?? null,
   });

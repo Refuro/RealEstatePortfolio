@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
+import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
 
 type PropertyFormData = {
   nickname?: string;
@@ -20,8 +21,12 @@ type PropertyFormData = {
   purchaseDate: string;
   currentEstimatedValue: string;
   currentMonthlyRent: string;
+  unitRents?: string[];
   currentMonthlyExpenses: string;
   cashInvested?: string;
+  bedrooms?: number;
+  bathrooms?: string;
+  unitMix?: string;
   notes?: string;
 };
 
@@ -56,13 +61,34 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [propertyType, setPropertyType] = useState(property?.propertyType ?? "single_family");
+  const [units, setUnits] = useState(property?.units ?? 1);
   const [purchasePrice, setPurchasePrice] = useState(property?.purchasePrice ?? "");
   const [currentEstimatedValue, setCurrentEstimatedValue] = useState(property?.currentEstimatedValue ?? "");
   const [cashInvested, setCashInvested] = useState(property?.cashInvested ?? "");
   const [currentMonthlyRent, setCurrentMonthlyRent] = useState(property?.currentMonthlyRent ?? "");
+  const hasExistingUnitRents = Array.isArray(property?.unitRents) && (property.unitRents as string[]).length > 0;
+  const [unitRents, setUnitRents] = useState<string[]>(() => {
+    const ur = property?.unitRents;
+    if (Array.isArray(ur) && ur.length > 0) return ur.map(String);
+    const n = property?.units ?? 1;
+    return Array(n).fill("");
+  });
   const [currentMonthlyExpenses, setCurrentMonthlyExpenses] = useState(property?.currentMonthlyExpenses ?? "");
+  const [bedrooms, setBedrooms] = useState(property?.bedrooms != null ? String(property.bedrooms) : "");
+  const [bathrooms, setBathrooms] = useState(property?.bathrooms ?? "");
 
   const isEdit = !!property;
+  const unitCount =
+    propertyType === "multi_family" || propertyType === "apartment"
+      ? Math.min(999, Math.max(1, units))
+      : 1;
+  const isMulti =
+    (propertyType === "multi_family" || propertyType === "apartment") && unitCount > 1;
+  const unitRentsDisplay = (() => {
+    const arr = [...unitRents];
+    while (arr.length < unitCount) arr.push("");
+    return arr.length > unitCount ? arr.slice(0, unitCount) : arr;
+  })();
   const values = property
     ? {
         nickname: property.nickname ?? "",
@@ -108,14 +134,18 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const addressLine2 = (fd.get("addressLine2") as string)?.trim();
       if (addressLine2) params.set("addressLine2", addressLine2);
       params.set("propertyType", propertyType);
-      if (propertyType === "multi_family") {
-        const units = fd.get("units");
-        if (units) params.set("units", String(units));
-      }
+      if (isMulti) params.set("units", String(unitCount));
+      if (bedrooms.trim()) params.set("bedrooms", bedrooms);
+      if (bathrooms.trim()) params.set("bathrooms", bathrooms);
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
-        setCurrentMonthlyRent(String(Math.round(json.rent)));
+        if (isMulti && hasExistingUnitRents) {
+          const perUnit = Math.round(json.rent / unitCount);
+          setUnitRents(Array(unitCount).fill(String(perUnit)));
+        } else {
+          setCurrentMonthlyRent(String(Math.round(json.rent)));
+        }
       } else {
         setEstimateError(json.error ?? "Estimate unavailable for this address");
       }
@@ -134,7 +164,20 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
-    const payload = {
+    const u =
+      ["single_family", "condo", "townhouse", "manufactured"].includes(propertyType)
+        ? 1
+        : Number(formData.get("units")) || unitCount;
+    const unitRentsArr =
+      isMulti && unitRentsDisplay.some((s) => (Number(s) || 0) > 0)
+        ? unitRentsDisplay.slice(0, u).map((s) => Number(s) || 0)
+        : null;
+    const totalRent =
+      unitRentsArr != null
+        ? unitRentsArr.reduce((a, b) => a + b, 0)
+        : Number(currentMonthlyRent) || 0;
+
+    const payload: Record<string, unknown> = {
       nickname: (formData.get("nickname") as string) || undefined,
       addressLine1: formData.get("addressLine1") as string,
       addressLine2: (formData.get("addressLine2") as string) || undefined,
@@ -142,16 +185,25 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       state: formData.get("state") as string,
       zipCode: formData.get("zipCode") as string,
       propertyType: formData.get("propertyType") as string,
-      units: propertyType === "single_family" ? 1 : Number(formData.get("units")),
+      units: u,
       ownershipPercent: Math.min(100, Math.max(1, Number(formData.get("ownershipPercent")) || 100)),
       purchasePrice,
       purchaseDate: formData.get("purchaseDate") as string,
       currentEstimatedValue,
-      currentMonthlyRent,
+      currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses,
       cashInvested: cashInvested.trim() || undefined,
       notes: (formData.get("notes") as string) || undefined,
     };
+    if (unitRentsArr != null) payload.unitRents = unitRentsArr;
+    if (bedrooms.trim()) {
+      const b = Number(bedrooms);
+      if (!Number.isNaN(b) && b >= 1 && b <= 10) payload.bedrooms = Math.round(b);
+    }
+    if (bathrooms.trim()) {
+      const b = Number(bathrooms);
+      if (!Number.isNaN(b) && b >= 0.5 && b <= 10) payload.bathrooms = b;
+    }
 
     try {
       const url = isEdit ? `/api/properties/${property.id}` : "/api/properties";
@@ -310,11 +362,14 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               onChange={(e) => setPropertyType(e.target.value)}
               className={inputClass}
             >
-              <option value="single_family">Single family</option>
-              <option value="multi_family">Multi family</option>
+              {Object.entries(PROPERTY_TYPE_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
             </select>
           </div>
-          {propertyType === "multi_family" && (
+          {(propertyType === "multi_family" || propertyType === "apartment") && (
             <div>
               <label htmlFor="units" className={labelClass}>
                 Units
@@ -326,15 +381,101 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 min={1}
                 max={999}
                 inputMode="numeric"
-                defaultValue={values.units}
+                value={units}
+                onChange={(e) => {
+                  const n = Math.min(999, Math.max(1, Number(e.target.value) || 1));
+                  setUnits(n);
+                  const prev = unitRents.length;
+                  if (prev < n) setUnitRents([...unitRents, ...Array(n - prev).fill("")]);
+                  else if (prev > n) setUnitRents(unitRents.slice(0, n));
+                }}
                 className={inputClass}
               />
             </div>
           )}
-          {propertyType === "single_family" && (
+          {["single_family", "condo", "townhouse", "manufactured"].includes(propertyType) && (
             <input type="hidden" name="units" value="1" />
           )}
         </div>
+
+        {["single_family", "condo", "townhouse", "manufactured"].includes(propertyType) && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="bedrooms" className={labelClass}>
+                Bedrooms (optional)
+              </label>
+              <input
+                id="bedrooms"
+                type="number"
+                min={1}
+                max={10}
+                inputMode="numeric"
+                placeholder="e.g. 3"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+            </div>
+            <div>
+              <label htmlFor="bathrooms" className={labelClass}>
+                Bathrooms (optional)
+              </label>
+              <input
+                id="bathrooms"
+                type="number"
+                min={0.5}
+                max={10}
+                step={0.5}
+                inputMode="decimal"
+                placeholder="e.g. 2.5"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value)}
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+            </div>
+          </div>
+        )}
+        {(propertyType === "multi_family" || propertyType === "apartment") && (
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label htmlFor="bedrooms" className={labelClass}>
+                Typical unit bedrooms (optional)
+              </label>
+              <input
+                id="bedrooms"
+                type="number"
+                min={1}
+                max={10}
+                inputMode="numeric"
+                placeholder="e.g. 2"
+                value={bedrooms}
+                onChange={(e) => setBedrooms(e.target.value)}
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+            </div>
+            <div>
+              <label htmlFor="bathrooms" className={labelClass}>
+                Typical unit bathrooms (optional)
+              </label>
+              <input
+                id="bathrooms"
+                type="number"
+                min={0.5}
+                max={10}
+                step={0.5}
+                inputMode="decimal"
+                placeholder="e.g. 1.5"
+                value={bathrooms}
+                onChange={(e) => setBathrooms(e.target.value)}
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+            </div>
+          </div>
+        )}
 
         <div>
           <label htmlFor="ownershipPercent" className={labelClass}>
@@ -410,33 +551,107 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label htmlFor="currentMonthlyRent" className={labelClass}>
-              Monthly rent *
-            </label>
-            <div className="flex gap-2">
-              <div className="min-w-0 flex-1">
-                <CurrencyInput
-                  id="currentMonthlyRent"
-                  value={currentMonthlyRent}
-                  onChange={setCurrentMonthlyRent}
-                  required
-                  className={inputClass}
-                />
+          {isMulti && hasExistingUnitRents ? (
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-end gap-2">
+                {unitRentsDisplay.map((_, i) => (
+                  <div key={i} className="min-w-[100px] flex-1">
+                    <label htmlFor={`unitRent-${i}`} className={labelClass}>
+                      Unit {i + 1} rent *
+                    </label>
+                    <CurrencyInput
+                      id={`unitRent-${i}`}
+                      value={unitRentsDisplay[i] ?? ""}
+                      onChange={(v) => {
+                        const next = [...unitRentsDisplay];
+                        next[i] = v;
+                        setUnitRents(next);
+                      }}
+                      required
+                      className={inputClass}
+                    />
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleEstimateRent}
+                  disabled={estimateLoading}
+                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                >
+                  {estimateLoading ? "Estimating…" : "Estimate rent"}
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={handleEstimateRent}
-                disabled={estimateLoading}
-                className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-              >
-                {estimateLoading ? "Estimating…" : "Estimate rent"}
-              </button>
+              <p className="text-sm text-muted">
+                Total: $
+                {unitRentsDisplay
+                  .reduce((s, r) => s + (Number(r) || 0), 0)
+                  .toLocaleString()}
+                /mo
+              </p>
+              {estimateError && (
+                <p className="text-sm text-muted">{estimateError}</p>
+              )}
             </div>
-            {estimateError && (
-              <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
-            )}
-          </div>
+          ) : isMulti ? (
+            <div>
+              <label htmlFor="currentMonthlyRent" className={labelClass}>
+                Total monthly rent *
+              </label>
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <CurrencyInput
+                    id="currentMonthlyRent"
+                    value={currentMonthlyRent}
+                    onChange={setCurrentMonthlyRent}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleEstimateRent}
+                  disabled={estimateLoading}
+                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                >
+                  {estimateLoading ? "Estimating…" : "Estimate rent"}
+                </button>
+              </div>
+              <p className="mt-0.5 text-xs text-muted">
+                Will be split evenly across {unitCount} units on save
+              </p>
+              {estimateError && (
+                <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+              )}
+            </div>
+          ) : (
+            <div>
+              <label htmlFor="currentMonthlyRent" className={labelClass}>
+                Monthly rent *
+              </label>
+              <div className="flex gap-2">
+                <div className="min-w-0 flex-1">
+                  <CurrencyInput
+                    id="currentMonthlyRent"
+                    value={currentMonthlyRent}
+                    onChange={setCurrentMonthlyRent}
+                    required
+                    className={inputClass}
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleEstimateRent}
+                  disabled={estimateLoading}
+                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                >
+                  {estimateLoading ? "Estimating…" : "Estimate rent"}
+                </button>
+              </div>
+              {estimateError && (
+                <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+              )}
+            </div>
+          )}
           <div>
             <label htmlFor="currentMonthlyExpenses" className={labelClass}>
               Monthly expenses *

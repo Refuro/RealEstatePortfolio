@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getAppUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
 import { US_STATES } from "@/lib/us-states";
 
@@ -17,14 +18,29 @@ const rentEstimateQuerySchema = z.object({
     )
     .transform((s) => s.toUpperCase()),
   zipCode: z.string().min(1, "ZIP is required").max(20),
-  propertyType: z.enum(["single_family", "multi_family"]).optional(),
+  propertyType: z
+    .enum(["single_family", "condo", "townhouse", "manufactured", "multi_family", "apartment"])
+    .optional(),
   units: z.coerce.number().int().min(1).max(999).optional(),
+  bedrooms: z.coerce.number().int().min(1).max(10).optional(),
+  bathrooms: z.coerce.number().min(0.5).max(10).optional(),
 });
 
 export async function GET(req: NextRequest) {
   const user = await getAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  const recentCallCount = await prisma.rentCastApiCall.count({
+    where: { userId: user.id, createdAt: { gte: oneHourAgo } },
+  });
+  if (recentCallCount >= 20) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const { searchParams } = new URL(req.url);
@@ -36,6 +52,8 @@ export async function GET(req: NextRequest) {
     zipCode: searchParams.get("zipCode") ?? "",
     propertyType: searchParams.get("propertyType") ?? undefined,
     units: searchParams.get("units") ?? undefined,
+    bedrooms: searchParams.get("bedrooms") ?? undefined,
+    bathrooms: searchParams.get("bathrooms") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -62,11 +80,19 @@ export async function GET(req: NextRequest) {
         zipCode: parsed.data.zipCode,
         propertyType: parsed.data.propertyType,
         units: parsed.data.units,
+        bedrooms: parsed.data.bedrooms,
+        bathrooms: parsed.data.bathrooms,
       },
       apiKey
     );
+    await prisma.rentCastApiCall.create({
+      data: { userId: user.id },
+    });
     return NextResponse.json({ rent: result.rent });
   } catch (err) {
+    await prisma.rentCastApiCall.create({
+      data: { userId: user.id },
+    }).catch(() => {});
     const message = err instanceof Error ? err.message : "Estimate unavailable";
     return NextResponse.json({ error: message }, { status: 200 });
   }

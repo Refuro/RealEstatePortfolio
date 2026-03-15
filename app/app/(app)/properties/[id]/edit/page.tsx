@@ -50,8 +50,14 @@ export default async function EditPropertyPage({
           purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
           currentEstimatedValue: property.currentEstimatedValue.toString(),
           currentMonthlyRent: property.currentMonthlyRent.toString(),
+          unitRents: Array.isArray(property.unitRents)
+            ? (property.unitRents as number[]).map((n) => String(n))
+            : undefined,
           currentMonthlyExpenses: property.currentMonthlyExpenses.toString(),
           cashInvested: property.cashInvested?.toString(),
+          bedrooms: property.bedrooms ?? undefined,
+          bathrooms: property.bathrooms?.toString(),
+          unitMix: property.unitMix ?? undefined,
           notes: property.notes ?? undefined,
         }}
       />

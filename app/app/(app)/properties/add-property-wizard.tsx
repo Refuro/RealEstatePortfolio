@@ -3,8 +3,10 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useDraft, hasAnyWizardData } from "../draft-context";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
+import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
 import {
   MortgageFormFields,
@@ -27,8 +29,11 @@ export type WizardData = {
   currentEstimatedValue: string;
   cashInvested: string;
   currentMonthlyRent: string;
+  unitRents: string[];
   currentMonthlyExpenses: string;
   notes: string;
+  bedrooms: string;
+  bathrooms: string;
   addMortgage: boolean | null;
   mortgage: MortgageFormData;
 };
@@ -48,8 +53,11 @@ const defaultWizardData: WizardData = {
   currentEstimatedValue: "",
   cashInvested: "",
   currentMonthlyRent: "",
+  unitRents: [],
   currentMonthlyExpenses: "",
   notes: "",
+  bedrooms: "",
+  bathrooms: "",
   addMortgage: null,
   mortgage: defaultMortgageFormData,
 };
@@ -192,19 +200,24 @@ function StepAddressBasics({
             value={data.propertyType}
             onChange={(e) => {
               const val = e.target.value;
+              const isSingleUnit = ["single_family", "condo", "townhouse", "manufactured"].includes(val);
               onChange({
                 ...data,
                 propertyType: val,
-                units: val === "single_family" ? "1" : data.units,
+                units: isSingleUnit ? "1" : data.units,
+                unitRents: isSingleUnit ? [] : data.unitRents,
               });
             }}
             className={inputClass}
           >
-            <option value="single_family">Single family</option>
-            <option value="multi_family">Multi family</option>
+            {Object.entries(PROPERTY_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
           </select>
         </div>
-        {data.propertyType === "multi_family" && (
+        {(data.propertyType === "multi_family" || data.propertyType === "apartment") && (
           <div>
             <label htmlFor="units" className={labelClass}>
               Units
@@ -216,7 +229,18 @@ function StepAddressBasics({
               max={999}
               inputMode="numeric"
               value={data.units}
-              onChange={(e) => update("units", e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                const n = Math.min(999, Math.max(1, Number(val) || 1));
+                const prevLen = data.unitRents.length;
+                const newRents =
+                  prevLen === n
+                    ? data.unitRents
+                    : prevLen < n
+                      ? [...data.unitRents, ...Array(n - prevLen).fill("")]
+                      : data.unitRents.slice(0, n);
+                onChange({ ...data, units: val, unitRents: newRents });
+              }}
               className={inputClass}
             />
             {errors.units && (
@@ -225,6 +249,92 @@ function StepAddressBasics({
           </div>
         )}
       </div>
+      {["single_family", "condo", "townhouse", "manufactured"].includes(data.propertyType) && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="bedrooms" className={labelClass}>
+              Bedrooms (optional)
+            </label>
+            <input
+              id="bedrooms"
+              type="number"
+              min={1}
+              max={10}
+              inputMode="numeric"
+              placeholder="e.g. 3"
+              value={data.bedrooms}
+              onChange={(e) => update("bedrooms", e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-0.5 text-xs text-muted">
+              Improves rent estimates
+            </p>
+          </div>
+          <div>
+            <label htmlFor="bathrooms" className={labelClass}>
+              Bathrooms (optional)
+            </label>
+            <input
+              id="bathrooms"
+              type="number"
+              min={0.5}
+              max={10}
+              step={0.5}
+              inputMode="decimal"
+              placeholder="e.g. 2.5"
+              value={data.bathrooms}
+              onChange={(e) => update("bathrooms", e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-0.5 text-xs text-muted">
+              Improves rent estimates
+            </p>
+          </div>
+        </div>
+      )}
+      {(data.propertyType === "multi_family" || data.propertyType === "apartment") && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div>
+            <label htmlFor="bedrooms" className={labelClass}>
+              Typical unit bedrooms (optional)
+            </label>
+            <input
+              id="bedrooms"
+              type="number"
+              min={1}
+              max={10}
+              inputMode="numeric"
+              placeholder="e.g. 2"
+              value={data.bedrooms}
+              onChange={(e) => update("bedrooms", e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-0.5 text-xs text-muted">
+              Improves rent estimates
+            </p>
+          </div>
+          <div>
+            <label htmlFor="bathrooms" className={labelClass}>
+              Typical unit bathrooms (optional)
+            </label>
+            <input
+              id="bathrooms"
+              type="number"
+              min={0.5}
+              max={10}
+              step={0.5}
+              inputMode="decimal"
+              placeholder="e.g. 1.5"
+              value={data.bathrooms}
+              onChange={(e) => update("bathrooms", e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-0.5 text-xs text-muted">
+              Improves rent estimates
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -342,9 +452,30 @@ function StepIncomeExpenses({
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
 
+  const isMulti =
+    (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
+    (Number(data.units) || 1) > 1;
+  const units = Math.min(999, Math.max(1, Number(data.units) || 1));
+  const unitRents = (() => {
+    const arr = [...data.unitRents];
+    while (arr.length < units) arr.push("");
+    return arr.length > units ? arr.slice(0, units) : arr;
+  })();
+
   function update<K extends keyof WizardData>(key: K, val: WizardData[K]) {
     onChange({ ...data, [key]: val });
   }
+
+  function setUnitRent(index: number, val: string) {
+    const next = [...unitRents];
+    next[index] = val;
+    onChange({ ...data, unitRents: next });
+  }
+
+  const totalRent = unitRents.reduce(
+    (sum, s) => sum + (Number(s) || 0),
+    0
+  );
 
   async function handleEstimateRent() {
     if (!data.addressLine1?.trim() || !data.city?.trim() || !data.state?.trim() || !data.zipCode?.trim()) {
@@ -362,11 +493,20 @@ function StepIncomeExpenses({
       });
       if (data.addressLine2?.trim()) params.set("addressLine2", data.addressLine2);
       if (data.propertyType) params.set("propertyType", data.propertyType);
-      if (data.propertyType === "multi_family" && data.units) params.set("units", data.units);
+      if ((data.propertyType === "multi_family" || data.propertyType === "apartment") && data.units)
+        params.set("units", data.units);
+      if (data.bedrooms?.trim()) params.set("bedrooms", data.bedrooms);
+      if (data.bathrooms?.trim()) params.set("bathrooms", data.bathrooms);
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
-        update("currentMonthlyRent", String(Math.round(json.rent)));
+        if (isMulti) {
+          const perUnit = Math.round(json.rent / units);
+          const rents = Array(units).fill(String(perUnit));
+          onChange({ ...data, unitRents: rents });
+        } else {
+          update("currentMonthlyRent", String(Math.round(json.rent)));
+        }
       } else {
         setEstimateError(json.error ?? "Estimate unavailable for this address");
       }
@@ -379,7 +519,45 @@ function StepIncomeExpenses({
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {isMulti ? (
+        <div className="space-y-3">
+          <div className="flex flex-wrap items-end gap-2">
+            {unitRents.map((_, i) => (
+              <div key={i} className="min-w-[120px] flex-1">
+                <label htmlFor={`unitRent-${i}`} className={labelClass}>
+                  Unit {i + 1} rent *
+                </label>
+                <CurrencyInput
+                  id={`unitRent-${i}`}
+                  value={unitRents[i] ?? ""}
+                  onChange={(v) => setUnitRent(i, v)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={handleEstimateRent}
+              disabled={estimateLoading}
+              className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+            >
+              {estimateLoading ? "Estimating…" : "Estimate rent"}
+            </button>
+          </div>
+          <p className="text-sm text-muted">
+            Total: ${totalRent.toLocaleString()}/mo
+          </p>
+          {estimateError && (
+            <p className="text-sm text-muted">{estimateError}</p>
+          )}
+          {(errors.unitRents || errors.currentMonthlyRent) && (
+            <p className="text-sm text-negative">
+              {errors.unitRents ?? errors.currentMonthlyRent}
+            </p>
+          )}
+        </div>
+      ) : (
         <div>
           <label htmlFor="currentMonthlyRent" className={labelClass}>
             Monthly rent *
@@ -410,21 +588,21 @@ function StepIncomeExpenses({
             <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyRent}</p>
           )}
         </div>
-        <div>
-          <label htmlFor="currentMonthlyExpenses" className={labelClass}>
-            Monthly expenses *
-          </label>
-          <CurrencyInput
-            id="currentMonthlyExpenses"
-            value={data.currentMonthlyExpenses}
-            onChange={(v) => update("currentMonthlyExpenses", v)}
-            required
-            className={inputClass}
-          />
-          {errors.currentMonthlyExpenses && (
-            <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyExpenses}</p>
-          )}
-        </div>
+      )}
+      <div>
+        <label htmlFor="currentMonthlyExpenses" className={labelClass}>
+          Monthly expenses *
+        </label>
+        <CurrencyInput
+          id="currentMonthlyExpenses"
+          value={data.currentMonthlyExpenses}
+          onChange={(v) => update("currentMonthlyExpenses", v)}
+          required
+          className={inputClass}
+        />
+        {errors.currentMonthlyExpenses && (
+          <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyExpenses}</p>
+        )}
       </div>
     </div>
   );
@@ -550,8 +728,10 @@ function StepReview({
           <div>
             <dt className="text-muted">Property type</dt>
             <dd className="font-medium text-foreground">
-              {data.propertyType === "single_family" ? "Single family" : "Multi family"}
-              {data.propertyType === "multi_family" && ` (${data.units} units)`}
+              {PROPERTY_TYPE_LABELS[data.propertyType] ?? data.propertyType}
+              {(data.propertyType === "multi_family" || data.propertyType === "apartment") &&
+                Number(data.units) > 1 &&
+                ` (${data.units} units)`}
             </dd>
           </div>
         </dl>
@@ -614,7 +794,17 @@ function StepReview({
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
             <dt className="text-muted">Monthly rent</dt>
-            <dd className="font-medium text-foreground">{formatCurrency(data.currentMonthlyRent)}</dd>
+            <dd className="font-medium text-foreground">
+              {(data.propertyType === "multi_family" || data.propertyType === "apartment") &&
+              (Number(data.units) || 1) > 1 &&
+              data.unitRents.length > 0
+                ? (() => {
+                    const rents = data.unitRents.slice(0, Number(data.units) || 1);
+                    const total = rents.reduce((s, r) => s + (Number(r) || 0), 0);
+                    return `${rents.map((r, i) => `Unit ${i + 1}: ${formatCurrency(r)}`).join(", ")} (Total: ${formatCurrency(String(total))})`;
+                  })()
+                : formatCurrency(data.currentMonthlyRent)}
+            </dd>
           </div>
           <div>
             <dt className="text-muted">Monthly expenses</dt>
@@ -682,7 +872,7 @@ function validateStep1(data: WizardData): Record<string, string> {
   if (!US_STATES.includes(data.state?.toUpperCase() as (typeof US_STATES)[number]))
     err.state = "Select a valid state";
   if (!data.zipCode?.trim()) err.zipCode = "ZIP is required";
-  if (data.propertyType === "multi_family") {
+  if (data.propertyType === "multi_family" || data.propertyType === "apartment") {
     const u = Number(data.units);
     if (Number.isNaN(u) || u < 1 || u > 999) err.units = "Enter valid units (1–999)";
   }
@@ -701,10 +891,22 @@ function validateStep2(data: WizardData): Record<string, string> {
 
 function validateStep3(data: WizardData): Record<string, string> {
   const err: Record<string, string> = {};
-  const rent = Number(data.currentMonthlyRent);
-  if (Number.isNaN(rent) || rent < 0) err.currentMonthlyRent = "Enter a valid monthly rent";
   const exp = Number(data.currentMonthlyExpenses);
   if (Number.isNaN(exp) || exp < 0) err.currentMonthlyExpenses = "Enter valid monthly expenses";
+  const isMultiUnit =
+    (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
+    (Number(data.units) || 1) > 1;
+  if (isMultiUnit) {
+    const units = Math.min(999, Math.max(1, Number(data.units) || 1));
+    const rents = data.unitRents ?? [];
+    const filled = rents.slice(0, units).map((s) => Number(s) || 0);
+    if (filled.length < units || filled.some((n) => n < 0)) {
+      err.unitRents = `Enter rent for each of ${units} units`;
+    }
+  } else {
+    const rent = Number(data.currentMonthlyRent);
+    if (Number.isNaN(rent) || rent < 0) err.currentMonthlyRent = "Enter a valid monthly rent";
+  }
   return err;
 }
 
@@ -737,14 +939,45 @@ function validateStep4(data: WizardData): Record<string, string> {
   return {};
 }
 
+function mergeWithDefaults(restored: Partial<WizardData>): WizardData {
+  const m = restored.mortgage as Partial<MortgageFormData> | undefined;
+  return {
+    ...defaultWizardData,
+    ...restored,
+    mortgage: m ? { ...defaultMortgageFormData, ...m } : defaultMortgageFormData,
+  };
+}
+
 export function AddPropertyWizard() {
   const router = useRouter();
+  const draft = useDraft();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(defaultWizardData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const stepContainerRef = useRef<HTMLDivElement>(null);
+  const hasRestoredRef = useRef(false);
+
+  useEffect(() => {
+    if (draft?.draftData && !hasRestoredRef.current) {
+      const id = setTimeout(() => {
+        setData(mergeWithDefaults(draft.draftData!.data as Partial<WizardData>));
+        setStep(5); // Go directly to review when continuing from draft
+        hasRestoredRef.current = true;
+      }, 0);
+      return () => clearTimeout(id);
+    }
+  }, [draft?.draftData, draft]);
+
+  useEffect(() => {
+    draft?.setHasDraft(hasAnyWizardData(data));
+  }, [data, draft]);
+
+  useEffect(() => {
+    draft?.registerWizardGetData(() => data);
+    return () => draft?.registerWizardGetData(null);
+  }, [draft, data]);
 
   useEffect(() => {
     const first = stepContainerRef.current?.querySelector<HTMLElement>(
@@ -792,7 +1025,22 @@ export function AddPropertyWizard() {
     setError(null);
     setSubmitting(true);
 
-    const payload = {
+    const isMultiUnit =
+      (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
+      (Number(data.units) || 1) > 1;
+    const units = isMultiUnit ? Number(data.units) : 1;
+    const unitRentsArr =
+      isMultiUnit && data.unitRents.length > 0
+        ? data.unitRents
+            .slice(0, units)
+            .map((s) => Number(s) || 0)
+        : null;
+    const totalRent =
+      unitRentsArr != null
+        ? unitRentsArr.reduce((a, b) => a + b, 0)
+        : Number(data.currentMonthlyRent) || 0;
+
+    const payload: Record<string, unknown> = {
       nickname: data.nickname.trim() || undefined,
       addressLine1: data.addressLine1,
       addressLine2: data.addressLine2.trim() || undefined,
@@ -800,16 +1048,21 @@ export function AddPropertyWizard() {
       state: data.state,
       zipCode: data.zipCode,
       propertyType: data.propertyType,
-      units: data.propertyType === "single_family" ? 1 : Number(data.units),
+      units,
       ownershipPercent: Math.min(100, Math.max(1, Number(data.ownershipPercent) || 100)),
       purchasePrice: data.purchasePrice,
       purchaseDate: data.purchaseDate,
       currentEstimatedValue: data.currentEstimatedValue,
-      currentMonthlyRent: data.currentMonthlyRent,
+      currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses: data.currentMonthlyExpenses,
       cashInvested: data.cashInvested.trim() ? data.cashInvested : undefined,
       notes: data.notes.trim() || undefined,
     };
+    if (unitRentsArr != null) payload.unitRents = unitRentsArr;
+    const bed = Number(data.bedrooms);
+    if (data.bedrooms?.trim() && !Number.isNaN(bed) && bed >= 1 && bed <= 10) payload.bedrooms = Math.round(bed);
+    const bath = Number(data.bathrooms);
+    if (data.bathrooms?.trim() && !Number.isNaN(bath) && bath >= 0.5 && bath <= 10) payload.bathrooms = bath;
 
     const body =
       data.addMortgage === true
@@ -836,6 +1089,7 @@ export function AddPropertyWizard() {
         setSubmitting(false);
         return;
       }
+      draft?.clearDraft();
       router.push(`/properties/${resData.id}`);
       router.refresh();
     } catch {
@@ -877,12 +1131,13 @@ export function AddPropertyWizard() {
         <div className="mb-4 rounded-md px-4 py-2 text-sm text-negative">
           {error}
           {error.includes("Upgrade") && (
-            <Link
-              href="/pricing"
+            <button
+              type="button"
+              onClick={() => draft?.navigateTo("/pricing")}
               className="ml-1 font-medium underline hover:no-underline"
             >
               View plans
-            </Link>
+            </button>
           )}
         </div>
       )}
@@ -930,6 +1185,14 @@ export function AddPropertyWizard() {
               className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
               Back
+            </button>
+          ) : draft?.hasDraft ? (
+            <button
+              type="button"
+              onClick={() => draft.navigateTo("/properties")}
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
+            >
+              Cancel
             </button>
           ) : (
             <Link

@@ -26,6 +26,10 @@ function serializeProperty(p: {
   purchaseDate: Date;
   currentEstimatedValue: { toString(): string };
   currentMonthlyRent: { toString(): string };
+  unitRents?: unknown;
+  bedrooms?: number | null;
+  bathrooms?: { toString(): string } | null;
+  unitMix?: string | null;
   currentMonthlyExpenses: { toString(): string };
   cashInvested: { toString(): string } | null;
   notes: string | null;
@@ -48,6 +52,10 @@ function serializeProperty(p: {
     purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
     currentEstimatedValue: p.currentEstimatedValue.toString(),
     currentMonthlyRent: p.currentMonthlyRent.toString(),
+    unitRents: (p.unitRents as number[] | null) ?? null,
+    bedrooms: p.bedrooms ?? null,
+    bathrooms: p.bathrooms?.toString() ?? null,
+    unitMix: p.unitMix ?? null,
     currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
     cashInvested: p.cashInvested?.toString() ?? null,
     ownershipPercent: p.ownershipPercent ?? 100,
@@ -112,9 +120,15 @@ export async function PATCH(
   }
 
   const data = parsed.data;
-  if (data.units !== undefined && data.propertyType === undefined && existing.propertyType === "single_family" && data.units !== 1) {
+  const singleUnitTypes = ["single_family", "condo", "townhouse", "manufactured"];
+  const effectiveType = data.propertyType ?? existing.propertyType;
+  if (
+    data.units !== undefined &&
+    singleUnitTypes.includes(effectiveType) &&
+    data.units !== 1
+  ) {
     return NextResponse.json(
-      { error: "Units must be 1 for single-family properties" },
+      { error: "Units must be 1 for this property type" },
       { status: 400 }
     );
   }
@@ -132,9 +146,30 @@ export async function PATCH(
   if (data.purchaseDate !== undefined) updatePayload.purchaseDate = data.purchaseDate;
   if (data.currentEstimatedValue !== undefined) updatePayload.currentEstimatedValue = data.currentEstimatedValue;
   if (data.currentMonthlyRent !== undefined) updatePayload.currentMonthlyRent = data.currentMonthlyRent;
+  if (data.unitRents !== undefined) {
+    const arr = data.unitRents;
+    if (Array.isArray(arr) && arr.length > 0) {
+      updatePayload.unitRents = arr;
+      updatePayload.currentMonthlyRent = arr.reduce((a: number, b: number) => a + b, 0);
+    }
+  }
+  if (data.bedrooms !== undefined) updatePayload.bedrooms = data.bedrooms;
+  if (data.bathrooms !== undefined) updatePayload.bathrooms = data.bathrooms;
+  if (data.unitMix !== undefined) updatePayload.unitMix = data.unitMix;
   if (data.currentMonthlyExpenses !== undefined) updatePayload.currentMonthlyExpenses = data.currentMonthlyExpenses;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
+
+  if (data.currentMonthlyRent !== undefined && !(data.unitRents !== undefined && Array.isArray(data.unitRents) && data.unitRents.length > 0)) {
+    const total = Number(data.currentMonthlyRent) || 0;
+    const units = Number(updatePayload.units ?? existing.units) || 1;
+    if (["single_family", "condo", "townhouse", "manufactured"].includes(existing.propertyType)) {
+      updatePayload.unitRents = [total];
+    } else {
+      const perUnit = Math.round((total / units) * 100) / 100;
+      updatePayload.unitRents = Array(units).fill(perUnit);
+    }
+  }
 
   const property = await prisma.property.update({
     where: { id },

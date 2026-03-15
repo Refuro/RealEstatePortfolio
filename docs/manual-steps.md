@@ -27,6 +27,20 @@ Use this as a planning guide. Pricing changes; check each provider’s site for 
 
 ---
 
+## Seed data (optional)
+
+Run `npm run db:seed` from `app/` to create 3 test accounts with distinct use cases:
+
+| Account | Email | Tier | Properties | Use case |
+|---------|-------|------|------------|----------|
+| **Solo Starter** | dev@example.com | Free | 1 single-family, no mortgage | New landlord testing the waters |
+| **Growth Investor** | investor@example.com | Investor | 3 properties: SFH + duplex (with mortgages), condo (50% ownership) | Active investor with mixed portfolio |
+| **Professional Portfolio** | pro@example.com | Pro | 5 properties: SFH, townhouse, 4-plex, condo (mix of mortgages) | Full portfolio manager |
+
+Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as them, create matching test users in Clerk Dashboard with these emails, then update the `clerkUserId` in the DB to match the real Clerk IDs. Or use **Prisma Studio** (`npm run db:studio`) to browse the data without signing in.
+
+---
+
 ## Auth (Clerk)
 
 - [ ] **Clerk:** Create application at [clerk.com](https://clerk.com). In Dashboard: get **Publishable key** and **Secret key**; add to `.env` as `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` and `CLERK_SECRET_KEY`.
@@ -55,6 +69,12 @@ Use this as a planning guide. Pricing changes; check each provider’s site for 
 ## Rent estimate (RentCast — optional)
 
 - [ ] **RentCast API key:** To enable "Estimate rent" when adding or editing properties, create an API key at [RentCast API Dashboard](https://app.rentcast.io/app/api). Add `RENTCAST_API_KEY` to `app/.env` (and Vercel env for production). Free tier includes 50 calls/month.
+
+---
+
+## Admin dashboard (optional)
+
+- [ ] **Admin emails:** To access `/admin`, set `ADMIN_EMAILS` in `app/.env` (and Vercel env for production). Use a comma-separated list of allowed emails, e.g. `ADMIN_EMAILS=you@example.com,other@example.com`. Do not commit real admin emails. If unset or empty, no one can access admin.
 
 ---
 

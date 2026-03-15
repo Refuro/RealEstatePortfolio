@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -31,32 +32,38 @@ export default async function DashboardPage() {
     return {
       id: p.id,
       name: p.nickname || p.addressLine1 || "Property",
-      monthlyRent: Number(p.currentMonthlyRent),
+      monthlyRent: getPropertyTotalRent(p),
       monthlyExpenses: Number(p.currentMonthlyExpenses),
       estimatedValue: Number(p.currentEstimatedValue),
       cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
       totalMortgageBalance,
       totalMonthlyPayment,
+      ownershipPercent: p.ownershipPercent ?? 100,
     };
   });
 
-  const metrics = computePortfolioMetrics(portfolioInput);
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const metrics = computePortfolioMetrics(portfolioInput, displayMode);
 
   type PortfolioInputItem = PortfolioPropertyInput & { name: string };
-  // Chart data from same metrics engine (Module I — data must match metrics engine)
+  const fullLiability = displayMode === "full_liability";
+  // Chart data from same metrics engine — use displayMode for consistency
   const chartData: DashboardChartData = {
     equity: portfolioInput.map((p: PortfolioInputItem) => {
-      const m = computePropertyMetrics(p);
+      const m = computePropertyMetrics(p, displayMode);
       return { name: p.name, equity: m.equity, propertyId: p.id };
     }),
-    debtVsValue: portfolioInput.map((p: PortfolioInputItem) => ({
-      name: p.name,
-      value: p.estimatedValue,
-      debt: p.totalMortgageBalance,
-      propertyId: p.id,
-    })),
+    debtVsValue: portfolioInput.map((p: PortfolioInputItem) => {
+      const scale = (p.ownershipPercent ?? 100) / 100;
+      return {
+        name: p.name,
+        value: p.estimatedValue * scale,
+        debt: fullLiability ? p.totalMortgageBalance : p.totalMortgageBalance * scale,
+        propertyId: p.id,
+      };
+    }),
     cashFlow: portfolioInput.map((p: PortfolioInputItem) => {
-      const m = computePropertyMetrics(p);
+      const m = computePropertyMetrics(p, displayMode);
       return {
         name: p.name,
         monthlyCashFlow: m.monthlyCashFlow,
@@ -131,6 +138,18 @@ export default async function DashboardPage() {
           <MetricCard
             label="Portfolio LTV"
             value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+            primary={false}
+          />
+        )}
+        <MetricCard
+          label="NOI (Net Operating Income)"
+          value={formatCurrency(metrics.totalNoi)}
+          primary={false}
+        />
+        {metrics.portfolioCashOnCashReturn != null && (
+          <MetricCard
+            label="Cash-on-cash return"
+            value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
             primary={false}
           />
         )}

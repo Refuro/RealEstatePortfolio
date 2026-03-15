@@ -3,6 +3,8 @@
  * Formulas from docs/engineering-spec.md §6.
  */
 
+export type OwnershipDisplayMode = "proportional" | "full_liability";
+
 export type PropertyMetricsInput = {
   monthlyRent: number;
   monthlyExpenses: number;
@@ -28,7 +30,10 @@ export type PropertyMetrics = {
   cashOnCashReturn: number | null;
 };
 
-export function computePropertyMetrics(input: PropertyMetricsInput): PropertyMetrics {
+export function computePropertyMetrics(
+  input: PropertyMetricsInput,
+  displayMode?: OwnershipDisplayMode | null
+): PropertyMetrics {
   const {
     monthlyRent,
     monthlyExpenses,
@@ -40,26 +45,39 @@ export function computePropertyMetrics(input: PropertyMetricsInput): PropertyMet
   } = input;
 
   const scale = ownershipPercent / 100;
+  const fullLiability = displayMode === "full_liability";
 
   const grossAnnualRent = monthlyRent * 12;
   const annualExpenses = monthlyExpenses * 12;
   const noi = grossAnnualRent - annualExpenses;
   const capRate = estimatedValue > 0 ? noi / estimatedValue : null;
-  const monthlyCashFlow = monthlyRent - monthlyExpenses - totalMonthlyPayment;
+
+  // full_liability: cash flow = (rent×scale − expenses×scale − full payment)
+  // proportional: cash flow = (rent − expenses − payment) × scale
+  const monthlyCashFlow = fullLiability
+    ? monthlyRent * scale - monthlyExpenses * scale - totalMonthlyPayment
+    : (monthlyRent - monthlyExpenses - totalMonthlyPayment) * scale;
+
   const annualCashFlow = monthlyCashFlow * 12;
-  const equity = estimatedValue - totalMortgageBalance;
+
+  // Equity stays scaled in both modes
+  const equity = (estimatedValue - totalMortgageBalance) * scale;
+
+  // LTV: debt in context of property stays as-is (full debt / full value)
   const ltv = estimatedValue > 0 ? totalMortgageBalance / estimatedValue : null;
+
+  const cashInvestedScaled = cashInvested != null && cashInvested > 0 ? cashInvested * scale : 0;
   const cashOnCashReturn =
-    cashInvested != null && cashInvested > 0 ? annualCashFlow / cashInvested : null;
+    cashInvestedScaled > 0 ? annualCashFlow / cashInvestedScaled : null;
 
   return {
     grossAnnualRent: grossAnnualRent * scale,
     annualExpenses: annualExpenses * scale,
     noi: noi * scale,
     capRate,
-    monthlyCashFlow: monthlyCashFlow * scale,
-    annualCashFlow: annualCashFlow * scale,
-    equity: equity * scale,
+    monthlyCashFlow,
+    annualCashFlow,
+    equity,
     ltv,
     cashOnCashReturn,
   };

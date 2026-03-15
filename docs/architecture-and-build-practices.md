@@ -164,5 +164,6 @@ When adding tasks to `docs/tasks.md`:
 - **Design:** `docs/design-spec.md`
 - **Security:** `docs/security-notes.md`
 - **Manual steps:** `docs/manual-steps.md`
+- **Ownership metrics:** `docs/ownership-metrics.md` — how partial ownership scales metrics
 - **Builder rule:** `.cursor/rules/builder-agent.mdc`
 - **PM checklist:** `docs/pm-review-checklist.md`

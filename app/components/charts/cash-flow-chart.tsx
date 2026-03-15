@@ -23,6 +23,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
   const isEmpty = data.length === 0;
   const allZero = data.length > 0 && data.every((d) => d.monthlyCashFlow === 0);
 
+  // Diverging bar: horizontal layout — bars extend left (negative) and right (positive) from center
   return (
     <ChartWrapper
       title="Monthly cash flow by property"
@@ -33,15 +34,17 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
+            layout="vertical"
             margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
           >
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-            <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-            <YAxis
+            <XAxis
+              type="number"
               tickFormatter={(v) => `$${v}`}
               tick={{ fontSize: 11 }}
-              allowDataOverflow
+              domain={["dataMin", "dataMax"]}
             />
+            <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
             <Tooltip
               formatter={(value: number) =>
                 new Intl.NumberFormat("en-US", {
@@ -53,11 +56,11 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
               }
               contentStyle={{ fontSize: 12 }}
             />
-            {!allZero && <ReferenceLine y={0} stroke="var(--foreground-muted)" />}
+            {!allZero && <ReferenceLine x={0} stroke="var(--foreground-muted)" />}
             <Bar
               dataKey="monthlyCashFlow"
               name="Monthly cash flow"
-              radius={[4, 4, 0, 0]}
+              radius={[0, 4, 4, 0]}
             >
               {data.map((d, i) => (
                 <Cell

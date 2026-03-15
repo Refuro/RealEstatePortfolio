@@ -1,4 +1,4 @@
-import { getAppUser } from "@/lib/auth";
+import { getAppUser, isAdmin } from "@/lib/auth";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
 
@@ -13,5 +13,9 @@ export default async function AppLayout({
   if (user?.deletedAt) {
     return <RestoreAccountScreen />;
   }
-  return <AppLayoutClient>{children}</AppLayoutClient>;
+  return (
+    <AppLayoutClient user={user} showAdmin={user ? isAdmin(user) : false}>
+      {children}
+    </AppLayoutClient>
+  );
 }
