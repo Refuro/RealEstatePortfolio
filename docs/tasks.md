@@ -10,7 +10,16 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 | # | Task | Focus |
 |---|------|-------|
-| — | *None* | Cancel-at-period-end completed ✓ |
+| 1 | Permanent delete server-side confirmText | Security |
+| 2 | Extract formatCurrency to lib | DRY |
+| 3 | Move import parsing to lib | Architecture |
+| 4 | Reduce modal shadows | Design |
+| 5 | Resolve Prisma `any` in settings | Technical debt |
+| 6 | Zod for account delete routes | Consistency |
+| 7 | Extract MetricCard to shared component | DRY |
+| 8 | Block API access for deleted users | Security |
+| 9 | Env validation at startup | Robustness |
+| 10 | Accessibility pass | A11y |
 
 ---
 
@@ -737,6 +746,84 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
   - [x] Webhook syncs cancel_at_period_end from Stripe subscription.updated.
   - [x] Plan & billing shows "Plan ends [date]. You have access until then." when canceled.
   - [x] Plan & billing shows "Next billing: [date]" when renewing.
+  - [x] Run `npm run check` when done.
+
+- [x] **Permanent delete: server-side confirmText validation:** In `/api/account/delete-permanent/route.ts`, require `body.confirmText === "DELETE"` before proceeding. Return 400 if missing or incorrect. Client already enforces; this closes the gap for direct API calls.
+
+  **Acceptance criteria:**
+  - [x] Request body validated for `confirmText === "DELETE"` (exact string, case-sensitive).
+  - [x] Return 400 with clear error if confirmText is missing or does not match.
+  - [x] Permanent delete only proceeds when validation passes.
+  - [x] Run `npm run check` when done.
+
+- [x] **Extract formatCurrency to lib:** Same `Intl.NumberFormat` logic duplicated in 6+ places (dashboard, properties, deals, charts, scenario section). Create `lib/format-currency.ts` with `formatCurrency(n: number): string` and use it everywhere.
+
+  **Acceptance criteria:**
+  - [x] `lib/format-currency.ts` exists with `formatCurrency(n: number): string` using `Intl.NumberFormat` (locale en-US, style currency).
+  - [x] Dashboard, properties page, deals list, property-metrics-section, scenario-section, dashboard-charts use the shared function.
+  - [x] No duplicated formatCurrency logic remains.
+  - [x] Run `npm run check` when done.
+
+- [x] **Move import parsing to lib:** CSV parsing and row validation in `api/import/portfolio/route.ts` (~382 lines). Extract `parseRow`, `parseDate`, `parseNum`, `getCol`, `parseAddressFromCombined` (or equivalent) to `lib/import/csv-parser.ts` or similar. Route stays thin.
+
+  **Acceptance criteria:**
+  - [x] `lib/import/csv-parser.ts` (or similar) contains parsing and validation logic.
+  - [x] Import route imports from lib and stays thin (orchestration only).
+  - [x] Import behavior unchanged; CSV import works as before.
+  - [x] Run `npm run check` when done.
+
+- [x] **Reduce modal shadows:** `draft-context.tsx` and `metric-help-modal.tsx` use `shadow-lg`. Design spec §9: "Prefer flat or very subtle shadow." Replace with `shadow-sm` or remove.
+
+  **Acceptance criteria:**
+  - [x] `draft-context.tsx` and `metric-help-modal.tsx` use `shadow-sm` or no shadow (per design spec).
+  - [x] Modals still visually distinct from background.
+  - [x] Run `npm run check` when done.
+
+- [x] **Resolve Prisma `any` in settings:** `(prisma as any).savedDeal` and `as any` for `cancelAtPeriodEnd` in `app/(app)/settings/page.tsx`. Run `npx prisma generate`; if types are correct, remove casts. If schema/client mismatch, fix and document.
+
+  **Acceptance criteria:**
+  - [x] No `as any` or `(prisma as any)` in settings page for savedDeal or cancelAtPeriodEnd.
+  - [x] TypeScript and Prisma client in sync; types resolve correctly.
+  - [x] Run `npm run check` when done.
+
+- [x] **Zod for account delete routes:** Add Zod schemas for `/api/account/delete` and `/api/account/delete-permanent` request bodies. Matches pattern used by property, deal, mortgage routes.
+
+  **Acceptance criteria:**
+  - [x] Delete route: Zod schema validates `{ password: string }`.
+  - [x] Delete-permanent route: Zod schema validates `{ password: string, confirmText: string }`.
+  - [x] Return 400 on validation failure with clear error.
+  - [x] Run `npm run check` when done.
+
+- [x] **Extract MetricCard to shared component:** Similar MetricCard in `dashboard/page.tsx` and `properties/page.tsx`. Extract to shared component (e.g. `components/metric-card.tsx`).
+
+  **Acceptance criteria:**
+  - [x] Shared `MetricCard` component exists and is used by dashboard and properties pages.
+  - [x] No duplicated MetricCard markup.
+  - [x] Run `npm run check` when done.
+
+- [x] **Block API access for deleted users:** `getAppUser()` returns deleted users; layout blocks UI but direct API calls still work. Add check: if `user.deletedAt` is set, return 401 (or equivalent) so deleted users cannot access protected APIs.
+
+  **Acceptance criteria:**
+  - [x] `getAppUser()` or a wrapper returns null/throws when `user.deletedAt` is set, OR each protected route checks `user.deletedAt` and returns 401.
+  - [x] Deleted user with valid session cannot access GET /api/properties, /api/deals, etc.
+  - [x] Restore flow still works (restore route does not block deleted users).
+  - [x] Run `npm run check` when done.
+
+- [x] **Env validation at startup:** Validate required env vars (e.g. `DATABASE_URL`, `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY`) at app startup or first use. Fail fast with clear error message if missing.
+
+  **Acceptance criteria:**
+  - [x] Required env vars validated (document which ones in code or manual-steps).
+  - [x] Clear error message when validation fails (e.g. "DATABASE_URL is required").
+  - [x] App does not proceed with invalid/missing env for critical paths.
+  - [x] Run `npm run check` when done.
+
+- [x] **Accessibility pass:** Audit modals, forms, and interactive elements for aria labels, focus management, and keyboard navigation. Fix gaps.
+
+  **Acceptance criteria:**
+  - [x] Modals have appropriate aria attributes (role, aria-labelledby, aria-modal).
+  - [x] Focus trapped in modals when open; focus returns on close.
+  - [x] Form inputs have associated labels; buttons have accessible names.
+  - [x] Key interactive elements keyboard-accessible.
   - [x] Run `npm run check` when done.
 
 ---

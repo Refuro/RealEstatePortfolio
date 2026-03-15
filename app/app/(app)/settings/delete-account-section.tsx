@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useClerk } from "@clerk/nextjs";
 import { X } from "lucide-react";
 
@@ -14,14 +14,14 @@ export function DeleteAccountSection() {
   const [error, setError] = useState<string | null>(null);
   const { signOut } = useClerk();
 
-  function closeModal() {
+  const closeModal = useCallback(() => {
     if (!loading) {
       setModalOpen(null);
       setPassword("");
       setConfirmText("");
       setError(null);
     }
-  }
+  }, [loading]);
 
   async function handleDeactivate() {
     if (!password.trim()) {
@@ -84,6 +84,31 @@ export function DeleteAccountSection() {
   const canConfirmPermanent =
     password.trim().length > 0 && confirmText === "DELETE";
 
+  const deactivateModalRef = useRef<HTMLDivElement>(null);
+  const permanentModalRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const previousActive = document.activeElement;
+    const ref = modalOpen === "deactivate" ? deactivateModalRef : permanentModalRef;
+    const firstFocusable = ref.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        closeModal();
+        (previousActive as HTMLElement)?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      (previousActive as HTMLElement)?.focus();
+    };
+  }, [modalOpen, closeModal]);
+
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
       <div className="flex flex-col gap-2">
@@ -124,7 +149,10 @@ export function DeleteAccountSection() {
             onClick={closeModal}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6">
+          <div
+            ref={deactivateModalRef}
+            className="relative w-full max-w-md rounded-lg border border-border bg-card p-6"
+          >
             <div className="flex items-center justify-between gap-4">
               <h2
                 id="deactivate-account-title"
@@ -203,7 +231,10 @@ export function DeleteAccountSection() {
             onClick={closeModal}
             aria-hidden="true"
           />
-          <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6">
+          <div
+            ref={permanentModalRef}
+            className="relative w-full max-w-md rounded-lg border border-border bg-card p-6"
+          >
             <div className="flex items-center justify-between gap-4">
               <h2
                 id="permanent-delete-title"

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 
 const TEMPLATE_HEADERS = [
   "address",
@@ -42,7 +42,7 @@ const SAMPLE_ROW = [
 ];
 
 export async function GET() {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

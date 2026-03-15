@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
+import { formatCurrency } from "@/lib/format-currency";
 
 type ScenarioSectionProps = {
   monthlyRent: number;
@@ -15,15 +16,6 @@ type ScenarioSectionProps = {
   vacancyPercent: number;
   displayMode: OwnershipDisplayMode | null;
 };
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
 
 export function ScenarioSection({
   monthlyRent,

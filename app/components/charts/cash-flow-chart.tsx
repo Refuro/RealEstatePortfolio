@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/format-currency";
 import {
   BarChart,
   Bar,
@@ -46,14 +47,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
             />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
             <Tooltip
-              formatter={(value: number) =>
-                new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(value)
-              }
+              formatter={(value: number) => formatCurrency(value)}
               contentStyle={{ fontSize: 12 }}
             />
             {!allZero && <ReferenceLine x={0} stroke="var(--foreground-muted)" />}

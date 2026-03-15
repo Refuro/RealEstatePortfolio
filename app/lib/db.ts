@@ -1,5 +1,8 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { validateEnv } from "@/lib/env";
+
+validateEnv();
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 

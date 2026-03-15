@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
@@ -7,7 +7,7 @@ import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
 
 export async function GET() {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

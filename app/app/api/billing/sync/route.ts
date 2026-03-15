@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getStripe } from "@/lib/stripe-config";
 
@@ -9,7 +9,7 @@ import { getStripe } from "@/lib/stripe-config";
  * If Stripe shows no active subscription (canceled, unpaid, etc.), downgrade user to free.
  */
 export async function GET() {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

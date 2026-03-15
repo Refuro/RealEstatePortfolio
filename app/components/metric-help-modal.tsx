@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { X } from "lucide-react";
 
 const METRIC_DEFINITIONS = [
@@ -52,6 +53,33 @@ export function MetricHelpModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const previousActiveRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    previousActiveRef.current = document.activeElement;
+    const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        (previousActiveRef.current as HTMLElement)?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      (previousActiveRef.current as HTMLElement)?.focus();
+    };
+  }, [open, onClose]);
+
   if (!open) return null;
 
   return (
@@ -66,7 +94,10 @@ export function MetricHelpModal({
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-card p-6 shadow-lg">
+      <div
+        ref={containerRef}
+        className="relative max-h-[90vh] w-full max-w-lg overflow-auto rounded-lg border border-border bg-card p-6 shadow-sm"
+      >
         <div className="flex items-center justify-between gap-4">
           <h2
             id="metric-help-title"
