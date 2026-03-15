@@ -138,6 +138,8 @@ Post-MVP features, in suggested order:
 | 12 | **Report section** (PDF/print portfolio summary) | Professional output; share with partners/lenders |
 | 13 | **Referral system** (if realtor validation positive) | Growth lever |
 | 14 | **Admin membership override** | Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill. |
+| 15 | **Automated testing** | Larger planned effort. Configure test runner (Jest/Vitest), add unit tests for metric calculations and amortization logic, API route tests for auth-protected endpoints. Plan thoughtfully per engineering spec Module M. |
+| 16 | **Error tracking** (Sentry or similar) | Add production error tracking and alerting. Defer until post-MVP. |
 
 Defer until validated: referral incentives, advanced analytics, mobile app, Plaid (bank integration — see §5.1).
 

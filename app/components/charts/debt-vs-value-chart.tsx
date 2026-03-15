@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/format-currency";
 import {
   BarChart,
   Bar,
@@ -41,14 +42,7 @@ export function DebtVsValueChart({ data }: { data: DebtValueDatum[] }) {
               tick={{ fontSize: 11 }}
             />
             <Tooltip
-              formatter={(value: number) =>
-                new Intl.NumberFormat("en-US", {
-                  style: "currency",
-                  currency: "USD",
-                  minimumFractionDigits: 0,
-                  maximumFractionDigits: 0,
-                }).format(value)
-              }
+              formatter={(value: number) => formatCurrency(value)}
               contentStyle={{ fontSize: 12 }}
             />
             <Legend wrapperStyle={{ fontSize: 12 }} />

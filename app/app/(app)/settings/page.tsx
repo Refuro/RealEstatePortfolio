@@ -17,10 +17,9 @@ export default async function SettingsPage() {
   const [subscriptionInitial, propertyCount, dealCount] = await Promise.all([
     prisma.subscription.findUnique({ where: { userId: user.id } }),
     prisma.property.count({ where: { userId: user.id } }),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma client may need regenerate (npx prisma generate)
-    (prisma as any).savedDeal.count({ where: { userId: user.id } }),
+    prisma.savedDeal.count({ where: { userId: user.id } }),
   ]);
-  let subscription = subscriptionInitial as typeof subscriptionInitial & { cancelAtPeriodEnd?: boolean | null };
+  let subscription = subscriptionInitial;
 
   // Refresh cancel_at_period_end from Stripe when viewing Settings (webhook can be delayed)
   if (subscription?.stripeSubscriptionId) {
@@ -28,15 +27,16 @@ export default async function SettingsPage() {
       const stripe = getStripe();
       const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
       // Stripe sets cancel_at_period_end immediately when user cancels in portal
+      // eslint-disable-next-line react-hooks/purity -- need current time to compare with Stripe cancel_at
+      const now = Date.now();
       const willCancel =
         stripeSub.cancel_at_period_end === true ||
-        (typeof stripeSub.cancel_at === "number" && stripeSub.cancel_at * 1000 > Date.now());
+        (typeof stripeSub.cancel_at === "number" && stripeSub.cancel_at * 1000 > now);
       if (stripeSub.cancel_at_period_end !== undefined || stripeSub.cancel_at) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Prisma client may need regenerate (npx prisma generate)
-        subscription = (await prisma.subscription.update({
+        subscription = await prisma.subscription.update({
           where: { userId: user.id },
-          data: { cancelAtPeriodEnd: willCancel } as any,
-        })) as typeof subscriptionInitial & { cancelAtPeriodEnd: boolean | null };
+          data: { cancelAtPeriodEnd: willCancel },
+        });
       }
     } catch {
       // Use DB value if Stripe fetch fails

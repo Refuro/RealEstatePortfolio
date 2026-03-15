@@ -3,15 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
+import { formatCurrency } from "@/lib/format-currency";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", {

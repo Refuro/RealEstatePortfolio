@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getAppUser, isAdmin } from "@/lib/auth";
+import { getActiveAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
 function escapeCsvCell(value: string | number | null | undefined): string {
@@ -12,7 +12,7 @@ function escapeCsvCell(value: string | number | null | undefined): string {
 }
 
 export async function GET() {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user || !isAdmin(user)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }

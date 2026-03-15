@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
+import { formatCurrency } from "@/lib/format-currency";
+import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
@@ -10,41 +12,6 @@ import {
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
-}
-
-function MetricCard({
-  label,
-  value,
-  primary = true,
-  cashFlow,
-}: {
-  label: string;
-  value: string;
-  primary?: boolean;
-  cashFlow?: number;
-}) {
-  const valueClassName =
-    cashFlow !== undefined
-      ? `text-xl font-semibold ${cashFlow >= 0 ? "text-positive" : "text-negative"}`
-      : primary
-        ? "text-xl font-semibold text-foreground"
-        : "text-lg font-medium text-foreground";
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <dt className="text-sm font-medium text-muted">{label}</dt>
-      <dd className={`mt-1 ${valueClassName}`}>{value}</dd>
-    </div>
-  );
-}
 
 function PropertyTypeBadge({
   propertyType,
@@ -149,16 +116,19 @@ export default async function PropertiesPage() {
                 label="Total value"
                 value={formatCurrency(portfolioMetrics.totalMarketValue)}
                 primary
+                compact
               />
               <MetricCard
                 label="Total equity"
                 value={formatCurrency(portfolioMetrics.totalEquity)}
                 primary
+                compact
               />
               <MetricCard
                 label="Monthly cash flow"
                 value={formatCurrency(portfolioMetrics.totalMonthlyCashFlow)}
                 cashFlow={portfolioMetrics.totalMonthlyCashFlow}
+                compact
               />
             </div>
           )}

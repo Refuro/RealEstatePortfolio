@@ -33,6 +33,18 @@ export async function getAppUser() {
 }
 
 /**
+ * Get the current app user only if they are active (not soft-deleted).
+ * Use in protected API routes — returns null when user.deletedAt is set.
+ * Deleted users cannot access protected APIs; use getAppUser in layout (for RestoreAccountScreen)
+ * and in the restore route (which must work for deleted users).
+ */
+export async function getActiveAppUser() {
+  const user = await getAppUser();
+  if (!user || user.deletedAt) return null;
+  return user;
+}
+
+/**
  * Check if the user is an admin based on ADMIN_EMAILS env (comma-separated).
  * Returns false if ADMIN_EMAILS is empty or unset.
  */

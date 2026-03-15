@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
+import { formatCurrency } from "@/lib/format-currency";
+import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
@@ -205,39 +207,4 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
-}
-
-function MetricCard({
-  label,
-  value,
-  primary = true,
-  cashFlow,
-}: {
-  label: string;
-  value: string;
-  primary?: boolean;
-  cashFlow?: number;
-}) {
-  const valueClassName =
-    cashFlow !== undefined
-      ? `text-2xl font-semibold ${cashFlow >= 0 ? "text-positive" : "text-negative"}`
-      : primary
-        ? "text-2xl sm:text-3xl font-semibold text-foreground"
-        : "text-lg font-medium text-foreground";
-
-  return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <dt className="text-base font-medium text-muted">{label}</dt>
-      <dd className={`mt-1 ${valueClassName}`}>{value}</dd>
-    </div>
-  );
-}
-
-function formatCurrency(n: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n);
 }

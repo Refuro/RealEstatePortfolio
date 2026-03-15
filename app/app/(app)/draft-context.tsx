@@ -9,6 +9,34 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
+function useModalFocus(open: boolean, onClose: () => void, containerRef: React.RefObject<HTMLDivElement | null>) {
+  const previousActiveRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    previousActiveRef.current = document.activeElement;
+    const firstFocusable = containerRef.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    firstFocusable?.focus();
+  }, [open, containerRef]);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        (previousActiveRef.current as HTMLElement)?.focus();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      (previousActiveRef.current as HTMLElement)?.focus();
+    };
+  }, [open, onClose]);
+}
 import { usePathname, useRouter } from "next/navigation";
 
 const STORAGE_KEY = "add-property-wizard-draft";
@@ -136,6 +164,11 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [leaveModal, setLeaveModal] = useState<{ href: string } | null>(null);
   const [restoreModal, setRestoreModal] = useState<DraftPayload | null>(null);
   const wizardGetDataRef = useRef<(() => WizardData) | null>(null);
+  const leaveModalRef = useRef<HTMLDivElement>(null);
+  const restoreModalRef = useRef<HTMLDivElement>(null);
+
+  useModalFocus(!!leaveModal, () => setLeaveModal(null), leaveModalRef);
+  useModalFocus(!!restoreModal, () => setRestoreModal(null), restoreModalRef);
 
   const setHasDraft = useCallback((v: boolean) => {
     setHasDraftState(v);
@@ -262,7 +295,10 @@ export function DraftProvider({ children }: { children: ReactNode }) {
           aria-modal="true"
           aria-labelledby="leave-modal-title"
         >
-          <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+          <div
+            ref={leaveModalRef}
+            className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm"
+          >
             <h2 id="leave-modal-title" className="text-lg font-semibold text-foreground">
               Unsaved changes
             </h2>
@@ -302,7 +338,10 @@ export function DraftProvider({ children }: { children: ReactNode }) {
           aria-modal="true"
           aria-labelledby="restore-modal-title"
         >
-          <div className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+          <div
+            ref={restoreModalRef}
+            className="w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm"
+          >
             <h2 id="restore-modal-title" className="text-lg font-semibold text-foreground">
               Continue from draft?
             </h2>

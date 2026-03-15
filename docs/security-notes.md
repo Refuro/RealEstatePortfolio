@@ -38,3 +38,11 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 
 - **Webhook:** `/api/billing/webhook` is a public route (excluded from Clerk auth in middleware). Security is enforced by verifying the request body with `STRIPE_WEBHOOK_SECRET` via `stripe.webhooks.constructEvent()`; invalid or missing signature returns 400.
 - **Secrets:** `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` are server-only (no `NEXT_PUBLIC_`). See manual-steps for webhook URL and key setup.
+
+---
+
+## Account deletion + deleted user blocking (March 2025)
+
+- **Permanent delete confirmText** — POST `/api/account/delete-permanent` requires `body.confirmText === "DELETE"` (exact, case-sensitive). Returns 400 if missing or incorrect. Closes gap for direct API calls bypassing client validation.
+- **Block API access for deleted users** — `getActiveAppUser()` returns null when `user.deletedAt` is set. All protected API routes use `getActiveAppUser()` instead of `getAppUser()`; deleted users receive 401. The restore route and app layout keep `getAppUser()` so deleted users can restore their account.
+- **Env validation** — `lib/env.ts` validates `DATABASE_URL`, `CLERK_SECRET_KEY`, `STRIPE_SECRET_KEY` at first DB import. Fails fast with clear error if any are missing.

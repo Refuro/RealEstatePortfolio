@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createDealSchema } from "@/lib/validations/deal";
 import { canAddDeal } from "@/lib/plans";
@@ -78,7 +78,7 @@ function serializeDeal(deal: {
 }
 
 export async function GET() {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -92,7 +92,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
