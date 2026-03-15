@@ -1,0 +1,4 @@
+address,nickname,property type,units,purchase price,purchase date,value,rent,expenses,vacancy %,cash invested,ownership %,mortgage balance,mortgage rate,mortgage term,monthly payment,lender
+"123 Main St, Dallas, TX, 75201",Oak Street Duplex,Single family,1,330000,2023-06-13,364700,2195,100,5,32000,100,288417,6.25,30,2450,WestGate Bank
+"456 Elm Ave, Austin, TX, 78701",Westport Property,Multi family,4,485000,2022-03-01,520000,5800,1200,5,75000,50,380000,5.5,30,2156,First National
+"789 Pine Rd, Houston, TX, 77001",Pine Cottage,Single family,1,185000,2024-01-10,195000,1650,320,5,45000,100,,,,

@@ -23,6 +23,7 @@ type PropertyFormData = {
   currentMonthlyRent: string;
   unitRents?: string[];
   currentMonthlyExpenses: string;
+  vacancyPercent?: number;
   cashInvested?: string;
   bedrooms?: number;
   bathrooms?: string;
@@ -60,6 +61,8 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
+  const [valueEstimateLoading, setValueEstimateLoading] = useState(false);
+  const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
   const [propertyType, setPropertyType] = useState(property?.propertyType ?? "single_family");
   const [units, setUnits] = useState(property?.units ?? 1);
   const [purchasePrice, setPurchasePrice] = useState(property?.purchasePrice ?? "");
@@ -74,6 +77,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
     return Array(n).fill("");
   });
   const [currentMonthlyExpenses, setCurrentMonthlyExpenses] = useState(property?.currentMonthlyExpenses ?? "");
+  const [vacancyPercent, setVacancyPercent] = useState(property?.vacancyPercent != null ? String(property.vacancyPercent) : "5");
   const [bedrooms, setBedrooms] = useState(property?.bedrooms != null ? String(property.bedrooms) : "");
   const [bathrooms, setBathrooms] = useState(property?.bathrooms ?? "");
 
@@ -109,6 +113,44 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         notes: property.notes ?? "",
       }
     : defaultValues;
+
+  async function handleEstimateValue() {
+    const form = formRef.current;
+    if (!form) return;
+    const fd = new FormData(form);
+    const addressLine1 = (fd.get("addressLine1") as string)?.trim();
+    const city = (fd.get("city") as string)?.trim();
+    const state = (fd.get("state") as string)?.trim();
+    const zipCode = (fd.get("zipCode") as string)?.trim();
+    if (!addressLine1 || !city || !state || !zipCode) {
+      setValueEstimateError("Enter address first");
+      return;
+    }
+    setValueEstimateError(null);
+    setValueEstimateLoading(true);
+    try {
+      const params = new URLSearchParams({
+        addressLine1,
+        city,
+        state,
+        zipCode,
+      });
+      const addressLine2 = (fd.get("addressLine2") as string)?.trim();
+      if (addressLine2) params.set("addressLine2", addressLine2);
+      params.set("propertyType", propertyType);
+      const res = await fetch(`/api/estimates/value?${params.toString()}`);
+      const json = (await res.json()) as { value?: number; error?: string };
+      if (json.value != null && Number.isFinite(json.value)) {
+        setCurrentEstimatedValue(String(Math.round(json.value)));
+      } else {
+        setValueEstimateError(json.error ?? "Estimate unavailable for this address");
+      }
+    } catch {
+      setValueEstimateError("Estimate unavailable for this address");
+    } finally {
+      setValueEstimateLoading(false);
+    }
+  }
 
   async function handleEstimateRent() {
     const form = formRef.current;
@@ -192,6 +234,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       currentEstimatedValue,
       currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses,
+      vacancyPercent: Math.min(100, Math.max(0, Number(vacancyPercent) || 5)),
       cashInvested: cashInvested.trim() || undefined,
       notes: (formData.get("notes") as string) || undefined,
     };
@@ -529,13 +572,28 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             <label htmlFor="currentEstimatedValue" className={labelClass}>
               Current estimated value *
             </label>
-            <CurrencyInput
-              id="currentEstimatedValue"
-              value={currentEstimatedValue}
-              onChange={setCurrentEstimatedValue}
-              required
-              className={inputClass}
-            />
+            <div className="flex gap-2">
+              <div className="min-w-0 flex-1">
+                <CurrencyInput
+                  id="currentEstimatedValue"
+                  value={currentEstimatedValue}
+                  onChange={setCurrentEstimatedValue}
+                  required
+                  className={inputClass}
+                />
+              </div>
+              <button
+                type="button"
+                onClick={handleEstimateValue}
+                disabled={valueEstimateLoading}
+                className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+              >
+                {valueEstimateLoading ? "Estimating…" : "Estimate value"}
+              </button>
+            </div>
+            {valueEstimateError && (
+              <p className="mt-0.5 text-sm text-muted">{valueEstimateError}</p>
+            )}
           </div>
           <div>
             <label htmlFor="cashInvested" className={labelClass}>
@@ -664,6 +722,26 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               className={inputClass}
             />
           </div>
+        </div>
+
+        <div>
+          <label htmlFor="vacancyPercent" className={labelClass}>
+            Vacancy %
+          </label>
+          <input
+            id="vacancyPercent"
+            name="vacancyPercent"
+            type="number"
+            min={0}
+            max={100}
+            inputMode="numeric"
+            value={vacancyPercent}
+            onChange={(e) => setVacancyPercent(e.target.value)}
+            className={inputClass}
+          />
+          <p className="mt-0.5 text-xs text-muted">
+            Expected vacancy (e.g. 5%). Reduces rent in cash flow calculations.
+          </p>
         </div>
 
         <div>

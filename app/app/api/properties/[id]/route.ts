@@ -157,6 +157,7 @@ export async function PATCH(
   if (data.bathrooms !== undefined) updatePayload.bathrooms = data.bathrooms;
   if (data.unitMix !== undefined) updatePayload.unitMix = data.unitMix;
   if (data.currentMonthlyExpenses !== undefined) updatePayload.currentMonthlyExpenses = data.currentMonthlyExpenses;
+  if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
 

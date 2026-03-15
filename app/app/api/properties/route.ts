@@ -157,6 +157,7 @@ export async function POST(request: NextRequest) {
       bathrooms: data.bathrooms ?? null,
       unitMix: data.unitMix ?? null,
       currentMonthlyExpenses: data.currentMonthlyExpenses,
+      vacancyPercent: data.vacancyPercent ?? 5,
       cashInvested: data.cashInvested ?? null,
       notes: data.notes ?? null,
     },

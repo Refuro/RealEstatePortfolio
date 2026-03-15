@@ -46,6 +46,7 @@ const propertySchemaBase = z.object({
     .nullable(),
   unitMix: z.string().max(100).optional().nullable(),
   currentMonthlyExpenses: decimalString,
+  vacancyPercent: z.coerce.number().int().min(0).max(100).default(5),
   cashInvested: z.string().optional().nullable().transform((s) => (s == null || s.trim() === "" ? null : s)),
   notes: z.string().max(2000).optional().nullable(),
 });

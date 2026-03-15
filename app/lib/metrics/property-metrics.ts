@@ -16,6 +16,8 @@ export type PropertyMetricsInput = {
   totalMonthlyPayment: number;
   /** Ownership percentage (1-100). Metrics scaled by this for partial ownership. */
   ownershipPercent?: number;
+  /** Vacancy percentage (0-100). Effective rent = monthlyRent * (1 - vacancyPercent/100). Default 5. */
+  vacancyPercent?: number;
 };
 
 export type PropertyMetrics = {
@@ -42,21 +44,23 @@ export function computePropertyMetrics(
     totalMortgageBalance,
     totalMonthlyPayment,
     ownershipPercent = 100,
+    vacancyPercent = 5,
   } = input;
 
   const scale = ownershipPercent / 100;
   const fullLiability = displayMode === "full_liability";
+  const effectiveRent = monthlyRent * (1 - vacancyPercent / 100);
 
-  const grossAnnualRent = monthlyRent * 12;
+  const grossAnnualRent = effectiveRent * 12;
   const annualExpenses = monthlyExpenses * 12;
   const noi = grossAnnualRent - annualExpenses;
   const capRate = estimatedValue > 0 ? noi / estimatedValue : null;
 
-  // full_liability: cash flow = (rent×scale − expenses×scale − full payment)
-  // proportional: cash flow = (rent − expenses − payment) × scale
+  // full_liability: cash flow = (effectiveRent×scale − expenses×scale − full payment)
+  // proportional: cash flow = (effectiveRent − expenses − payment) × scale
   const monthlyCashFlow = fullLiability
-    ? monthlyRent * scale - monthlyExpenses * scale - totalMonthlyPayment
-    : (monthlyRent - monthlyExpenses - totalMonthlyPayment) * scale;
+    ? effectiveRent * scale - monthlyExpenses * scale - totalMonthlyPayment
+    : (effectiveRent - monthlyExpenses - totalMonthlyPayment) * scale;
 
   const annualCashFlow = monthlyCashFlow * 12;
 

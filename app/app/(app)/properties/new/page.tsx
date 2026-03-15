@@ -1,7 +1,13 @@
 import Link from "next/link";
 import { AddPropertyWizard } from "../add-property-wizard";
 
-export default function NewPropertyPage() {
+export default async function NewPropertyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ from?: string }>;
+}) {
+  const { from: dealId } = await searchParams;
+
   return (
     <div>
       <div className="mb-6 flex items-center gap-4">
@@ -17,7 +23,7 @@ export default function NewPropertyPage() {
         Follow the steps below to add your property.
       </p>
       <div className="mt-6">
-        <AddPropertyWizard />
+        <AddPropertyWizard dealId={dealId ?? undefined} />
       </div>
     </div>
   );

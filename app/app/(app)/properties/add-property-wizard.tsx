@@ -31,6 +31,7 @@ export type WizardData = {
   currentMonthlyRent: string;
   unitRents: string[];
   currentMonthlyExpenses: string;
+  vacancyPercent: string;
   notes: string;
   bedrooms: string;
   bathrooms: string;
@@ -55,6 +56,7 @@ const defaultWizardData: WizardData = {
   currentMonthlyRent: "",
   unitRents: [],
   currentMonthlyExpenses: "",
+  vacancyPercent: "5",
   notes: "",
   bedrooms: "",
   bathrooms: "",
@@ -348,8 +350,41 @@ function StepPurchase({
   onChange: (d: WizardData) => void;
   errors: Record<string, string>;
 }) {
+  const [valueEstimateLoading, setValueEstimateLoading] = useState(false);
+  const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
+
   function update<K extends keyof WizardData>(key: K, val: WizardData[K]) {
     onChange({ ...data, [key]: val });
+  }
+
+  async function handleEstimateValue() {
+    if (!data.addressLine1?.trim() || !data.city?.trim() || !data.state?.trim() || !data.zipCode?.trim()) {
+      setValueEstimateError("Enter address in Step 1 first");
+      return;
+    }
+    setValueEstimateError(null);
+    setValueEstimateLoading(true);
+    try {
+      const params = new URLSearchParams({
+        addressLine1: data.addressLine1,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+      });
+      if (data.addressLine2?.trim()) params.set("addressLine2", data.addressLine2);
+      if (data.propertyType) params.set("propertyType", data.propertyType);
+      const res = await fetch(`/api/estimates/value?${params.toString()}`);
+      const json = (await res.json()) as { value?: number; error?: string };
+      if (json.value != null && Number.isFinite(json.value)) {
+        update("currentEstimatedValue", String(Math.round(json.value)));
+      } else {
+        setValueEstimateError(json.error ?? "Estimate unavailable for this address");
+      }
+    } catch {
+      setValueEstimateError("Estimate unavailable for this address");
+    } finally {
+      setValueEstimateLoading(false);
+    }
   }
 
   return (
@@ -392,13 +427,28 @@ function StepPurchase({
           <label htmlFor="currentEstimatedValue" className={labelClass}>
             Current estimated value *
           </label>
-          <CurrencyInput
-            id="currentEstimatedValue"
-            value={data.currentEstimatedValue}
-            onChange={(v) => update("currentEstimatedValue", v)}
-            required
-            className={inputClass}
-          />
+          <div className="flex gap-2">
+            <div className="min-w-0 flex-1">
+              <CurrencyInput
+                id="currentEstimatedValue"
+                value={data.currentEstimatedValue}
+                onChange={(v) => update("currentEstimatedValue", v)}
+                required
+                className={inputClass}
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleEstimateValue}
+              disabled={valueEstimateLoading}
+              className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+            >
+              {valueEstimateLoading ? "Estimating…" : "Estimate value"}
+            </button>
+          </div>
+          {valueEstimateError && (
+            <p className="mt-0.5 text-sm text-muted">{valueEstimateError}</p>
+          )}
           {errors.currentEstimatedValue && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentEstimatedValue}</p>
           )}
@@ -601,7 +651,28 @@ function StepIncomeExpenses({
           className={inputClass}
         />
         {errors.currentMonthlyExpenses && (
-          <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyExpenses}</p>
+            <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyExpenses}</p>
+          )}
+      </div>
+      <div>
+        <label htmlFor="vacancyPercent" className={labelClass}>
+          Vacancy %
+        </label>
+        <input
+          id="vacancyPercent"
+          type="number"
+          min={0}
+          max={100}
+          inputMode="numeric"
+          value={data.vacancyPercent}
+          onChange={(e) => update("vacancyPercent", e.target.value)}
+          className={inputClass}
+        />
+        <p className="mt-0.5 text-xs text-muted">
+          Expected vacancy (e.g. 5%). Reduces rent in cash flow calculations.
+        </p>
+        {errors.vacancyPercent && (
+          <p className="mt-0.5 text-sm text-negative">{errors.vacancyPercent}</p>
         )}
       </div>
     </div>
@@ -810,6 +881,12 @@ function StepReview({
             <dt className="text-muted">Monthly expenses</dt>
             <dd className="font-medium text-foreground">{formatCurrency(data.currentMonthlyExpenses)}</dd>
           </div>
+          {data.vacancyPercent && Number(data.vacancyPercent) !== 5 && (
+            <div>
+              <dt className="text-muted">Vacancy</dt>
+              <dd className="font-medium text-foreground">{data.vacancyPercent}%</dd>
+            </div>
+          )}
         </dl>
       </div>
 
@@ -893,6 +970,8 @@ function validateStep3(data: WizardData): Record<string, string> {
   const err: Record<string, string> = {};
   const exp = Number(data.currentMonthlyExpenses);
   if (Number.isNaN(exp) || exp < 0) err.currentMonthlyExpenses = "Enter valid monthly expenses";
+  const vac = Number(data.vacancyPercent);
+  if (!Number.isNaN(vac) && (vac < 0 || vac > 100)) err.vacancyPercent = "Vacancy must be 0–100";
   const isMultiUnit =
     (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
     (Number(data.units) || 1) > 1;
@@ -948,7 +1027,7 @@ function mergeWithDefaults(restored: Partial<WizardData>): WizardData {
   };
 }
 
-export function AddPropertyWizard() {
+export function AddPropertyWizard({ dealId }: { dealId?: string }) {
   const router = useRouter();
   const draft = useDraft();
   const [step, setStep] = useState(1);
@@ -958,6 +1037,52 @@ export function AddPropertyWizard() {
   const [error, setError] = useState<string | null>(null);
   const stepContainerRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
+  const dealPrefilledRef = useRef(false);
+
+  useEffect(() => {
+    if (dealId && !dealPrefilledRef.current) {
+      dealPrefilledRef.current = true;
+      fetch(`/api/deals/${dealId}`)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((deal: Record<string, unknown> | null) => {
+          if (!deal) return;
+          const today = new Date().toISOString().slice(0, 10);
+          setData((prev) => ({
+            ...prev,
+            nickname: (deal.nickname as string) ?? prev.nickname,
+            addressLine1: (deal.addressLine1 as string) ?? prev.addressLine1,
+            addressLine2: (deal.addressLine2 as string) ?? prev.addressLine2,
+            city: (deal.city as string) ?? prev.city,
+            state: (deal.state as string) ?? prev.state,
+            zipCode: (deal.zipCode as string) ?? prev.zipCode,
+            purchasePrice: (deal.purchasePrice as string) ?? prev.purchasePrice,
+            currentEstimatedValue: (deal.currentEstimatedValue as string) ?? prev.currentEstimatedValue,
+            purchaseDate: prev.purchaseDate || today,
+            currentMonthlyRent: (deal.currentMonthlyRent as string) ?? prev.currentMonthlyRent,
+            currentMonthlyExpenses: (deal.currentMonthlyExpenses as string) ?? prev.currentMonthlyExpenses,
+            vacancyPercent: deal.vacancyPercent != null ? String(deal.vacancyPercent) : prev.vacancyPercent,
+            ownershipPercent: deal.ownershipPercent != null ? String(deal.ownershipPercent) : prev.ownershipPercent,
+            cashInvested: (deal.cashInvested as string) ?? prev.cashInvested,
+            notes: (deal.notes as string) ?? prev.notes,
+            addMortgage:
+              (deal.totalMortgageBalance != null && Number(deal.totalMortgageBalance) > 0) ||
+              (deal.totalMonthlyPayment != null && Number(deal.totalMonthlyPayment) > 0)
+                ? true
+                : prev.addMortgage,
+            mortgage:
+              (deal.totalMortgageBalance != null && Number(deal.totalMortgageBalance) > 0) ||
+              (deal.totalMonthlyPayment != null && Number(deal.totalMonthlyPayment) > 0)
+                ? {
+                    ...prev.mortgage,
+                    currentBalance: (deal.totalMortgageBalance as string) ?? prev.mortgage.currentBalance,
+                    monthlyPayment: (deal.totalMonthlyPayment as string) ?? prev.mortgage.monthlyPayment,
+                  }
+                : prev.mortgage,
+          }));
+        })
+        .catch(() => {});
+    }
+  }, [dealId]);
 
   useEffect(() => {
     if (draft?.draftData && !hasRestoredRef.current) {
@@ -1040,6 +1165,7 @@ export function AddPropertyWizard() {
         ? unitRentsArr.reduce((a, b) => a + b, 0)
         : Number(data.currentMonthlyRent) || 0;
 
+    const vacancy = Math.min(100, Math.max(0, Number(data.vacancyPercent) || 5));
     const payload: Record<string, unknown> = {
       nickname: data.nickname.trim() || undefined,
       addressLine1: data.addressLine1,
@@ -1055,6 +1181,7 @@ export function AddPropertyWizard() {
       currentEstimatedValue: data.currentEstimatedValue,
       currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses: data.currentMonthlyExpenses,
+      vacancyPercent: vacancy,
       cashInvested: data.cashInvested.trim() ? data.cashInvested : undefined,
       notes: data.notes.trim() || undefined,
     };
