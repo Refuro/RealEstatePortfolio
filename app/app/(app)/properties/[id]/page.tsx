@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { PropertyActions } from "../property-actions";
 import { MortgageSection } from "../mortgage-section";
@@ -34,15 +35,20 @@ export default async function PropertyDetailPage({
     0
   );
   const ownershipPercent = property.ownershipPercent ?? 100;
-  const metrics = computePropertyMetrics({
-    monthlyRent: Number(property.currentMonthlyRent),
-    monthlyExpenses: Number(property.currentMonthlyExpenses),
-    estimatedValue: Number(property.currentEstimatedValue),
-    cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
-    totalMortgageBalance,
-    totalMonthlyPayment,
-    ownershipPercent,
-  });
+  const totalRent = getPropertyTotalRent(property);
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const metrics = computePropertyMetrics(
+    {
+      monthlyRent: totalRent,
+      monthlyExpenses: Number(property.currentMonthlyExpenses),
+      estimatedValue: Number(property.currentEstimatedValue),
+      cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
+      totalMortgageBalance,
+      totalMonthlyPayment,
+      ownershipPercent,
+    },
+    displayMode
+  );
 
   const address = [property.addressLine1, property.addressLine2, property.city, property.state, property.zipCode]
     .filter(Boolean)
@@ -72,6 +78,12 @@ export default async function PropertyDetailPage({
           </h2>
           <dl className="space-y-3">
             <div>
+              <dt className="text-base font-medium text-muted">Property type</dt>
+              <dd className="text-base font-medium text-foreground">
+                {formatPropertyType(property.propertyType, property.units)}
+              </dd>
+            </div>
+            <div>
               <dt className="text-base font-medium text-muted">Purchase price</dt>
               <dd className="text-lg font-medium text-foreground">
                 ${Number(property.purchasePrice).toLocaleString()}
@@ -92,9 +104,35 @@ export default async function PropertyDetailPage({
             <div>
               <dt className="text-base font-medium text-muted">Monthly rent</dt>
               <dd className="text-lg font-medium text-foreground">
-                ${Number(property.currentMonthlyRent).toLocaleString()}
+                {Array.isArray(property.unitRents) && (property.unitRents as number[]).length > 0 ? (
+                  <>
+                    {(property.unitRents as number[]).map((r, i) => (
+                      <span key={i}>
+                        {i > 0 && ", "}Unit {i + 1}: ${Number(r).toLocaleString()}
+                      </span>
+                    ))}
+                    {" "}
+                    <span className="text-muted">(Total: ${totalRent.toLocaleString()})</span>
+                  </>
+                ) : (
+                  `$${totalRent.toLocaleString()}`
+                )}
               </dd>
             </div>
+            {(property.bedrooms != null || property.bathrooms != null || property.unitMix) && (
+              <div>
+                <dt className="text-base font-medium text-muted">Details</dt>
+                <dd className="text-base font-medium text-foreground">
+                  {[
+                    property.bedrooms != null && `${property.bedrooms} bed`,
+                    property.bathrooms != null && `${Number(property.bathrooms)} bath`,
+                    property.unitMix && property.unitMix,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </dd>
+              </div>
+            )}
             <div>
               <dt className="text-base font-medium text-muted">Monthly expenses</dt>
               <dd className="text-lg font-medium text-foreground">

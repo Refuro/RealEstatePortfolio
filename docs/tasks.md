@@ -4,6 +4,14 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ---
 
+## Current tasks (open)
+
+| # | Task | Focus |
+|---|------|-------|
+| *(none)* | | |
+
+---
+
 ## Builder tasks
 
 - [x] **Next.js middleware → proxy:** Migrate `app/middleware.ts` from the deprecated middleware convention to the new proxy convention. See [Next.js docs](https://nextjs.org/docs/messages/middleware-to-proxy). Dev/build currently show this deprecation warning; app works as-is until migrated.
@@ -190,6 +198,217 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
   - [x] Focus moves to first input of next step after advancing
   - [x] No accidental form submission when Enter is pressed mid-step
   - [x] Run `npm run check` when done
+
+- [x] **Per-unit rent + optional property details (bedrooms, unit mix):** Support per-unit rent for multi-family (e.g. duplex: Unit 1 $1500, Unit 2 $1900) and optional bedrooms/bathrooms for more accurate rent estimates. Minimal friction.
+
+  **Schema:**
+  - Add `unitRents Json?` to Property — array of numbers, one per unit. For single-family: `[total]`. For multi-family: `[1500, 1900]`. Total rent = sum(unitRents). When null, fall back to `currentMonthlyRent` for backward compat.
+  - Add `bedrooms Int?`, `bathrooms Decimal?` — optional, for single-family. Improves RentCast estimate.
+  - Add `unitMix String?` — optional, for multi-family. E.g. "2BR, 3BR" for duplex. Improves RentCast estimate.
+  - Migration: existing properties keep currentMonthlyRent; new/edited properties use unitRents. On read: if unitRents present, total = sum; else total = currentMonthlyRent.
+
+  **Validation (lib/validations/property.ts):**
+  - Add optional bedrooms (1-10), bathrooms (0.5-10), unitMix (max 100 chars).
+  - For create/update: when propertyType is multi_family and units=N, require unitRents array of length N, each non-negative. When single_family, unitRents is single-element array or we derive from currentMonthlyRent.
+  - API accepts unitRents as number[] or derives from currentMonthlyRent for backward compat.
+
+  **RentCast integration:**
+  - Extend RentCastParams and API route to accept bedrooms, bathrooms (single-family) and unitMix (multi-family). RentCast API supports these for better estimates.
+  - Update `lib/integrations/rentcast.ts` and `GET /api/estimates/rent` to pass bedrooms, bathrooms when provided.
+
+  **Add Property wizard (Step 3, Income & expenses):**
+  - Single-family: one "Monthly rent" field. Optional "Bedrooms" and "Bathrooms" (dropdown or number input) with helper text "Optional — improves rent estimates."
+  - Multi-family: show "Unit 1 rent", "Unit 2 rent", ... "Unit N rent" (N = units). Total computed and displayed. Optional "Unit mix" field (e.g. "2BR, 3BR") with helper text "Optional — improves rent estimates."
+  - Rent estimate: pass bedrooms/bathrooms or unitMix to API. For multi-family estimate: if RentCast returns per-unit, show "Estimate: $X/unit × N = $Y total" and let user apply to each unit or fill total. If total, show and let user split.
+
+  **Edit property form:**
+  - Same structure: per-unit rent for multi-family, optional bedrooms/bathrooms or unit mix.
+  - Load existing unitRents when editing.
+
+  **Property detail page:**
+  - For multi-family: display per-unit rents (Unit 1: $X, Unit 2: $Y) and total. For single-family: display rent as today.
+  - Show bedrooms/bathrooms or unit mix when present.
+
+  **API routes (create/update property):**
+  - Accept unitRents, bedrooms, bathrooms, unitMix. Compute currentMonthlyRent = sum(unitRents) when unitRents provided. Store all new fields.
+
+  **Acceptance criteria:**
+  - [x] Schema has unitRents, bedrooms, bathrooms, unitMix; migration applied.
+  - [x] Single-family: one rent field; optional bedrooms/bathrooms.
+  - [x] Multi-family: Unit 1, Unit 2, ... Unit N rent fields; optional unit mix.
+  - [x] Rent estimate API accepts and passes bedrooms, bathrooms, unitMix to RentCast.
+  - [x] Add Property wizard and Edit form support new structure.
+  - [x] Property detail shows per-unit rents for multi-family.
+  - [x] Metrics use total rent (sum of unitRents); no regression.
+  - [x] Existing properties without unitRents still work (currentMonthlyRent fallback).
+  - [x] Run `npm run check` when done.
+
+- [x] **RentCast unit mix fix:** RentCast API does not support `unitMix` (see [RentCast rent estimate docs](https://developers.rentcast.io/reference/rent-estimate-long-term)). Replaced with `bedrooms` and `bathrooms` for multi-family ("Typical unit bedrooms/bathrooms") — these are supported params per [RentCast changelog](https://developers.rentcast.io/changelog/api-release-2025-08). Removed unitMix from RentCast integration. Multi-family now uses same bedrooms/bathrooms fields as single-family for estimates. unitMix kept in schema for backwards compat (display only).
+
+- [x] **Additional property types (Condo, Townhouse, Manufactured, Apartment):** RentCast supports 6 property types; we currently support 2. Add: Condo, Townhouse, Manufactured, Apartment. (1) **Schema/validation:** Extend propertyType enum. (2) **Units rule:** Only Multi-Family and Apartment allow units > 1; Single Family, Condo, Townhouse, Manufactured enforce units = 1. (3) **RentCast mapping:** Map to RentCast values (Single Family, Condo, Townhouse, Manufactured, Multi-Family, Apartment). (4) **UI:** Add options to property type dropdown in wizard and form. (5) **Per-unit rent:** Single-unit types use one rent field; multi-unit types use per-unit fields.
+
+- [x] **Admin dashboard:** Add an admin section to manage users, view aggregate stats, and monitor API usage. Admin access restricted by env var; all checks server-side.
+
+  **Admin auth (lib/auth.ts):**
+  - Add `isAdmin(user: { email: string }): boolean` — parses `ADMIN_EMAILS` from env (comma-separated), checks if `user.email` (lowercase) is in the list. Returns false if `ADMIN_EMAILS` is empty or unset.
+  - Add `ADMIN_EMAILS` to `app/.env.example` (placeholder: `admin@example.com`). Document in `docs/manual-steps.md`. Do not commit real admin emails.
+  - Admin check is server-side only; never expose to client.
+
+  **RentCast API usage logging:**
+  - Add `RentCastApiCall` model to Prisma: `userId`, `propertyId?`, `createdAt`. Log each successful/failed call from the rent estimate API route.
+  - Migration required.
+  - Enables admin to see total calls and per-user breakdown.
+
+  **Admin layout and guard:**
+  - Create `app/(app)/admin/` route group. Layout: call `getAppUser()`, then `isAdmin(user)`. If not admin, redirect to `/` or 403.
+  - Admin routes are under `/admin/*`. Same app shell (sidebar) but add "Admin" nav link only when `isAdmin(user)`.
+
+  **Admin dashboard page (`/admin`):**
+  - **Summary cards:** Total users, total properties, subscription breakdown (free / investor / pro), RentCast API calls this month.
+  - **User list:** Table with email, plan, property count, last active (from User.updatedAt or most recent property/mortgage update). Paginated or limited to recent 50.
+  - **RentCast usage:** Total calls this month, calls by user (optional). Simple table or summary.
+
+  **Admin API routes (optional):**
+  - `GET /api/admin/stats` — returns aggregate counts. Auth: `getAppUser()` + `isAdmin()`. Returns 403 if not admin.
+  - Or compute stats in server component; no separate API if data comes from Prisma directly.
+
+  **Nav:**
+  - In app nav (sidebar), show "Admin" link only when `isAdmin(user)`. Use same layout as Dashboard, Properties, etc.
+
+  **Security checklist:**
+  - [x] `ADMIN_EMAILS` in .env only; never in client bundle.
+  - [x] Every admin route and layout checks `isAdmin(user)` server-side.
+  - [x] No client-side admin checks (bypassable).
+  - [x] Admin API routes (if any) also enforce `isAdmin()`.
+
+  **Acceptance criteria:**
+  - [x] `isAdmin(user)` in lib/auth.ts; uses ADMIN_EMAILS env var.
+  - [x] ADMIN_EMAILS in .env.example and docs/manual-steps.md.
+  - [x] RentCastApiCall model + migration; rent estimate route logs each call.
+  - [x] `/admin` route group with layout guard (redirect non-admins).
+  - [x] Admin dashboard shows: user count, property count, plan breakdown, RentCast calls this month.
+  - [x] Admin dashboard shows user list (email, plan, property count, last active).
+  - [x] "Admin" nav link visible only to admins.
+  - [x] Non-admins cannot access /admin (redirect or 403).
+  - [x] Run `npm run check` when done.
+
+- [x] **Add Property draft save / unsaved changes guard:** When user is in the add property wizard and navigates away (e.g. clicks "View plans" after hitting property limit), they lose all entered data. Add: (1) **Leave warning:** Popup when user tries to navigate away with unsaved data. Options: "Save draft and continue", "Don't save and continue", "Cancel" (stay). (2) **Draft restoration:** When user returns to Add Property, if a draft exists, prompt: "Continue from draft" or "Start fresh". Show draft timestamp (e.g. "Saved at 2:34 PM"). Start fresh deletes the draft. (3) **Draft storage:** Each save overwrites the previous; one draft per user. Modern app focus: smooth UX, no data loss.
+
+  **Implementation (refined):**
+
+  - **Storage:** `localStorage` key `add-property-wizard-draft`. Store `{ data: WizardData, savedAt: string }` (ISO timestamp). No backend. Defer auto-save to Phase 2.
+
+  - **Navigation interception:** Create `DraftContext` with `navigateTo(href)`. When `hasDraft` is true, `navigateTo` shows modal first; on confirm, saves/clears draft and navigates. Nav links and "View plans" CTA (property limit) all use `navigateTo` instead of direct Link. `beforeunload` for browser close/refresh.
+
+  - **Dirty detection:** `hasAnyWizardData(data)` — true if any address, purchase, income, or mortgage field has meaningful content. Avoid false positives on empty form.
+
+  - **Draft timestamp:** Store `savedAt` with draft. In restore modal: "Saved at 2:34 PM" or "Saved 2 hours ago". Helps user decide Continue vs Start fresh.
+
+  - **Property limit CTA:** "View plans" button must call `navigateTo('/pricing')` so it goes through the same modal flow.
+
+  **Acceptance criteria:**
+  - [x] Navigating away with entered data shows modal: Save draft / Don't save / Cancel.
+  - [x] "Save draft" persists `{ data, savedAt }` to localStorage and navigates.
+  - [x] Returning to Add Property with draft shows prompt: Continue or Start fresh, with timestamp.
+  - [x] Start fresh deletes draft.
+  - [x] Each save overwrites previous draft.
+  - [x] Successful property creation clears draft.
+  - [x] Run `npm run check` when done.
+
+- [x] **Security: headers + rate limiting:** Per docs/security-audit.md §3–4. (1) **Security headers:** Add to `app/next.config.ts` — X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. (2) **Rent estimate rate limit:** In GET /api/estimates/rent, after getAppUser(), count RentCastApiCall for userId in last hour; if >= 20 return 429. DB-based, no new deps. (3) **Account delete:** Defer or add AccountActionAttempt table; see audit for Option A/B. Document in security-notes.md.
+
+  **Acceptance criteria:**
+  - [x] Security headers in next.config
+  - [x] Rent estimate API rate limited (20/hour per user)
+  - [x] Run `npm run check` when done
+
+---
+
+## New tasks (to be picked up by builder)
+
+- [x] **Dashboard enhancements (charts, metrics, diverging bar):** Improve dashboard charts and add new metrics. See recommendations below.
+
+  **1. Cash flow chart — fix negative values:**
+  - Add `domain={['dataMin', 'dataMax']}` to YAxis in `cash-flow-chart.tsx` so negative bars render below the zero line instead of being clipped.
+
+  **2. Cash flow chart — diverging bar (optional, if clean):**
+  - Replace vertical bar chart with a **diverging bar chart**: bars extend left (negative) and right (positive) from a center line. Very clear for mixed positive/negative cash flow. Use Recharts BarChart with `layout="vertical"` and `stackId` or a custom approach. Only implement if it can be done cleanly and elegantly; otherwise keep the fixed vertical bar chart.
+
+  **3. New summary metrics (dashboard cards):**
+  - **Cash-on-cash return** — `annualCashFlow / cashInvested` when cashInvested > 0. Portfolio-level: weighted by property or sum(annualCashFlow) / sum(cashInvested). Show as percentage.
+  - **NOI (Net Operating Income)** — `grossAnnualRent - annualExpenses`; portfolio total. Add to summary cards or a secondary row.
+
+  **4. Rent vs expenses breakdown (optional chart):**
+  - Stacked bar or pie: Rent vs Expenses vs Mortgage by property. Helps users see where money goes. Add only if it fits the layout and doesn’t clutter.
+
+  **5. Metric help modal:**
+  - Add definitions for any new metrics (cash-on-cash, NOI) to `metric-help-modal.tsx`.
+
+  **Acceptance criteria:**
+  - [ ] Negative cash flow bars display correctly (YAxis domain fix).
+  - [ ] Diverging bar chart for cash flow OR keep vertical bar with fix (builder’s call based on elegance).
+  - [ ] Cash-on-cash return and NOI shown on dashboard when applicable.
+  - [ ] Metric help updated for new metrics.
+  - [ ] Run `npm run check` when done.
+
+- [ ] **Ownership % audit + display options:** Ensure ownership % is applied consistently and offer user choice for how debt/liability is displayed.
+
+  **Current behavior (audit):**
+  - `property-metrics.ts` and `portfolio-metrics.ts` scale by ownership %: equity, rent, expenses, cash flow, value, debt.
+  - **Dashboard** (`dashboard/page.tsx`): Does NOT pass `ownershipPercent` in portfolioInput — metrics default to 100%. **Bug:** partial owners see full-property numbers on dashboard.
+  - **Charts:** `debtVsValue` uses raw `estimatedValue` and `totalMortgageBalance` — shows full property, not user’s share. May be intentional (property-level view) or inconsistent.
+  - Properties page, property detail, export, summary API: all pass ownershipPercent correctly.
+
+  **Ownership model — recommendations:**
+
+  | Metric | Proportional (My share) | Full liability |
+  |--------|-------------------------|-----------------|
+  | **Equity** | (value − debt) × % | Same — you own X% of equity |
+  | **Rent** | rent × % | Same — you receive X% of rent |
+  | **Expenses** | expenses × % | Same — your share of taxes, insurance, etc. |
+  | **Debt** | debt × % (your share of the asset’s debt) | debt × 100% (full liability — you’re on the hook) |
+  | **Mortgage payment** | payment × % | payment × 100% (full payment) |
+  | **Cash flow** | (rent − expenses − payment) × % | (rent × % − expenses × % − payment) — income scaled, debt full |
+
+  **Recommendation:** Default to **Proportional** (current behavior) for all metrics. It answers “What’s my piece?” and is what most partial owners want. Add an optional **Settings** toggle: “Display mode: My share (proportional) | Full liability” for users who want to see their joint liability.
+
+  **Implementation:**
+  1. **Fix dashboard:** Pass `ownershipPercent: p.ownershipPercent ?? 100` in dashboard `portfolioInput`. Same for chart data — ensure equity, debtVsValue, cashFlow use scaled metrics when ownership < 100%.
+  2. **Chart consistency:** Decide: charts show (a) property-level (full numbers) or (b) user’s share (scaled). Recommend (b) for consistency with summary cards. Update debtVsValue and equity charts to use scaled values when ownership < 100%.
+  3. **Display mode (Phase 2):** Add User or App setting: `ownershipDisplayMode: 'proportional' | 'full_liability'`. When `full_liability`: debt and mortgage payment use 100%; equity, rent, expenses stay scaled; cash flow = (rent×% − expenses×% − payment). Store in User model or localStorage; default proportional.
+  4. **Documentation:** Add brief note to `docs/architecture-and-build-practices.md` or `docs/security-notes.md` (or new `docs/ownership-metrics.md`) explaining the two modes and when to use each.
+
+  **Acceptance criteria:**
+  - [x] Dashboard passes ownershipPercent; partial owners see correct scaled metrics.
+  - [x] Charts (equity, debtVsValue, cashFlow) use scaled values when ownership < 100%.
+  - [x] Display mode toggle (proportional vs full liability) — Phase 2 implemented.
+  - [x] Run `npm run check` when done.
+
+- [x] **Ownership display mode toggle (Phase 2):** Add Settings toggle for "My share (proportional)" vs "Full liability" view. See docs/ownership-metrics.md.
+
+  **1. Schema:** Add `ownershipDisplayMode String?` to User model. Values: `"proportional"` (default) or `"full_liability"`. Migration required.
+
+  **2. Metrics logic:** Extend `computePortfolioMetrics` and `computePropertyMetrics` to accept optional `displayMode`. When `full_liability`:
+  - Debt: 100% (not scaled by ownership %)
+  - Mortgage payment: 100% (not scaled)
+  - Equity, rent, expenses: stay scaled by ownership %
+  - Cash flow: (rent×% − expenses×% − full payment) per property; portfolio = sum
+  - LTV: totalDebt (full) / totalMarketValue (scaled) — debt uses 100%, value uses scaled
+
+  **3. API:** Add PATCH /api/me or extend existing to accept `ownershipDisplayMode`. Auth via getAppUser(). Validate value is "proportional" or "full_liability".
+
+  **4. Settings UI:** Add section "Portfolio display" with toggle/select: "My share (proportional)" | "Full liability". Helper text: "Proportional shows your share of each metric. Full liability shows 100% of debt and mortgage (joint liability)." Client component that calls API on change; server refetches or use router.refresh().
+
+  **5. Wire up everywhere:** Dashboard, properties page, property detail, charts, export API, portfolio summary API — pass user.ownershipDisplayMode ?? "proportional" into metrics. getAppUser() already returns user; ensure it includes ownershipDisplayMode from DB.
+
+  **6. Documentation:** Update docs/ownership-metrics.md to mark Full Liability as implemented.
+
+  **Acceptance criteria:**
+  - [x] User can toggle display mode in Settings.
+  - [x] Dashboard, properties, property detail, charts, export use the selected mode.
+  - [x] Proportional = current behavior (default).
+  - [x] Full liability = debt and payment at 100%; equity, rent, expenses scaled; cash flow = (rent×% − expenses×% − payment).
+  - [x] Run `npm run check` when done.
 
 ---
 

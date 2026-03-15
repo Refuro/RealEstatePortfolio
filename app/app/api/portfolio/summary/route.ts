@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
 
 export async function GET() {
@@ -26,7 +27,7 @@ export async function GET() {
     );
     return {
       id: p.id,
-      monthlyRent: Number(p.currentMonthlyRent),
+      monthlyRent: getPropertyTotalRent(p),
       monthlyExpenses: Number(p.currentMonthlyExpenses),
       estimatedValue: Number(p.currentEstimatedValue),
       cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
@@ -36,7 +37,8 @@ export async function GET() {
     };
   });
 
-  const metrics = computePortfolioMetrics(portfolioInput);
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const metrics = computePortfolioMetrics(portfolioInput, displayMode);
 
   return NextResponse.json({
     ...metrics,

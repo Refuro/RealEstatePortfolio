@@ -13,17 +13,33 @@ export type RentCastParams = {
   state: string;
   zipCode: string;
   addressLine2?: string;
-  propertyType?: "single_family" | "multi_family";
+  propertyType?: "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment";
   units?: number;
+  /** Bedrooms (single-family) or typical unit bedrooms (multi-family). RentCast supported. */
+  bedrooms?: number;
+  /** Bathrooms (single-family) or typical unit bathrooms (multi-family). RentCast supported. */
+  bathrooms?: number;
 };
 
 export type RentCastResult = { rent: number };
 
 /** Map our property types to RentCast property types */
+const RENTCAST_PROPERTY_TYPE_MAP: Record<
+  "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment",
+  string
+> = {
+  single_family: "Single Family",
+  condo: "Condo",
+  townhouse: "Townhouse",
+  manufactured: "Manufactured",
+  multi_family: "Multi-Family",
+  apartment: "Apartment",
+};
+
 function toRentCastPropertyType(
-  propertyType: "single_family" | "multi_family"
+  propertyType: keyof typeof RENTCAST_PROPERTY_TYPE_MAP
 ): string {
-  return propertyType === "single_family" ? "House" : "Apartment";
+  return RENTCAST_PROPERTY_TYPE_MAP[propertyType] ?? "Single Family";
 }
 
 /**
@@ -48,6 +64,12 @@ export async function fetchRentEstimate(
   }
   if (params.units != null && params.units > 1) {
     searchParams.set("units", String(params.units));
+  }
+  if (params.bedrooms != null && params.bedrooms >= 1) {
+    searchParams.set("bedrooms", String(params.bedrooms));
+  }
+  if (params.bathrooms != null && params.bathrooms >= 0.5) {
+    searchParams.set("bathrooms", String(params.bathrooms));
   }
 
   const url = `${RENTCAST_BASE}?${searchParams.toString()}`;

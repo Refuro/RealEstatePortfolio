@@ -20,6 +20,20 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 
 ---
 
+## Security headers + rate limiting (March 2025)
+
+- **Security headers** — Added via `next.config.ts` async `headers()` for `/:path*`: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera, microphone, geolocation disabled).
+- **Rent estimate rate limit** — GET `/api/estimates/rent` is limited to 20 calls per user per hour. Uses `RentCastApiCall` table count; returns 429 with `{ error: "Rate limit exceeded. Try again later." }` when exceeded. DB-based, no new dependencies.
+
+---
+
+## Security audit (March 2025)
+
+- See [security-audit.md](security-audit.md) for full assessment.
+- **Summary:** Auth, authorization, input validation, and secrets handling are strong. Gaps: no rate limiting, no security headers, RentCast estimate could be abused. Prioritize rate limiting and security headers.
+
+---
+
 ## Phase 4 — Stripe (implemented)
 
 - **Webhook:** `/api/billing/webhook` is a public route (excluded from Clerk auth in middleware). Security is enforced by verifying the request body with `STRIPE_WEBHOOK_SECRET` via `stripe.webhooks.constructEvent()`; invalid or missing signature returns 400.

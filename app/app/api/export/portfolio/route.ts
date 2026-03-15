@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 
 function escapeCsvCell(value: string | number | null | undefined): string {
@@ -47,6 +48,7 @@ export async function GET() {
   ];
 
   const rows: string[][] = [];
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
 
   for (const p of properties) {
     const totalMortgageBalance = p.mortgages.reduce(
@@ -68,15 +70,18 @@ export async function GET() {
     const monthlyPayment = totalMonthlyPayment || (firstMortgage ? Number(firstMortgage.monthlyPayment) : null);
     const lender = firstMortgage?.lenderName ?? null;
 
-    const metrics = computePropertyMetrics({
-      monthlyRent: Number(p.currentMonthlyRent),
-      monthlyExpenses: Number(p.currentMonthlyExpenses),
-      estimatedValue: Number(p.currentEstimatedValue),
-      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-      totalMortgageBalance,
-      totalMonthlyPayment,
-      ownershipPercent: p.ownershipPercent ?? 100,
-    });
+    const metrics = computePropertyMetrics(
+      {
+        monthlyRent: getPropertyTotalRent(p),
+        monthlyExpenses: Number(p.currentMonthlyExpenses),
+        estimatedValue: Number(p.currentEstimatedValue),
+        cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+        totalMortgageBalance,
+        totalMonthlyPayment,
+        ownershipPercent: p.ownershipPercent ?? 100,
+      },
+      displayMode
+    );
 
     const address = [p.addressLine1, p.addressLine2, p.city, p.state, p.zipCode]
       .filter(Boolean)
@@ -98,7 +103,7 @@ export async function GET() {
       escapeCsvCell(Number(p.purchasePrice)),
       escapeCsvCell(purchaseDate),
       escapeCsvCell(Number(p.currentEstimatedValue)),
-      escapeCsvCell(Number(p.currentMonthlyRent)),
+      escapeCsvCell(getPropertyTotalRent(p)),
       escapeCsvCell(Number(p.currentMonthlyExpenses)),
       escapeCsvCell(p.cashInvested != null ? Number(p.cashInvested) : ""),
       escapeCsvCell(p.ownershipPercent ?? 100),

@@ -3,7 +3,11 @@
  * Uses property-level NOI and values for weighted cap rate and LTV.
  */
 
-import { computePropertyMetrics, type PropertyMetricsInput } from "./property-metrics";
+import {
+  computePropertyMetrics,
+  type PropertyMetricsInput,
+  type OwnershipDisplayMode,
+} from "./property-metrics";
 
 export type PortfolioPropertyInput = PropertyMetricsInput & {
   id: string;
@@ -18,12 +22,17 @@ export type PortfolioMetrics = {
   totalMonthlyExpenses: number;
   totalMonthlyCashFlow: number;
   totalNoi: number;
+  totalCashInvested: number;
   weightedCapRate: number | null;
   portfolioLtv: number | null;
+  portfolioCashOnCashReturn: number | null;
   propertyCount: number;
 };
 
-export function computePortfolioMetrics(properties: PortfolioPropertyInput[]): PortfolioMetrics {
+export function computePortfolioMetrics(
+  properties: PortfolioPropertyInput[],
+  displayMode?: OwnershipDisplayMode | null
+): PortfolioMetrics {
   if (properties.length === 0) {
     return {
       totalMarketValue: 0,
@@ -33,33 +42,50 @@ export function computePortfolioMetrics(properties: PortfolioPropertyInput[]): P
       totalMonthlyExpenses: 0,
       totalMonthlyCashFlow: 0,
       totalNoi: 0,
+      totalCashInvested: 0,
       weightedCapRate: null,
       portfolioLtv: null,
+      portfolioCashOnCashReturn: null,
       propertyCount: 0,
     };
   }
 
+  const fullLiability = displayMode === "full_liability";
+
   let totalMarketValue = 0;
   let totalDebt = 0;
+  let totalEquity = 0;
   let totalMonthlyRent = 0;
   let totalMonthlyExpenses = 0;
   let totalMonthlyCashFlow = 0;
   let totalNoi = 0;
+  let totalCashInvested = 0;
 
   for (const p of properties) {
-    const metrics = computePropertyMetrics(p);
+    const metrics = computePropertyMetrics(p, displayMode);
     const scale = (p.ownershipPercent ?? 100) / 100;
+
     totalMarketValue += p.estimatedValue * scale;
-    totalDebt += p.totalMortgageBalance * scale;
     totalMonthlyRent += p.monthlyRent * scale;
     totalMonthlyExpenses += p.monthlyExpenses * scale;
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
     totalNoi += metrics.noi;
-  }
+    totalEquity += metrics.equity;
 
-  const totalEquity = totalMarketValue - totalDebt;
+    if (fullLiability) {
+      totalDebt += p.totalMortgageBalance; // 100% debt
+    } else {
+      totalDebt += p.totalMortgageBalance * scale;
+    }
+
+    if (p.cashInvested != null && p.cashInvested > 0) {
+      totalCashInvested += p.cashInvested * scale;
+    }
+  }
   const weightedCapRate = totalMarketValue > 0 ? totalNoi / totalMarketValue : null;
   const portfolioLtv = totalMarketValue > 0 ? totalDebt / totalMarketValue : null;
+  const portfolioCashOnCashReturn =
+    totalCashInvested > 0 ? (totalMonthlyCashFlow * 12) / totalCashInvested : null;
 
   return {
     totalMarketValue,
@@ -69,8 +95,10 @@ export function computePortfolioMetrics(properties: PortfolioPropertyInput[]): P
     totalMonthlyExpenses,
     totalMonthlyCashFlow,
     totalNoi,
+    totalCashInvested,
     weightedCapRate,
     portfolioLtv,
+    portfolioCashOnCashReturn,
     propertyCount: properties.length,
   };
 }

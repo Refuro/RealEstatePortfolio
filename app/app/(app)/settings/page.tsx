@@ -5,6 +5,7 @@ import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
 import { DeleteAccountSection } from "./delete-account-section";
 import { DownloadCsvButton } from "./download-csv-button";
+import { OwnershipDisplayToggle } from "./ownership-display-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
 export default async function SettingsPage() {
@@ -30,6 +31,15 @@ export default async function SettingsPage() {
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Appearance</h2>
         <div className="rounded-lg border border-border bg-card p-6">
           <ThemeToggle />
+        </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Portfolio display</h2>
+        <div className="rounded-lg border border-border bg-card p-6">
+          <OwnershipDisplayToggle
+            initialMode={(user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability"}
+          />
         </div>
       </section>
 

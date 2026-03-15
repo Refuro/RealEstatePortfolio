@@ -33,6 +33,16 @@ const METRIC_DEFINITIONS = [
     definition:
       "Loan-to-value ratio for your portfolio. Total debt divided by total property value. Lower LTV means more equity and less leverage.",
   },
+  {
+    term: "NOI (Net Operating Income)",
+    definition:
+      "Gross annual rent minus annual expenses. This is income before mortgage payments. For partial ownership, it reflects your share of NOI.",
+  },
+  {
+    term: "Cash-on-cash return",
+    definition:
+      "Annual cash flow divided by cash invested. For partial ownership, uses your share of cash flow and invested capital. Shows the return on your actual money.",
+  },
 ];
 
 export function MetricHelpModal({
