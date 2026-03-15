@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyLimit } from "@/lib/plans";
+import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import {
@@ -63,11 +65,15 @@ export default async function PropertiesPage() {
   const user = await getAppUser();
   if (!user) return null;
 
-  const properties = await prisma.property.findMany({
+  const allProperties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
-    orderBy: { createdAt: "desc" },
   });
+
+  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
+  const totalCount = allProperties.length;
+  const overLimit = totalCount > propertyLimit;
 
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput: PortfolioPropertyInput[] = properties.map(
@@ -129,6 +135,14 @@ export default async function PropertiesPage() {
         </div>
       ) : (
         <>
+          {overLimit && (
+            <p className="mb-4 text-sm text-muted">
+              Showing {properties.length} of {totalCount} properties (plan limit).{" "}
+              <Link href="/pricing" className="font-medium text-foreground hover:underline">
+                Upgrade to see all
+              </Link>
+            </p>
+          )}
           {properties.length >= 1 && (
             <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               <MetricCard

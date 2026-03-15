@@ -2,11 +2,16 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
 import { Menu } from "lucide-react";
 import { AppNav } from "./app-nav";
 import { DraftProvider, useDraft } from "./draft-context";
+import { OverLimitBanner } from "./components/over-limit-banner";
+import { PastDueBanner } from "./components/past-due-banner";
+
+const BILLING_SYNC_KEY = "billing-sync-last";
+const BILLING_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 min
 function LogoLink() {
   const pathname = usePathname();
   const draft = useDraft();
@@ -35,15 +40,54 @@ function LogoLink() {
 export function AppLayoutClient({
   children,
   showAdmin,
+  bannerProps,
 }: {
   children: React.ReactNode;
   user?: { id: string; email: string } | null;
   showAdmin: boolean;
+  bannerProps?: {
+    propertyCount: number;
+    dealCount: number;
+    propertyLimit: number;
+    dealLimit: number;
+    overLimit: boolean;
+    subscriptionStatus: string | null;
+    stripeCustomerId: string | null;
+    subscriptionTier: string;
+  };
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
 
   const closeDrawer = () => setDrawerOpen(false);
+
+  useEffect(() => {
+    if (
+      !bannerProps?.stripeCustomerId ||
+      (bannerProps.subscriptionTier ?? "free").toLowerCase() === "free"
+    ) {
+      return;
+    }
+    const last = sessionStorage.getItem(BILLING_SYNC_KEY);
+    const lastTs = last ? parseInt(last, 10) : 0;
+    if (Date.now() - lastTs < BILLING_SYNC_INTERVAL_MS) return;
+
+    let cancelled = false;
+    fetch("/api/billing/sync")
+      .then((res) => res.json())
+      .then((data: { synced?: boolean; tier?: string }) => {
+        if (cancelled) return;
+        sessionStorage.setItem(BILLING_SYNC_KEY, String(Date.now()));
+        if (data.synced && data.tier === "free") {
+          router.refresh();
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [bannerProps?.stripeCustomerId, bannerProps?.subscriptionTier, router]);
 
   useEffect(() => {
     const id = setTimeout(() => setDrawerOpen(false), 0);
@@ -126,7 +170,21 @@ export function AppLayoutClient({
 
       {/* Main content */}
       <main className="flex-1 overflow-auto p-4 pt-20 md:p-6 md:pt-6">
-        <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl">{children}</div>
+        <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
+          {bannerProps && (
+            <>
+              <PastDueBanner subscriptionStatus={bannerProps.subscriptionStatus} />
+              <OverLimitBanner
+                propertyCount={bannerProps.propertyCount}
+                dealCount={bannerProps.dealCount}
+                propertyLimit={bannerProps.propertyLimit}
+                dealLimit={bannerProps.dealLimit}
+                overLimit={bannerProps.overLimit}
+              />
+            </>
+          )}
+          {children}
+        </div>
       </main>
     </div>
     </DraftProvider>

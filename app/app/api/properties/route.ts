@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
   if (!canAddProperty(user.subscriptionTier, currentCount)) {
     return NextResponse.json(
       {
-        error: "Property limit reached for your plan. Upgrade to add more properties.",
+        error: "Property limit reached. Upgrade your plan or remove a property to add more.",
         code: "PLAN_LIMIT_REACHED",
       },
       { status: 403 }

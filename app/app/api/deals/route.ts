@@ -120,7 +120,7 @@ export async function POST(request: NextRequest) {
   if (!canAddDeal(user.subscriptionTier, currentCount)) {
     return NextResponse.json(
       {
-        error: "Deal limit reached for your plan. Upgrade to save more deals.",
+        error: "Deal limit reached. Upgrade your plan or remove a deal to save more.",
         code: "PLAN_LIMIT_REACHED",
       },
       { status: 403 }

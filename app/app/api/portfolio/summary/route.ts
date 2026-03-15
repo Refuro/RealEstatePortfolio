@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyLimit } from "@/lib/plans";
+import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
 
@@ -10,10 +12,13 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const properties = await prisma.property.findMany({
+  const allProperties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
   });
+
+  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
 
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {

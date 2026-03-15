@@ -271,10 +271,23 @@ export async function POST(req: NextRequest) {
   const slotsRemaining = limit - propertyCount;
 
   if (!canAdd) {
-    return NextResponse.json({
-      imported: 0,
-      errors: [{ row: 0, message: `Property limit reached (${limit}). Upgrade to add more.` }, ...errors],
-    });
+    return NextResponse.json(
+      {
+        error:
+          "Property limit reached. Upgrade your plan or remove a property to add more.",
+        code: "PLAN_LIMIT_REACHED",
+        imported: 0,
+        errors: [
+          {
+            row: 0,
+            message:
+              "Property limit reached. Upgrade your plan or remove a property to add more.",
+          },
+          ...errors,
+        ],
+      },
+      { status: 403 }
+    );
   }
 
   // Over limit and no selection: return requiresSelection (do NOT import)

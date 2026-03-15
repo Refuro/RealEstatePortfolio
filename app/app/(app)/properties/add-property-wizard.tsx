@@ -1210,7 +1210,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
       if (!res.ok) {
         setError(
           resData.code === "PLAN_LIMIT_REACHED"
-            ? "Property limit reached. Upgrade your plan to add more properties."
+            ? "Property limit reached. Upgrade your plan or remove a property to add more."
             : resData.error || "Something went wrong"
         );
         setSubmitting(false);
@@ -1257,13 +1257,13 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
       {error && (
         <div className="mb-4 rounded-md px-4 py-2 text-sm text-negative">
           {error}
-          {error.includes("Upgrade") && (
+          {(error.includes("Upgrade") || error.includes("limit")) && (
             <button
               type="button"
               onClick={() => draft?.navigateTo("/pricing")}
               className="ml-1 font-medium underline hover:no-underline"
             >
-              View plans
+              Upgrade plan
             </button>
           )}
         </div>

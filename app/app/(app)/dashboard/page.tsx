@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPropertyLimit } from "@/lib/plans";
+import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import {
   computePortfolioMetrics,
@@ -14,10 +16,13 @@ export default async function DashboardPage() {
   const user = await getAppUser();
   if (!user) return null;
 
-  const properties = await prisma.property.findMany({
+  const allProperties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
   });
+
+  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
 
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
