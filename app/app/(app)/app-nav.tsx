@@ -6,6 +6,8 @@ import { useDraft } from "./draft-context";
 import {
   LayoutDashboard,
   Building2,
+  Briefcase,
+  Calculator,
   CreditCard,
   Settings,
   Shield,
@@ -14,6 +16,8 @@ import {
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/properties", label: "Properties", icon: Building2 },
+  { href: "/analyze", label: "Analyze deal", icon: Calculator },
+  { href: "/deals", label: "Deals", icon: Briefcase },
   { href: "/pricing", label: "Pricing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

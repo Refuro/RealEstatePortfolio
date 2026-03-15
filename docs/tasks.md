@@ -412,4 +412,265 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ---
 
+## New tasks (value-add pipeline)
+
+- [x] **Vacancy assumption:** Add vacancy % to properties for more realistic cash flow and NOI.
+
+  **Schema:** Add `vacancyPercent Int @default(5)` to Property (0–100). Migration required.
+
+  **Metrics:** In `lib/metrics/property-metrics.ts`, add `vacancyPercent?: number` to PropertyMetricsInput. Effective rent = `monthlyRent * (1 - vacancyPercent/100)`. Use effective rent (not gross rent) for: grossAnnualRent, NOI, cash flow, cap rate. Expenses and mortgage unchanged. Portfolio metrics aggregate from property metrics (no change to portfolio-metrics signature; vacancy flows through property input).
+
+  **Data flow:** All callers that build PortfolioPropertyInput or PropertyMetricsInput must pass `vacancyPercent: p.vacancyPercent ?? 5`. Dashboard, properties page, property detail, export API, portfolio summary API, property metrics API.
+
+  **Forms:** Add "Vacancy %" field to add-property-wizard (Step 3, Income & expenses) and property-form. Number input 0–100, default 5. Helper text: "Expected vacancy (e.g. 5%). Reduces rent in cash flow calculations."
+
+  **Validation:** `lib/validations/property.ts` — optional vacancyPercent 0–100, default 5.
+
+  **Display:** Property detail page — show vacancy % when not default. Dashboard/charts — no change (metrics already use it). CSV export — add vacancy % column.
+
+  **Acceptance criteria:**
+  - [x] Property has vacancyPercent; migration applied.
+  - [x] Metrics use effective rent (rent × (1 − vacancy/100)) for cash flow, NOI, cap rate.
+  - [x] Add property wizard and edit form have vacancy field (default 5).
+  - [x] Dashboard, properties, property detail, export, APIs all pass vacancyPercent.
+  - [x] Run `npm run check` when done.
+
+- [x] **Scenario modeling:** "What if" sliders on property detail to recalculate metrics with adjusted inputs.
+
+  **Location:** Property detail page (`properties/[id]/page.tsx`). Add a collapsible "Scenario" section below Property metrics.
+
+  **UI:** Client component. Sliders or number inputs for: Rent % change (−20 to +20), Value % change (−20 to +20), Mortgage payment % change (−20 to +20). Each applies to the property's current values. Display recalculated: monthly cash flow, cap rate, cash-on-cash return. Label clearly: "What if rent increased 10%?" etc.
+
+  **Logic:** Reuse `computePropertyMetrics` from `lib/metrics/property-metrics.ts`. Pass base property data with adjusted values: `monthlyRent * (1 + rentChange/100)`, etc. No persistence — scenario is ephemeral.
+
+  **Design:** Follow design-spec; use semantic tokens. Collapsible so it doesn't clutter. "Reset" button to clear overrides.
+
+  **Acceptance criteria:**
+  - [x] Property detail has Scenario section (collapsible).
+  - [x] User can adjust rent %, value %, mortgage payment % and see recalculated metrics.
+  - [x] Uses computePropertyMetrics with adjusted inputs; no new formulas.
+  - [x] Reset clears overrides.
+  - [x] Run `npm run check` when done.
+
+- [x] **Data staleness nudges:** Show "Last updated X ago" on property cards and nudge when stale.
+
+  **Data:** Use `Property.updatedAt`. No schema change.
+
+  **Helper:** Add `formatTimeAgo(date: Date): string` in `lib/` (e.g. `lib/date-utils.ts`). Returns "2 days ago", "3 months ago", "1 year ago" for recent; "X months ago" or "X years ago" for older. Use `Intl.RelativeTimeFormat` or simple logic.
+
+  **Property cards (properties page):** Show "Updated 2 months ago" or similar below address or in card footer. Muted text.
+
+  **Property detail:** Optionally show "Last updated X ago" in property details section.
+
+  **Stale nudge:** When `updatedAt` is > 6 months ago, show a subtle badge or note: "Consider updating" or "Data may be stale" — muted, non-intrusive. On property cards and/or property detail.
+
+  **Acceptance criteria:**
+  - [x] Property cards show "Updated X ago" (or "Updated today" for same-day).
+  - [x] Properties not updated in 6+ months show "Consider updating" or similar nudge.
+  - [x] Property detail shows last updated.
+  - [x] formatTimeAgo utility in lib.
+  - [x] Run `npm run check` when done.
+
+---
+
+## New tasks (value-add pipeline — next)
+
+- [x] **CSV import:** Allow users to import properties from a CSV file. Onboarding lever for users with existing spreadsheet data.
+
+  **Format:** Accept CSV matching the export format. Required columns: address (or addressLine1, city, state, zipCode), purchasePrice, purchaseDate, currentEstimatedValue, rent, expenses. Optional: nickname, property type, units, vacancy %, cash invested, ownership %, mortgage balance, mortgage rate, mortgage term, monthly payment, lender. Header row required. See `app/app/api/export/portfolio/route.ts` for export column order — import should accept same or a minimal subset.
+
+  **API:** POST /api/import/portfolio — auth via getAppUser(). Accept multipart/form-data with file, or base64/raw CSV in JSON body. Parse CSV (use a lightweight parser; consider papaparse or built-in line-by-line). Validate each row with createPropertySchema (or a relaxed import schema). Respect property limit (canAddProperty). Create properties (and mortgages if columns present) in a transaction. Return { imported: number, errors: { row: number, message: string }[] }.
+
+  **Validation:** Create import-specific schema that maps CSV columns to property fields. Handle date formats (YYYY-MM-DD, MM/DD/YYYY). Property type: map "Single family" / "Multi family" to single_family / multi_family. State: 2-letter. Fail row on invalid data; collect errors; import valid rows.
+
+  **UI:** Settings → Export section, add "Import from CSV" with file input. On submit: upload, show progress/loading, display result (X imported, Y errors with row numbers). Offer download of template CSV (headers only or sample row) for users who don't have export format.
+
+  **Acceptance criteria:**
+  - [x] POST /api/import/portfolio accepts CSV file; auth required.
+  - [x] Parses CSV; validates rows; creates properties (and mortgages when columns present).
+  - [x] Respects property limit; returns imported count and per-row errors.
+  - [x] Settings has "Import from CSV" with file input and result feedback.
+  - [x] Template CSV available for download (headers matching export format).
+  - [x] Invalid rows reported with row number; valid rows imported.
+  - [x] Run `npm run check` when done.
+
+- [x] **Property value estimate (RentCast AVM):** Add "Estimate value" for properties, mirroring the rent estimate flow. RentCast has GET /v1/avm/value — same API key as rent.
+
+  **Integration:** Create `lib/integrations/rentcast.ts` value function or extend existing. `fetchValueEstimate(params: { address, city, state, zipCode, ... })` → `{ value: number }`. Handle errors, timeouts. See [RentCast value estimate docs](https://developers.rentcast.io/reference/value-estimate).
+
+  **API:** GET /api/estimates/value — auth via getAppUser(), validate query params (addressLine1, city, state, zipCode required). Call RentCast value endpoint. Return { value: number } or { error: string }. Rate limit: same as rent (RentCastApiCall or extend to track value calls). Consider separate model or type field if needed.
+
+  **UI — Add property wizard (Step 2, Purchase):** Add "Estimate value" button next to Current estimated value. On click: call API with address from Step 1. Populate value field on success. Loading and error states.
+
+  **UI — Edit property form:** Same "Estimate value" next to value field.
+
+  **Logging:** Log value estimate calls (RentCastApiCall or new table) for admin/usage tracking. Reuse existing pattern.
+
+  **Acceptance criteria:**
+  - [x] lib/integrations/rentcast.ts has fetchValueEstimate; uses RentCast AVM value endpoint.
+  - [x] GET /api/estimates/value exists; auth + validation; returns { value } or { error }.
+  - [x] Add property wizard Step 2 has "Estimate value" that populates value field.
+  - [x] Edit property form has "Estimate value".
+  - [x] API calls logged for admin; rate limit applied (reuse rent limit or extend).
+  - [x] Graceful failure: API error shows message; manual entry still works.
+  - [x] Run `npm run check` when done.
+
+- [x] **Deal analyzer / scratchpad:** "Analyze a deal" without adding to portfolio. Enter address, rent, price, expenses, mortgage → instant metrics. Acquisition evaluation; can drive sign-ups.
+
+  **Location:** New route /analyze or /deal-analyzer. Accessible to signed-in users (or optionally public for acquisition — if public, no auth; if auth, use getAppUser). Recommend auth required for consistency.
+
+  **UI:** Single page with form: Address (line1, city, state, zip — optional for quick analysis), Purchase price, Current value (default same as price), Monthly rent, Monthly expenses, Mortgage (balance, monthly payment — optional). Ownership % (default 100), Vacancy % (default 5). Submit or live-update as user types.
+
+  **Logic:** Reuse computePropertyMetrics with form inputs. No persistence. Display: monthly cash flow, annual cash flow, equity, cap rate, cash-on-cash (if cash invested provided), LTV. Show metrics in same style as PropertyMetricsSection.
+
+  **Design:** Follow design-spec. Clean form, clear labels. Optional: "Add to portfolio" CTA that redirects to /properties/new with pre-filled data (query params or state) — nice-to-have, can defer.
+
+  **Acceptance criteria:**
+  - [x] /analyze (or /deal-analyzer) route exists; auth required.
+  - [x] Form: address, price, value, rent, expenses, mortgage (balance, payment), ownership %, vacancy %.
+  - [x] Metrics computed with computePropertyMetrics; displayed (cash flow, cap rate, cash-on-cash, equity, LTV).
+  - [x] No persistence; ephemeral analysis.
+  - [x] Follow design-spec; add to nav or link from dashboard/properties (e.g. "Analyze a deal").
+  - [x] Run `npm run check` when done.
+
+- [x] **Save potential deals:** Persist analyzed deals so users can save, list, and promote them to portfolio. Address becomes meaningful; enables future "compare deals" feature.
+
+  **Plan limits:** Free tier: 5 saved deals max. Paid (Investor, Pro): 20 saved deals max. Enforce on create; show limit in UI when near or at cap.
+
+  **Schema:** New `SavedDeal` model. Fields: `id`, `userId`, `nickname?`, `addressLine1`, `addressLine2?`, `city`, `state`, `zipCode`, `purchasePrice`, `currentEstimatedValue`, `currentMonthlyRent`, `currentMonthlyExpenses`, `totalMortgageBalance`, `totalMonthlyPayment`, `ownershipPercent`, `vacancyPercent`, `cashInvested?`, `notes?`, `createdAt`, `updatedAt`. Store raw inputs; metrics computed on read via `computePropertyMetrics`. No mortgage sub-model — single balance + payment for simplicity.
+
+  **API:**
+  - `POST /api/deals` — create saved deal. Auth, Zod validation, enforce limit. Return created deal.
+  - `GET /api/deals` — list user's saved deals (auth). Return array with computed metrics for display.
+  - `GET /api/deals/[id]` — single deal (auth, ownership check).
+  - `PATCH /api/deals/[id]` — update deal (auth, ownership).
+  - `DELETE /api/deals/[id]` — delete deal (auth, ownership).
+
+  **UI — Analyze page:**
+  - Add "Save deal" button. Enabled when form has minimum required data (address, price or value, rent, expenses). On click: POST to API. On success: toast or inline message "Saved"; optionally navigate to /deals or stay with form cleared for next deal.
+  - If at limit: disable button, show "Upgrade to save more deals" or similar with link to /pricing.
+
+  **UI — Saved deals list (`/deals`):**
+  - New nav item "Deals" (or "Saved deals") between Analyze and Pricing. List cards: address/nickname, key metrics (cash flow, cap rate, equity), created date. Actions: View, Edit, Add to portfolio, Delete.
+  - Empty state: "No saved deals yet. Analyze a deal and save it to compare later."
+  - At limit: banner or inline note: "You've reached your limit. Upgrade to save more."
+
+  **UI — Deal detail (`/deals/[id]`):**
+  - Full form pre-filled; metrics section (reuse PropertyMetricsSection). Edit in place or "Edit" mode. "Add to portfolio" button: redirect to /properties/new with query params or POST to prefill endpoint.
+
+  **Add to portfolio flow:**
+  - From deal detail or list: "Add to portfolio" opens add-property wizard with fields pre-filled from saved deal. User can adjust before submitting. On success: optionally delete saved deal or keep (user choice — recommend keep for now; user can delete manually).
+
+  **Acceptance criteria:**
+  - [x] SavedDeal model + migration; all fields stored.
+  - [x] Plan limits: 5 (free), 20 (paid). Enforced on create; clear UI feedback at limit.
+  - [x] POST/GET/PATCH/DELETE /api/deals; auth + ownership; Zod validation.
+  - [x] Analyze page: "Save deal" button; saves current form; disabled at limit with upgrade CTA.
+  - [x] /deals list page: cards with address, metrics, actions (View, Add to portfolio, Delete).
+  - [x] /deals/[id] detail: full deal data, metrics, Edit, Add to portfolio.
+  - [x] Add to portfolio: pre-fills add-property wizard from saved deal; user submits to create property.
+  - [x] Design: modern, minimal; follows design-spec; no friction (one-click save, clear CTAs).
+  - [x] Future-ready: structure supports "compare deals" (e.g. side-by-side) in a later task.
+  - [x] Run `npm run check` when done.
+
+- [x] **Import CSV: selection when over limit (Option A):** When user imports more valid rows than their plan allows, use a two-phase flow so they can choose which properties to add. Clear upgrade CTA.
+
+  **Problem:** Currently, importing 3 rows with a 1-property limit shows "1 imported, 1 error(s)" — confusing, no choice, no upgrade path.
+
+  **Flow:**
+  1. User uploads CSV. API parses and validates.
+  2. If `validRows.length <= slotsRemaining`: import all (current behavior).
+  3. If `validRows.length > slotsRemaining`: **do not import**. Return `{ requiresSelection: true, validRows, slotsRemaining, limit, validationErrors }`.
+  4. UI shows selection step: "Your file has 3 properties. Your plan allows 1. Choose which to import:" — checkboxes per valid row (address/nickname), max `slotsRemaining` selectable.
+  5. "Import selected" button + prominent "Upgrade to import all" link → /pricing.
+  6. User selects, clicks "Import selected". Second POST with same file + `selectedIndices` (e.g. "0,2" in formData).
+  7. API imports only selected rows (up to limit).
+
+  **API changes (POST /api/import/portfolio):**
+  - Accept optional `selectedIndices` in formData (comma-separated: "0,2" = row indices in validRows).
+  - When over limit and no selectedIndices: return `requiresSelection` payload; do not import.
+  - When selectedIndices provided: import only those rows (validate indices, enforce limit).
+
+  **UI changes (import-csv-section.tsx):**
+  - Store uploaded File in state when starting import (for second request).
+  - When response has `requiresSelection`: render selection UI (checkboxes, address/nickname per row, max = slotsRemaining).
+  - "Import selected" triggers second POST with file + selectedIndices.
+  - Prominent "Upgrade to import all" link to /pricing.
+  - Separate validation errors from limit messaging — show validation errors in list; limit message in selection header.
+
+  **Acceptance criteria:**
+  - [x] When validRows > slotsRemaining: no import; API returns requiresSelection with validRows, slotsRemaining, limit.
+  - [x] UI shows selection step with checkboxes (address/nickname), max slotsRemaining selectable.
+  - [x] "Import selected" sends file + selectedIndices; API imports only selected rows.
+  - [x] "Upgrade to import all" link to /pricing is prominent and clear.
+  - [x] Validation errors displayed separately from limit/selection messaging.
+  - [x] When validRows <= slotsRemaining: current behavior unchanged (import all).
+  - [x] Run `npm run check` when done.
+
+- [x] **Deal limits visibility + Pro limit bump:** Surface saved-deal usage across the app so users see limits and upgrade incentives. Bump Pro deal limit.
+
+  **Plan limit change (lib/plans.ts):**
+  - Pro: 20 → 50 saved deals. Investor stays 20. Free stays 5.
+
+  **Deals page (`/deals`):**
+  - Add usage in header/subtitle: "3 of 5 saved deals" (or "3/5 saved deals"). Always visible.
+  - When at limit: add "Upgrade to save more" link.
+  - Replace current at-limit-only banner with persistent usage + upgrade when needed.
+
+  **Settings — Plan & billing:**
+  - Add "Saved deals" row: "3 / 5" (or "3 of 5 saved deals").
+  - When at limit: "(limit reached)" + upgrade link, same pattern as Properties.
+
+  **Pricing page (pricing-cards.tsx):**
+  - Add saved-deal limits to each plan card. Free: "5 saved deals", Investor: "20 saved deals", Pro: "50 saved deals".
+  - Update plan descriptions to include both properties and deals (e.g. "1 property · 5 saved deals").
+
+  **Analyze page (optional):**
+  - Add subtle "3 of 5 deals saved" near Save button to reinforce limit.
+
+  **Acceptance criteria:**
+  - [x] Pro deal limit = 50 in lib/plans.ts.
+  - [x] Deals page shows "X of Y saved deals" with upgrade link when at limit.
+  - [x] Settings Plan & billing shows Saved deals row.
+  - [x] Pricing cards show saved-deal limits per plan.
+  - [x] Run `npm run check` when done.
+
+- [x] **View deal → Analyze with prefill:** When user clicks "View" on a saved deal, take them to the Analyze page with the deal pre-filled so they can tweak numbers and see live metrics. Overwrite on save.
+
+  **Problem:** Current deal detail (`/deals/[id]`) looks like a property view — static display, separate Edit mode. Users saving deals are considering them and want to circle back, mess with numbers, and see if it's worth it. The Analyze experience (editable form + live metrics) is the right mental model.
+
+  **Flow:**
+  1. "View" on a deal card → navigate to `/analyze?deal=id` (not `/deals/[id]`).
+  2. Analyze page: when `deal` query param present, fetch deal via GET /api/deals/[id], prefill form.
+  3. Form shows deal data; metrics update live as user edits (same as new analysis).
+  4. "Update deal" button (instead of "Save deal") — PATCH /api/deals/[id] to overwrite.
+  5. "New deal" clears form and clears query param; user can start fresh.
+  6. "Add to portfolio" still available — link to /properties/new?from=dealId.
+
+  **Deal detail page (`/deals/[id]`):**
+  - Option A: Remove. All "View" links go to /analyze?deal=id.
+  - Option B: Keep as lightweight redirect — /deals/[id] redirects to /analyze?deal=id.
+  - Option C: Keep minimal detail page with "Edit in Analyze" CTA that goes to /analyze?deal=id.
+  - Recommend Option B: /deals/[id] redirects to /analyze?deal=id. Single source of truth; no duplicate UI.
+
+  **Analyze page changes:**
+  - Accept `deal` query param. Server or client fetches deal, passes to form as initialData.
+  - DealAnalyzerForm: accept optional `dealId` and `initialData`. When present, prefill and show "Update deal" instead of "Save deal".
+  - On Update: PATCH instead of POST. On success: stay on page, show "Updated"; optionally clear dealId to allow "New deal" flow.
+
+  **Deals list:**
+  - "View" link: `/analyze?deal=${d.id}` instead of `/deals/${d.id}`.
+  - "Add to portfolio" unchanged.
+
+  **Acceptance criteria:**
+  - [x] View on deal → /analyze?deal=id with form pre-filled.
+  - [x] "Update deal" overwrites existing deal (PATCH).
+  - [x] "New deal" clears form and param.
+  - [x] Live metrics as user edits.
+  - [x] /deals/[id] redirects to /analyze?deal=id (or remove; no orphan).
+  - [x] Add to portfolio still works from Analyze when editing deal.
+  - [x] Run `npm run check` when done.
+
+---
+
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*

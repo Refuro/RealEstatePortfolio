@@ -34,6 +34,7 @@ export async function GET() {
       totalMortgageBalance,
       totalMonthlyPayment,
       ownershipPercent: p.ownershipPercent ?? 100,
+      vacancyPercent: p.vacancyPercent ?? 5,
     };
   });
 

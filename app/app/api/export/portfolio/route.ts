@@ -34,6 +34,7 @@ export async function GET() {
     "value",
     "rent",
     "expenses",
+    "vacancy %",
     "cash invested",
     "ownership %",
     "mortgage balance",
@@ -79,6 +80,7 @@ export async function GET() {
         totalMortgageBalance,
         totalMonthlyPayment,
         ownershipPercent: p.ownershipPercent ?? 100,
+        vacancyPercent: p.vacancyPercent ?? 5,
       },
       displayMode
     );
@@ -105,6 +107,7 @@ export async function GET() {
       escapeCsvCell(Number(p.currentEstimatedValue)),
       escapeCsvCell(getPropertyTotalRent(p)),
       escapeCsvCell(Number(p.currentMonthlyExpenses)),
+      escapeCsvCell(p.vacancyPercent ?? 5),
       escapeCsvCell(p.cashInvested != null ? Number(p.cashInvested) : ""),
       escapeCsvCell(p.ownershipPercent ?? 100),
       escapeCsvCell(mortgageBalance || ""),

@@ -43,6 +43,7 @@ export async function GET(
       totalMortgageBalance,
       totalMonthlyPayment,
       ownershipPercent,
+      vacancyPercent: property.vacancyPercent ?? 5,
     },
     displayMode
   );

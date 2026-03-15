@@ -1,10 +1,11 @@
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit } from "@/lib/plans";
+import { getDealLimit, getPropertyLimit } from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
 import { DeleteAccountSection } from "./delete-account-section";
 import { DownloadCsvButton } from "./download-csv-button";
+import { ImportCsvSection } from "./import-csv-section";
 import { OwnershipDisplayToggle } from "./ownership-display-toggle";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -12,13 +13,16 @@ export default async function SettingsPage() {
   const user = await getAppUser();
   if (!user) return null;
 
-  const [subscription, propertyCount] = await Promise.all([
+  const [subscription, propertyCount, dealCount] = await Promise.all([
     prisma.subscription.findUnique({ where: { userId: user.id } }),
     prisma.property.count({ where: { userId: user.id } }),
+    prisma.savedDeal.count({ where: { userId: user.id } }),
   ]);
 
   const limit = getPropertyLimit(user.subscriptionTier);
   const canAddMore = propertyCount < limit;
+  const dealLimit = getDealLimit(user.subscriptionTier);
+  const canAddMoreDeals = dealCount < dealLimit;
 
   return (
     <div>
@@ -73,14 +77,32 @@ export default async function SettingsPage() {
                 {user.subscriptionTier}
               </dd>
             </div>
-            <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
-              <dt className="text-sm font-medium text-muted">Properties</dt>
-              <dd className="text-base text-foreground">
-                {propertyCount} / {limit}
-                {!canAddMore && (
-                  <span className="ml-1 text-negative">(limit reached)</span>
-                )}
-              </dd>
+            <div className="flex flex-wrap gap-x-8 gap-y-4 sm:col-span-2">
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+                <dt className="text-sm font-medium text-muted">Properties</dt>
+                <dd className="text-base text-foreground">
+                  {propertyCount} / {limit}
+                  {!canAddMore && (
+                    <span className="ml-1 text-negative">(limit reached)</span>
+                  )}
+                </dd>
+              </div>
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+                <dt className="text-sm font-medium text-muted">Saved deals</dt>
+                <dd className="text-base text-foreground">
+                  {dealCount} / {dealLimit}
+                  {!canAddMoreDeals && (
+                    <span className="ml-1 text-negative">(limit reached)</span>
+                  )}
+                  {!canAddMoreDeals && (
+                    <span className="ml-1">
+                      <Link href="/pricing" className="font-medium text-foreground hover:underline">
+                        Upgrade
+                      </Link>
+                    </span>
+                  )}
+                </dd>
+              </div>
             </div>
             {subscription?.currentPeriodEnd && (
               <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
@@ -105,13 +127,16 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="mt-8">
+      <section id="export" className="mt-8 scroll-mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Export your data</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
-          <p className="text-base text-muted mb-4">
+        <div className="rounded-lg border border-border bg-card p-6 space-y-6">
+          <p className="text-base text-muted">
             Download your properties and metrics as a CSV file.
           </p>
           <DownloadCsvButton />
+          <div className="border-t border-border pt-6">
+            <ImportCsvSection />
+          </div>
         </div>
       </section>
 
