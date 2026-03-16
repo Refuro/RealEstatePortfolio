@@ -48,7 +48,7 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ---
 
-## Billing (Stripe) — Phase 4
+## Billing (Stripe)
 
 - [ ] **Stripe account:** Create at [stripe.com](https://stripe.com). Use test mode for development.
 - [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro"). For each product, create a monthly recurring price and an annual recurring price. Copy all four price IDs (`price_...`).
@@ -60,8 +60,8 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ## Security (manual)
 
-- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` (and Clerk/Stripe redirect URLs) to your real app URL. Never commit production keys or DB URL.
-- [ ] **Stripe (Phase 4):** When adding webhooks, verify signature with `STRIPE_WEBHOOK_SECRET` in the webhook handler; reject requests with invalid or missing signature.
+- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` to your production URL (e.g. `https://veldportfolio.com`) for canonical URLs, sitemap, and redirects. Set Clerk/Stripe redirect URLs to match. Never commit production keys or DB URL.
+- [ ] **Stripe:** When adding webhooks, verify signature with `STRIPE_WEBHOOK_SECRET` in the webhook handler; reject requests with invalid or missing signature.
 - [ ] **Clerk:** In production, use production Clerk instance and keys; update redirect URLs for production domain.
 
 ---
@@ -75,6 +75,12 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 ## Admin dashboard (optional)
 
 - [ ] **Admin emails:** To access `/admin`, set `ADMIN_EMAILS` in `app/.env` (and Vercel env for production). Use a comma-separated list of allowed emails, e.g. `ADMIN_EMAILS=you@example.com,other@example.com`. Do not commit real admin emails. If unset or empty, no one can access admin.
+
+---
+
+## Support / contact (launch pre-flight)
+
+- [ ] **Support email:** Create a support email address (e.g. `support@yourdomain.com`). Add it to `app/.env` as `SUPPORT_EMAIL`. Also add to Vercel env for production. The Support link appears in the footer (landing page and app shell) as a mailto link; it is hidden when `SUPPORT_EMAIL` is unset. Do not commit the real email.
 
 ---
 

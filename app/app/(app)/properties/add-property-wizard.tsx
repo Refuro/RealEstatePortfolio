@@ -1261,7 +1261,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
           {(error.includes("Upgrade") || error.includes("limit")) && (
             <button
               type="button"
-              onClick={() => draft?.navigateTo("/pricing")}
+              onClick={() => draft?.navigateTo("/plans")}
               className="ml-1 font-medium underline hover:no-underline"
             >
               Upgrade plan

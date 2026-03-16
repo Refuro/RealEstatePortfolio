@@ -60,7 +60,7 @@ export function OverLimitBanner({
         You&apos;re over your plan limit ({propertyCount} properties, {dealCount} saved deals).{" "}
         {limitCopy}{" "}
         <Link
-          href="/pricing"
+          href="/plans"
           className="font-medium text-accent hover:underline"
         >
           Upgrade to see all

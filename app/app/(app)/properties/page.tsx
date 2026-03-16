@@ -105,7 +105,7 @@ export default async function PropertiesPage() {
           {overLimit && (
             <p className="mb-4 text-sm text-muted">
               Showing {properties.length} of {totalCount} properties (plan limit).{" "}
-              <Link href="/pricing" className="font-medium text-foreground hover:underline">
+              <Link href="/plans" className="font-medium text-foreground hover:underline">
                 Upgrade to see all
               </Link>
             </p>

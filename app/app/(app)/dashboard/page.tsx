@@ -85,7 +85,7 @@ export default async function DashboardPage() {
       <div>
         <div className="rounded-lg border border-border bg-card p-8 text-center">
           <h1 className="text-2xl font-semibold text-foreground">
-            Welcome to Portfolio
+            Welcome to Veld
           </h1>
           <p className="mt-2 text-base text-muted">
             Track your rental properties and see equity, cash flow, and more at a

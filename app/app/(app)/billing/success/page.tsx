@@ -1,5 +1,10 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 export default async function BillingSuccessPage() {
   const user = await getAppUser();

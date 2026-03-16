@@ -10,7 +10,7 @@ The project uses:
 
 1. **PM and builder rules** — PM rule (`pm-agent.mdc`) tells Cursor how to act as the PM; builder rule (`builder-agent.mdc`) reinforces phase scope, Handoff, and manual-step boundaries.
 2. **Two Cursor hooks** — one runs when a subagent stops (optional follow-up to the PM); one runs before every shell command (allow/deny/ask by risk).
-3. **Docs the PM and builder rely on** — phase list, current phase, review checklist, workflow, manual steps, tasks, shell risk policy.
+3. **Docs the PM and builder rely on** — phase list, task list, review checklist, workflow, manual steps, shell risk policy.
 
 Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning the repo and ensuring the hook script is executable is enough for the infrastructure to work.
 
@@ -23,7 +23,7 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | Path | Purpose |
 |------|--------|
 | **`.cursor/rules/pm-agent.mdc`** | Rule that defines the PM agent. `alwaysApply: true` so it’s active in any chat. Tells the agent to use the phase workflow, the review checklist, and when to pause or gate phases. |
-| **`.cursor/rules/builder-agent.mdc`** | Rule that reinforces builder behavior: stay in scope, update `current-phase.md`, add Handoff, never do manual steps. |
+| **`.cursor/rules/builder-agent.mdc`** | Rule that reinforces builder behavior: stay in scope, update `tasks.md`, add env vars and manual steps to `.env.example` and `manual-steps.md`, never do manual steps. |
 | **`.cursor/rules/code-audit-agent.mdc`** | Code audit command. When the user says "run code audit" or "code audit", the agent launches a subagent that follows `docs/code-audit-process.md` and writes a report to `docs/code_audits/`. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
 | **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
@@ -36,11 +36,11 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | Doc | Role |
 |-----|------|
 | `docs/engineering-spec.md` | Phase list and scope (§8). |
-| `docs/current-phase.md` | Current phase and checklist; builder updates this and adds Handoff when done. |
+| `docs/tasks.md` | Task list; builder checks off items when done. New env vars and manual steps go to `.env.example` and `docs/manual-steps.md`. |
+| `docs/roadmap.md` | Value-add backlog, initiatives, long-term vision; PM promotes items to tasks.md when ready to build. |
 | `docs/pm-review-checklist.md` | Checklist the PM runs before approving a phase (build, lint, tests, scope, docs). |
-| `docs/pm-agent-workflow.md` | How to start the builder, when to pause, Phase 4 gate, command-level risk. |
+| `docs/pm-agent-workflow.md` | How to start the builder, task-based workflow, command-level risk. |
 | `docs/manual-steps.md` | Steps that stay manual (Vercel, Clerk, DB, Stripe); builder must not do these. |
-| `docs/tasks.md` | Optional task list for the builder (“complete tasks in tasks.md”). |
 | `docs/shell-risk-policy.md` | Canonical shell risk policy (allow/deny/ask). The `beforeShellExecution` hook implements this; keep them in sync. |
 | `docs/code-audit-process.md` | Process the code audit agent follows when the user runs a code audit. |
 | `docs/code_audits/` | Folder for code audit reports. User reviews reports and creates tasks from findings as needed. |
@@ -82,7 +82,7 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 
 ### Step 4: Use the workflow
 
-- Open a chat and treat the agent as the PM (e.g. “Start the builder at the stage the last builder left off at”). The PM rule will apply.
+- Open a chat and treat the agent as the PM (e.g. “Start the builder or Complete tasks in tasks.md”). The PM rule will apply.
 - The `beforeShellExecution` hook will gate shell commands; the `subagentStop` hook can prompt the PM to review when a builder subagent finishes.
 
 ---
