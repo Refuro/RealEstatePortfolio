@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { LandingNav } from "@/components/landing-nav";
+import { Footer } from "@/components/footer";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
@@ -17,15 +19,19 @@ export const metadata: Metadata = {
 };
 
 export default function PrivacyPage() {
+  const supportEmail = process.env.SUPPORT_EMAIL ?? null;
+
   return (
-    <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-3xl px-4 py-12">
-        <Link
-          href="/"
-          className="mb-8 inline-block text-sm text-muted hover:text-foreground"
-        >
-          ← Back to home
-        </Link>
+    <div className="flex min-h-screen flex-col bg-background">
+      <LandingNav userId={null} />
+      <main className="flex-1">
+        <div className="mx-auto max-w-3xl px-4 py-12">
+          <Link
+            href="/"
+            className="mb-8 inline-block text-sm text-muted hover:text-foreground"
+          >
+            ← Back to home
+          </Link>
         <h1 className="text-2xl font-semibold text-foreground">
           Privacy Policy
         </h1>
@@ -124,6 +130,8 @@ export default function PrivacyPage() {
           </Link>
         </div>
       </div>
+      </main>
+      <Footer supportEmail={supportEmail} />
     </div>
   );
 }

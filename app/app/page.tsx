@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
+import { LandingNav } from "@/components/landing-nav";
 import {
   LayoutGrid,
   TrendingUp,
@@ -54,8 +55,8 @@ function ValuePropIcon({
   Icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border border-border bg-card">
-      <Icon className="size-6 text-muted" aria-hidden />
+    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg border border-border bg-card sm:size-12">
+      <Icon className="size-5 text-muted sm:size-6" aria-hidden />
     </div>
   );
 }
@@ -72,38 +73,7 @@ export default async function HomePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <nav className="flex items-center justify-between border-b border-border px-4 py-3">
-        <Link href="/" className="text-lg font-semibold text-foreground">
-          Veld
-        </Link>
-        <div className="flex items-center gap-4 sm:gap-6 text-sm">
-          <Link href="/pricing" className="text-muted hover:text-foreground">
-            Pricing
-          </Link>
-          <Link href="/privacy" className="text-muted hover:text-foreground">
-            Privacy
-          </Link>
-          <Link href="/terms" className="text-muted hover:text-foreground">
-            Terms
-          </Link>
-          {!userId && (
-            <>
-              <Link
-                href="/sign-in"
-                className="text-muted hover:text-foreground"
-              >
-                Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-              >
-                Sign up
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <LandingNav userId={userId} />
 
       <main className="flex flex-1 flex-col">
         {/* Hero */}
@@ -169,22 +139,26 @@ export default async function HomePage({
         </section>
 
         {/* Value props */}
-        <section className="border-t border-border bg-card/50 px-4 py-12 sm:py-16">
+        <section className="border-t border-border bg-card/50 px-4 py-10 sm:py-16">
           <div className="mx-auto max-w-4xl">
-            <h2 className="mb-8 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+            <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-muted sm:mb-8">
               What you get
             </h2>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-8">
               {VALUE_PROPS.map((prop) => (
                 <div
                   key={prop.title}
-                  className="flex flex-col gap-3 rounded-lg border border-border bg-card p-6"
+                  className="flex flex-row items-start gap-4 rounded-lg border border-border bg-card p-4 sm:flex-col sm:gap-3 sm:p-6"
                 >
                   <ValuePropIcon Icon={prop.icon} />
-                  <h3 className="text-base font-semibold text-foreground">
-                    {prop.title}
-                  </h3>
-                  <p className="text-sm text-muted">{prop.description}</p>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-base font-semibold text-foreground">
+                      {prop.title}
+                    </h3>
+                    <p className="mt-0.5 text-sm text-muted sm:mt-1">
+                      {prop.description}
+                    </p>
+                  </div>
                 </div>
               ))}
             </div>
