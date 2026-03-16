@@ -1,8 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+
+export const metadata: Metadata = {
   title: "Terms of Service",
   description: "Terms of service for Veld Portfolio.",
+  alternates: { canonical: APP_URL + "/terms" },
+  openGraph: {
+    title: "Terms of Service | Veld Portfolio",
+    description: "Terms of service for Veld Portfolio.",
+    url: "/terms",
+  },
 };
 
 export default function TermsPage() {

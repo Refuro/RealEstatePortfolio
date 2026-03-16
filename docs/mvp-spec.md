@@ -1,5 +1,5 @@
 
-# Real Estate Portfolio Intelligence — MVP Specification
+# Veld Portfolio — MVP Specification
 
 ## Project Vision
 
@@ -529,15 +529,7 @@ Early milestone targets:
 
 # Long-Term Vision
 
-Future product direction may include:
+**See `docs/roadmap.md`** — Long-term vision, value-add features, and future initiatives are consolidated there.
 
-* automated property value updates
-* rent estimate tracking
-* refinance recommendations
-* portfolio optimization insights
-* deal analysis tools for new acquisitions
-
-Ultimate goal:
-
-Create a **portfolio intelligence platform for real estate investors**.
+Ultimate goal: Create a **portfolio intelligence platform for real estate investors**.
 

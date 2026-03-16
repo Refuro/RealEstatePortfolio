@@ -1,14 +1,16 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+
 export const metadata: Metadata = {
   title: "Pricing",
   description:
     "Veld Portfolio plans: Free, Investor, and Pro. Track 1–20 properties. Rent and value estimates. Sign up to get started.",
+  alternates: { canonical: APP_URL + "/pricing" },
   openGraph: {
     title: "Pricing | Veld Portfolio",
     description:
@@ -24,9 +26,8 @@ export default async function PricingPage() {
   return (
     <div className="flex min-h-screen flex-col bg-background">
       <nav className="flex items-center justify-between border-b border-border px-4 py-3">
-        <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.png" alt="Veld" width={28} height={28} className="shrink-0" />
-          <span className="text-lg font-semibold text-foreground">Veld</span>
+        <Link href="/" className="text-lg font-semibold text-foreground">
+          Veld
         </Link>
         <div className="flex items-center gap-6 text-sm">
           {user && (

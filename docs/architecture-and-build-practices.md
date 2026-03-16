@@ -118,38 +118,9 @@ When adding external integrations (RentCast, Zillow, etc.):
 
 ---
 
-## 5. Value-Add Roadmap (Prioritized)
+## 5. Value-Add Roadmap
 
-Post-MVP features, in suggested order:
-
-| Priority | Feature | Rationale |
-|----------|---------|-----------|
-| 1 | ~~**Rent estimate integration**~~ (RentCast) | ✅ Done |
-| 2 | ~~**Vacancy assumption**~~ | ✅ Done — vacancy % in schema, forms, metrics, import/export. |
-| 3 | ~~**Scenario modeling**~~ | ✅ Done — ScenarioSection on property detail with rent/value/mortgage sliders. |
-| 4 | ~~**Data staleness nudges**~~ | ✅ Done — formatTimeAgo, isDataStale (6mo threshold) on properties list and detail. |
-| 5 | ~~**Property value estimate**~~ (RentCast AVM) | ✅ Done — Estimate value in add-property wizard and property form. |
-| 6 | **Rent gap email notifications** | *Deferred — cost scales with users; revisit when user base justifies.* Periodically compare stored rent to RentCast. If gap exceeds threshold (e.g. 10–15%), email user. Drives retention. |
-| 7 | ~~**CSV import**~~ | ✅ Done — Import from CSV in Settings; template, validation, selection when over limit. |
-| 8 | ~~**Deal analyzer / scratchpad**~~ | ✅ Done — Analyze page; save deals; add to portfolio. |
-| 9 | **Benchmarking** | "Your rent is X% above/below market" (RentCast). "Your cap rate vs market" if API supports. Differentiator. |
-| 10 | **Refinance / payoff insights** | "When to refinance" or "Payoff timeline" |
-| 11 | **Simulation page** | Full modeling page: adjust all inputs (rent, value, expenses, mortgage), add hypothetical property to portfolio, see impact on totals. Dense but powerful. Extends scenario concept. |
-| 12 | **Report section** (PDF/print portfolio summary) | Professional output; share with partners/lenders |
-| 13 | **Referral system** (if realtor validation positive) | Growth lever |
-| 14 | **Admin membership override** | Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill. |
-| 15 | **Automated testing** | Larger planned effort. Configure test runner (Jest/Vitest), add unit tests for metric calculations and amortization logic, API route tests for auth-protected endpoints. Plan thoughtfully per engineering spec Module M. |
-| 16 | **Error tracking** (Sentry or similar) | Add production error tracking and alerting. Defer until post-MVP. |
-
-Defer until validated: referral incentives, advanced analytics, mobile app, Plaid (bank integration — see §5.1).
-
-### 5.1 Plaid (Bank Integration) — Deferred
-
-**Use case:** (1) **Liabilities API** — Connect mortgage lender accounts to pull actual principal balance; keeps equity/LTV accurate without manual updates. (2) **Transactions API** — Pull bank transactions (rent, mortgage, expenses) for *actual* vs *projected* cash flow.
-
-**Why deferred:** Cost scales with connected accounts (~$0.30–$1+/account/month). Legal/compliance for storing financial data. Development: 4–8 weeks for Liabilities-only; more for Transactions + categorization. Better suited after core analytics and mortgage balance advancement (amortization projection) are in place.
-
-**Reference:** `docs/plaid-considerations.md` — cost, legal, and development analysis.
+**See `docs/roadmap.md`** for the prioritized value-add backlog, medium-term initiatives, external API opportunities, and deferred items. PM promotes items from there to `docs/tasks.md` when ready to build.
 
 ---
 
@@ -169,9 +140,40 @@ Before marking task complete:
 - [ ] New API routes follow auth + validation pattern
 - [ ] Update `docs/security-notes.md` if new security behavior
 - [ ] Update `docs/manual-steps.md` if new env vars or manual steps
-- [ ] **If this task implements a value-add roadmap feature** (§5 above): mark it done in this doc’s roadmap table.
+- [ ] **If this task implements a roadmap feature:** mark it done in docs/roadmap.md (add to Completed table or update status).
 
-### 6.3 Task Scoping (PM/User)
+### 6.3 Builder Checklist — Context-Specific
+
+Apply these when the task matches the context:
+
+**When adding a new third-party service (API, auth, payments, analytics, etc.):**
+- [ ] Add the service to Privacy Policy (`app/privacy/page.tsx` — "Data We Collect" section). Describe what data is collected, how it's used, and link to provider's privacy policy if relevant.
+- [ ] Update Terms of Service (`app/terms/page.tsx`) if the service affects payments, data handling, or user obligations.
+- [ ] Add env vars to `app/.env.example` and `docs/manual-steps.md`.
+- [ ] Document in `docs/manual-steps.md` any manual setup (API keys, webhooks, dashboard config).
+
+**When adding a new page:**
+- [ ] **Public page (guest-accessible):** Add route to `proxy.ts` `isPublicRoute` so unauthenticated users can access it.
+- [ ] **SEO:** Add `metadata` with `title`, `description`, `alternates.canonical`, and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Add to `sitemap.ts` if it should be indexed.
+- [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered.
+- [ ] **Design:** Use semantic tokens from `docs/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
+- [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).
+
+**When adding plan-gated features (properties, deals, etc.):**
+- [ ] Update `lib/plans.ts` if adding new limits or tiers.
+- [ ] In-app upgrade links → `/plans`. Public/guest upgrade links → `/pricing`.
+- [ ] Show limit and upgrade CTA when user is at or over limit.
+
+**When adding new API routes:**
+- [ ] Auth: `getAppUser()`; return 401 if null.
+- [ ] Validation: Zod schema; return 400 on invalid.
+- [ ] Data scope: All queries by `userId: user.id`.
+- [ ] Block deleted users: Check `user.deletedAt` for account-sensitive operations.
+
+**Brand consistency:**
+- [ ] Use "Veld" for short form (logo, nav, sidebar). Use "Veld Portfolio" for formal contexts (metadata, Terms, Privacy, page titles).
+
+### 6.4 Task Scoping (PM/User)
 When adding tasks to `docs/tasks.md`:
 - Include acceptance criteria
 - Specify which existing patterns to follow

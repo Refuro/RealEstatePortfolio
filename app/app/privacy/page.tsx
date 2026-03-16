@@ -1,8 +1,19 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
-export const metadata = {
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+
+export const metadata: Metadata = {
   title: "Privacy Policy",
-  description: "Privacy policy for Veld Portfolio — how we collect, use, and protect your data.",
+  description:
+    "Privacy policy for Veld Portfolio — how we collect, use, and protect your data.",
+  alternates: { canonical: APP_URL + "/privacy" },
+  openGraph: {
+    title: "Privacy Policy | Veld Portfolio",
+    description:
+      "Privacy policy for Veld Portfolio — how we collect, use, and protect your data.",
+    url: "/privacy",
+  },
 };
 
 export default function PrivacyPage() {

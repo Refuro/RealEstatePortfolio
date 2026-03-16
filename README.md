@@ -1,4 +1,4 @@
-# Real Estate Portfolio Intelligence
+# Veld Portfolio
 
 Lightweight SaaS for small real estate investors (1–20 properties) to track portfolio performance, analyze returns, and understand their investment position.
 

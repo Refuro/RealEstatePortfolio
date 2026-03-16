@@ -48,7 +48,7 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ---
 
-## Billing (Stripe) — Phase 4
+## Billing (Stripe)
 
 - [ ] **Stripe account:** Create at [stripe.com](https://stripe.com). Use test mode for development.
 - [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro"). For each product, create a monthly recurring price and an annual recurring price. Copy all four price IDs (`price_...`).
@@ -60,8 +60,8 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ## Security (manual)
 
-- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` (and Clerk/Stripe redirect URLs) to your real app URL. Never commit production keys or DB URL.
-- [ ] **Stripe (Phase 4):** When adding webhooks, verify signature with `STRIPE_WEBHOOK_SECRET` in the webhook handler; reject requests with invalid or missing signature.
+- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` to your production URL (e.g. `https://veldportfolio.com`) for canonical URLs, sitemap, and redirects. Set Clerk/Stripe redirect URLs to match. Never commit production keys or DB URL.
+- [ ] **Stripe:** When adding webhooks, verify signature with `STRIPE_WEBHOOK_SECRET` in the webhook handler; reject requests with invalid or missing signature.
 - [ ] **Clerk:** In production, use production Clerk instance and keys; update redirect URLs for production domain.
 
 ---

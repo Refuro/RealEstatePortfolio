@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -23,9 +22,8 @@ function LogoLink() {
       <button
         type="button"
         onClick={() => draft.navigateTo("/dashboard")}
-        className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
+        className="flex min-w-0 flex-1 items-center justify-center md:justify-start"
       >
-        <Image src="/logo.png" alt="Veld" width={28} height={28} className="shrink-0" />
         <span className="text-lg font-semibold text-foreground">Veld</span>
       </button>
     );
@@ -33,9 +31,8 @@ function LogoLink() {
   return (
     <Link
       href="/dashboard"
-      className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
+      className="flex min-w-0 flex-1 items-center justify-center md:justify-start"
     >
-      <Image src="/logo.png" alt="Veld" width={28} height={28} className="shrink-0" />
       <span className="text-lg font-semibold text-foreground">Veld</span>
     </Link>
   );

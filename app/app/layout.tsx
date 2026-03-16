@@ -26,24 +26,78 @@ export const metadata: Metadata = {
   },
   description:
     "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+  // favicon.png exists in public/; favicon-512.png does not
   icons: {
-    icon: "/favicon-512.png",
+    icon: "/favicon.png",
   },
   openGraph: {
     title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
     description:
       "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
     type: "website",
-    images: ["/og-image.png"],
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Veld Portfolio — Portfolio analytics for real estate investors",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
     description:
       "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
-    images: ["/og-image.png"],
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Veld Portfolio — Portfolio analytics for real estate investors",
+      },
+    ],
   },
 };
+
+function JsonLdScript() {
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": `${APP_URL}/#organization`,
+        name: "Veld Portfolio",
+        url: APP_URL,
+        logo: `${APP_URL}/logo.png`,
+        description:
+          "Portfolio analytics for real estate investors. Track equity, cash flow, and metrics. Replace spreadsheets.",
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${APP_URL}/#website`,
+        name: "Veld Portfolio",
+        url: APP_URL,
+        publisher: { "@id": `${APP_URL}/#organization` },
+      },
+      {
+        "@type": "WebApplication",
+        name: "Veld Portfolio",
+        url: APP_URL,
+        applicationCategory: "FinanceApplication",
+        description:
+          "Portfolio analytics for real estate investors. Track equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+      },
+    ],
+  };
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
+  );
+}
 
 export default function RootLayout({
   children,
@@ -53,6 +107,9 @@ export default function RootLayout({
   return (
     <ClerkProvider>
       <html lang="en">
+        <head>
+          <JsonLdScript />
+        </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
