@@ -290,7 +290,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           {error}
           {(error.includes("Upgrade") || error.includes("limit")) && (
             <Link
-              href="/pricing"
+              href="/plans"
               className="ml-1 font-medium underline hover:no-underline"
             >
               Upgrade plan

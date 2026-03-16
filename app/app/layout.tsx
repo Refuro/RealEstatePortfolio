@@ -16,9 +16,33 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+
 export const metadata: Metadata = {
-  title: "Portfolio Intelligence",
-  description: "Track and analyze your rental property portfolio",
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+    template: "%s | Veld Portfolio",
+  },
+  description:
+    "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+  icons: {
+    icon: "/favicon-512.png",
+  },
+  openGraph: {
+    title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+    description:
+      "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
+    type: "website",
+    images: ["/og-image.png"],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+    description:
+      "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
+    images: ["/og-image.png"],
+  },
 };
 
 export default function RootLayout({

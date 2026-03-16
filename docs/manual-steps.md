@@ -78,6 +78,12 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ---
 
+## Support / contact (launch pre-flight)
+
+- [ ] **Support email:** Create a support email address (e.g. `support@yourdomain.com`). Add it to `app/.env` as `SUPPORT_EMAIL`. Also add to Vercel env for production. The Support link appears in the footer (landing page and app shell) as a mailto link; it is hidden when `SUPPORT_EMAIL` is unset. Do not commit the real email.
+
+---
+
 ## Later / as needed
 
 - [ ] **Custom domain** (Vercel): Add domain in Vercel project settings.

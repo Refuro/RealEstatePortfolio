@@ -388,7 +388,7 @@ export function DealAnalyzerForm({
           {atLimit && (
             <p className="text-sm text-muted">
               You&apos;ve reached your deal limit.{" "}
-              <Link href="/pricing" className="font-medium text-foreground hover:underline">
+              <Link href="/plans" className="font-medium text-foreground hover:underline">
                 Upgrade to save more deals
               </Link>
             </p>
@@ -438,7 +438,7 @@ export function DealAnalyzerForm({
             {(saveError.includes("Upgrade") || saveError.includes("limit")) && (
               <>
                 {" "}
-                <Link href="/pricing" className="font-medium text-accent hover:underline">
+                <Link href="/plans" className="font-medium text-accent hover:underline">
                   Upgrade plan
                 </Link>
               </>

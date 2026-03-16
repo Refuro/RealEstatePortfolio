@@ -8,7 +8,117 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ## Current tasks (open)
 
-*None. Code audit tasks (2025-03-15) completed.*
+### Landing page overhaul + branding + SEO
+
+**Scope:** Improve landing page, adopt Veld/Veld Portfolio branding, make key pages public for Stripe compliance, and add SEO.
+
+**Phase 1 — Stripe compliance (quick wins):**
+- [x] **Public routes:** Add `/privacy`, `/terms`, `/pricing` to `proxy.ts` `isPublicRoute` matcher so these pages are accessible without sign-in.
+- [x] **Pricing page (unauthenticated):** Update `app/(app)/pricing/page.tsx` to render pricing for `!user` — show plan cards with "Sign up to get started" CTA instead of upgrade buttons. Reuse `PricingCards` or a read-only variant.
+- [x] **Landing nav:** Add links to Pricing, Privacy, Terms on landing page (or a simple nav bar). Add "Pricing" CTA.
+
+**Phase 1 acceptance criteria:**
+- [x] Unauthenticated user can visit `/privacy`, `/terms`, `/pricing` without redirect to sign-in.
+- [x] Pricing page is standalone (no app shell/sidebar) — guests see nav bar + pricing + footer only.
+- [x] Pricing page shows plan cards with "Sign up" (not "Upgrade") when `!user`.
+- [x] Landing page has visible links to Pricing, Privacy, Terms (nav bar or footer).
+- [x] `npm run check` passes.
+
+**Phase 2 — Branding (Veld / Veld Portfolio):**
+- [ ] **Root layout metadata:** `title`: "Veld Portfolio" or "Veld — Portfolio Analytics"; `description`: SEO-friendly (e.g. "Portfolio analytics for real estate investors. Track equity, cash flow, and metrics. Replace spreadsheets.").
+- [ ] **Landing page:** Replace "Portfolio Intelligence" with "Veld Portfolio" in hero. Use "Veld" for logo/short form.
+- [ ] **App shell logo:** Change sidebar/header "Portfolio" to "Veld" in `app-layout-client.tsx`.
+- [ ] **Terms/Privacy:** Replace "Portfolio Intelligence" with "Veld Portfolio" in metadata, headings, and body text.
+- [ ] **Dashboard:** "Welcome to Portfolio" → "Welcome to Veld" (or similar).
+- [ ] **Other pages:** Audit for any remaining "Portfolio Intelligence" references; update to Veld Portfolio where appropriate. Leave "portfolio" as product terminology (e.g. "Portfolio summary", "Portfolio charts") — only brand name changes.
+
+**Phase 2 acceptance criteria:**
+- [ ] Root layout: title includes "Veld Portfolio", description SEO-friendly.
+- [ ] Landing hero: "Veld Portfolio" (not Portfolio Intelligence).
+- [ ] App shell: logo/text says "Veld" (not "Portfolio").
+- [ ] Terms and Privacy: "Veld Portfolio" in metadata and body.
+- [ ] Dashboard: "Welcome to Veld".
+- [ ] No "Portfolio Intelligence" in app code. `npm run check` passes.
+
+**Phase 3 — Landing page overhaul:**
+- [ ] **Hero:** Headline (e.g. "Track your rental portfolio in one place"), subhead, primary CTA (Get started), secondary CTA (View pricing).
+- [ ] **Value props:** 3–4 bullets or short sections — replace spreadsheets, rent/value estimates, deal analyzer, scenario modeling.
+- [ ] **Pricing preview:** Brief summary + link to /pricing, or compact 3-tier overview.
+- [ ] **Footer:** Ensure Privacy, Terms, Support links. Optional: "© 2025 Veld Portfolio".
+
+**Phase 3 acceptance criteria:**
+- [ ] Landing has clear headline + subhead + primary CTA (Sign up/Get started) + secondary CTA (Pricing).
+- [ ] Value props section with 4 bullets (spreadsheets, estimates, deal analyzer, scenario).
+- [ ] Pricing preview or link to /pricing visible.
+- [ ] Footer has Privacy, Terms, Support. `npm run check` passes.
+
+**Phase 4 — SEO:**
+- [ ] **Metadata:** Add `metadataBase` with `NEXT_PUBLIC_APP_URL` or `https://veldportfolio.com`. Add `openGraph` and `twitter` to root layout for social sharing.
+- [ ] **Per-page metadata:** Ensure `/`, `/pricing`, `/privacy`, `/terms` have unique `title` and `description`. Use "Veld Portfolio" in titles.
+- [ ] **Structured data (optional):** Consider `Organization` or `WebApplication` JSON-LD for rich snippets. Defer if not priority.
+- [ ] **Sitemap/robots (optional):** Add `sitemap.xml` and `robots.txt` if deploying to production domain. Next.js can generate these.
+
+**Phase 4 acceptance criteria:**
+- [ ] Root layout has metadataBase, openGraph, twitter.
+- [ ] `/`, `/pricing`, `/privacy`, `/terms` each have unique title and description.
+- [ ] sitemap.xml and robots.txt exist (optional). `npm run check` passes.
+
+**Acceptance criteria (overall):**
+- [ ] `/privacy`, `/terms`, `/pricing` accessible without sign-in.
+- [ ] Pricing visible to unauthenticated users.
+- [ ] "Veld" in app shell; "Veld Portfolio" in formal contexts (Terms, Privacy, metadata).
+- [ ] Landing has hero, value props, pricing link, nav to key pages.
+- [ ] Root and key pages have SEO metadata (title, description, openGraph).
+- [ ] Run `npm run check` when done.
+
+---
+
+### Visual assets integration
+
+**Scope:** Wire generated assets into the app. Assets in `app/public/` per `docs/visual-assets-guide.md`.
+
+- [ ] **Wire up empty states:** Display `empty-properties.png` on Properties page when propertyCount === 0; display `empty-deals.png` on Deals page when dealCount === 0. Replace or augment existing empty-state UI with these images.
+- [ ] **Value props with icons:** Add value props section to landing page using the 4 icons (`icon-spreadsheet.png`, `icon-estimates.png`, `icon-deal-analyzer.png`, `icon-scenario.png`). Bullets: replace spreadsheets, rent/value estimates, deal analyzer, scenario modeling. See Phase 3 value props.
+- [ ] **Confirm favicon:** Ensure root layout metadata `icons.icon` points to correct favicon file (`/favicon.png`). Verify favicon displays in browser tab.
+
+**Visual assets acceptance criteria:**
+- [ ] Properties empty state shows empty-properties.png when 0 properties.
+- [ ] Deals empty state shows empty-deals.png when 0 deals.
+- [ ] Landing has value props section with 4 icons + copy.
+- [ ] Favicon correct in layout. `npm run check` passes.
+
+---
+
+### Launch pre-flight tasks (completed)
+
+- [x] **Privacy Policy & Terms of Service** — Implemented at `/privacy` and `/terms`. Third-party services listed; age 18+; soft-delete retention (30 days); refund policy; sign-up notice with links.
+- [x] **Support / contact and footer** — Footer on landing and app shell; Support (mailto), Privacy, Terms. Support hidden when `SUPPORT_EMAIL` unset.
+
+---
+
+## Planned tasks (value-add roadmap)
+
+### Mortgage balance advancement (Phase 1 — amortization projection + manual override)
+
+**Scope:** Keep app focused on portfolio analytics (not property management). Mortgage balance drives equity, LTV, and debt metrics. Without advancement, these metrics drift over time as principal is paid down. Competitors either connect to banks (Plaid) or rely on manual updates. We implement a hybrid: amortization projection as default, with optional manual override when user has a statement.
+
+**Approach:** Use existing amortization logic to project remaining balance from original loan, rate, term, start date. When user provides an actual balance + date, use that when recent; otherwise use projected. No bank connection in Phase 1.
+
+**Acceptance criteria:**
+
+- [ ] **Schema:** Add optional `balanceAsOfDate DateTime? @db.Date` to Mortgage model. Migration.
+- [ ] **Lib:** Add `getProjectedBalanceAsOf(input: AmortizationInput, asOfDate: Date): number` in `lib/amortization.ts`. Returns balance at given date from schedule; returns 0 if asOfDate is before startDate.
+- [ ] **Lib:** Add `getEffectiveBalance(mortgage)` in `lib/metrics/` or `lib/amortization.ts`: if `balanceAsOfDate` exists and is within 6 months of today, return `currentBalance`; else return projected balance as of today.
+- [ ] **Metrics:** Update `lib/metrics/property-metrics.ts`, `portfolio-metrics.ts`, and all consumers (API routes, dashboard, properties list, property detail) to use `getEffectiveBalance` instead of raw `currentBalance` when computing totalMortgageBalance for equity/LTV/debt.
+- [ ] **Mortgage form:** Add optional "Balance as of" date picker. When user updates current balance, encourage setting this date (or auto-set to today).
+- [ ] **Mortgage display:** Show which source is used: "Balance: $X (as of [date])" when using stored; "Estimated balance: $X (from amortization — update from your statement for accuracy)" when using projected. Add subtle nudge to update when projected and balanceAsOfDate is missing or >6 months old.
+- [ ] **Import/export:** Include `balanceAsOfDate` in export; support optional column in import. Existing mortgages: balanceAsOfDate null → use projected.
+- [ ] **Amortization chart:** Continue using original loan for schedule (unchanged). Chart shows projected path; effective balance for metrics may differ if user overrode.
+- [ ] Run `npm run check` when done.
+
+**Out of scope (Phase 1):** Plaid/bank connection, transaction sync, automatic balance refresh. See `docs/plaid-considerations.md` for cost, legal, and development analysis of a future Plaid phase.
+
+---
 
 ## Code audit tasks (completed 2025-03-15)
 

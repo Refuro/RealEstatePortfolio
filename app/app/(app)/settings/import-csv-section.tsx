@@ -241,7 +241,7 @@ export function ImportCsvSection() {
               {loading ? "Importing…" : "Import selected"}
             </button>
             <Link
-              href="/pricing"
+              href="/plans"
               className="text-base font-medium text-accent hover:underline"
             >
               Upgrade to import all
@@ -266,7 +266,7 @@ export function ImportCsvSection() {
                     err.message.toLowerCase().includes("limit")) && (
                     <>
                       {" "}
-                      <Link href="/pricing" className="font-medium text-accent hover:underline">
+                      <Link href="/plans" className="font-medium text-accent hover:underline">
                         Upgrade plan
                       </Link>
                     </>

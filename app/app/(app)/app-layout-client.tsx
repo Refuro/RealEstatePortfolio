@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -9,6 +10,7 @@ import { AppNav } from "./app-nav";
 import { DraftProvider, useDraft } from "./draft-context";
 import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
+import { Footer } from "@/components/footer";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
 const BILLING_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 min
@@ -21,18 +23,20 @@ function LogoLink() {
       <button
         type="button"
         onClick={() => draft.navigateTo("/dashboard")}
-        className="min-w-0 flex-1 truncate text-center text-lg font-semibold text-foreground md:text-left"
+        className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
       >
-        Portfolio
+        <Image src="/logo.png" alt="Veld" width={28} height={28} className="shrink-0" />
+        <span className="text-lg font-semibold text-foreground">Veld</span>
       </button>
     );
   }
   return (
     <Link
       href="/dashboard"
-      className="min-w-0 flex-1 truncate text-center text-lg font-semibold text-foreground md:text-left"
+      className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
     >
-      Portfolio
+      <Image src="/logo.png" alt="Veld" width={28} height={28} className="shrink-0" />
+      <span className="text-lg font-semibold text-foreground">Veld</span>
     </Link>
   );
 }
@@ -40,11 +44,13 @@ function LogoLink() {
 export function AppLayoutClient({
   children,
   showAdmin,
+  supportEmail,
   bannerProps,
 }: {
   children: React.ReactNode;
   user?: { id: string; email: string } | null;
   showAdmin: boolean;
+  supportEmail?: string | null;
   bannerProps?: {
     propertyCount: number;
     dealCount: number;
@@ -168,24 +174,27 @@ export function AppLayoutClient({
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-auto p-4 pt-20 md:p-6 md:pt-6">
-        <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
-          {bannerProps && (
-            <>
-              <PastDueBanner subscriptionStatus={bannerProps.subscriptionStatus} />
-              <OverLimitBanner
-                propertyCount={bannerProps.propertyCount}
-                dealCount={bannerProps.dealCount}
-                propertyLimit={bannerProps.propertyLimit}
-                dealLimit={bannerProps.dealLimit}
-                overLimit={bannerProps.overLimit}
-              />
-            </>
-          )}
-          {children}
-        </div>
-      </main>
+      {/* Main content + footer */}
+      <div className="flex min-w-0 flex-1 flex-col">
+        <main className="flex-1 overflow-auto p-4 pt-20 md:p-6 md:pt-6">
+          <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
+            {bannerProps && (
+              <>
+                <PastDueBanner subscriptionStatus={bannerProps.subscriptionStatus} />
+                <OverLimitBanner
+                  propertyCount={bannerProps.propertyCount}
+                  dealCount={bannerProps.dealCount}
+                  propertyLimit={bannerProps.propertyLimit}
+                  dealLimit={bannerProps.dealLimit}
+                  overLimit={bannerProps.overLimit}
+                />
+              </>
+            )}
+            {children}
+          </div>
+        </main>
+        <Footer supportEmail={supportEmail} />
+      </div>
     </div>
     </DraftProvider>
   );

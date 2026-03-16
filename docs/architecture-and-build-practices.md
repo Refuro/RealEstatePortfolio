@@ -145,9 +145,11 @@ Defer until validated: referral incentives, advanced analytics, mobile app, Plai
 
 ### 5.1 Plaid (Bank Integration) — Deferred
 
-**Use case:** Connect bank accounts to pull *actual* transaction data — rent deposits, mortgage payments, expenses. Would show *actual* cash flow vs *projected* (e.g. "You projected $1,500/mo but actual averaged $1,200 over 6 months"). High value for investors who want reality-check on their numbers.
+**Use case:** (1) **Liabilities API** — Connect mortgage lender accounts to pull actual principal balance; keeps equity/LTV accurate without manual updates. (2) **Transactions API** — Pull bank transactions (rent, mortgage, expenses) for *actual* vs *projected* cash flow.
 
-**Why deferred:** Large lift — security/compliance (Plaid handles auth but you store/process financial data), transaction categorization (rent vs mortgage vs maintenance), bank connection UX, and scope creep into bookkeeping. Better suited after core analytics and estimates are proven.
+**Why deferred:** Cost scales with connected accounts (~$0.30–$1+/account/month). Legal/compliance for storing financial data. Development: 4–8 weeks for Liabilities-only; more for Transactions + categorization. Better suited after core analytics and mortgage balance advancement (amortization projection) are in place.
+
+**Reference:** `docs/plaid-considerations.md` — cost, legal, and development analysis.
 
 ---
 
