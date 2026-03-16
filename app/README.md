@@ -1,4 +1,4 @@
-# Real Estate Portfolio Intelligence — App
+# Veld Portfolio — App
 
 Next.js application. See repo root and `../docs/` for product and engineering specs.
 

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
@@ -40,9 +41,12 @@ const PLANS: {
 export function PricingCards({
   currentTier,
   className = "",
+  showSignUp = false,
 }: {
   currentTier: string;
   className?: string;
+  /** When true, show "Sign up" link instead of "Upgrade" (for unauthenticated visitors). */
+  showSignUp?: boolean;
 }) {
   const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
   const [loading, setLoading] = useState<string | null>(null);
@@ -125,7 +129,7 @@ export function PricingCards({
       <div className="mx-auto grid max-w-5xl xl:max-w-6xl gap-8 sm:grid-cols-3">
       {PLANS.map((plan) => {
         const isCurrent =
-          currentTier.toLowerCase() === plan.tier;
+          currentTier && currentTier.toLowerCase() === plan.tier;
         const canUpgrade =
           (plan.tier === "investor" || plan.tier === "pro") &&
           !isCurrent;
@@ -137,8 +141,18 @@ export function PricingCards({
               isCurrent ? "border-positive ring-1 ring-positive" : "border-border"
             }`}
           >
-            <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
+              {plan.tier === "free" && showSignUp && (
+                <span className="rounded-md bg-positive/10 px-2 py-0.5 text-xs font-medium text-positive">
+                  Most popular for getting started
+                </span>
+              )}
+            </div>
             <p className="mt-2 text-base text-muted">{plan.description}</p>
+            {plan.tier === "free" && (
+              <p className="mt-2 text-lg font-semibold text-foreground">Free</p>
+            )}
             {plan.tier === "investor" && (
               <p className="mt-2 text-lg font-semibold text-foreground">
                 {billingCycle === "monthly"
@@ -154,12 +168,28 @@ export function PricingCards({
               </p>
             )}
             <div className="mt-4">
-              {plan.tier === "free" && (
+              {plan.tier === "free" && !showSignUp && (
                 <span className="inline-block rounded-md bg-subtle px-3 py-1.5 text-sm text-muted">
                   {isCurrent ? "Current plan" : "Default"}
                 </span>
               )}
-              {canUpgrade && (
+              {plan.tier === "free" && showSignUp && (
+                <Link
+                  href="/sign-up"
+                  className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                >
+                  Get started free
+                </Link>
+              )}
+              {canUpgrade && showSignUp && (
+                <Link
+                  href="/sign-up"
+                  className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                >
+                  Sign up
+                </Link>
+              )}
+              {canUpgrade && !showSignUp && (
                 <button
                   type="button"
                   onClick={() => handleUpgrade(plan.tier as "investor" | "pro")}

@@ -68,7 +68,7 @@ export default async function DealsPage() {
         {atLimit && (
           <>
             {" · "}
-            <Link href="/pricing" className="font-medium text-foreground hover:underline">
+            <Link href="/plans" className="font-medium text-foreground hover:underline">
               Upgrade to save more
             </Link>
           </>
@@ -78,7 +78,7 @@ export default async function DealsPage() {
       {overLimit && (
         <p className="mt-1 text-sm text-muted">
           Showing {deals.length} of {totalCount} saved deals (plan limit).{" "}
-          <Link href="/pricing" className="font-medium text-foreground hover:underline">
+          <Link href="/plans" className="font-medium text-foreground hover:underline">
             Upgrade to see all
           </Link>
         </p>

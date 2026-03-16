@@ -120,7 +120,7 @@ export default async function SettingsPage() {
                   )}
                   {!canAddMoreDeals && (
                     <span className="ml-1">
-                      <Link href="/pricing" className="font-medium text-foreground hover:underline">
+                      <Link href="/plans" className="font-medium text-foreground hover:underline">
                         Upgrade
                       </Link>
                     </span>
@@ -146,7 +146,7 @@ export default async function SettingsPage() {
           </dl>
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
-              href="/pricing"
+              href="/plans"
               className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
               {user.subscriptionTier === "free" ? "Upgrade plan" : "Change plan"}

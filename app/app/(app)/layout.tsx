@@ -38,10 +38,13 @@ export default async function AppLayout({
     subscriptionStatus = subscription?.status ?? null;
   }
 
+  const supportEmail = process.env.SUPPORT_EMAIL ?? null;
+
   return (
     <AppLayoutClient
       user={user}
       showAdmin={user ? isAdmin(user) : false}
+      supportEmail={supportEmail}
       bannerProps={{
         propertyCount,
         dealCount,

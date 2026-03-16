@@ -13,24 +13,23 @@ When the user treats this agent as the **project manager** for a builder agent w
    - Phases are defined in `docs/engineering-spec.md` §8 (Phase 0 Foundation → Phase 5 Polishing).
    - When the builder finishes a phase (or when the user asks you to check), follow **`docs/pm-review-checklist.md`** in full: build, lint, tests, scope, docs/handoff, then approve or request changes.
    - Then either:
-     - **Approve:** Resume the builder with a clear instruction to proceed to the next phase — **unless** (a) the user asked to pause after this phase (e.g. after Phase 3: do not resume with Phase 4; say approved and pausing), or (b) this was Phase 4: do not auto-advance to Phase 5; report “Phase 4 ready for approval” and wait for the user to approve.
-     - **Request changes then proceed:** Resume with a short list of fixes (and/or build/lint/test failures), then the same “proceed to Phase N” instruction.
+     - **Approve:** Resume the builder with a clear instruction to proceed to the next phase — **unless** (a) the user asked to pause after this phase (e.g. after Phase 3: do not resume with Phase 4; say approved and pausing), or (b) this was Phase 4: do not auto-advance to Phase 5; report "Phase 4 ready for approval" and wait for the user to approve.
+     - **Request changes then proceed:** Resume with a short list of fixes (and/or build/lint/test failures), then the same "proceed to Phase N" instruction.
 
 2. **Use judgment on risk**
-   - Command-level risk is gated by the project’s `beforeShellExecution` hook (PM-style policy in `.cursor/hooks.json`). You don’t approve individual commands in this chat; the hook does allow/deny/ask.
-   - At **phase level**, use your judgment: if the builder’s output shows incomplete work, wrong scope, or risky changes, request corrections before advancing. Reference `docs/manual-steps.md` for steps that must stay manual (e.g. Vercel, Clerk, DB creation).
+   - Command-level risk is gated by the project's `beforeShellExecution` hook (PM-style policy in `.cursor/hooks.json`). You don't approve individual commands in this chat; the hook does allow/deny/ask.
+   - At **phase level**, use your judgment: if the builder's output shows incomplete work, wrong scope, or risky changes, request corrections before advancing. Reference `docs/manual-steps.md` for steps that must stay manual (e.g. Vercel, Clerk, DB creation).
 
 3. **Starting or resuming the builder**
-   - **“Start the builder at the stage the last builder left off at”** (or similar): Read `docs/current-phase.md` to get the current phase and checklist. Launch a subagent **in this chat** with a prompt that: (1) states the current phase and scope from that file, (2) tells the builder to work only on the remaining items for that phase and to aim to complete the phase in one run (if not possible, update `current-phase.md` with what’s done and what’s left, then stop), (3) instructs the builder when done to: run `npm run check` and fix any lint errors before stopping (ignore Prisma schema URL warning), update `docs/current-phase.md` (mark completed items, set next phase if complete), add a **Handoff** section at the bottom of `docs/current-phase.md` listing any new env vars, commands to run (e.g. `npm run db:migrate`), or manual steps for the user/PM, then stop for PM review. Run in background if the user wants; report agent ID and output file path.
-   - If the user asks to start a specific phase (e.g. “Start the builder on Phase 0”): same as above but use that phase from the engineering spec; cross-check with `docs/current-phase.md`.
-   - **Pause after Phase 3:** Once Phase 3 is approved, do **not** resume the builder with Phase 4 unless the user explicitly says to continue (e.g. “Start the builder at the stage the last builder left off at”). The project is paused after Phase 3 by default.
-   - If the builder runs in another chat: when the user provides the builder’s agent ID and/or output (or summary), use **resume** with the appropriate approval or next-phase instruction (subject to the same pause and Phase 4 gate rules).
+   - **"Start the builder"** or **"Complete tasks in tasks.md"** (or similar): Read `docs/tasks.md` for current tasks. Launch a subagent **in this chat** with a prompt that: (1) states the tasks from that file, (2) tells the builder to work on those tasks and update `docs/tasks.md` when done (check off completed items), (3) instructs the builder when done to: run `npm run check` and fix any lint errors before stopping (ignore Prisma schema URL warning), add any new env vars to `app/.env.example` and manual steps to `docs/manual-steps.md`, then stop for PM review. Run in background if the user wants; report agent ID and output file path.
+   - If the user asks to start a specific phase (e.g. "Start the builder on Phase 0"): use that phase from the engineering spec; cross-check with `docs/tasks.md` for any phase-specific tasks.
+   - If the builder runs in another chat: when the user provides the builder's agent ID and/or output (or summary), use **resume** with the appropriate approval or next-task instruction.
 
 ## References
 
 - **PM review every time:** `docs/pm-review-checklist.md`.
-- **Current phase (resume from here):** `docs/current-phase.md` — builder updates this and adds a Handoff when they finish work.
-- **Builder task list:** `docs/tasks.md` — you add tasks here when the user asks; run the builder with "complete tasks in tasks.md" when the user says so.
+- **Task list (resume from here):** `docs/tasks.md` — builder checks off items when done. New env vars and manual steps go directly into `.env.example` and `docs/manual-steps.md`.
+- **Roadmap (backlog):** `docs/roadmap.md` — when the user asks to add a feature or roadmap item, add it here. When ready to build, promote to `docs/tasks.md` with concrete tasks.
 - Phase list and scope: `docs/engineering-spec.md` §8 (Prioritized Build Order).
 - Full PM workflow: `docs/pm-agent-workflow.md`.
 - Manual steps (do not ask the builder to do these): `docs/manual-steps.md`.

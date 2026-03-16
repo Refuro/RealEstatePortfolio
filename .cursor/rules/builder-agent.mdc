@@ -8,18 +8,15 @@ When the PM (or user) instructs you to work on a phase or tasks:
 
 ## Responsibilities
 
-1. **Stay in scope** — Work only on items from `docs/current-phase.md`, `docs/tasks.md`, or `docs/engineering-spec.md` §8 for the current phase. Do not add out-of-scope features.
+1. **Stay in scope** — Work only on items from `docs/tasks.md` or the PM's instructions. Do not add out-of-scope features. When a task references a roadmap item, read `docs/roadmap.md` for full scope and acceptance criteria.
 
 2. **Follow the design spec** — All UI work (layouts, components, styling, charts) must align with `docs/design-spec.md`. Use semantic color tokens, typography scale, spacing, and component patterns from the spec. Do not introduce styles that conflict with the design direction (e.g. heavy shadows, decorative gradients, inconsistent spacing). When in doubt, prefer the design spec over ad-hoc styling.
 
 3. **Follow architecture practices** — Read `docs/architecture-and-build-practices.md`. Reuse existing components (CurrencyInput, ChartWrapper, etc.) and lib modules. Do not duplicate logic; extract to `lib/` if the same logic appears in multiple places. API routes: always `getAppUser()`, validate with Zod, scope data by `userId`. Keep files focused; avoid spaghetti.
 
-4. **Update progress** — When done (or when stopping mid-phase), update `docs/current-phase.md`: check off completed items, note what's left, set next phase if the phase is complete.
+4. **Update progress** — When done, check off completed items in `docs/tasks.md`.
 
-5. **Add Handoff** — When you finish a phase, add a **Handoff** section at the bottom of `docs/current-phase.md` with:
-   - New env vars (and ensure they're in `app/.env.example` and `docs/manual-steps.md`)
-   - Commands to run (e.g. `npm run db:migrate`)
-   - Manual steps for the user/PM (Vercel, Clerk, Stripe Dashboard, etc.)
+5. **Handoff** — When you add new env vars, commands, or manual steps, update `app/.env.example` and `docs/manual-steps.md` directly. Do not leave them only in a Handoff section.
 
 6. **Never do manual steps** — Do not create Vercel projects, Clerk apps, Stripe products, or production databases. See `docs/manual-steps.md`. Document what the user must do instead.
 
@@ -29,9 +26,16 @@ When the PM (or user) instructs you to work on a phase or tasks:
 
 9. **Security** — New API routes must call `getAppUser()` and return 401 if null. All data access scoped by `userId`. Validate input with Zod. Update `docs/security-notes.md` if adding security-relevant behavior.
 
+10. **Context-specific checklists** — When adding a new service, page, or plan-gated feature, follow the applicable checklist in `docs/architecture-and-build-practices.md` §6.3:
+    - **New third-party service:** Update Privacy Policy and Terms; add env vars and manual steps.
+    - **New page:** Public route → proxy.ts; SEO metadata (title, description, canonical, openGraph); robots/sitemap as needed.
+    - **Plan-gated feature:** lib/plans.ts; in-app links → /plans, public links → /pricing.
+    - **Brand:** "Veld" for short form, "Veld Portfolio" for formal contexts.
+
 ## References
 
-- Current phase and checklist: `docs/current-phase.md`
+- Task list: `docs/tasks.md`
+- Roadmap (scope for tasks that reference it): `docs/roadmap.md`
 - Phase scope: `docs/engineering-spec.md` §8
 - **Design spec (UI compliance):** `docs/design-spec.md`
 - **Architecture & build practices:** `docs/architecture-and-build-practices.md`

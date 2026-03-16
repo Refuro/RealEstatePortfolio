@@ -4,13 +4,13 @@ This doc describes how one Cursor agent (the **PM**) keeps another agent (the **
 
 ---
 
-## What’s Feasible
+## What's Feasible
 
 | Goal | Feasible? | How |
 |------|-----------|-----|
-| **PM keeps builder moving through phases** | ✅ Yes | PM (this chat) reviews builder output after each phase and **resumes** the builder with “Approved, proceed to Phase N” or with feedback. A `subagentStop` hook can auto-send a follow-up so the PM is prompted to review. |
-| **PM approves/declines commands by risk** | ✅ Partially | This chat **cannot** approve each shell command in real time (hooks run in a separate process). Use a **beforeShellExecution** hook with a prompt that encodes PM-style risk policy: allow low-risk (e.g. install, prisma migrate), deny high-risk (e.g. `rm -rf`, force push, prod DB), and optionally **ask** for medium-risk (e.g. network/API calls) so the **user** approves in the UI. |
-| **PM uses “judgement” on risk** | ✅ Yes (at two levels) | (1) **Phase level:** PM (me) reviews what the builder did and decides approve / request changes / next phase. (2) **Command level:** A prompt-based hook acts as a “PM proxy” with a written risk policy. |
+| **PM keeps builder moving through phases** | Yes | PM (this chat) reviews builder output after each phase and **resumes** the builder with "Approved, proceed to Phase N" or with feedback. A `subagentStop` hook can auto-send a follow-up so the PM is prompted to review. |
+| **PM approves/declines commands by risk** | Partially | This chat **cannot** approve each shell command in real time (hooks run in a separate process). Use a **beforeShellExecution** hook with a prompt that encodes PM-style risk policy: allow low-risk (e.g. install, prisma migrate), deny high-risk (e.g. `rm -rf`, force push, prod DB), and optionally **ask** for medium-risk (e.g. network/API calls) so the **user** approves in the UI. |
+| **PM uses "judgement" on risk** | Yes (at two levels) | (1) **Phase level:** PM (me) reviews what the builder did and decides approve / request changes / next phase. (2) **Command level:** A prompt-based hook acts as a "PM proxy" with a written risk policy. |
 
 So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is a hook that follows the risk policy below.
 
@@ -20,19 +20,17 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 
 ### 1. Start the builder (from this chat or another)
 
-- In **this** chat: say **“Start the builder at the stage the last builder left off at”** (or “Start the builder on Phase N”). I’ll read `docs/current-phase.md` to get the current phase and checklist, then launch a **subagent in this chat** with instructions to: work that phase only; aim to complete the phase in one run (if not possible, update `current-phase.md` with what’s done and what’s left, then stop); when done, update `docs/current-phase.md` and add a **Handoff** section at the bottom of that file with any new env vars, commands to run, or manual steps; then stop for PM review.
-  - **Foreground (default):** Don’t say “background” — we’ll wait for the builder to finish, then I review using the PM review checklist and approve/advance or pause as agreed.
-  - **Background:** Say **“in the background”** — I’ll run it in the background and report the agent ID and output file path; you can later say “check on the builder” or “approve and advance” and I’ll read the output and follow the checklist (and pause after Phase 3 if that’s the phase we just approved).
-- In **another** chat: start the builder there; when you want PM oversight, bring the builder’s **agent ID** and **output file path** (or paste a summary) into this chat so I can “check on the builder” and resume with next phase or feedback.
+- In **this** chat: say **"Start the builder"** or **"Complete tasks in tasks.md"** (or "Start the builder on Phase N"). I'll read `docs/tasks.md` to get the current tasks, then launch a **subagent in this chat** with instructions to: work those tasks; update `docs/tasks.md` when done (check off completed items); add any new env vars to `app/.env.example` and manual steps to `docs/manual-steps.md`; then stop for PM review.
+  - **Foreground (default):** Don't say "background" — we'll wait for the builder to finish, then I review using the PM review checklist and approve/advance or pause as agreed.
+  - **Background:** Say **"in the background"** — I'll run it in the background and report the agent ID and output file path; you can later say "check on the builder" or "approve and advance" and I'll read the output and follow the checklist.
+- In **another** chat: start the builder there; when you want PM oversight, bring the builder's **agent ID** and **output file path** (or paste a summary) into this chat so I can "check on the builder" and resume with next phase or feedback.
 
 ### 2. After each phase
 
 - When the builder finishes a phase, the **subagentStop** hook can send a follow-up so the PM is prompted to review.
 - I (the PM) follow **`docs/pm-review-checklist.md`** every time: build, lint (errors must be cleaned up before approval; ignore Prisma schema URL), tests, scope, **design compliance** (for UI phases; see checklist), docs/handoff, then approve or request changes.
-- **Builder handoff:** The builder adds a **Handoff** section at the bottom of `docs/current-phase.md` when they finish a phase: new env vars, commands to run (e.g. `npm run db:migrate`), and manual steps. The PM checks this and ensures `manual-steps.md` / `.env.example` are updated if needed.
-- **Pause after Phase 3:** After Phase 3 is approved, the project is **paused**. I do not resume the builder with Phase 4 unless you explicitly say to continue (e.g. “Start the builder at the stage the last builder left off at”). You can run Phase 4 when you’re ready.
-- **Phase 4 (Stripe) gate:** When we reach Phase 4, I do not auto-advance to Phase 5 after approval. I report “Phase 4 ready for approval” and wait for you to explicitly approve (or run a quick smoke test) before sending the builder to Phase 5.
-- **Resume (when not pausing):** Resume the builder with one message: e.g. “Approved. Proceed to Phase N — [scope].” or “Fix X and Y, then proceed to Phase N as above.”
+- **Builder handoff:** The builder adds new env vars to `app/.env.example` and manual steps to `docs/manual-steps.md` when done. The PM checks this during review.
+- **Resume:** Resume the builder with one message: e.g. "Approved. Proceed to Phase N — [scope]." or "Fix X and Y, then proceed to Phase N as above."
 
 ### 3. Command-level risk (hook)
 
@@ -46,10 +44,9 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 
 ### 4. Builder crashed or stopped unexpectedly
 
-- Read `docs/current-phase.md` to see what’s done vs. remaining for the current phase.
+- Read `docs/tasks.md` to see what's done vs. remaining.
 - If the builder updated it before stopping, use that as the source of truth. If not, infer from recent changes or ask the user.
-- Decide whether to resume the same phase (launch a new builder with “continue Phase N from where the last builder left off”) or start fresh.
-- Optionally add a brief note in `current-phase.md` under a “Last builder status” line if useful for the next run.
+- Decide whether to resume (launch a new builder with "continue from where the last builder left off") or start fresh.
 
 ---
 
@@ -62,15 +59,13 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 - **Phase 4** — Monetization (Stripe, property caps)
 - **Phase 5** — Polishing (onboarding, settings, error handling)
 
-The PM uses these phases when approving and when instructing the builder (“proceed to Phase N”).
+The PM uses these phases when approving and when instructing the builder ("proceed to Phase N").
 
 ---
 
 ## Summary
 
-- **PM (this agent):** Follows `docs/pm-review-checklist.md` every review. Keeps the builder moving through phases by approving and resuming with “proceed to Phase N” or with fixes. Uses `docs/engineering-spec.md`, `docs/design-spec.md`, and `docs/manual-steps.md` as reference. Design compliance is part of PM approval for UI work.
-- **Builder handoff:** Builder adds a Handoff at the bottom of `docs/current-phase.md` when done; PM ensures manual-steps and env example are updated.
-- **Pause after Phase 3:** After Phase 3 is approved, the project pauses; Phase 4 starts only when you say to continue.
-- **Phase 4 gate:** After Phase 4 approval, PM does not auto-advance to Phase 5; waits for your explicit approval.
+- **PM (this agent):** Follows `docs/pm-review-checklist.md` every review. Keeps the builder moving through phases by approving and resuming with "proceed to Phase N" or with fixes. Uses `docs/engineering-spec.md`, `docs/design-spec.md`, and `docs/manual-steps.md` as reference. Design compliance is part of PM approval for UI work.
+- **Builder handoff:** Builder adds env vars and manual steps to `.env.example` and `manual-steps.md` when done; PM ensures they're complete during review.
 - **Command risk:** Handled by the **beforeShellExecution** hook (allow/deny/ask).
 - **Handoff (other chat):** When the builder runs in another chat, you bring agent ID and output here so the PM can review and resume.

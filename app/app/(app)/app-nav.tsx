@@ -18,7 +18,7 @@ const nav = [
   { href: "/properties", label: "Properties", icon: Building2 },
   { href: "/analyze", label: "Analyze deal", icon: Calculator },
   { href: "/deals", label: "Deals", icon: Briefcase },
-  { href: "/pricing", label: "Pricing", icon: CreditCard },
+  { href: "/plans", label: "Pricing", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

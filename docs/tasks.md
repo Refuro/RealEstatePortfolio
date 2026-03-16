@@ -4,11 +4,136 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 **Product mantra (all tasks):** Thoughtful, robust, modern, frictionless. See `docs/architecture-and-build-practices.md`.
 
+**Future features / roadmap:** See `docs/roadmap.md`. PM promotes items from there to here when ready to build.
+
 ---
 
 ## Current tasks (open)
 
-*None. Code audit tasks (2025-03-15) completed.*
+### Landing page overhaul + branding + SEO
+
+**Scope:** Improve landing page, adopt Veld/Veld Portfolio branding, make key pages public for Stripe compliance, and add SEO.
+
+**Phase 1 — Stripe compliance (quick wins):**
+- [x] **Public routes:** Add `/privacy`, `/terms`, `/pricing` to `proxy.ts` `isPublicRoute` matcher so these pages are accessible without sign-in.
+- [x] **Pricing page (unauthenticated):** Update `app/(app)/pricing/page.tsx` to render pricing for `!user` — show plan cards with "Sign up to get started" CTA instead of upgrade buttons. Reuse `PricingCards` or a read-only variant.
+- [x] **Landing nav:** Add links to Pricing, Privacy, Terms on landing page (or a simple nav bar). Add "Pricing" CTA.
+
+**Phase 1 acceptance criteria:**
+- [x] Unauthenticated user can visit `/privacy`, `/terms`, `/pricing` without redirect to sign-in.
+- [x] Pricing page is standalone (no app shell/sidebar) — guests see nav bar + pricing + footer only.
+- [x] Pricing page shows plan cards with "Sign up" (not "Upgrade") when `!user`.
+- [x] Landing page has visible links to Pricing, Privacy, Terms (nav bar or footer).
+- [x] `npm run check` passes.
+
+**Phase 2 — Branding (Veld / Veld Portfolio):**
+- [x] **Root layout metadata:** `title`: "Veld Portfolio" or "Veld — Portfolio Analytics"; `description`: SEO-friendly (e.g. "Portfolio analytics for real estate investors. Track equity, cash flow, and metrics. Replace spreadsheets.").
+- [x] **Landing page:** Replace "Portfolio Intelligence" with "Veld Portfolio" in hero. Use "Veld" for logo/short form.
+- [x] **App shell logo:** Change sidebar/header "Portfolio" to "Veld" in `app-layout-client.tsx`.
+- [x] **Terms/Privacy:** Replace "Portfolio Intelligence" with "Veld Portfolio" in metadata, headings, and body text.
+- [x] **Dashboard:** "Welcome to Portfolio" → "Welcome to Veld" (or similar).
+- [x] **Other pages:** Audit for any remaining "Portfolio Intelligence" references; update to Veld Portfolio where appropriate. Leave "portfolio" as product terminology (e.g. "Portfolio summary", "Portfolio charts") — only brand name changes.
+
+**Phase 2 acceptance criteria:**
+- [x] Root layout: title includes "Veld Portfolio", description SEO-friendly.
+- [x] Landing hero: "Veld Portfolio" (not Portfolio Intelligence).
+- [x] App shell: logo/text says "Veld" (not "Portfolio").
+- [x] Terms and Privacy: "Veld Portfolio" in metadata and body.
+- [x] Dashboard: "Welcome to Veld".
+- [x] No "Portfolio Intelligence" in app code. `npm run check` passes.
+
+**Phase 3 — Landing page overhaul:**
+- [x] **Hero:** Benefit-focused headline (e.g. "Track your rental portfolio in one place"); keep "Veld Portfolio" as brand line. Subhead: current or similar. Primary CTA for guests: "Get started free" or "Sign up". Secondary CTA: "View pricing" as visible link/button in hero (not just nav). Signed-in: "Go to dashboard" primary; value props and pricing preview still visible.
+- [x] **Value props:** 4 bullets with icons — (1) Replace spreadsheets, (2) Rent & value estimates (RentCast), (3) Deal analyzer (analyze before you buy), (4) Scenario modeling (what-if sliders). Use `icon-spreadsheet.png`, `icon-estimates.png`, `icon-deal-analyzer.png`, `icon-scenario.png` from `app/public/`. If `icon-scenario.png` missing, use lucide-react placeholder.
+- [x] **Pricing preview:** Compact teaser section — one-line summary ("Free, Investor, and Pro plans — start free") or 3-tier overview (Free $0, Investor $10, Pro $20). Prominent "View pricing" link to `/pricing`.
+- [x] **Footer:** Privacy, Terms, Support links. Add "© 2025 Veld Portfolio". Support conditional on `SUPPORT_EMAIL`.
+- [x] **Guest nav:** Add Sign in and Sign up links to nav for guests (so they're reachable after scrolling past hero).
+- [x] **Responsive:** Hero, value props, pricing preview work on mobile (stacked layout, readable text, touch targets).
+
+**Phase 3 acceptance criteria:**
+- [x] Hero: benefit-focused headline, subhead, primary CTA ("Get started free" or "Sign up"), secondary CTA ("View pricing") in hero.
+- [x] Value props section with 4 bullets + icons (spreadsheets, estimates, deal analyzer, scenario).
+- [x] Pricing preview (summary or 3-tier teaser) + "View pricing" link visible.
+- [x] Footer: Privacy, Terms, Support, "© 2025 Veld Portfolio".
+- [x] Guest nav includes Sign in and Sign up.
+- [x] Mobile-responsive. `npm run check` passes.
+
+**Phase 4 — SEO:**
+- [x] **Metadata (base):** `metadataBase` with `NEXT_PUBLIC_APP_URL` or `veldportfolio.com`. Root `openGraph` and `twitter` for social sharing.
+- [x] **Per-page metadata:** `/`, `/pricing`, `/privacy`, `/terms` have unique `title` and `description`. "Veld Portfolio" in titles.
+- [x] **Sitemap/robots:** `sitemap.xml` and `robots.txt` exist.
+- [x] **Canonical URLs:** Add `alternates.canonical` to `/`, `/pricing`, `/privacy`, `/terms` (avoid duplicate content from query params, UTM).
+- [x] **Per-page openGraph for Privacy & Terms:** Add page-specific `openGraph` (title, description, url) so shares show correct preview (not homepage).
+- [x] **Open Graph image metadata:** Use object form with `width: 1200`, `height: 630`, `alt` for better platform compatibility.
+- [x] **JSON-LD structured data:** Add Organization, WebSite, and WebApplication schemas (root layout or key pages). Supports Knowledge Panel, sitelinks, AI/LLM understanding.
+- [x] **Robots disallow:** Add `/sign-in`, `/sign-up`, `/billing/` to `disallow` (auth flows, not content).
+- [x] **Auth pages noindex:** Add `robots: { index: false, follow: false }` to sign-in, sign-up, billing pages.
+- [x] **Favicon:** Confirm `favicon-512.png` (or `favicon.png`) correct in layout; verify displays in browser tab.
+
+**Phase 4 acceptance criteria:**
+- [x] Root layout has metadataBase, openGraph, twitter, JSON-LD.
+- [x] Canonical URLs on all public pages.
+- [x] Per-page openGraph for Privacy and Terms.
+- [x] OG images have width, height, alt.
+- [x] Robots disallow auth routes; auth pages noindex.
+- [x] Favicon correct. `npm run check` passes.
+
+**Acceptance criteria (overall):**
+- [ ] `/privacy`, `/terms`, `/pricing` accessible without sign-in.
+- [ ] Pricing visible to unauthenticated users.
+- [ ] "Veld" in app shell; "Veld Portfolio" in formal contexts (Terms, Privacy, metadata).
+- [ ] Landing has hero, value props, pricing link, nav to key pages.
+- [ ] Root and key pages have SEO metadata (title, description, openGraph).
+- [ ] Run `npm run check` when done.
+
+---
+
+### Visual assets integration
+
+**Scope:** Wire generated assets into the app. Assets in `app/public/` per `docs/visual-assets-guide.md`.
+
+- [ ] **Wire up empty states:** Display `empty-properties.png` on Properties page when propertyCount === 0; display `empty-deals.png` on Deals page when dealCount === 0. Replace or augment existing empty-state UI with these images.
+- [ ] **Value props with icons:** Add value props section to landing page using the 4 icons (`icon-spreadsheet.png`, `icon-estimates.png`, `icon-deal-analyzer.png`, `icon-scenario.png`). Bullets: replace spreadsheets, rent/value estimates, deal analyzer, scenario modeling. See Phase 3 value props.
+- [ ] **Confirm favicon:** Ensure root layout metadata `icons.icon` points to correct favicon file (`/favicon.png`). Verify favicon displays in browser tab.
+
+**Visual assets acceptance criteria:**
+- [ ] Properties empty state shows empty-properties.png when 0 properties.
+- [ ] Deals empty state shows empty-deals.png when 0 deals.
+- [ ] Landing has value props section with 4 icons + copy.
+- [ ] Favicon correct in layout. `npm run check` passes.
+
+---
+
+### Contact page (form + support email)
+
+**Scope:** Replace footer mailto link with a `/contact` page that has a contact form and displays the support email. Users can submit via form or email directly.
+
+**Implementation:**
+- [ ] **Route:** Add `/contact` page. Add to `proxy.ts` `isPublicRoute`. `robots: { index: false }` (utility page).
+- [ ] **Form:** Email (required), Subject (dropdown: General, Billing, Bug report, Feature request, Other), Message (required). Pre-fill email from Clerk when signed in.
+- [ ] **Below form:** "Or email us directly at support@example.com" with mailto link. Only show when `SUPPORT_EMAIL` is set.
+- [ ] **API:** `POST /api/contact` — validate with Zod, rate limit (5/hour per IP or per user), honeypot field. Send via Resend to `SUPPORT_EMAIL`.
+- [ ] **Env:** Add `RESEND_API_KEY` to `.env.example` and `docs/manual-steps.md`.
+- [ ] **Footer:** Change Support link from mailto to `Link href="/contact"`. When `SUPPORT_EMAIL` unset: show Contact link (no email on page) or hide per current behavior.
+- [ ] **Privacy:** Add brief note to Privacy Policy about contact form submissions.
+- [ ] **Design:** Follow `docs/design-spec.md`; match standalone pages (Privacy, Terms).
+
+**Acceptance criteria:**
+- [ ] `/contact` accessible without sign-in.
+- [ ] Form submits successfully; email arrives at SUPPORT_EMAIL.
+- [ ] Support email displayed on page when set; mailto fallback works.
+- [ ] Footer Support links to /contact.
+- [ ] Rate limit and honeypot prevent abuse.
+- [ ] `npm run check` passes.
+
+---
+
+### Launch pre-flight tasks (completed)
+
+- [x] **Privacy Policy & Terms of Service** — Implemented at `/privacy` and `/terms`. Third-party services listed; age 18+; soft-delete retention (30 days); refund policy; sign-up notice with links.
+- [x] **Support / contact and footer** — Footer on landing and app shell; Support (mailto), Privacy, Terms. Support hidden when `SUPPORT_EMAIL` unset.
+
+---
 
 ## Code audit tasks (completed 2025-03-15)
 
