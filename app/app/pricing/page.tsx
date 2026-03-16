@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
+import { LandingNav } from "@/components/landing-nav";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
@@ -25,40 +26,7 @@ export default async function PricingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <nav className="flex items-center justify-between border-b border-border px-4 py-3">
-        <Link href="/" className="text-lg font-semibold text-foreground">
-          Veld
-        </Link>
-        <div className="flex items-center gap-6 text-sm">
-          {user && (
-            <Link href="/dashboard" className="text-muted hover:text-foreground">
-              Dashboard
-            </Link>
-          )}
-          <Link href="/pricing" className="font-medium text-foreground">
-            Pricing
-          </Link>
-          <Link href="/privacy" className="text-muted hover:text-foreground">
-            Privacy
-          </Link>
-          <Link href="/terms" className="text-muted hover:text-foreground">
-            Terms
-          </Link>
-          {!user && (
-            <>
-              <Link href="/sign-in" className="text-muted hover:text-foreground">
-                Sign in
-              </Link>
-              <Link
-                href="/sign-up"
-                className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-              >
-                Sign up
-              </Link>
-            </>
-          )}
-        </div>
-      </nav>
+      <LandingNav userId={user?.id ?? null} />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-5xl">
           <h1 className="text-2xl font-semibold text-foreground">Pricing</h1>

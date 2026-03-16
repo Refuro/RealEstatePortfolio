@@ -88,6 +88,24 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ---
 
+### Public-facing mobile optimization
+
+**Scope:** Use shared `LandingNav` and `Footer` on all public pages so Pricing, Privacy, and Terms have the same mobile-friendly nav (hamburger) and footer as the landing page.
+
+**Implementation:**
+- [x] **Pricing page:** Replace inline nav with `LandingNav`; pass `userId={user?.id ?? null}`. Keep Footer (already present).
+- [x] **Privacy page:** Add `LandingNav userId={null}` and `Footer`. Wrap content in same shell as landing (flex min-h-screen flex-col).
+- [x] **Terms page:** Same as Privacy — add `LandingNav` and `Footer`.
+- [x] **LandingNav:** Add Dashboard link when `userId` present (for Pricing page when signed in).
+
+**Acceptance criteria:**
+- [x] Pricing, Privacy, Terms all use `LandingNav` with hamburger on mobile (< 768px).
+- [x] Privacy and Terms have Footer (Support, Privacy, Terms links).
+- [x] Nav and footer consistent across `/`, `/pricing`, `/privacy`, `/terms`.
+- [x] `npm run check` passes.
+
+---
+
 ### Visual assets integration
 
 **Scope:** Wire generated assets into the app. Assets in `app/public/` per `docs/visual-assets-guide.md`.
@@ -124,6 +142,27 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 - [ ] Support email displayed on page when set; mailto fallback works.
 - [ ] Footer Support links to /contact.
 - [ ] Rate limit and honeypot prevent abuse.
+- [ ] `npm run check` passes.
+
+---
+
+### Local timezone for dates (admin, settings)
+
+**Scope:** Server-rendered dates use server timezone (often UTC), so users see wrong times. Fix by formatting dates on the client so they display in the user's local timezone.
+
+**Affected locations:**
+- **Admin:** Recent signups (Signed up), Users table (Last active), Last RentCast call
+- **Settings:** Plan & billing — "Next billing" / "Plan ends" date
+
+**Implementation:**
+- [ ] Create client component `LocalDate` / `LocalDateTime` that accepts an ISO date string and formats with `toLocaleDateString()` / `toLocaleString()` (runs in browser, uses user timezone).
+- [ ] Admin page: pass dates as ISO strings to the client component for Sign up, Last active, Last RentCast call.
+- [ ] Settings page: pass `subscription.currentPeriodEnd` as ISO string to client component for billing date.
+- [ ] No changes needed for: Properties list, property detail (formatTimeAgo is relative), Deals list, mortgage section, draft context (already client components).
+
+**Acceptance criteria:**
+- [ ] Admin signup times and last active show in user's local timezone.
+- [ ] Settings billing period end shows in user's local timezone.
 - [ ] `npm run check` passes.
 
 ---

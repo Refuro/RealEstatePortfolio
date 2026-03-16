@@ -158,6 +158,7 @@ Apply these when the task matches the context:
 - [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered.
 - [ ] **Design:** Use semantic tokens from `docs/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
 - [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).
+- [ ] **Mobile-also:** Test on both desktop and narrow viewport (375px) or real device. Nav should not be squished on mobile; use hamburger or simplified nav if many links. Touch targets at least 44px. Avoid horizontal overflow.
 
 **When adding plan-gated features (properties, deals, etc.):**
 - [ ] Update `lib/plans.ts` if adding new limits or tiers.

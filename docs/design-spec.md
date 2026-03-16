@@ -81,6 +81,7 @@ Define semantic tokens in `globals.css` and use them consistently.
 - **Sidebar:** Slim (e.g. `w-56` or icon-only collapsible). White/subtle background, `border-r` with `--border`.
 - **Main content:** `flex-1 overflow-auto p-6` (or `p-6` equivalent). Max-width optional for very wide screens.
 - **Responsive:** Stack grids on small screens (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`). No horizontal scroll.
+- **Mobile-also:** Test on both desktop and mobile (375px or real device). Use hamburger or simplified nav if many links; avoid squished text. Touch targets ≥ 44px.
 
 ---
 
