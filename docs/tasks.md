@@ -25,6 +25,103 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ---
 
+### Website performance optimization
+
+**Scope:** Improve load times and reduce bundle size without breaking any functionality. Touches layout, chart components, and config. **Prioritize stability:** every change must be verified end-to-end.
+
+**Phase 1 — Remove or narrow `force-dynamic` (high impact):**
+
+- [x] **Investigate:** Determine why `export const dynamic = "force-dynamic"` exists in `app/layout.tsx`. Check Clerk docs and any prior notes. If it was added for auth, verify whether Clerk requires it at root or only on specific routes.
+- [x] **Remove or relocate:** If root layout does not need `force-dynamic`, remove it. If it is required for Clerk, consider moving it only to layouts/pages that need dynamic auth (e.g. `(app)/layout.tsx` or specific pages). Public pages (`/`, `/privacy`, `/terms`, `/pricing`, `/contact`) should be static or cached where possible.
+- [x] **Verify build:** Run `npm run build`. Confirm public routes show as static (○) or at least not all forced dynamic. App routes under `(app)/` may remain dynamic.
+
+**Phase 1 acceptance criteria:**
+- [x] `force-dynamic` removed from root layout OR moved to the narrowest scope that still satisfies Clerk/auth requirements.
+- [ ] **Auth intact:** Guest can visit `/`, `/privacy`, `/terms`, `/pricing`, `/contact` without errors. Sign-in and sign-up work. Signed-in user sees correct nav (e.g. "Go to dashboard" on landing, Dashboard link in nav).
+- [ ] **Protected routes intact:** Unauthenticated user visiting `/dashboard` or `/properties` is redirected to sign-in. Authenticated user can access dashboard, properties, deals, settings, etc.
+- [ ] **Public page content correct:** Landing shows value props, pricing preview, CTAs. Privacy and Terms render full content. Pricing page shows plan cards.
+- [x] `npm run check` passes. No new console errors or hydration warnings in dev.
+
+**Phase 1 completion note (Mar 2025):** `force-dynamic` removed from root `app/layout.tsx`. Clerk docs confirm ClerkProvider does not require force-dynamic at root (Clerk v6+). Root layout only renders ClerkProvider, ThemeProvider, fonts, JSON-LD — no auth() call. `(app)/layout.tsx` retains `force-dynamic` for protected routes (calls getAppUser(), DB queries). Build verified: `/robots.txt`, `/sitemap.xml`, `/_not-found` show as static (○); public pages (/, /privacy, /terms, /pricing, /contact) remain dynamic (ƒ) because they call auth() or getAppUser() for personalized nav — this is per-page, not root-forced. **Manual smoke test recommended:** Use `docs/run-and-smoke-test.md` checklist to verify guest access, sign-in/sign-up, protected route redirects, and public page content.
+
+**Phase 2 — Lazy-load Recharts (high impact):**
+
+- [ ] **Dashboard charts:** Use `next/dynamic` with `ssr: false` for `EquityChart`, `DebtVsValueChart`, `CashFlowChart` in `dashboard-charts.tsx`. Show a loading placeholder (e.g. skeleton or "Loading charts…") while the chart chunk loads.
+- [ ] **Property detail chart:** Use `next/dynamic` with `ssr: false` for `AmortizationChart` in `app/(app)/properties/[id]/page.tsx`. Preserve existing loading state (AmortizationChart already fetches data client-side).
+- [ ] **Analyze page:** If it uses charts, apply same pattern. Check `app/(app)/analyze/` for any Recharts usage.
+- [ ] **No regressions:** Charts must render correctly with same data, same styling, same empty states. Responsive behavior unchanged.
+
+**Phase 2 acceptance criteria:**
+- [ ] Dashboard: With 1+ properties, all charts (equity, debt vs value, cash flow) render correctly. Empty states show when no data. Single-property "at a glance" section works.
+- [ ] Dashboard: With 0 properties, welcome message and "Add your first property" CTA show; no chart errors.
+- [ ] Property detail: Amortization chart loads and displays schedule. Loading state visible while fetching. Empty/error states handled.
+- [ ] Analyze page: Any charts render correctly.
+- [ ] Build output: Recharts appears in a separate chunk (not in main page bundle). `npm run check` passes.
+- [ ] No hydration errors, no missing chart data, no layout shift that breaks UX.
+
+**Phase 3 — Additional optimizations (medium/low impact):**
+
+- [ ] **`optimizePackageImports`:** Add to `next.config.ts`: `experimental: { optimizePackageImports: ['lucide-react', 'recharts'] }`. Verify build and runtime; icons and charts still work.
+- [ ] **`revalidate` for static content:** Add `export const revalidate = 3600` to `/privacy` and `/terms` pages (if they can be cached; skip if Phase 1 keeps them dynamic). Ensure content is still correct after deploy.
+- [ ] **Preconnect:** Add `<link rel="preconnect" href="https://api.rentcast.io" />` and `<link rel="dns-prefetch" href="https://api.stripe.com" />` in root layout `<head>` if RentCast and Stripe are used. Verify no duplicate or conflicting links.
+- [ ] **Static assets:** Audit `app/public/`. Remove unused files (e.g. `vercel.svg`, `next.svg`) if not referenced. Ensure `og-image.png` exists and is reasonable size (~1200×630).
+
+**Phase 3 acceptance criteria:**
+- [ ] `optimizePackageImports` does not break icons (LandingNav, value props, app nav, etc.) or charts.
+- [ ] Privacy and Terms (if revalidated) still show correct content. Revalidation does not cause stale or wrong content.
+- [ ] Preconnect/dns-prefetch do not cause console errors or broken requests.
+- [ ] No broken images or missing assets. `npm run check` passes.
+
+**Acceptance criteria (overall):**
+- [ ] All existing functionality works: auth (sign-in, sign-up, sign-out), protected routes, public routes, dashboard, properties, deals, analyze, settings, pricing, contact, admin (if applicable).
+- [ ] No new errors in browser console (dev and production build).
+- [ ] `npm run check` passes. Manual smoke test: landing → sign up → dashboard → add property → view property → charts → sign out → landing.
+- [ ] Performance improved or unchanged; no regressions in LCP, TTI, or perceived speed.
+
+---
+
+### App layout performance — getAppUser cache + layout query reduction
+
+**Scope:** Reduce DB round-trips when navigating between protected pages (e.g. clicking a property). Deduplicate `getAppUser` and cache layout counts/subscription. **Prioritize stability:** no stale data that breaks banners or auth.
+
+**Implementation:**
+
+- [x] **1. Deduplicate getAppUser with React `cache()`:** In `lib/auth.ts`, wrap `getAppUser` with React's `cache()` so it runs once per request. Both the `(app)` layout and child pages (dashboard, property detail, etc.) call `getAppUser` in the same RSC request — they will share the cached result. `getActiveAppUser` calls `getAppUser` internally, so it benefits automatically. API routes are separate requests; no change there.
+- [x] **2. Cache layout counts and subscription:** In `(app)/layout.tsx`, wrap the property count, deal count, and subscription query in `unstable_cache` with a short revalidate (e.g. 30–60 seconds). Cache key must include `userId` so each user gets their own cached data. If `user` is null (guest), skip caching and return zeros/null as today.
+
+**Acceptance criteria:**
+- [ ] **Auth intact:** Sign-in, sign-up, sign-out work. Protected routes redirect unauthenticated users. Authenticated users can access dashboard, properties, deals, settings, admin (if applicable).
+- [ ] **Banners correct:** OverLimitBanner shows when user is at or over property/deal limit. PastDueBanner shows when subscription is past_due. Banners may be stale for up to the cache revalidate window (e.g. 30–60s) — document the chosen value; this is acceptable for banner display.
+- [ ] **Deleted user flow:** User with `deletedAt` set sees RestoreAccountScreen; layout does not crash.
+- [ ] **API routes unchanged:** All API routes that use `getActiveAppUser` or `getAppUser` continue to work. No caching in API routes — only in the layout.
+- [ ] `npm run check` passes. No new console errors or hydration warnings.
+- [ ] Manual smoke test: sign in → dashboard → click property → verify property loads; add property (if under limit) → verify over-limit banner appears when limit reached (may take up to revalidate seconds).
+
+**Notes:** Use `import { cache } from "react"` for `cache()`. Use `import { unstable_cache } from "next/cache"` for layout query caching. Cache key example: `["layout-banner", user.id]` for the counts + subscription.
+
+---
+
+### Settings page — defer Stripe sync for faster load
+
+**Scope:** Remove the blocking Stripe `subscriptions.retrieve` call from the Settings page server render. Show DB data immediately; sync `cancelAtPeriodEnd` from Stripe in the client after the page loads.
+
+**Implementation:**
+
+- [x] **1. Remove Stripe sync from server:** In `app/(app)/settings/page.tsx`, remove the block that calls `stripe.subscriptions.retrieve` and `prisma.subscription.update`. Use `subscriptionInitial` directly (no `subscription` variable reassignment). The page renders with DB data only.
+- [x] **2. Add API route:** Create `GET /api/billing/subscription-details` that returns `{ currentPeriodEnd, cancelAtPeriodEnd }` after syncing from Stripe. Auth with `getActiveAppUser`. If no subscription or no stripeSubscriptionId, return null. If Stripe fetch succeeds, update DB and return the synced values. If Stripe fails, return DB values.
+- [x] **3. Client component for billing date display:** Create a client component (e.g. `SubscriptionBillingDisplay`) that receives initial `currentPeriodEnd` and `cancelAtPeriodEnd` from the server. Renders them immediately. On mount, fetches `/api/billing/subscription-details`. When response arrives, updates state and re-renders if values changed. If fetch fails, keeps showing initial values. No loading spinner needed — the initial values are already visible.
+- [x] **4. Integrate:** Replace the inline "Plan ends" / "Next billing" display in the Settings page with the new client component. Pass the initial subscription values from the server.
+
+**Acceptance criteria:**
+- [ ] Settings page loads without waiting for Stripe. Initial render uses DB data only.
+- [ ] "Plan ends" or "Next billing" date displays immediately (from DB). If user has canceled in Stripe portal, the "Plan ends" label and date may update shortly after (when client fetch completes).
+- [ ] Free-tier users: no Stripe call, no API fetch — billing section shows plan and limits only.
+- [ ] Paid users with subscription: DB value shows first; client fetches and may update cancelAtPeriodEnd. No flash or layout shift.
+- [ ] If Stripe or API fails: DB value remains visible. No errors shown to user.
+- [ ] `npm run check` passes.
+
+---
+
 ### Landing page overhaul + branding + SEO
 
 **Scope:** Improve landing page, adopt Veld/Veld Portfolio branding, make key pages public for Stripe compliance, and add SEO.

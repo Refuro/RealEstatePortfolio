@@ -1,10 +1,9 @@
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getDealLimit, getPropertyLimit } from "@/lib/plans";
-import { getStripe } from "@/lib/stripe-config";
 import Link from "next/link";
-import { LocalDate } from "@/components/local-date";
 import { BillingPortalButton } from "./billing-portal-button";
+import { SubscriptionBillingDisplay } from "@/app/(app)/settings/subscription-billing-display";
 import { DeleteAccountSection } from "./delete-account-section";
 import { DownloadCsvButton } from "./download-csv-button";
 import { ImportCsvSection } from "./import-csv-section";
@@ -15,34 +14,11 @@ export default async function SettingsPage() {
   const user = await getAppUser();
   if (!user) return null;
 
-  const [subscriptionInitial, propertyCount, dealCount] = await Promise.all([
+  const [subscription, propertyCount, dealCount] = await Promise.all([
     prisma.subscription.findUnique({ where: { userId: user.id } }),
     prisma.property.count({ where: { userId: user.id } }),
     prisma.savedDeal.count({ where: { userId: user.id } }),
   ]);
-  let subscription = subscriptionInitial;
-
-  // Refresh cancel_at_period_end from Stripe when viewing Settings (webhook can be delayed)
-  if (subscription?.stripeSubscriptionId) {
-    try {
-      const stripe = getStripe();
-      const stripeSub = await stripe.subscriptions.retrieve(subscription.stripeSubscriptionId);
-      // Stripe sets cancel_at_period_end immediately when user cancels in portal
-      // eslint-disable-next-line react-hooks/purity -- need current time to compare with Stripe cancel_at
-      const now = Date.now();
-      const willCancel =
-        stripeSub.cancel_at_period_end === true ||
-        (typeof stripeSub.cancel_at === "number" && stripeSub.cancel_at * 1000 > now);
-      if (stripeSub.cancel_at_period_end !== undefined || stripeSub.cancel_at) {
-        subscription = await prisma.subscription.update({
-          where: { userId: user.id },
-          data: { cancelAtPeriodEnd: willCancel },
-        });
-      }
-    } catch {
-      // Use DB value if Stripe fetch fails
-    }
-  }
 
   const limit = getPropertyLimit(user.subscriptionTier);
   const canAddMore = propertyCount < limit;
@@ -130,25 +106,14 @@ export default async function SettingsPage() {
               </div>
             </div>
             {subscription?.currentPeriodEnd && (
-              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
-                <dt className="text-sm font-medium text-muted">
-                  {subscription.cancelAtPeriodEnd ? "Plan ends" : "Next billing"}
-                </dt>
-                <dd className="text-base text-foreground">
-                  <LocalDate
-                    value={
-                      typeof subscription.currentPeriodEnd === "string"
-                        ? subscription.currentPeriodEnd
-                        : subscription.currentPeriodEnd.toISOString()
-                    }
-                  />
-                  {subscription.cancelAtPeriodEnd && (
-                    <span className="ml-1 text-muted">
-                      — You will have full access up until the expiration date
-                    </span>
-                  )}
-                </dd>
-              </div>
+              <SubscriptionBillingDisplay
+                initialCurrentPeriodEnd={
+                  typeof subscription.currentPeriodEnd === "string"
+                    ? subscription.currentPeriodEnd
+                    : subscription.currentPeriodEnd.toISOString()
+                }
+                initialCancelAtPeriodEnd={subscription.cancelAtPeriodEnd ?? null}
+              />
             )}
           </dl>
           <div className="mt-4 flex flex-wrap gap-3">

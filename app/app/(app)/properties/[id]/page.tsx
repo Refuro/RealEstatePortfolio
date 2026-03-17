@@ -9,7 +9,7 @@ import { PropertyActions } from "../property-actions";
 import { MortgageSection } from "../mortgage-section";
 import { PropertyMetricsSection } from "../property-metrics-section";
 import { ScenarioSection } from "./scenario-section";
-import { AmortizationChart } from "@/components/charts/amortization-chart";
+import { AmortizationChartDynamic } from "./amortization-chart-dynamic";
 
 export default async function PropertyDetailPage({
   params,
@@ -225,7 +225,7 @@ export default async function PropertyDetailPage({
         <p className="mb-4 text-sm text-muted">
           Original mortgage schedule. Not affected by scenario changes above.
         </p>
-        <AmortizationChart propertyId={property.id} />
+        <AmortizationChartDynamic propertyId={property.id} />
       </section>
     </div>
   );

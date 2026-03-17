@@ -75,6 +75,37 @@ UI (pages, components)
 - **Errors:** `{ error: string }` in JSON body; appropriate status code.
 - **Deleted users:** Check `user.deletedAt` for account operations; reject or redirect as needed.
 
+### 2.5 Performance Practices
+
+Keep initial JS small, defer heavy libraries, and cache static content. Follow these patterns so we don't regress.
+
+**Heavy libraries (charts, etc.):**
+- Use `next/dynamic` with `ssr: false` for components that import Recharts or other large libraries (~50KB+).
+- Show a loading placeholder (skeleton or "Loading…") while the chunk loads.
+- Do not import Recharts (or similar) at the top level of pages that render above-the-fold content.
+
+**Layout and rendering:**
+- Do **not** add `export const dynamic = "force-dynamic"` to the root layout unless Clerk or another requirement explicitly needs it. Prefer scoping `force-dynamic` to specific layouts or pages that need request-time data.
+- Public pages (`/`, `/privacy`, `/terms`, `/pricing`, `/contact`) should be static or cached where possible.
+
+**Images:**
+- Use `next/image` for all `<img>` tags. Never use raw `<img>` for user-facing images.
+- Optimize OG images (e.g. 1200×630, WebP when possible).
+
+**Config:**
+- When adding large packages (lucide-react, recharts, etc.), add them to `next.config.ts` `experimental.optimizePackageImports` if supported.
+- For pages that rarely change (Privacy, Terms), add `export const revalidate = 3600` (or similar) so they can be cached.
+
+**External APIs:**
+- When adding new third-party API integrations, add `<link rel="preconnect" href="https://api.example.com" />` or `rel="dns-prefetch"` in the root layout `<head>` for the API origin.
+
+**Checklist for new features:**
+- [ ] New chart or heavy UI library? Use `next/dynamic` with `ssr: false`.
+- [ ] New image in body? Use `next/image`.
+- [ ] New external API? Add preconnect/dns-prefetch.
+- [ ] New large package? Add to `optimizePackageImports` if applicable.
+- [ ] New static content page? Consider `revalidate`.
+
 ---
 
 ## 3. Security Checklist (New Features)

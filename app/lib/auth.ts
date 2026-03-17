@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
 
@@ -5,8 +6,9 @@ import { prisma } from "@/lib/db";
  * Get the current user from Clerk and ensure they exist in our DB.
  * Use in API routes and server components that need the app user.
  * Uses currentUser() to reliably get email (sessionClaims.email is often empty for OAuth sign-ins).
+ * Wrapped with React cache() to deduplicate within the same RSC request (layout + child pages share result).
  */
-export async function getAppUser() {
+export const getAppUser = cache(async function getAppUser() {
   const clerkUser = await currentUser();
   if (!clerkUser) return null;
 
@@ -30,7 +32,7 @@ export async function getAppUser() {
   });
 
   return user;
-}
+});
 
 /**
  * Get the current app user only if they are active (not soft-deleted).
