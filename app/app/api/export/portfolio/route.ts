@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
@@ -43,9 +44,11 @@ export async function GET() {
     "cash invested",
     "ownership %",
     "mortgage balance",
+    "balance as of",
     "mortgage rate",
     "mortgage term",
     "monthly payment",
+    "escrow amount",
     "lender",
     "equity",
     "monthly cash flow",
@@ -58,7 +61,7 @@ export async function GET() {
 
   for (const p of properties) {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum, m) => sum + Number(m.currentBalance),
+      (sum, m) => sum + getEffectiveBalance(m),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(
@@ -67,13 +70,24 @@ export async function GET() {
     );
 
     const firstMortgage = p.mortgages[0];
-    const mortgageBalance = totalMortgageBalance;
+    const mortgageBalanceStored = p.mortgages.reduce(
+      (sum, m) => sum + Number(m.currentBalance),
+      0
+    );
+    const balanceAsOf = firstMortgage?.balanceAsOfDate
+      ? (firstMortgage.balanceAsOfDate instanceof Date
+          ? firstMortgage.balanceAsOfDate
+          : new Date(firstMortgage.balanceAsOfDate)
+        ).toISOString().slice(0, 10)
+      : "";
     const mortgageRate =
       firstMortgage != null
         ? Number(firstMortgage.interestRate) * 100
         : null;
     const mortgageTerm = firstMortgage?.termYears ?? null;
     const monthlyPayment = totalMonthlyPayment || (firstMortgage ? Number(firstMortgage.monthlyPayment) : null);
+    const escrowAmount =
+      firstMortgage?.escrowAmount != null ? Number(firstMortgage.escrowAmount) : null;
     const lender = firstMortgage?.lenderName ?? null;
 
     const metrics = computePropertyMetrics(
@@ -115,10 +129,12 @@ export async function GET() {
       escapeCsvCell(p.vacancyPercent ?? 5),
       escapeCsvCell(p.cashInvested != null ? Number(p.cashInvested) : ""),
       escapeCsvCell(p.ownershipPercent ?? 100),
-      escapeCsvCell(mortgageBalance || ""),
+      escapeCsvCell(mortgageBalanceStored || ""),
+      escapeCsvCell(balanceAsOf),
       escapeCsvCell(mortgageRate ?? ""),
       escapeCsvCell(mortgageTerm ?? ""),
       escapeCsvCell(monthlyPayment ?? ""),
+      escapeCsvCell(escrowAmount ?? ""),
       escapeCsvCell(lender ?? ""),
       escapeCsvCell(metrics.equity),
       escapeCsvCell(metrics.monthlyCashFlow),

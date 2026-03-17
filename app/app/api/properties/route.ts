@@ -75,12 +75,14 @@ export async function POST(request: NextRequest) {
   let mortgageData: {
     originalLoanAmount: string;
     currentBalance: string;
+    balanceAsOfDate: Date | null;
     interestRate: string;
     termYears: number;
     startDate: Date;
     monthlyPayment: string;
     paymentEffectiveDate: Date | null;
     escrowIncluded: boolean;
+    escrowAmount: string | null;
     lenderName: string | null;
     loanType: string | null;
   } | null = null;
@@ -96,12 +98,14 @@ export async function POST(request: NextRequest) {
     mortgageData = {
       originalLoanAmount: m.originalLoanAmount,
       currentBalance: m.currentBalance,
+      balanceAsOfDate: m.balanceAsOfDate ?? null,
       interestRate: m.interestRate,
       termYears: m.termYears,
       startDate: m.startDate,
       monthlyPayment: m.monthlyPayment,
       paymentEffectiveDate: m.paymentEffectiveDate ?? null,
       escrowIncluded: m.escrowIncluded,
+      escrowAmount: m.escrowAmount ?? null,
       lenderName: m.lenderName ?? null,
       loanType: m.loanType ?? null,
     };

@@ -19,14 +19,18 @@ type Mortgage = {
   id: string;
   originalLoanAmount: string;
   currentBalance: string;
+  balanceAsOfDate?: string | null;
   interestRate: string;
   termYears: number;
   startDate: string;
   monthlyPayment: string;
   paymentEffectiveDate: string | null;
   escrowIncluded: boolean;
+  escrowAmount?: string | null;
   lenderName: string | null;
   loanType: string | null;
+  effectiveBalance?: number;
+  balanceSource?: "stored" | "projected";
 };
 
 export function MortgageSection({
@@ -139,10 +143,26 @@ export function MortgageSection({
             >
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <div>
-                  <dt className="text-base text-muted">Balance</dt>
+                  <dt className="text-base text-muted">
+                    {m.balanceSource === "stored" ? "Balance" : "Estimated balance"}
+                  </dt>
                   <dd className="text-lg font-medium text-foreground">
-                    ${Number(m.currentBalance).toLocaleString()}
+                    ${(m.effectiveBalance ?? Number(m.currentBalance)).toLocaleString()}
+                    {m.balanceSource === "stored" && m.balanceAsOfDate ? (
+                      <span className="ml-1 text-xs text-muted font-normal">
+                        (as of {new Date(m.balanceAsOfDate).toLocaleDateString()})
+                      </span>
+                    ) : m.balanceSource === "projected" ? (
+                      <span className="ml-1 block text-xs text-muted font-normal">
+                        (from amortization — update from your statement for accuracy)
+                      </span>
+                    ) : null}
                   </dd>
+                  {m.balanceSource === "projected" && (
+                    <p className="mt-0.5 text-xs text-muted">
+                      Consider updating from your latest statement.
+                    </p>
+                  )}
                 </div>
                 <div>
                   <dt className="text-base text-muted">Rate</dt>
@@ -242,12 +262,14 @@ function mortgageFormDataFromMortgage(m: Mortgage): MortgageFormData {
   return {
     originalLoanAmount: m.originalLoanAmount,
     currentBalance: m.currentBalance,
+    balanceAsOfDate: m.balanceAsOfDate ?? "",
     interestRatePercent: (Number(m.interestRate) * 100).toString(),
     termYears: m.termYears.toString(),
     startDate: m.startDate,
     monthlyPayment: m.monthlyPayment,
     paymentEffectiveDate: m.paymentEffectiveDate ?? "",
     escrowIncluded: m.escrowIncluded,
+    escrowAmount: m.escrowAmount ?? "",
     lenderName: m.lenderName ?? "",
     loanType: m.loanType ?? "",
   };
@@ -258,12 +280,14 @@ function mortgageFormDataToPayload(data: MortgageFormData) {
   return {
     originalLoanAmount: data.originalLoanAmount,
     currentBalance: data.currentBalance,
+    balanceAsOfDate: data.balanceAsOfDate?.trim() ? data.balanceAsOfDate : null,
     interestRate: interestDecimal,
     termYears: Number(data.termYears),
     startDate: data.startDate,
     monthlyPayment: data.monthlyPayment,
     paymentEffectiveDate: data.paymentEffectiveDate?.trim() ? data.paymentEffectiveDate : null,
     escrowIncluded: data.escrowIncluded,
+    escrowAmount: data.escrowAmount?.trim() ? data.escrowAmount : null,
     lenderName: data.lenderName.trim() || null,
     loanType: data.loanType.trim() || null,
   };

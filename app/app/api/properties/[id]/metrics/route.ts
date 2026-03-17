@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 
@@ -24,7 +25,7 @@ export async function GET(
   }
 
   const totalMortgageBalance = property.mortgages.reduce(
-    (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
+    (sum: number, m) => sum + getEffectiveBalance(m),
     0
   );
   const totalMonthlyPayment = property.mortgages.reduce(

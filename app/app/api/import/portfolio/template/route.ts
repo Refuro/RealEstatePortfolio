@@ -10,15 +10,20 @@ const TEMPLATE_HEADERS = [
   "purchase date",
   "value",
   "rent",
+  "unit rents",
   "expenses",
   "vacancy %",
   "cash invested",
   "ownership %",
   "mortgage balance",
+  "original loan amount",
+  "balance as of",
   "mortgage rate",
   "mortgage term",
   "monthly payment",
+  "escrow amount",
   "lender",
+  "loan type",
 ];
 
 const SAMPLE_ROW = [
@@ -30,15 +35,20 @@ const SAMPLE_ROW = [
   "2023-01-15",
   "275000",
   "2200",
+  "",
   "450",
   "5",
   "50000",
   "100",
   "200000",
+  "",
+  "",
   "6.5",
   "30",
   "1265",
+  "",
   "ABC Mortgage",
+  "",
 ];
 
 export async function GET() {

@@ -42,6 +42,11 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
     return d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
   };
 
+  const formatDateTooltip = (dateStr: string) => {
+    const d = new Date(dateStr);
+    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+  };
+
   const chartData = schedule.map((row) => ({
     ...row,
     displayDate: formatDate(row.date),
@@ -75,13 +80,20 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
               tick={{ fontSize: 11 }}
             />
             <Tooltip
-              formatter={(value: number) => formatCurrency(value)}
-              labelFormatter={(_, payload) =>
-                payload?.[0]?.payload?.date
-                  ? formatDate(payload[0].payload.date)
-                  : ""
-              }
-              contentStyle={{ fontSize: 12 }}
+              content={({ active, payload }) => {
+                if (!active || !payload?.length) return null;
+                const p = payload[0].payload;
+                const dateLabel = p.date ? formatDateTooltip(p.date) : "";
+                const balanceVal = p.balance;
+                return (
+                  <div className="rounded border border-border bg-card px-3 py-2 text-sm shadow-lg">
+                    <div className="font-medium text-foreground">{dateLabel}</div>
+                    <div className="text-muted">
+                      Remaining balance: {formatCurrency(balanceVal)}
+                    </div>
+                  </div>
+                );
+              }}
             />
             <Line
               type="monotone"

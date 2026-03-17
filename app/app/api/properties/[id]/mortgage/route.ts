@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { createMortgageSchema } from "@/lib/validations/mortgage";
+import { getEffectiveBalance, getBalanceSource } from "@/lib/amortization";
+import { createMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
 
 async function getPropertyForUser(propertyId: string, userId: string) {
   return prisma.property.findFirst({
@@ -14,27 +15,40 @@ function serializeMortgage(m: {
   propertyId: string;
   originalLoanAmount: { toString(): string };
   currentBalance: { toString(): string };
+  balanceAsOfDate: Date | null;
   interestRate: { toString(): string };
   termYears: number;
   startDate: Date;
   monthlyPayment: { toString(): string };
   paymentEffectiveDate: Date | null;
   escrowIncluded: boolean;
+  escrowAmount: { toString(): string } | null;
   lenderName: string | null;
   loanType: string | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
   return {
-    ...m,
+    id: m.id,
+    propertyId: m.propertyId,
     originalLoanAmount: m.originalLoanAmount.toString(),
     currentBalance: m.currentBalance.toString(),
+    balanceAsOfDate: m.balanceAsOfDate
+      ? m.balanceAsOfDate.toISOString().slice(0, 10)
+      : null,
     interestRate: m.interestRate.toString(),
-    monthlyPayment: m.monthlyPayment.toString(),
+    termYears: m.termYears,
     startDate: m.startDate.toISOString().slice(0, 10),
+    monthlyPayment: m.monthlyPayment.toString(),
     paymentEffectiveDate: m.paymentEffectiveDate
       ? m.paymentEffectiveDate.toISOString().slice(0, 10)
       : null,
+    escrowIncluded: m.escrowIncluded,
+    escrowAmount: m.escrowAmount != null ? m.escrowAmount.toString() : null,
+    lenderName: m.lenderName,
+    loanType: m.loanType,
+    effectiveBalance: getEffectiveBalance(m),
+    balanceSource: getBalanceSource(m),
   };
 }
 
@@ -92,18 +106,27 @@ export async function POST(
   }
 
   const data = parsed.data;
+  const escrowCheck = validateEscrowAmount(data.escrowAmount, data.monthlyPayment);
+  if (!escrowCheck.success) {
+    return NextResponse.json(
+      { error: escrowCheck.error, details: { fieldErrors: { escrowAmount: [escrowCheck.error] } } },
+      { status: 400 }
+    );
+  }
 
   const mortgage = await prisma.mortgage.create({
     data: {
       propertyId,
       originalLoanAmount: data.originalLoanAmount,
       currentBalance: data.currentBalance,
+      balanceAsOfDate: data.balanceAsOfDate ?? null,
       interestRate: data.interestRate,
       termYears: data.termYears,
       startDate: data.startDate,
       monthlyPayment: data.monthlyPayment,
       paymentEffectiveDate: data.paymentEffectiveDate ?? null,
       escrowIncluded: data.escrowIncluded,
+      escrowAmount: data.escrowAmount ?? null,
       lenderName: data.lenderName ?? null,
       loanType: data.loanType ?? null,
     },
