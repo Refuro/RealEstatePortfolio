@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getStripe, getPriceIdForPlan, type BillingCycle } from "@/lib/stripe-config";
+import { getStripe, getPriceIdForPlan } from "@/lib/stripe-config";
+import { createCheckoutSessionSchema } from "@/lib/validations/checkout";
 
 export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
@@ -9,23 +10,23 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { plan?: string; billingCycle?: string };
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  const plan = body.plan === "investor" || body.plan === "pro" ? body.plan : null;
-  if (!plan) {
-    return NextResponse.json(
-      { error: "Invalid or missing plan; use 'investor' or 'pro'" },
-      { status: 400 }
-    );
+  const parsed = createCheckoutSessionSchema.safeParse(body);
+  if (!parsed.success) {
+    const planError = parsed.error.flatten().fieldErrors.plan?.[0];
+    const billingError = parsed.error.flatten().fieldErrors.billingCycle?.[0];
+    const errorMessage =
+      planError ?? billingError ?? "Invalid request";
+    return NextResponse.json({ error: errorMessage }, { status: 400 });
   }
 
-  const billingCycle: BillingCycle =
-    body.billingCycle === "yearly" ? "yearly" : "monthly";
+  const { plan, billingCycle } = parsed.data;
   const priceId = getPriceIdForPlan(plan, billingCycle);
   if (!priceId) {
     return NextResponse.json(

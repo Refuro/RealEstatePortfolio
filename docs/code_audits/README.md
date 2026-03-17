@@ -1,6 +1,6 @@
 # Code Audits
 
-This folder contains periodic code audit reports. Each report is a snapshot of the codebase health across design compliance, architecture, efficiency, technical debt, security, and the product mantra.
+This folder contains periodic code audit reports. Each report is a snapshot of the codebase health across design compliance, architecture, efficiency, technical debt, security, product mantra, and performance.
 
 ## Process
 

@@ -25,7 +25,7 @@ When the user says **"run code audit"**, **"code audit"**, or **"do a code audit
 Perform a code audit following docs/code-audit-process.md.
 
 1. Read docs/code-audit-process.md, docs/design-spec.md, docs/architecture-and-build-practices.md, and docs/security-notes.md.
-2. Systematically audit the codebase under app/ (lib, components, API routes, pages) across all dimensions in the process: design compliance, architecture compliance, efficiency, technical debt/corners, security, product mantra.
+2. Systematically audit the codebase under app/ (lib, components, API routes, pages) across all dimensions in the process: design compliance, architecture compliance, efficiency, technical debt/corners, security, product mantra, performance.
 3. Write the report to docs/code_audits/YYYY-MM-DD-code-audit.md (use today's date).
 4. Do NOT make any code changes. Audit only. Document findings with file paths where helpful.
 

@@ -5,6 +5,7 @@ import { getPropertyLimit, getDealLimit } from "@/lib/plans";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
 
+/** Required for user-specific banner data (property/deal counts, subscription status) and getAppUser(). Child pages need request-time data. */
 export const dynamic = "force-dynamic";
 
 /** Revalidate layout counts/subscription every 30 seconds. Banners may be stale within this window. */

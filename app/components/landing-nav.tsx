@@ -95,7 +95,7 @@ export function LandingNav({ userId }: LandingNavProps) {
       )}
       {/* Mobile slide-out drawer */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 w-64 border-l border-border bg-background shadow-lg transition-transform md:hidden ${
+        className={`fixed inset-y-0 right-0 z-50 w-64 border-l border-border bg-background shadow-sm transition-transform md:hidden ${
           mobileMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >

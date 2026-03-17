@@ -122,6 +122,56 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ---
 
+### Code audit follow-ups — design, docs, validation
+
+**Scope:** Address findings from 2025-03-13 code audit. Three small tasks; prioritize stability.
+
+---
+
+#### Task A: Reduce mobile nav shadow (design compliance)
+
+**Implementation:**
+- [x] In `components/landing-nav.tsx`, change `shadow-lg` to `shadow-sm` on the mobile slide-out drawer (line ~98). Design spec §9: "Prefer flat or very subtle shadow." *(Already shadow-sm; verified compliant.)*
+
+**Acceptance criteria:**
+- [ ] Mobile drawer uses `shadow-sm` (or equivalent subtle shadow). No `shadow-lg`, `shadow-xl`, or `shadow-2xl`.
+- [ ] Mobile nav still opens and closes correctly. Hamburger menu works on viewports < 768px.
+- [ ] Drawer remains visible and readable; no regression in contrast or usability.
+- [ ] Desktop nav (md and up) unchanged.
+- [ ] `npm run check` passes.
+
+---
+
+#### Task B: Document force-dynamic in app layout
+
+**Implementation:**
+- [x] In `app/(app)/layout.tsx`, add a brief comment above `export const dynamic = "force-dynamic"` explaining why it is required. Example: "Required for user-specific banner data (property/deal counts, subscription status) and getAppUser(). Child pages need request-time data."
+
+**Acceptance criteria:**
+- [ ] Comment is present and accurately describes the rationale.
+- [ ] Comment does not exceed ~2–3 lines; concise.
+- [ ] No code changes; comment only.
+- [ ] `npm run check` passes.
+
+---
+
+#### Task C: Add Zod validation to create-checkout-session
+
+**Implementation:**
+- [x] Create `lib/validations/checkout.ts` with a schema for the checkout request body: `{ plan: z.enum(["investor", "pro"]), billingCycle: z.enum(["monthly", "yearly"]).optional().default("monthly") }`. Export schema and inferred type.
+- [x] In `app/api/billing/create-checkout-session/route.ts`, replace manual validation with Zod. Parse body with the schema; return 400 with `{ error: string }` on invalid. Preserve existing error messages where possible (e.g. "Invalid or missing plan; use 'investor' or 'pro'").
+- [x] Ensure `billingCycle` defaults to `"monthly"` when missing (current behavior: `body.billingCycle === "yearly" ? "yearly" : "monthly"`).
+
+**Acceptance criteria:**
+- [ ] Valid requests (`{ plan: "investor" }`, `{ plan: "investor", billingCycle: "yearly" }`, `{ plan: "pro", billingCycle: "monthly" }`) create checkout sessions and redirect to Stripe. No regression.
+- [ ] Invalid plan (`{ plan: "free" }`, `{ plan: "invalid" }`, `{ plan: null }`, missing `plan`) returns 400 with clear error message.
+- [ ] Invalid billingCycle (`{ plan: "investor", billingCycle: "invalid" }`) returns 400 or is coerced to monthly per schema design.
+- [ ] Missing body or invalid JSON still returns 400.
+- [ ] Auth unchanged: unauthenticated requests return 401.
+- [ ] `npm run check` passes.
+
+---
+
 ### Landing page overhaul + branding + SEO
 
 **Scope:** Improve landing page, adopt Veld/Veld Portfolio branding, make key pages public for Stripe compliance, and add SEO.
