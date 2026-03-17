@@ -93,12 +93,14 @@ model Mortgage {
   propertyId             String
   originalLoanAmount     Decimal   @db.Decimal(14, 2)
   currentBalance        Decimal   @db.Decimal(14, 2)
+  balanceAsOfDate       DateTime? @db.Date
   interestRate          Decimal   @db.Decimal(6, 4)
   termYears             Int
   startDate              DateTime  @db.Date
   monthlyPayment        Decimal   @db.Decimal(12, 2)
   paymentEffectiveDate   DateTime? @db.Date
   escrowIncluded        Boolean   @default(false)
+  escrowAmount          Decimal?  @db.Decimal(12, 2)
   lenderName            String?
   loanType              String? // e.g. conventional, fha
   createdAt             DateTime  @default(now())

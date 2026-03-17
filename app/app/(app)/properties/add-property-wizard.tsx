@@ -8,7 +8,7 @@ import { CurrencyInput } from "@/components/currency-input";
 import { formatCurrency } from "@/lib/format-currency";
 import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
-import { createMortgageSchema } from "@/lib/validations/mortgage";
+import { createMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
 import {
   MortgageFormFields,
   defaultMortgageFormData,
@@ -685,12 +685,14 @@ function mortgageFormDataToPayload(data: MortgageFormData) {
   return {
     originalLoanAmount: data.originalLoanAmount,
     currentBalance: data.currentBalance,
+    balanceAsOfDate: data.balanceAsOfDate?.trim() ? data.balanceAsOfDate : null,
     interestRate: interestDecimal,
     termYears: Number(data.termYears),
     startDate: data.startDate,
     monthlyPayment: data.monthlyPayment,
     paymentEffectiveDate: data.paymentEffectiveDate?.trim() ? data.paymentEffectiveDate : null,
     escrowIncluded: data.escrowIncluded,
+    escrowAmount: data.escrowAmount?.trim() ? data.escrowAmount : null,
     lenderName: data.lenderName.trim() || null,
     loanType: data.loanType.trim() || null,
   };
@@ -867,15 +869,15 @@ function StepReview({
           <div>
             <dt className="text-muted">Monthly rent</dt>
             <dd className="font-medium text-foreground">
-              {(data.propertyType === "multi_family" || data.propertyType === "apartment") &&
-              (Number(data.units) || 1) > 1 &&
-              data.unitRents.length > 0
+              {data.unitRents.length > 1
                 ? (() => {
                     const rents = data.unitRents.slice(0, Number(data.units) || 1);
                     const total = rents.reduce((s, r) => s + (Number(r) || 0), 0);
                     return `${rents.map((r, i) => `Unit ${i + 1}: ${formatCurrency(Number(r))}`).join(", ")} (Total: ${formatCurrency(total)})`;
                   })()
-                : formatCurrencyVal(data.currentMonthlyRent)}
+                : data.unitRents.length === 1
+                  ? formatCurrency(Number(data.unitRents[0]))
+                  : formatCurrencyVal(data.currentMonthlyRent)}
             </dd>
           </div>
           <div>
@@ -999,11 +1001,14 @@ function validateStep4(data: WizardData): Record<string, string> {
   const payload = {
     originalLoanAmount: m.originalLoanAmount,
     currentBalance: m.currentBalance,
+    balanceAsOfDate: m.balanceAsOfDate?.trim() ? m.balanceAsOfDate : null,
     interestRate: (Number(m.interestRatePercent) / 100).toString(),
     termYears: Number(m.termYears),
     startDate: m.startDate,
     monthlyPayment: m.monthlyPayment,
+    paymentEffectiveDate: m.paymentEffectiveDate?.trim() ? m.paymentEffectiveDate : null,
     escrowIncluded: m.escrowIncluded,
+    escrowAmount: m.escrowAmount?.trim() ? m.escrowAmount : null,
     lenderName: m.lenderName.trim() || null,
     loanType: m.loanType.trim() || null,
   };
@@ -1015,6 +1020,13 @@ function validateStep4(data: WizardData): Record<string, string> {
       if (Array.isArray(v) && v[0]) err[k] = v[0];
     }
     return err;
+  }
+  const escrowCheck = validateEscrowAmount(
+    payload.escrowAmount ?? null,
+    payload.monthlyPayment
+  );
+  if (!escrowCheck.success) {
+    return { escrowAmount: escrowCheck.error };
   }
   return {};
 }

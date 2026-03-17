@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
@@ -23,7 +24,7 @@ export async function GET() {
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
+      (sum: number, m) => sum + getEffectiveBalance(m),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(

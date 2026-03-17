@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { generateAmortizationSchedule } from "@/lib/amortization";
+import { generateAmortizationSchedule, getPiForAmortization } from "@/lib/amortization";
 
 export async function GET(
   _request: NextRequest,
@@ -33,7 +33,7 @@ export async function GET(
     annualInterestRate: Number(mortgage.interestRate),
     termYears: mortgage.termYears,
     startDate: mortgage.startDate,
-    monthlyPayment: Number(mortgage.monthlyPayment),
+    monthlyPayment: getPiForAmortization(mortgage),
   });
 
   return NextResponse.json({ schedule });

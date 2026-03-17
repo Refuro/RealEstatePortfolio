@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { updateMortgageSchema } from "@/lib/validations/mortgage";
+import { getEffectiveBalance, getBalanceSource } from "@/lib/amortization";
+import { updateMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
 
 async function getMortgageForUser(mortgageId: string, userId: string) {
   return prisma.mortgage.findFirst({
@@ -17,27 +18,40 @@ function serializeMortgage(m: {
   propertyId: string;
   originalLoanAmount: { toString(): string };
   currentBalance: { toString(): string };
+  balanceAsOfDate: Date | null;
   interestRate: { toString(): string };
   termYears: number;
   startDate: Date;
   monthlyPayment: { toString(): string };
   paymentEffectiveDate: Date | null;
   escrowIncluded: boolean;
+  escrowAmount: { toString(): string } | null;
   lenderName: string | null;
   loanType: string | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
   return {
-    ...m,
+    id: m.id,
+    propertyId: m.propertyId,
     originalLoanAmount: m.originalLoanAmount.toString(),
     currentBalance: m.currentBalance.toString(),
+    balanceAsOfDate: m.balanceAsOfDate
+      ? m.balanceAsOfDate.toISOString().slice(0, 10)
+      : null,
     interestRate: m.interestRate.toString(),
-    monthlyPayment: m.monthlyPayment.toString(),
+    termYears: m.termYears,
     startDate: m.startDate.toISOString().slice(0, 10),
+    monthlyPayment: m.monthlyPayment.toString(),
     paymentEffectiveDate: m.paymentEffectiveDate
       ? m.paymentEffectiveDate.toISOString().slice(0, 10)
       : null,
+    escrowIncluded: m.escrowIncluded,
+    escrowAmount: m.escrowAmount != null ? m.escrowAmount.toString() : null,
+    lenderName: m.lenderName,
+    loanType: m.loanType,
+    effectiveBalance: getEffectiveBalance(m),
+    balanceSource: getBalanceSource(m),
   };
 }
 
@@ -72,6 +86,17 @@ export async function PATCH(
   }
 
   const data = parsed.data;
+  const monthlyPayment =
+    data.monthlyPayment ?? existing.monthlyPayment.toString();
+  const escrowAmount =
+    data.escrowAmount !== undefined ? data.escrowAmount : existing.escrowAmount?.toString() ?? null;
+  const escrowCheck = validateEscrowAmount(escrowAmount, monthlyPayment);
+  if (!escrowCheck.success) {
+    return NextResponse.json(
+      { error: escrowCheck.error, details: { fieldErrors: { escrowAmount: [escrowCheck.error] } } },
+      { status: 400 }
+    );
+  }
   const updatePayload: Record<string, unknown> = {};
   if (data.originalLoanAmount !== undefined) updatePayload.originalLoanAmount = data.originalLoanAmount;
   if (data.currentBalance !== undefined) updatePayload.currentBalance = data.currentBalance;
@@ -81,8 +106,10 @@ export async function PATCH(
   if (data.monthlyPayment !== undefined) updatePayload.monthlyPayment = data.monthlyPayment;
   if (data.paymentEffectiveDate !== undefined) updatePayload.paymentEffectiveDate = data.paymentEffectiveDate;
   if (data.escrowIncluded !== undefined) updatePayload.escrowIncluded = data.escrowIncluded;
+  if (data.escrowAmount !== undefined) updatePayload.escrowAmount = data.escrowAmount;
   if (data.lenderName !== undefined) updatePayload.lenderName = data.lenderName;
   if (data.loanType !== undefined) updatePayload.loanType = data.loanType;
+  if (data.balanceAsOfDate !== undefined) updatePayload.balanceAsOfDate = data.balanceAsOfDate;
 
   const mortgage = await prisma.mortgage.update({
     where: { id: mortgageId },

@@ -94,15 +94,20 @@ export type ImportRow = {
   purchaseDate: Date;
   currentEstimatedValue: number;
   currentMonthlyRent: number;
+  unitRents: number[] | null;
   currentMonthlyExpenses: number;
   vacancyPercent: number;
   cashInvested: number | null;
   ownershipPercent: number;
   mortgageBalance: number | null;
+  balanceAsOfDate: Date | null;
+  originalLoanAmount: number | null;
   mortgageRate: number | null;
   mortgageTerm: number | null;
   monthlyPayment: number | null;
+  escrowAmount: number | null;
   lenderName: string | null;
+  loanType: string | null;
 };
 
 export function parseRow(
@@ -218,6 +223,17 @@ export function parseRow(
   const mortgageBalance = parseNum(
     getCol(row, "mortgage balance", "mortgageBalance")
   );
+  const balanceAsOfRaw = parseDate(
+    getCol(row, "balance as of", "balanceAsOfDate")
+  );
+  const balanceAsOfDate = balanceAsOfRaw ?? null;
+  const originalLoanAmountRaw = parseNum(
+    getCol(row, "original loan amount", "originalLoanAmount")
+  );
+  const originalLoanAmount =
+    originalLoanAmountRaw != null && originalLoanAmountRaw >= 0
+      ? originalLoanAmountRaw
+      : null;
   const mortgageRateRaw = parseNum(getCol(row, "mortgage rate", "mortgageRate"));
   const mortgageRate =
     mortgageRateRaw != null && mortgageRateRaw >= 0 ? mortgageRateRaw / 100 : null;
@@ -225,9 +241,28 @@ export function parseRow(
   const monthlyPayment = parseNum(
     getCol(row, "monthly payment", "monthlyPayment")
   );
+  const escrowAmountRaw = parseNum(
+    getCol(row, "escrow amount", "escrowAmount")
+  );
+  const escrowAmount =
+    escrowAmountRaw != null && escrowAmountRaw >= 0 ? escrowAmountRaw : null;
   const lenderName = getCol(row, "lender") || null;
+  const loanTypeRaw = getCol(row, "loan type", "loanType");
+  const loanType = loanTypeRaw ? loanTypeRaw.trim() : null;
 
   const nickname = getCol(row, "nickname") || null;
+
+  const unitRentsRaw = getCol(row, "unit rents", "unitRents");
+  let unitRents: number[] | null = null;
+  if (unitRentsRaw) {
+    const parsed = unitRentsRaw
+      .split(",")
+      .map((s) => parseNum(s.trim()))
+      .filter((n): n is number => n != null && n >= 0);
+    if (parsed.length === units && parsed.every((n) => n > 0)) {
+      unitRents = parsed;
+    }
+  }
 
   return {
     data: {
@@ -243,18 +278,23 @@ export function parseRow(
       purchaseDate,
       currentEstimatedValue,
       currentMonthlyRent: rent,
+      unitRents,
       currentMonthlyExpenses: expenses,
       vacancyPercent,
       cashInvested,
       ownershipPercent,
       mortgageBalance:
         mortgageBalance != null && mortgageBalance >= 0 ? mortgageBalance : null,
+      balanceAsOfDate,
+      originalLoanAmount,
       mortgageRate,
       mortgageTerm:
         mortgageTerm != null && mortgageTerm >= 1 ? Math.round(mortgageTerm) : null,
       monthlyPayment:
         monthlyPayment != null && monthlyPayment >= 0 ? monthlyPayment : null,
+      escrowAmount,
       lenderName,
+      loanType,
     },
   };
 }

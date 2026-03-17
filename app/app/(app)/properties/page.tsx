@@ -7,6 +7,7 @@ import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
+import { getEffectiveBalance } from "@/lib/amortization";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -46,8 +47,7 @@ export default async function PropertiesPage() {
   const portfolioInput: PortfolioPropertyInput[] = properties.map(
     (p: PropertyWithMortgages) => {
       const totalMortgageBalance = p.mortgages.reduce(
-        (sum: number, m: { currentBalance: unknown }) =>
-          sum + Number(m.currentBalance),
+        (sum: number, m) => sum + getEffectiveBalance(m),
         0
       );
       const totalMonthlyPayment = p.mortgages.reduce(
@@ -136,8 +136,7 @@ export default async function PropertiesPage() {
           <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
             {properties.map((p: PropertyWithMortgages) => {
               const totalMortgageBalance = p.mortgages.reduce(
-                (sum: number, m: { currentBalance: unknown }) =>
-                  sum + Number(m.currentBalance),
+                (sum: number, m) => sum + getEffectiveBalance(m),
                 0
               );
               const totalMonthlyPayment = p.mortgages.reduce(

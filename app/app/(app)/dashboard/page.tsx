@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { getPropertyLimit } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
+import { getEffectiveBalance } from "@/lib/amortization";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -29,7 +30,7 @@ export default async function DashboardPage() {
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
+      (sum: number, m) => sum + getEffectiveBalance(m),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(

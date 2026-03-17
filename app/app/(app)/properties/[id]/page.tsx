@@ -4,6 +4,7 @@ import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
+import { getEffectiveBalance, getBalanceSource } from "@/lib/amortization";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { PropertyActions } from "../property-actions";
 import { MortgageSection } from "../mortgage-section";
@@ -29,7 +30,7 @@ export default async function PropertyDetailPage({
 
   type MortgageItem = (typeof property.mortgages)[number];
   const totalMortgageBalance = property.mortgages.reduce(
-    (sum: number, m: { currentBalance: unknown }) => sum + Number(m.currentBalance),
+    (sum: number, m) => sum + getEffectiveBalance(m),
     0
   );
   const totalMonthlyPayment = property.mortgages.reduce(
@@ -115,7 +116,7 @@ export default async function PropertyDetailPage({
             <div>
               <dt className="text-base font-medium text-muted">Monthly rent</dt>
               <dd className="text-lg font-medium text-foreground">
-                {Array.isArray(property.unitRents) && (property.unitRents as number[]).length > 0 ? (
+                {Array.isArray(property.unitRents) && (property.unitRents as number[]).length > 1 ? (
                   <>
                     {(property.unitRents as number[]).map((r, i) => (
                       <span key={i}>
@@ -125,6 +126,8 @@ export default async function PropertyDetailPage({
                     {" "}
                     <span className="text-muted">(Total: ${totalRent.toLocaleString()})</span>
                   </>
+                ) : Array.isArray(property.unitRents) && (property.unitRents as number[]).length === 1 ? (
+                  `$${Number((property.unitRents as number[])[0]).toLocaleString()}`
                 ) : (
                   `$${totalRent.toLocaleString()}`
                 )}
@@ -195,14 +198,18 @@ export default async function PropertyDetailPage({
             id: m.id,
             originalLoanAmount: m.originalLoanAmount.toString(),
             currentBalance: m.currentBalance.toString(),
+            balanceAsOfDate: m.balanceAsOfDate?.toISOString().slice(0, 10) ?? null,
             interestRate: m.interestRate.toString(),
             termYears: m.termYears,
             startDate: m.startDate.toISOString().slice(0, 10),
             monthlyPayment: m.monthlyPayment.toString(),
             paymentEffectiveDate: m.paymentEffectiveDate?.toISOString().slice(0, 10) ?? null,
             escrowIncluded: m.escrowIncluded,
+            escrowAmount: m.escrowAmount != null ? m.escrowAmount.toString() : null,
             lenderName: m.lenderName,
             loanType: m.loanType,
+            effectiveBalance: getEffectiveBalance(m),
+            balanceSource: getBalanceSource(m),
           }))}
         />
       </div>

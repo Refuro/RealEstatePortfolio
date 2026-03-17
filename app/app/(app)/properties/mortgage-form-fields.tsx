@@ -6,12 +6,14 @@ import { LOAN_TYPE_OPTIONS } from "@/lib/validations/mortgage";
 export type MortgageFormData = {
   originalLoanAmount: string;
   currentBalance: string;
+  balanceAsOfDate: string;
   interestRatePercent: string;
   termYears: string;
   startDate: string;
   monthlyPayment: string;
   paymentEffectiveDate: string;
   escrowIncluded: boolean;
+  escrowAmount: string;
   lenderName: string;
   loanType: string;
 };
@@ -19,12 +21,14 @@ export type MortgageFormData = {
 export const defaultMortgageFormData: MortgageFormData = {
   originalLoanAmount: "",
   currentBalance: "",
+  balanceAsOfDate: "",
   interestRatePercent: "",
   termYears: "",
   startDate: "",
   monthlyPayment: "",
   paymentEffectiveDate: "",
   escrowIncluded: false,
+  escrowAmount: "",
   lenderName: "",
   loanType: "",
 };
@@ -65,12 +69,32 @@ export function MortgageFormFields({
           <label className={labelClass}>Current balance</label>
           <CurrencyInput
             value={value.currentBalance}
-            onChange={(v) => update("currentBalance", v)}
+            onChange={(v) => {
+              update("currentBalance", v);
+              if (!value.balanceAsOfDate) {
+                update("balanceAsOfDate", new Date().toISOString().slice(0, 10));
+              }
+            }}
             required
             className={inputClass}
           />
           {errors.currentBalance && (
             <p className="mt-0.5 text-xs text-negative">{errors.currentBalance}</p>
+          )}
+        </div>
+        <div>
+          <label className={labelClass}>Balance as of (optional)</label>
+          <input
+            type="date"
+            value={value.balanceAsOfDate}
+            onChange={(e) => update("balanceAsOfDate", e.target.value)}
+            className={inputClass}
+          />
+          <p className="mt-0.5 text-xs text-muted">
+            Date from your statement when you last updated the balance
+          </p>
+          {errors.balanceAsOfDate && (
+            <p className="mt-0.5 text-xs text-negative">{errors.balanceAsOfDate}</p>
           )}
         </div>
         <div>
@@ -174,16 +198,34 @@ export function MortgageFormFields({
           </select>
         </div>
       </div>
-      <div className="flex items-center gap-3">
-        <label className="flex items-center gap-2 text-sm text-muted">
-          <input
-            type="checkbox"
-            checked={value.escrowIncluded}
-            onChange={(e) => update("escrowIncluded", e.target.checked)}
-            className="rounded border-border"
-          />
-          Escrow included in payment
-        </label>
+      <div className="flex flex-col gap-3">
+        <div className="flex items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={value.escrowIncluded}
+              onChange={(e) => update("escrowIncluded", e.target.checked)}
+              className="rounded border-border"
+            />
+            Escrow included in payment
+          </label>
+        </div>
+        {value.escrowIncluded && (
+          <div>
+            <label className={labelClass}>Escrow amount (optional)</label>
+            <CurrencyInput
+              value={value.escrowAmount}
+              onChange={(v) => update("escrowAmount", v)}
+              className={inputClass}
+            />
+            <p className="mt-0.5 text-xs text-muted">
+              Used for balance projection. Your total payment above is used for cash flow.
+            </p>
+            {errors.escrowAmount && (
+              <p className="mt-0.5 text-xs text-negative">{errors.escrowAmount}</p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

@@ -134,6 +134,7 @@ export async function POST(req: NextRequest) {
           purchaseDate: r.purchaseDate,
           currentEstimatedValue: r.currentEstimatedValue,
           currentMonthlyRent: r.currentMonthlyRent,
+          unitRents: r.unitRents && r.unitRents.length > 0 ? r.unitRents : null,
           currentMonthlyExpenses: r.currentMonthlyExpenses,
           vacancyPercent: r.vacancyPercent,
           cashInvested: r.cashInvested,
@@ -149,16 +150,21 @@ export async function POST(req: NextRequest) {
         r.mortgageRate != null &&
         r.mortgageTerm != null
       ) {
+        const originalLoan = r.originalLoanAmount ?? r.mortgageBalance;
         await tx.mortgage.create({
           data: {
             propertyId: prop.id,
-            originalLoanAmount: r.mortgageBalance,
+            originalLoanAmount: originalLoan,
             currentBalance: r.mortgageBalance,
+            balanceAsOfDate: r.balanceAsOfDate,
             interestRate: r.mortgageRate,
             termYears: r.mortgageTerm,
             startDate: r.purchaseDate,
             monthlyPayment: r.monthlyPayment,
+            escrowIncluded: r.escrowAmount != null && r.escrowAmount > 0,
+            escrowAmount: r.escrowAmount,
             lenderName: r.lenderName,
+            loanType: r.loanType ?? null,
           },
         });
       }
