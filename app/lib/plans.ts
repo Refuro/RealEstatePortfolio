@@ -15,7 +15,19 @@ export const PLAN_DEAL_LIMITS = {
   pro: 50,
 } as const;
 
+/** RentCast API calls per hour by plan. Free: 5, Investor: 10, Pro: 20. */
+export const RENTCAST_HOURLY_LIMITS = {
+  free: 5,
+  investor: 10,
+  pro: 20,
+} as const;
+
 export type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
+
+export function getRentCastHourlyLimit(tier: string): number {
+  const key = tier.toLowerCase() as PlanTier;
+  return RENTCAST_HOURLY_LIMITS[key] ?? RENTCAST_HOURLY_LIMITS.free;
+}
 
 export function getPropertyLimit(tier: string): number {
   const key = tier.toLowerCase() as PlanTier;

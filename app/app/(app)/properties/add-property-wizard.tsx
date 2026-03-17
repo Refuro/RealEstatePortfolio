@@ -448,7 +448,7 @@ function StepPurchase({
             </button>
           </div>
           {valueEstimateError && (
-            <p className="mt-0.5 text-sm text-muted">{valueEstimateError}</p>
+            <p className={`mt-0.5 text-sm ${valueEstimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{valueEstimateError}</p>
           )}
           {errors.currentEstimatedValue && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentEstimatedValue}</p>
@@ -600,7 +600,7 @@ function StepIncomeExpenses({
             Total: ${totalRent.toLocaleString()}/mo
           </p>
           {estimateError && (
-            <p className="text-sm text-muted">{estimateError}</p>
+            <p className={`text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
           )}
           {(errors.unitRents || errors.currentMonthlyRent) && (
             <p className="text-sm text-negative">
@@ -633,7 +633,7 @@ function StepIncomeExpenses({
             </button>
           </div>
           {estimateError && (
-            <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+            <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
           )}
           {errors.currentMonthlyRent && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyRent}</p>

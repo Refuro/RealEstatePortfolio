@@ -298,4 +298,53 @@ Replace raw `currentBalance` sum with `getEffectiveBalance` sum in:
 
 ---
 
+### RentCast rate limits — plan-based per-hour
+
+**Priority:** Low. Protects RentCast quota; aligns limits with plan value.
+
+**Scope:** Replace the fixed 20-calls-per-hour limit with plan-based limits:
+- **Free:** 5/hour
+- **Investor:** 10/hour
+- **Pro:** 20/hour
+
+**Files:**
+- `app/api/estimates/rent/route.ts` — use plan-based limit
+- `app/api/estimates/value/route.ts` — use plan-based limit
+
+**Implementation:**
+- Add helper `getRentCastHourlyLimit(tier: string): number` in `lib/plans.ts` or new `lib/rentcast-limits.ts`. Return 5 for "free", 10 for "investor", 20 for "pro"; default 5 for unknown.
+- Both estimate routes: get `user.subscriptionTier ?? "free"`, call helper, use result instead of hardcoded 20.
+- Error message unchanged: "Rate limit exceeded. Try again later."
+
+**Acceptance criteria**
+
+- [x] Free users: 5 RentCast calls per hour (rent + value combined).
+- [x] Investor users: 10 per hour.
+- [x] Pro users: 20 per hour.
+- [x] `npm run check` passes.
+
+---
+
+### RentCast rate limit — user-facing messaging
+
+**Priority:** Low. Users who hit the limit should see clear, friendly messaging without flow interruption.
+
+**Scope:** Improve the message shown when a user exceeds their RentCast estimate limit (rent or value). Keep it inline below the Estimate button; no modals or blocking UI.
+
+**API:** 429 response message: "You've used your estimate limit for this hour. Try again later."
+
+**Frontend:** When error contains "estimate limit", use `text-negative` (visible) instead of `text-muted`. Apply to rent and value estimate errors in add-property-wizard and property-form.
+
+**Constraints:** No modals, toasts, or blocking. Inline message only. Form flow unchanged.
+
+**Acceptance criteria**
+
+- [x] API returns friendly message on 429.
+- [x] Add-property wizard: rate limit error shown in text-negative below Estimate button(s).
+- [x] Property form: rate limit error shown in text-negative below Estimate button(s).
+- [x] No flow interruption; form remains fully usable.
+- [x] `npm run check` passes.
+
+---
+
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*

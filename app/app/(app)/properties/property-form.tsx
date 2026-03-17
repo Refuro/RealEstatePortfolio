@@ -592,7 +592,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               </button>
             </div>
             {valueEstimateError && (
-              <p className="mt-0.5 text-sm text-muted">{valueEstimateError}</p>
+              <p className={`mt-0.5 text-sm ${valueEstimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{valueEstimateError}</p>
             )}
           </div>
           <div>
@@ -647,7 +647,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 /mo
               </p>
               {estimateError && (
-                <p className="text-sm text-muted">{estimateError}</p>
+                <p className={`text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
               )}
             </div>
           ) : isMulti ? (
@@ -678,7 +678,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 Will be split evenly across {unitCount} units on save
               </p>
               {estimateError && (
-                <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+                <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
               )}
             </div>
           ) : (
@@ -706,7 +706,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 </button>
               </div>
               {estimateError && (
-                <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+                <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
               )}
             </div>
           )}
