@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 
@@ -18,19 +19,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <LandingNav userId={null} />
+      <LandingNav userId={userId} />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 py-12">
           <Link
-            href="/"
+            href={userId ? "/dashboard" : "/"}
             className="mb-8 inline-block text-sm text-muted hover:text-foreground"
           >
-            ← Back to home
+            ← {userId ? "Back to dashboard" : "Back to home"}
           </Link>
         <h1 className="text-2xl font-semibold text-foreground">
           Privacy Policy
@@ -50,7 +52,7 @@ export default function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">Data We Collect</h2>
             <p>
-              We collect information you provide directly (e.g., property details, mortgage information, financial summaries) and data necessary to operate the service (e.g., account credentials, email, name). We use third-party services that process data on our behalf:
+              We collect information you provide directly (e.g., property details, mortgage information, financial summaries) and data necessary to operate the service (e.g., account credentials, email, name). When you use our contact form, we collect your email, subject, and message to respond to your inquiry; we do not use this data for marketing. We use third-party services that process data on our behalf:
             </p>
             <ul className="mt-4 list-disc space-y-2 pl-6">
               <li>
@@ -119,15 +121,6 @@ export default function PrivacyPage() {
               For privacy-related questions, contact us at the support email in the app footer.
             </p>
           </section>
-        </div>
-
-        <div className="mt-12 border-t border-border pt-6">
-          <Link
-            href="/"
-            className="text-sm text-muted hover:text-foreground"
-          >
-            ← Back to home
-          </Link>
         </div>
       </div>
       </main>

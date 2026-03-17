@@ -2,6 +2,7 @@ import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { redirect } from "next/navigation";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
+import { LocalDateTime } from "@/components/local-date-time";
 
 export const dynamic = "force-dynamic";
 
@@ -222,9 +223,11 @@ export default async function AdminPage() {
         <div className="rounded-lg border border-border bg-card p-4">
           <dt className="text-sm font-medium text-muted">Last RentCast call</dt>
           <dd className="mt-1 text-base font-medium text-foreground">
-            {lastRentCastCall
-              ? lastRentCastCall.createdAt.toLocaleString()
-              : "—"}
+            {lastRentCastCall ? (
+              <LocalDateTime value={lastRentCastCall.createdAt.toISOString()} />
+            ) : (
+              "—"
+            )}
           </dd>
         </div>
         <div className="rounded-lg border border-border bg-card p-4 flex items-end">
@@ -259,7 +262,7 @@ export default async function AdminPage() {
                 <tr key={u.email} className="hover:bg-subtle/50">
                   <td className="px-4 py-3 text-sm text-foreground">{u.email}</td>
                   <td className="px-4 py-3 text-sm text-muted">
-                    {u.createdAt.toLocaleString()}
+                    <LocalDateTime value={u.createdAt.toISOString()} />
                   </td>
                 </tr>
               ))}
@@ -335,7 +338,7 @@ export default async function AdminPage() {
                     {u._count.properties}
                   </td>
                   <td className="px-4 py-3 text-sm text-muted">
-                    {u.updatedAt.toLocaleDateString()} {u.updatedAt.toLocaleTimeString()}
+                    <LocalDateTime value={u.updatedAt.toISOString()} />
                   </td>
                 </tr>
               ))}

@@ -10,6 +10,21 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ## Current tasks (open)
 
+### Pricing update — $15/$29 (Stripe already updated in production)
+
+**Scope:** Update all website and docs references to match new Stripe pricing: Investor $15/mo ($150/yr), Pro $29/mo ($290/yr).
+
+**Checklist:**
+- [ ] **`app/lib/pricing-display.ts`:** Change defaults from 10/100/20/200 to 15/150/29/290. Update JSDoc comments.
+- [ ] **`app/.env.example`:** Update display price defaults and comment to Investor $15/$150, Pro $29/$290.
+- [ ] **`docs/product-overview.md`:** Update pricing table (Investor $15/mo or $150/yr, Pro $29/mo or $290/yr).
+- [ ] **Vercel env (manual):** Set `NEXT_PUBLIC_PRICE_INVESTOR_MONTHLY=15`, `NEXT_PUBLIC_PRICE_INVESTOR_YEARLY=150`, `NEXT_PUBLIC_PRICE_PRO_MONTHLY=29`, `NEXT_PUBLIC_PRICE_PRO_YEARLY=290`. If new Stripe price IDs were created, update `STRIPE_PRICE_ID_*` vars.
+- [ ] **Local `.env`:** Same display price vars if used locally.
+
+**Notes:** Display prices come from env vars (or defaults in `pricing-display.ts`). Landing page and pricing page use `PRICING_DISPLAY` — no hardcoded prices there. Stripe checkout uses `STRIPE_PRICE_ID_*`; ensure those point to the new prices in Stripe.
+
+---
+
 ### Landing page overhaul + branding + SEO
 
 **Scope:** Improve landing page, adopt Veld/Veld Portfolio branding, make key pages public for Stripe compliance, and add SEO.
@@ -108,17 +123,9 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 
 ### Visual assets integration
 
+**Status:** Deferred until asset pack is commissioned. Do not work on this task.
+
 **Scope:** Wire generated assets into the app. Assets in `app/public/` per `docs/visual-assets-guide.md`.
-
-- [ ] **Wire up empty states:** Display `empty-properties.png` on Properties page when propertyCount === 0; display `empty-deals.png` on Deals page when dealCount === 0. Replace or augment existing empty-state UI with these images.
-- [ ] **Value props with icons:** Add value props section to landing page using the 4 icons (`icon-spreadsheet.png`, `icon-estimates.png`, `icon-deal-analyzer.png`, `icon-scenario.png`). Bullets: replace spreadsheets, rent/value estimates, deal analyzer, scenario modeling. See Phase 3 value props.
-- [ ] **Confirm favicon:** Ensure root layout metadata `icons.icon` points to correct favicon file (`/favicon.png`). Verify favicon displays in browser tab.
-
-**Visual assets acceptance criteria:**
-- [ ] Properties empty state shows empty-properties.png when 0 properties.
-- [ ] Deals empty state shows empty-deals.png when 0 deals.
-- [ ] Landing has value props section with 4 icons + copy.
-- [ ] Favicon correct in layout. `npm run check` passes.
 
 ---
 
@@ -127,22 +134,27 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 **Scope:** Replace footer mailto link with a `/contact` page that has a contact form and displays the support email. Users can submit via form or email directly.
 
 **Implementation:**
-- [ ] **Route:** Add `/contact` page. Add to `proxy.ts` `isPublicRoute`. `robots: { index: false }` (utility page).
-- [ ] **Form:** Email (required), Subject (dropdown: General, Billing, Bug report, Feature request, Other), Message (required). Pre-fill email from Clerk when signed in.
-- [ ] **Below form:** "Or email us directly at support@example.com" with mailto link. Only show when `SUPPORT_EMAIL` is set.
-- [ ] **API:** `POST /api/contact` — validate with Zod, rate limit (5/hour per IP or per user), honeypot field. Send via Resend to `SUPPORT_EMAIL`.
-- [ ] **Env:** Add `RESEND_API_KEY` to `.env.example` and `docs/manual-steps.md`.
-- [ ] **Footer:** Change Support link from mailto to `Link href="/contact"`. When `SUPPORT_EMAIL` unset: show Contact link (no email on page) or hide per current behavior.
-- [ ] **Privacy:** Add brief note to Privacy Policy about contact form submissions.
-- [ ] **Design:** Follow `docs/design-spec.md`; match standalone pages (Privacy, Terms).
+- [x] **Route:** Add `/contact` page. Add to `proxy.ts` `isPublicRoute`. `robots: { index: false }` (utility page). Use `LandingNav` and `Footer` (consistent with Privacy, Terms).
+- [x] **Form:** Email (required), Subject (dropdown: General, Billing, Bug report, Feature request, Other), Message (required). Pre-fill email from Clerk when signed in.
+- [x] **Below form:** "Or email us directly at support@example.com" with mailto link. Only show when `SUPPORT_EMAIL` is set.
+- [x] **API:** `POST /api/contact` — validate with Zod, rate limit (5/hour per IP or per user), honeypot field. Send via Resend to `SUPPORT_EMAIL`.
+- [x] **Env:** Add `RESEND_API_KEY` to `.env.example` and `docs/manual-steps.md`.
+- [x] **Footer:** Change Support link from mailto to `Link href="/contact"`. When `SUPPORT_EMAIL` unset: show "Contact" link to `/contact` (no email displayed on page).
+- [x] **Privacy:** Add brief note to Privacy Policy about contact form submissions.
+- [x] **Design:** Follow `docs/design-spec.md`; match standalone pages (Privacy, Terms).
 
 **Acceptance criteria:**
-- [ ] `/contact` accessible without sign-in.
-- [ ] Form submits successfully; email arrives at SUPPORT_EMAIL.
-- [ ] Support email displayed on page when set; mailto fallback works.
-- [ ] Footer Support links to /contact.
-- [ ] Rate limit and honeypot prevent abuse.
-- [ ] `npm run check` passes.
+- [x] `/contact` accessible without sign-in.
+- [x] Form has Email (required), Subject (dropdown: General, Billing, Bug report, Feature request, Other), Message (required).
+- [x] When signed in, email field pre-filled from Clerk.
+- [x] Form submits successfully; email arrives at SUPPORT_EMAIL (when set).
+- [x] "Or email us directly at X" with mailto link shown when SUPPORT_EMAIL set; hidden when unset.
+- [x] Footer "Contact" (or "Support") links to `/contact`; when SUPPORT_EMAIL unset, Contact link still shows.
+- [x] Rate limit: 5 requests/hour per IP or per user; returns 429 when exceeded.
+- [x] Honeypot field present; submissions with honeypot filled are rejected.
+- [x] Privacy Policy includes note about contact form submissions (data collected, how used).
+- [x] Contact page uses LandingNav and Footer; layout matches Privacy/Terms.
+- [x] `npm run check` passes.
 
 ---
 
@@ -155,15 +167,38 @@ Tasks you want the **builder** agent to do. The PM adds tasks here when you ask;
 - **Settings:** Plan & billing — "Next billing" / "Plan ends" date
 
 **Implementation:**
-- [ ] Create client component `LocalDate` / `LocalDateTime` that accepts an ISO date string and formats with `toLocaleDateString()` / `toLocaleString()` (runs in browser, uses user timezone).
-- [ ] Admin page: pass dates as ISO strings to the client component for Sign up, Last active, Last RentCast call.
-- [ ] Settings page: pass `subscription.currentPeriodEnd` as ISO string to client component for billing date.
-- [ ] No changes needed for: Properties list, property detail (formatTimeAgo is relative), Deals list, mortgage section, draft context (already client components).
+- [x] Create client component `LocalDate` / `LocalDateTime` that accepts an ISO date string and formats with `toLocaleDateString()` / `toLocaleString()` (runs in browser, uses user timezone).
+- [x] Admin page: pass dates as ISO strings to the client component for Sign up, Last active, Last RentCast call.
+- [x] Settings page: pass `subscription.currentPeriodEnd` as ISO string to client component for billing date.
+- [x] No changes needed for: Properties list, property detail (formatTimeAgo is relative), Deals list, mortgage section, draft context (already client components).
 
 **Acceptance criteria:**
-- [ ] Admin signup times and last active show in user's local timezone.
-- [ ] Settings billing period end shows in user's local timezone.
-- [ ] `npm run check` passes.
+- [x] `LocalDate` component displays date in user's local timezone (e.g. "3/13/2025" or "Mar 13, 2025").
+- [x] `LocalDateTime` component displays date and time in user's local timezone.
+- [x] Admin — Recent signups: "Signed up" column shows local date/time.
+- [x] Admin — Users table: "Last active" shows local date/time.
+- [x] Admin — Last RentCast call: shows local date/time when present.
+- [x] Settings — Plan & billing: "Next billing" or "Plan ends" shows local date.
+- [x] No regression in other date displays (properties, deals, formatTimeAgo).
+- [x] `npm run check` passes.
+
+---
+
+### Contact, Privacy, Terms — back navigation polish
+
+**Scope:** Improve back navigation on standalone public pages (Contact, Privacy, Terms). Remove duplicate links; signed-in users go to dashboard.
+
+**Implementation:**
+- [x] **Contact page:** Remove duplicate "Back to home" (keep one at top). When signed in: link to `/dashboard`, label "Back to dashboard". When not signed in: link to `/`, label "Back to home". Remove bottom "Back to home" block.
+- [x] **Privacy page:** Same pattern — one back link at top; signed in → "Back to dashboard" (/dashboard), not signed in → "Back to home" (/). Remove bottom "Back to home" block.
+- [x] **Terms page:** Same pattern — one back link at top; signed in → "Back to dashboard" (/dashboard), not signed in → "Back to home" (/). Remove bottom "Back to home" block.
+
+**Acceptance criteria:**
+- [x] Contact, Privacy, Terms each have exactly one back link at the top.
+- [x] When signed in: back link goes to /dashboard, label "Back to dashboard".
+- [x] When not signed in: back link goes to /, label "Back to home".
+- [x] No duplicate back link at bottom of any of these pages.
+- [x] `npm run check` passes.
 
 ---
 

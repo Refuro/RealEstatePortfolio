@@ -116,6 +116,14 @@ model RentCastApiCall {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model ContactFormSubmission {
+  id         String   @id @default(cuid())
+  identifier String   // userId when signed in, or "ip:xxx" for guests
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, createdAt])
+}
+
 model Subscription {
   id                   String    @id @default(cuid())
   userId               String    @unique
