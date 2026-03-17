@@ -4,8 +4,6 @@ import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
 import "./globals.css";
 
-export const dynamic = "force-dynamic";
-
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -108,6 +106,8 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
+          <link rel="preconnect" href="https://api.rentcast.io" />
+          <link rel="dns-prefetch" href="https://js.stripe.com" />
           <JsonLdScript />
         </head>
         <body

@@ -1,9 +1,36 @@
 "use client";
 
-import { EquityChart, type EquityDatum } from "@/components/charts/equity-chart";
-import { DebtVsValueChart, type DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
-import { CashFlowChart, type CashFlowDatum } from "@/components/charts/cash-flow-chart";
+import dynamic from "next/dynamic";
+import type { EquityDatum } from "@/components/charts/equity-chart";
+import type { DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
+import type { CashFlowDatum } from "@/components/charts/cash-flow-chart";
 import { formatCurrency } from "@/lib/format-currency";
+
+function ChartLoadingPlaceholder() {
+  return (
+    <div className="rounded-lg border border-border bg-card p-5">
+      <div className="h-4 w-24 animate-pulse rounded bg-muted" />
+      <div className="mt-4 flex h-[240px] items-center justify-center rounded border border-dashed border-border bg-subtle/50 text-sm text-muted">
+        Loading charts…
+      </div>
+    </div>
+  );
+}
+
+const EquityChart = dynamic(
+  () => import("@/components/charts/equity-chart").then((m) => ({ default: m.EquityChart })),
+  { ssr: false, loading: ChartLoadingPlaceholder }
+);
+
+const DebtVsValueChart = dynamic(
+  () => import("@/components/charts/debt-vs-value-chart").then((m) => ({ default: m.DebtVsValueChart })),
+  { ssr: false, loading: ChartLoadingPlaceholder }
+);
+
+const CashFlowChart = dynamic(
+  () => import("@/components/charts/cash-flow-chart").then((m) => ({ default: m.CashFlowChart })),
+  { ssr: false, loading: ChartLoadingPlaceholder }
+);
 
 export type DashboardChartData = {
   equity: EquityDatum[];

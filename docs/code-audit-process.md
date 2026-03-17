@@ -8,7 +8,7 @@
 
 ## 1. Scope
 
-Audit the entire application codebase under `app/` (and related `lib/`, `components/`, API routes, pages). Reference the established docs: `docs/design-spec.md`, `docs/architecture-and-build-practices.md`, `docs/security-notes.md`.
+Audit the entire application codebase under `app/` (and related `lib/`, `components/`, API routes, pages). Reference the established docs: `docs/design-spec.md`, `docs/architecture-and-build-practices.md`, `docs/security-notes.md`. For performance, see §2.5 Performance Practices in architecture-and-build-practices.md.
 
 ---
 
@@ -59,6 +59,18 @@ Audit the entire application codebase under `app/` (and related `lib/`, `compone
 
 Per `docs/architecture-and-build-practices.md`: **thoughtful, robust, modern, frictionless.** Are we living up to it? Flag areas that feel brittle, confusing, or high-friction.
 
+### 2.7 Performance
+
+Per `docs/architecture-and-build-practices.md` §2.5 Performance Practices:
+
+- **Heavy libraries:** Charts and large libs (~50KB+) use `next/dynamic` with `ssr: false`? Loading placeholders shown?
+- **Layout/rendering:** No `force-dynamic` at root layout unless required? Public pages static or cached where possible?
+- **Images:** `next/image` used for user-facing images? No raw `<img>`?
+- **Config:** `optimizePackageImports` includes lucide-react, recharts, and other large packages?
+- **Caching:** `revalidate` on static content pages? Layout/query caching where appropriate?
+- **External APIs:** Preconnect/dns-prefetch for third-party origins (RentCast, Stripe, etc.)?
+- **Blocking calls:** Any server components blocking render on slow external calls (e.g. Stripe) that could be deferred to client?
+
 ---
 
 ## 3. Output Format
@@ -91,6 +103,9 @@ Write the audit report to `docs/code_audits/YYYY-MM-DD-code-audit.md` (use today
 - ...
 
 ### Product Mantra
+- ...
+
+### Performance
 - ...
 
 ## Recommendations
