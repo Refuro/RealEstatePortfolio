@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 
@@ -16,19 +17,20 @@ export const metadata: Metadata = {
   },
 };
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <LandingNav userId={null} />
+      <LandingNav userId={userId} />
       <main className="flex-1">
         <div className="mx-auto max-w-3xl px-4 py-12">
           <Link
-            href="/"
+            href={userId ? "/dashboard" : "/"}
             className="mb-8 inline-block text-sm text-muted hover:text-foreground"
           >
-            ← Back to home
+            ← {userId ? "Back to dashboard" : "Back to home"}
           </Link>
         <h1 className="text-2xl font-semibold text-foreground">
           Terms of Service
@@ -114,15 +116,6 @@ export default function TermsPage() {
               For questions about these Terms, contact us at the support email in the app footer.
             </p>
           </section>
-        </div>
-
-        <div className="mt-12 border-t border-border pt-6">
-          <Link
-            href="/"
-            className="text-sm text-muted hover:text-foreground"
-          >
-            ← Back to home
-          </Link>
         </div>
       </div>
       </main>

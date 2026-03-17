@@ -2,6 +2,8 @@
 
 | Doc | Purpose |
 |-----|--------|
+| [product-overview.md](product-overview.md) | **Shareable overview** — Full application outline for sharing with others |
+| [ai-development-process-extraction.md](ai-development-process-extraction.md) | **Process extraction** — Replicate this AI-assisted workflow on new projects |
 | [mvp-spec.md](mvp-spec.md) | Product vision, scope, and MVP features |
 | [engineering-spec.md](engineering-spec.md) | Engineering backlog, stack, modules, and build order |
 | [setup.md](setup.md) | Local setup and deployment notes |

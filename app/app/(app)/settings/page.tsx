@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getDealLimit, getPropertyLimit } from "@/lib/plans";
 import { getStripe } from "@/lib/stripe-config";
 import Link from "next/link";
+import { LocalDate } from "@/components/local-date";
 import { BillingPortalButton } from "./billing-portal-button";
 import { DeleteAccountSection } from "./delete-account-section";
 import { DownloadCsvButton } from "./download-csv-button";
@@ -134,7 +135,13 @@ export default async function SettingsPage() {
                   {subscription.cancelAtPeriodEnd ? "Plan ends" : "Next billing"}
                 </dt>
                 <dd className="text-base text-foreground">
-                  {new Date(subscription.currentPeriodEnd).toLocaleDateString()}
+                  <LocalDate
+                    value={
+                      typeof subscription.currentPeriodEnd === "string"
+                        ? subscription.currentPeriodEnd
+                        : subscription.currentPeriodEnd.toISOString()
+                    }
+                  />
                   {subscription.cancelAtPeriodEnd && (
                     <span className="ml-1 text-muted">
                       — You will have full access up until the expiration date

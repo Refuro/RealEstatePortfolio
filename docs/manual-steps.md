@@ -80,7 +80,8 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ## Support / contact (launch pre-flight)
 
-- [ ] **Support email:** Create a support email address (e.g. `support@yourdomain.com`). Add it to `app/.env` as `SUPPORT_EMAIL`. Also add to Vercel env for production. The Support link appears in the footer (landing page and app shell) as a mailto link; it is hidden when `SUPPORT_EMAIL` is unset. Do not commit the real email.
+- [ ] **Support email:** Create a support email address (e.g. `support@yourdomain.com`). Add it to `app/.env` as `SUPPORT_EMAIL`. Also add to Vercel env for production. The Support link in the footer goes to `/contact`; when `SUPPORT_EMAIL` is unset, the link shows as "Contact" instead. Do not commit the real email.
+- [ ] **Resend (contact form):** To enable the contact form to send emails, create an API key at [Resend](https://resend.com/api-keys) and add `RESEND_API_KEY` to `app/.env` (and Vercel env for production). For production, verify your domain at [Resend Domains](https://resend.com/domains) and set `RESEND_FROM_DOMAIN=yourdomain.com` so emails are sent from your domain instead of the test address.
 
 ---
 

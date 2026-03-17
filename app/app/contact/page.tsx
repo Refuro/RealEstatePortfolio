@@ -1,0 +1,62 @@
+import Link from "next/link";
+import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
+import { LandingNav } from "@/components/landing-nav";
+import { Footer } from "@/components/footer";
+import { ContactForm } from "./contact-form";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+
+export const metadata: Metadata = {
+  title: "Contact | Veld Portfolio",
+  description: "Contact Veld Portfolio — send us a message or email us directly.",
+  robots: { index: false, follow: true },
+  alternates: { canonical: APP_URL + "/contact" },
+  openGraph: {
+    title: "Contact | Veld Portfolio",
+    description: "Contact Veld Portfolio — send us a message or email us directly.",
+    url: "/contact",
+  },
+};
+
+export default async function ContactPage() {
+  const { userId } = await auth();
+  const supportEmail = process.env.SUPPORT_EMAIL ?? null;
+
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <LandingNav userId={userId} />
+      <main className="flex-1">
+        <div className="mx-auto max-w-3xl px-4 py-12">
+          <Link
+            href={userId ? "/dashboard" : "/"}
+            className="mb-8 inline-block text-sm text-muted hover:text-foreground"
+          >
+            ← {userId ? "Back to dashboard" : "Back to home"}
+          </Link>
+          <h1 className="text-2xl font-semibold text-foreground">Contact us</h1>
+          <p className="mt-2 text-base text-muted">
+            Have a question or feedback? Send us a message below.
+          </p>
+
+          <div className="mt-8">
+            <ContactForm />
+          </div>
+
+          {supportEmail && supportEmail.trim() && (
+            <p className="mt-6 text-sm text-muted">
+              Or email us directly at{" "}
+              <a
+                href={`mailto:${supportEmail.trim()}`}
+                className="font-medium text-foreground hover:underline"
+              >
+                {supportEmail.trim()}
+              </a>
+            </p>
+          )}
+        </div>
+      </main>
+      <Footer supportEmail={supportEmail} />
+    </div>
+  );
+}
