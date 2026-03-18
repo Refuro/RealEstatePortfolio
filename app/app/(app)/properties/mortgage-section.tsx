@@ -15,6 +15,11 @@ function formatLoanType(loanType: string): string {
   return lower.charAt(0).toUpperCase() + lower.slice(1);
 }
 
+type PayoffProjection = {
+  payoffDate: string | null;
+  remainingAtTermEnd: number | null;
+};
+
 type Mortgage = {
   id: string;
   originalLoanAmount: string;
@@ -31,14 +36,17 @@ type Mortgage = {
   loanType: string | null;
   effectiveBalance?: number;
   balanceSource?: "stored" | "projected";
+  payoffProjection?: PayoffProjection;
 };
 
 export function MortgageSection({
   propertyId,
   mortgages: initialMortgages,
+  embedded,
 }: {
   propertyId: string;
   mortgages: Mortgage[];
+  embedded?: boolean;
 }) {
   const router = useRouter();
   const [mortgages, setMortgages] = useState<Mortgage[]>(initialMortgages);
@@ -57,12 +65,17 @@ export function MortgageSection({
     router.refresh();
   }
 
+  const Wrapper = embedded ? "div" : "section";
+  const wrapperClassName = embedded ? "" : "rounded-lg border border-border bg-card p-6";
+
   return (
-    <section className="rounded-lg border border-border bg-card p-6">
+    <Wrapper className={wrapperClassName}>
       <div className="flex items-center justify-between">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted mb-4">
-          Mortgage
-        </h2>
+        {!embedded && (
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+            Mortgages
+          </h2>
+        )}
         {!showForm && editingId === null && (
           <button
             type="button"
@@ -122,7 +135,7 @@ export function MortgageSection({
         <div className="mt-4 rounded-md border border-dashed border-border bg-subtle/50 p-6 text-center">
           <p className="text-base text-muted">No mortgage on file.</p>
           <p className="mt-1 text-sm text-muted">
-            Add a mortgage to see equity, LTV, and amortization.
+            Add a mortgage to see equity, LTV, payoff timeline, and amortization.
           </p>
           <button
             type="button"
@@ -135,6 +148,7 @@ export function MortgageSection({
       )}
 
       {!showForm && !editingId && mortgages.length > 0 && (
+        <>
         <ul className="mt-4 space-y-4">
           {mortgages.map((m) => (
             <li
@@ -242,8 +256,9 @@ export function MortgageSection({
             </li>
           ))}
         </ul>
+        </>
       )}
-    </section>
+    </Wrapper>
   );
 }
 

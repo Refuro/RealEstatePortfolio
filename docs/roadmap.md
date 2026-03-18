@@ -61,11 +61,19 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
+### Dashboard — single-property improvements
+
+**Priority:** 9
+
+**Scope:** Improve dashboard for single-property users so they see charts and discover tools (equity, cash flow, value breakdown, property detail). See `docs/dashboard-single-property-proposal.md` for all six items: show Equity & Cash flow charts, add View property path, value breakdown for debt vs. value, refine Add property CTA, contextual Quick actions, property page teaser.
+
+---
+
 ### Refinance / payoff insights
 
 **Priority:** 10
 
-**Scope:** "When to refinance" or "Payoff timeline".
+**Scope:** "When to refinance" or "Payoff timeline". See `docs/refinance-payoff-proposal.md` for phased approach (payoff timeline first, then accelerator, then refinance what-if) and property detail page considerations.
 
 ---
 
@@ -116,6 +124,12 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 ## 2. Medium-term (Larger Initiatives)
 
 Not yet scheduled; captured as backlog. Promote to `tasks.md` when ready.
+
+### Property detail page overhaul
+
+**Scope:** Redesign the property detail page as a user-centric home base. Current page stacks many sections (property details, mortgages, metrics, scenarios, amortization); tools are easy to miss. Target: card-based layout, clearer section headers, better discoverability. Consider collapsible sections or progressive disclosure. See `docs/refinance-payoff-proposal.md` §7 for options and rationale.
+
+---
 
 ### Property evaluation tool
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getEffectiveBalance, getBalanceSource } from "@/lib/amortization";
+import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
 import { createMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
 
 async function getPropertyForUser(propertyId: string, userId: string) {
@@ -49,6 +49,13 @@ function serializeMortgage(m: {
     loanType: m.loanType,
     effectiveBalance: getEffectiveBalance(m),
     balanceSource: getBalanceSource(m),
+    payoffProjection: (() => {
+      const p = getPayoffProjection(m);
+      return {
+        payoffDate: p.payoffDate ? p.payoffDate.toISOString().slice(0, 10) : null,
+        remainingAtTermEnd: p.remainingAtTermEnd,
+      };
+    })(),
   };
 }
 

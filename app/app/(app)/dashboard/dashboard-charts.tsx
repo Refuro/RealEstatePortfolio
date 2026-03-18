@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import dynamic from "next/dynamic";
 import { BenchmarkRefreshButton } from "@/app/(app)/properties/benchmark-refresh-button";
 import type { EquityDatum } from "@/components/charts/equity-chart";
@@ -46,40 +47,128 @@ export type BenchmarkAtGlance = {
   propertyId?: string;
 };
 
+export type SinglePropertyMetrics = {
+  weightedCapRate: number | null;
+  portfolioLtv: number | null;
+  totalNoi: number;
+  portfolioCashOnCashReturn: number | null;
+  totalAnnualRent: number;
+  dscr: number | null;
+};
+
+/** Compact inline value bar for Property at a glance. Height ~24–32px. Fallback: hide if value=0. */
+function InlineValueBar({
+  debt,
+  equity,
+  value,
+}: {
+  debt: number;
+  equity: number;
+  value: number;
+}) {
+  if (value <= 0) return null;
+  const debtPct = (debt / value) * 100;
+  const equityPct = (equity / value) * 100;
+
+  return (
+    <div className="mt-4 space-y-2">
+      <div className="flex h-7 w-full overflow-hidden rounded-md">
+        {debtPct > 0 && (
+          <div
+            className="flex items-center justify-center text-xs font-medium text-white transition-all"
+            style={{
+              width: `${debtPct}%`,
+              backgroundColor: "var(--chart-1)",
+              minWidth: debtPct > 0 && debtPct < 5 ? "1.5rem" : undefined,
+            }}
+            title={`Debt: ${formatCurrency(debt)}`}
+          >
+            {debtPct >= 12 && <span className="truncate px-1">Debt</span>}
+          </div>
+        )}
+        {equityPct > 0 && (
+          <div
+            className="flex items-center justify-center text-xs font-medium text-white transition-all"
+            style={{
+              width: `${equityPct}%`,
+              backgroundColor: "var(--chart-3)",
+              minWidth: equityPct > 0 && equityPct < 5 ? "1.5rem" : undefined,
+            }}
+            title={`Equity: ${formatCurrency(equity)}`}
+          >
+            {equityPct >= 12 && <span className="truncate px-1">Equity</span>}
+          </div>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-3 text-xs">
+        <span className="flex items-center gap-1.5">
+          <span
+            className="h-2 w-2 rounded-sm"
+            style={{ backgroundColor: "var(--chart-1)" }}
+          />
+          <span className="text-muted">Debt</span>
+          <span className="font-medium text-foreground">{formatCurrency(debt)}</span>
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="h-2 w-2 rounded-sm"
+            style={{ backgroundColor: "var(--chart-3)" }}
+          />
+          <span className="text-muted">Equity</span>
+          <span className="font-medium text-foreground">{formatCurrency(equity)}</span>
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function DashboardCharts({
   data,
   propertyCount,
   benchmark,
+  singlePropertyId,
+  singlePropertyMetrics,
 }: {
   data: DashboardChartData;
   propertyCount: number;
   benchmark?: BenchmarkAtGlance;
+  singlePropertyId?: string;
+  singlePropertyMetrics?: SinglePropertyMetrics;
 }) {
   const isSingleProperty = propertyCount === 1;
   const singleProperty = isSingleProperty ? data.equity[0] : null;
+  const debtVsValueFirst = data.debtVsValue[0];
 
-  return (
-    <div className="mt-8 space-y-6">
-      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-        Portfolio charts
-      </h2>
-
-      {isSingleProperty && singleProperty && (
+  // Single-property: Property at a glance only (with inline value bar). No Portfolio charts section.
+  if (isSingleProperty && singleProperty && debtVsValueFirst) {
+    return (
+      <div className="mt-8">
         <div className="rounded-lg border border-border bg-card p-5">
-          <h3 className="text-base font-semibold uppercase tracking-wide text-muted">
-            Property at a glance
-          </h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-base font-semibold uppercase tracking-wide text-muted">
+              Property at a glance
+            </h3>
+            {singlePropertyId && (
+              <Link
+                href={`/properties/${singlePropertyId}`}
+                className="font-medium text-foreground hover:underline"
+              >
+                View property
+              </Link>
+            )}
+          </div>
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            {/* Position */}
             <div>
               <p className="text-sm font-medium text-muted">Value</p>
               <p className="mt-0.5 text-lg font-semibold text-foreground">
-                {formatCurrency(data.debtVsValue[0]?.value ?? 0)}
+                {formatCurrency(debtVsValueFirst.value ?? 0)}
               </p>
             </div>
             <div>
               <p className="text-sm font-medium text-muted">Debt</p>
               <p className="mt-0.5 text-lg font-semibold text-foreground">
-                {formatCurrency(data.debtVsValue[0]?.debt ?? 0)}
+                {formatCurrency(debtVsValueFirst.debt ?? 0)}
               </p>
             </div>
             <div>
@@ -88,6 +177,7 @@ export function DashboardCharts({
                 {formatCurrency(singleProperty.equity)}
               </p>
             </div>
+            {/* Income */}
             <div>
               <p className="text-sm font-medium text-muted">Monthly cash flow</p>
               <p
@@ -100,7 +190,77 @@ export function DashboardCharts({
                 {formatCurrency(data.cashFlow[0]?.monthlyCashFlow ?? 0)}
               </p>
             </div>
-            <div>
+            {singlePropertyMetrics && (
+              <div>
+                <p className="text-sm font-medium text-muted">Annual rent</p>
+                <p className="mt-0.5 text-lg font-semibold text-foreground">
+                  {formatCurrency(singlePropertyMetrics.totalAnnualRent)}
+                </p>
+              </div>
+            )}
+            {/* Returns */}
+            {singlePropertyMetrics && (
+              <>
+                <div>
+                  <p className="text-sm font-medium text-muted">Cap rate</p>
+                  <p className="mt-0.5 text-lg font-semibold text-foreground">
+                    {singlePropertyMetrics.weightedCapRate != null
+                      ? `${(singlePropertyMetrics.weightedCapRate * 100).toFixed(2)}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted">NOI</p>
+                  <p className="mt-0.5 text-lg font-semibold text-foreground">
+                    {formatCurrency(singlePropertyMetrics.totalNoi)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted">Cash-on-cash return</p>
+                  <p
+                    className={`mt-0.5 text-lg font-semibold ${
+                      singlePropertyMetrics.portfolioCashOnCashReturn != null &&
+                      singlePropertyMetrics.portfolioCashOnCashReturn >= 0
+                        ? "text-positive"
+                        : singlePropertyMetrics.portfolioCashOnCashReturn != null
+                          ? "text-negative"
+                          : "text-foreground"
+                    }`}
+                  >
+                    {singlePropertyMetrics.portfolioCashOnCashReturn != null
+                      ? `${(singlePropertyMetrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`
+                      : "—"}
+                  </p>
+                </div>
+                {/* Leverage */}
+                <div>
+                  <p className="text-sm font-medium text-muted">LTV</p>
+                  <p className="mt-0.5 text-lg font-semibold text-foreground">
+                    {singlePropertyMetrics.portfolioLtv != null
+                      ? `${(singlePropertyMetrics.portfolioLtv * 100).toFixed(1)}%`
+                      : "—"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted">DSCR</p>
+                  <p
+                    className={`mt-0.5 text-lg font-semibold ${
+                      singlePropertyMetrics.dscr != null
+                        ? singlePropertyMetrics.dscr >= 1
+                          ? "text-positive"
+                          : "text-negative"
+                        : "text-foreground"
+                    }`}
+                  >
+                    {singlePropertyMetrics.dscr != null
+                      ? singlePropertyMetrics.dscr.toFixed(2)
+                      : "—"}
+                  </p>
+                </div>
+              </>
+            )}
+            {/* Benchmark */}
+            <div className="col-span-2 min-w-[10rem]">
               <p className="text-sm font-medium text-muted">Rent vs. market</p>
               {benchmark?.benchmarkLabel ? (
                 <p className="mt-0.5 text-lg font-semibold text-foreground">
@@ -120,18 +280,30 @@ export function DashboardCharts({
               )}
             </div>
           </div>
+          <InlineValueBar
+            debt={debtVsValueFirst.debt}
+            equity={singleProperty.equity}
+            value={debtVsValueFirst.value}
+          />
         </div>
-      )}
+      </div>
+    );
+  }
+
+  // Multi-property: Portfolio charts section with Equity, Debt vs. value, Cash flow
+  return (
+    <div className="mt-8 space-y-6">
+      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
+        Portfolio charts
+      </h2>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {!isSingleProperty && <EquityChart data={data.equity} />}
+        <EquityChart data={data.equity} />
         <DebtVsValueChart data={data.debtVsValue} />
       </div>
-      {!isSingleProperty && (
-        <div className="grid gap-6 lg:grid-cols-1">
-          <CashFlowChart data={data.cashFlow} />
-        </div>
-      )}
+      <div className="grid gap-6 lg:grid-cols-1">
+        <CashFlowChart data={data.cashFlow} />
+      </div>
     </div>
   );
 }

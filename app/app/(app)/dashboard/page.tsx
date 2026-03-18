@@ -5,14 +5,10 @@ import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
-import {
-  getPropertyTotalRent,
-  type PropertyWithRent,
-} from "@/lib/property-utils";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
   isBenchmarkFresh,
-  getBenchmarkPct,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
 import {
@@ -22,67 +18,7 @@ import {
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
-
-type PropertyForBenchmark = PropertyWithRent & {
-  id: string;
-  nickname: string | null;
-  addressLine1: string;
-  marketRent: { toString(): string } | number | null;
-  marketRentAsOf: Date | null;
-};
-
-function RentVsMarketSection({
-  properties,
-}: {
-  properties: PropertyForBenchmark[];
-}) {
-  const withFreshBenchmark = properties.filter(
-    (p) =>
-      p.marketRent != null &&
-      Number(p.marketRent) > 0 &&
-      isBenchmarkFresh(p.marketRentAsOf)
-  );
-  const marketRentNum = (p: PropertyForBenchmark) =>
-    p.marketRent != null ? Number(p.marketRent) : 0;
-  const sorted = [...withFreshBenchmark].sort((a, b) => {
-    const pctA = getBenchmarkPct(getPropertyTotalRent(a), marketRentNum(a));
-    const pctB = getBenchmarkPct(getPropertyTotalRent(b), marketRentNum(b));
-    return pctA - pctB;
-  });
-  const display = sorted.slice(0, 5);
-
-  return (
-    <div className="mt-8">
-      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-        Rent vs. market
-      </h2>
-      {display.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">
-          <Link
-            href="/properties"
-            className="font-medium text-foreground hover:underline"
-          >
-            See how your rent compares to market
-          </Link>
-        </p>
-      ) : (
-        <ul className="mt-3 space-y-1">
-          {display.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`/properties/${p.id}`}
-                className="text-sm text-muted hover:text-foreground hover:underline"
-              >
-                {p.nickname || p.addressLine1}:{" "}
-                {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
+import { RentVsMarketSection } from "./rent-vs-market-section";
 
 export default async function DashboardPage() {
   const user = await getAppUser();
@@ -191,66 +127,104 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <MetricCard
-          label="Total property value"
-          value={formatCurrency(metrics.totalMarketValue)}
-          primary
-        />
-        <MetricCard
-          label="Total debt"
-          value={formatCurrency(metrics.totalDebt)}
-          primary
-        />
-        <MetricCard
-          label="Total equity"
-          value={formatCurrency(metrics.totalEquity)}
-          primary
-        />
-        <MetricCard
-          label="Monthly cash flow"
-          value={formatCurrency(metrics.totalMonthlyCashFlow)}
-          cashFlow={metrics.totalMonthlyCashFlow}
-        />
-        {metrics.weightedCapRate != null && (
+      {metrics.propertyCount > 1 && (
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
           <MetricCard
-            label="Portfolio cap rate"
-            value={`${(metrics.weightedCapRate * 100).toFixed(2)}%`}
+            label="Total property value"
+            value={formatCurrency(metrics.totalMarketValue)}
+            primary
+          />
+          <MetricCard
+            label="Total debt"
+            value={formatCurrency(metrics.totalDebt)}
+            primary
+          />
+          <MetricCard
+            label="Total equity"
+            value={formatCurrency(metrics.totalEquity)}
+            primary
+          />
+          <MetricCard
+            label="Monthly cash flow"
+            value={formatCurrency(metrics.totalMonthlyCashFlow)}
+            cashFlow={metrics.totalMonthlyCashFlow}
+          />
+          {metrics.weightedCapRate != null && (
+            <MetricCard
+              label="Portfolio cap rate"
+              value={`${(metrics.weightedCapRate * 100).toFixed(2)}%`}
+              primary={false}
+            />
+          )}
+          {metrics.portfolioLtv != null && (
+            <MetricCard
+              label="Portfolio LTV"
+              value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+              primary={false}
+            />
+          )}
+          <MetricCard
+            label="NOI (Net Operating Income)"
+            value={formatCurrency(metrics.totalNoi)}
             primary={false}
           />
-        )}
-        {metrics.portfolioLtv != null && (
+          {metrics.portfolioCashOnCashReturn != null && (
+            <MetricCard
+              label="Cash-on-cash return"
+              value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
+              primary={false}
+            />
+          )}
           <MetricCard
-            label="Portfolio LTV"
-            value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+            label="Annual rent"
+            value={formatCurrency(metrics.totalAnnualRent)}
             primary={false}
           />
-        )}
-        <MetricCard
-          label="NOI (Net Operating Income)"
-          value={formatCurrency(metrics.totalNoi)}
-          primary={false}
-        />
-        {metrics.portfolioCashOnCashReturn != null && (
-          <MetricCard
-            label="Cash-on-cash return"
-            value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
-            primary={false}
-          />
-        )}
-      </div>
+          {metrics.dscr != null && (
+            <MetricCard
+              label="DSCR"
+              value={metrics.dscr.toFixed(2)}
+              primary={false}
+              cashFlow={metrics.dscr >= 1 ? 1 : -1}
+            />
+          )}
+        </div>
+      )}
 
       {metrics.propertyCount > 1 && (
-        <RentVsMarketSection properties={properties} />
+        <RentVsMarketSection
+          properties={properties.map((p) => ({
+            id: p.id,
+            nickname: p.nickname,
+            addressLine1: p.addressLine1,
+            marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+            marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
+            currentMonthlyRent: Number(p.currentMonthlyRent),
+            unitRents: p.unitRents,
+          }))}
+        />
       )}
 
       <DashboardCharts
         data={chartData}
         propertyCount={metrics.propertyCount}
+        singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
+        singlePropertyMetrics={
+          metrics.propertyCount === 1
+            ? {
+                weightedCapRate: metrics.weightedCapRate,
+                portfolioLtv: metrics.portfolioLtv,
+                totalNoi: metrics.totalNoi,
+                portfolioCashOnCashReturn: metrics.portfolioCashOnCashReturn,
+                totalAnnualRent: metrics.totalAnnualRent,
+                dscr: metrics.dscr,
+              }
+            : undefined
+        }
         benchmark={
           metrics.propertyCount === 1 && properties[0]
             ? (() => {
-                const p = properties[0] as PropertyForBenchmark;
+                const p = properties[0];
                 const userRent = getPropertyTotalRent(p);
                 const marketRent =
                   p.marketRent != null ? Number(p.marketRent) : 0;
@@ -270,17 +244,35 @@ export default async function DashboardPage() {
       />
 
       {metrics.propertyCount === 1 && (
-        <div className="mt-6 rounded-lg border border-border bg-card p-5">
-          <p className="text-lg text-muted">
-            Add another property to compare performance across your portfolio.
-          </p>
-          <Link
-            href="/properties/new"
-            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add another property
-          </Link>
-        </div>
+        <>
+          <div className="mt-6 rounded-lg border border-border bg-card p-5">
+            <p className="text-base text-muted">
+              Add another property to see equity, debt, and cash flow charts
+              side by side.
+            </p>
+            <Link
+              href="/properties/new"
+              className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            >
+              Add property
+            </Link>
+          </div>
+
+          {properties[0] && (
+            <div className="mt-4 rounded-lg border border-border bg-card p-4">
+              <p className="text-sm text-muted">
+                More on your property page: Amortization schedule, scenario
+                modeling, rent vs. market details, and more.
+              </p>
+              <Link
+                href={`/properties/${properties[0].id}`}
+                className="mt-2 inline-block font-medium text-foreground hover:underline"
+              >
+                See amortization, scenarios & more →
+              </Link>
+            </div>
+          )}
+        </>
       )}
 
       <div className="mt-8">
@@ -288,6 +280,21 @@ export default async function DashboardPage() {
           Quick actions
         </h2>
         <div className="mt-3 flex flex-wrap gap-3">
+          {metrics.propertyCount === 1 && properties[0] ? (
+            <Link
+              href={`/properties/${properties[0].id}`}
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
+            >
+              View property
+            </Link>
+          ) : (
+            <Link
+              href="/properties"
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
+            >
+              View all properties
+            </Link>
+          )}
           <Link
             href="/properties/new"
             className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
@@ -295,10 +302,10 @@ export default async function DashboardPage() {
             Add property
           </Link>
           <Link
-            href="/properties"
+            href="/analyze"
             className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
           >
-            View all properties
+            Analyze a deal
           </Link>
         </div>
       </div>

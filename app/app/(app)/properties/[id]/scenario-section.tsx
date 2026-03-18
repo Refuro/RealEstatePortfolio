@@ -28,7 +28,7 @@ export function ScenarioSection({
   vacancyPercent,
   displayMode,
 }: ScenarioSectionProps) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [rentChange, setRentChange] = useState(0);
   const [valueChange, setValueChange] = useState(0);
   const [mortgageChange, setMortgageChange] = useState(0);

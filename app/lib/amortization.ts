@@ -185,3 +185,176 @@ export function getBalanceSource(mortgage: MortgageRecord): "stored" | "projecte
   }
   return "projected";
 }
+
+export type PayoffProjection = {
+  payoffDate: Date | null;
+  remainingAtTermEnd: number | null;
+};
+
+/**
+ * Project payoff from effective balance forward.
+ * Returns payoff date when payment fully amortizes; else remaining balance at term end.
+ * Caps iterations at original term end. Uses getEffectiveBalance, getPiForAmortization.
+ */
+export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection {
+  const balance = getEffectiveBalance(mortgage);
+  const payment = getPiForAmortization(mortgage);
+  const monthlyRate = Number(mortgage.interestRate) / 12;
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  if (balance <= 0 || payment <= 0) {
+    return { payoffDate: null, remainingAtTermEnd: null };
+  }
+
+  const monthsSinceStartDate = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const totalTermMonths = termYears * 12;
+  const remainingMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+
+  let runningBalance = balance;
+  let periodStart = new Date(startOfCurrentMonth.getFullYear(), startOfCurrentMonth.getMonth() + 1, 1);
+
+  for (let i = 0; i < remainingMonths && runningBalance > 0; i++) {
+    const interest = runningBalance * monthlyRate;
+    let principal = payment - interest;
+
+    if (principal >= runningBalance) {
+      principal = runningBalance;
+    }
+    runningBalance = Math.max(0, runningBalance - principal);
+
+    if (runningBalance <= 0) {
+      return { payoffDate: periodStart, remainingAtTermEnd: null };
+    }
+
+    periodStart = new Date(periodStart.getFullYear(), periodStart.getMonth() + 1, 1);
+  }
+
+  return {
+    payoffDate: null,
+    remainingAtTermEnd: Math.round(runningBalance),
+  };
+}
+
+/**
+ * Run month-by-month payoff simulation with base P&I + extra payment.
+ * Returns number of months to payoff, or null if doesn't pay off within maxMonths.
+ * Uses same iteration logic as getPayoffProjection.
+ */
+function getMonthsToPayoffWithExtra(
+  mortgage: MortgageRecord,
+  extraPayment: number,
+  maxMonths: number
+): number | null {
+  const balance = getEffectiveBalance(mortgage);
+  const basePi = getPiForAmortization(mortgage);
+  const payment = basePi + extraPayment;
+  const monthlyRate = Number(mortgage.interestRate) / 12;
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  if (balance <= 0 || payment <= 0) return null;
+
+  const monthsSinceStartDate = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const totalTermMonths = termYears * 12;
+  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+  const cap = Math.min(maxMonths, remainingTermMonths);
+
+  let runningBalance = balance;
+  for (let i = 0; i < cap && runningBalance > 0; i++) {
+    const interest = runningBalance * monthlyRate;
+    let principal = payment - interest;
+    if (principal >= runningBalance) principal = runningBalance;
+    runningBalance = Math.max(0, runningBalance - principal);
+    if (runningBalance <= 0) return i + 1;
+  }
+  return null;
+}
+
+/**
+ * Get extra monthly payment needed to pay off yearsEarlier years sooner.
+ * Returns extra amount (rounded to nearest dollar) or null if invalid.
+ * Invalid when: payment doesn't amortize, yearsEarlier >= current payoff years, or other edge case.
+ */
+export function getExtraPaymentForYearsEarlier(
+  mortgage: MortgageRecord,
+  yearsEarlier: number
+): number | null {
+  const projection = getPayoffProjection(mortgage);
+  if (projection.payoffDate == null) return null;
+
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const payoffDate = new Date(projection.payoffDate);
+
+  const currentPayoffMonths =
+    (payoffDate.getFullYear() - startOfCurrentMonth.getFullYear()) * 12 +
+    (payoffDate.getMonth() - startOfCurrentMonth.getMonth());
+
+  const targetMonths = currentPayoffMonths - yearsEarlier * 12;
+  if (targetMonths <= 0) return null;
+
+  const balance = getEffectiveBalance(mortgage);
+  let low = 0;
+  let high = Math.ceil(balance); // safe upper bound: paying full balance in one month
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const months = getMonthsToPayoffWithExtra(mortgage, mid, targetMonths + 1);
+    if (months != null && months <= targetMonths) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  const monthsAtLow = getMonthsToPayoffWithExtra(mortgage, low, targetMonths + 1);
+  if (monthsAtLow == null || monthsAtLow > targetMonths) return null;
+
+  return Math.round(low);
+}
+
+/**
+ * Get years to payoff when adding extra monthly payment.
+ * Returns years (rounded to nearest whole) or null if invalid.
+ */
+export function getPayoffYearsWithExtra(
+  mortgage: MortgageRecord,
+  extraPayment: number
+): number | null {
+  if (extraPayment < 0) return null;
+  const projection = getPayoffProjection(mortgage);
+  if (projection.payoffDate == null) return null; // base doesn't amortize
+
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthsSinceStart = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+
+  const months = getMonthsToPayoffWithExtra(mortgage, extraPayment, remainingTermMonths);
+  if (months == null) return null;
+  return Math.round(months / 12);
+}

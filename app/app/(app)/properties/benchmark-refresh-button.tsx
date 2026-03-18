@@ -40,8 +40,11 @@ export function BenchmarkRefreshButton({
         type="button"
         onClick={handleRefresh}
         disabled={loading}
-        className="text-sm font-medium text-accent hover:underline disabled:opacity-50"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-accent hover:underline disabled:opacity-50 disabled:cursor-not-allowed"
       >
+        {loading && (
+          <span className="inline-block h-3.5 w-3.5 animate-spin rounded-full border-2 border-accent border-t-transparent" aria-hidden />
+        )}
         {loading ? "Refreshing…" : label}
       </button>
       {error && (
