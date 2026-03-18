@@ -120,4 +120,28 @@
 
 ---
 
+## Open tasks batch 2025-03-15 (verified complete)
+
+All tasks in this batch were verified implemented and marked complete:
+
+- [x] Mortgage balance advancement (Phase 1) — balanceAsOfDate, getEffectiveBalance, getBalanceSource, all consumers updated
+- [x] Escrow amount for accurate balance projection — getPiForAmortization, P&I-only amortization when escrow set
+- [x] Import template — add original loan amount
+- [x] Monthly rent display — simplify for single-unit (property detail, add-property-wizard)
+- [x] Import — add loan type
+- [x] Amortization chart — tooltip month/year
+- [x] Amortization schedule — fix steep dropoff at end of term
+- [x] RentCast rate limits — plan-based per-hour (5/10/20)
+- [x] RentCast rate limit — user-facing messaging (text-negative)
+- [x] Benchmarking — rent vs market (schema, API, refresh, property detail)
+- [x] Estimate buttons — disable when value matches last estimate
+- [x] Benchmarking surfacing — Option A (benchmark line on cards), Option C (dashboard section)
+- [x] Dashboard — integrate Rent vs. market into Property at a glance (single property)
+- [x] Benchmark refresh — inline "Refresh estimate" button
+- [x] Admin membership override — subscriptionTierOverride, getEffectiveTier, admin UI
+- [x] Settings — show override status in Plan & billing
+- [x] Sentry error tracking
+
+---
+
 *Full implementation details available in git history. This archive summarizes completed work for reference.*

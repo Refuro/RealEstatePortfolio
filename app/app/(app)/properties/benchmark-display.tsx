@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  isBenchmarkFresh,
+  getBenchmarkDaysAgo,
+  getBenchmarkLabel,
+} from "@/lib/benchmark-utils";
 import { BenchmarkRefreshButton } from "./benchmark-refresh-button";
-
-const SIXTY_DAYS_MS = 60 * 24 * 60 * 60 * 1000;
 
 type BenchmarkDisplayProps = {
   propertyId: string;
@@ -33,23 +36,20 @@ export function BenchmarkDisplay({
     );
   }
 
-  const asOfDate = marketRentAsOf instanceof Date ? marketRentAsOf : marketRentAsOf ? new Date(marketRentAsOf) : null;
-  const isFresh = marketRent != null && asOfDate && nowMs - asOfDate.getTime() < SIXTY_DAYS_MS;
+  const isFresh = marketRent != null && marketRent > 0 && isBenchmarkFresh(marketRentAsOf);
 
   if (isFresh && marketRent != null && marketRent > 0) {
-    const pct = ((totalRent - marketRent) / marketRent) * 100;
-    const absPct = Math.abs(pct);
-    const pctStr =
-      absPct < 0.5 ? "At market" : pct >= 0 ? `+${pct.toFixed(1)}% above market` : `${pct.toFixed(1)}% below market`;
+    const label = getBenchmarkLabel(totalRent, marketRent).replace(/^Rent /, "");
+    const displayLabel = label === "at market" ? "At market" : label;
     return (
       <dd className="mt-1 text-sm text-muted">
-        Market: ${marketRent.toLocaleString()} ({pctStr})
+        Market: ${marketRent.toLocaleString()} ({displayLabel})
       </dd>
     );
   }
 
-  if (marketRent != null && asOfDate) {
-    const daysAgo = Math.floor((nowMs - asOfDate.getTime()) / (24 * 60 * 60 * 1000));
+  if (marketRent != null && marketRentAsOf) {
+    const daysAgo = getBenchmarkDaysAgo(marketRentAsOf);
     return (
       <dd className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted">
         <span>Market: ${marketRent.toLocaleString()} · Updated {daysAgo} days ago</span>

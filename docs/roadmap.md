@@ -19,6 +19,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 | Property value estimate (RentCast AVM) | Done |
 | CSV import | Done |
 | Deal analyzer / scratchpad | Done |
+| Benchmarking (rent vs market) | Done |
+| Admin membership override | Done |
+| Error tracking (Sentry) | Done |
 
 ### Mortgage balance advancement (Phase 1 — amortization projection + manual override)
 
@@ -52,11 +55,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Benchmarking
+### Benchmarking — ✓ Done
 
-**Priority:** 9
-
-**Scope:** "Your rent is X% above/below market" (RentCast). "Your cap rate vs market" if API supports. Differentiator.
+**Scope:** "Your rent is X% above/below market" (RentCast). Surfacing on properties list, dashboard, inline refresh. See `docs/benchmarking-surfacing-proposal.md`.
 
 ---
 
@@ -92,11 +93,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Admin membership override
+### Admin membership override — ✓ Done
 
-**Priority:** 14
-
-**Scope:** Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill.
+**Scope:** Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill. See `docs/admin-membership-override-proposal.md`.
 
 ---
 
@@ -108,11 +107,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Error tracking (Sentry or similar)
+### Error tracking (Sentry) — ✓ Done
 
-**Priority:** 16
-
-**Scope:** Add production error tracking and alerting. Defer until post-MVP.
+**Scope:** Production error monitoring via Sentry. Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel for production.
 
 ---
 
