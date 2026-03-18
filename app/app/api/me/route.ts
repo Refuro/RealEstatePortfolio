@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveTier } from "@/lib/plans";
 import { z } from "zod";
 
 const patchSchema = z.object({
@@ -17,7 +18,7 @@ export async function GET() {
     email: user.email,
     firstName: user.firstName,
     lastName: user.lastName,
-    subscriptionTier: user.subscriptionTier,
+    subscriptionTier: getEffectiveTier(user),
     ownershipDisplayMode: user.ownershipDisplayMode ?? "proportional",
   });
 }

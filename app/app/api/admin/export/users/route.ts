@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveTier } from "@/lib/plans";
 
 function escapeCsvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
@@ -24,6 +25,7 @@ export async function GET() {
       firstName: true,
       lastName: true,
       subscriptionTier: true,
+      subscriptionTierOverride: true,
       createdAt: true,
       updatedAt: true,
       _count: { select: { properties: true } },
@@ -45,7 +47,7 @@ export async function GET() {
     escapeCsvCell(u.email),
     escapeCsvCell(u.firstName),
     escapeCsvCell(u.lastName),
-    escapeCsvCell(u.subscriptionTier),
+    escapeCsvCell(getEffectiveTier(u)),
     escapeCsvCell(u._count.properties),
     escapeCsvCell(u.createdAt.toISOString()),
     escapeCsvCell(u.updatedAt.toISOString()),

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getDealLimit } from "@/lib/plans";
+import { getDealLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DealsList } from "./deals-list";
@@ -15,7 +15,7 @@ export default async function DealsPage() {
     where: { userId: user.id },
   });
 
-  const dealLimit = getDealLimit(user.subscriptionTier);
+  const dealLimit = getDealLimit(getEffectiveTier(user));
   const deals = takeFirstNByUpdatedAt(allDeals, dealLimit);
   const totalCount = allDeals.length;
   const overLimit = totalCount > dealLimit;

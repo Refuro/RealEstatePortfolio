@@ -49,6 +49,17 @@ const propertySchemaBase = z.object({
   vacancyPercent: z.coerce.number().int().min(0).max(100).default(5),
   cashInvested: z.string().optional().nullable().transform((s) => (s == null || s.trim() === "" ? null : s)),
   notes: z.string().max(2000).optional().nullable(),
+  marketRent: z.union([z.string(), z.number()]).optional().nullable().transform((v) => {
+    if (v == null || v === "") return null;
+    const n = typeof v === "number" ? v : parseFloat(String(v));
+    return Number.isFinite(n) && n >= 0 ? n : null;
+  }),
+  marketRentAsOf: z
+    .string()
+    .refine((s) => !Number.isNaN(Date.parse(s)), "Invalid date")
+    .optional()
+    .nullable()
+    .transform((s) => (s && s.trim() ? new Date(s) : null)),
 });
 
 const SINGLE_UNIT_TYPES = ["single_family", "condo", "townhouse", "manufactured"] as const;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
+import { getEffectiveTier } from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 
 export const metadata: Metadata = {
@@ -18,7 +19,7 @@ export default async function PlansPage() {
         Choose a plan based on how many properties you track.
       </p>
       <PricingCards
-        currentTier={user?.subscriptionTier ?? "free"}
+        currentTier={user ? getEffectiveTier(user) : "free"}
         className="mt-8"
         showSignUp={false}
       />

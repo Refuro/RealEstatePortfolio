@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
+import { getEffectiveTier } from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
@@ -41,7 +42,7 @@ export default async function PricingPage() {
             </p>
           )}
           <PricingCards
-            currentTier={user ? (user.subscriptionTier ?? "free") : ""}
+            currentTier={user ? getEffectiveTier(user) : ""}
             className="mt-8"
             showSignUp={!user}
           />

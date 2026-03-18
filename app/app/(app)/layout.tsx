@@ -1,7 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit, getDealLimit } from "@/lib/plans";
+import { getPropertyLimit, getDealLimit, getEffectiveTier } from "@/lib/plans";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
 
@@ -53,8 +53,8 @@ export default async function AppLayout({
     propertyCount = pc;
     dealCount = dc;
     subscriptionStatus = ss;
-    propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
-    dealLimit = getDealLimit(user.subscriptionTier ?? "free");
+    propertyLimit = getPropertyLimit(getEffectiveTier(user));
+    dealLimit = getDealLimit(getEffectiveTier(user));
     overLimit = propertyCount > propertyLimit || dealCount > dealLimit;
   }
 
@@ -73,7 +73,7 @@ export default async function AppLayout({
         overLimit,
         subscriptionStatus,
         stripeCustomerId: user?.stripeCustomerId ?? null,
-        subscriptionTier: user?.subscriptionTier ?? "free",
+        subscriptionTier: user ? getEffectiveTier(user) : "free",
       }}
     >
       {children}

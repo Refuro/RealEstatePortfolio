@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { BenchmarkRefreshButton } from "@/app/(app)/properties/benchmark-refresh-button";
 import type { EquityDatum } from "@/components/charts/equity-chart";
 import type { DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
 import type { CashFlowDatum } from "@/components/charts/cash-flow-chart";
@@ -38,12 +39,21 @@ export type DashboardChartData = {
   cashFlow: CashFlowDatum[];
 };
 
+export type BenchmarkAtGlance = {
+  /** When fresh: display label (e.g. "Rent 1.6% below market") */
+  benchmarkLabel?: string;
+  /** When stale/missing: property ID for inline refresh button */
+  propertyId?: string;
+};
+
 export function DashboardCharts({
   data,
   propertyCount,
+  benchmark,
 }: {
   data: DashboardChartData;
   propertyCount: number;
+  benchmark?: BenchmarkAtGlance;
 }) {
   const isSingleProperty = propertyCount === 1;
   const singleProperty = isSingleProperty ? data.equity[0] : null;
@@ -59,7 +69,7 @@ export function DashboardCharts({
           <h3 className="text-base font-semibold uppercase tracking-wide text-muted">
             Property at a glance
           </h3>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5">
             <div>
               <p className="text-sm font-medium text-muted">Value</p>
               <p className="mt-0.5 text-lg font-semibold text-foreground">
@@ -89,6 +99,25 @@ export function DashboardCharts({
               >
                 {formatCurrency(data.cashFlow[0]?.monthlyCashFlow ?? 0)}
               </p>
+            </div>
+            <div>
+              <p className="text-sm font-medium text-muted">Rent vs. market</p>
+              {benchmark?.benchmarkLabel ? (
+                <p className="mt-0.5 text-lg font-semibold text-foreground">
+                  {benchmark.benchmarkLabel}
+                </p>
+              ) : benchmark?.propertyId ? (
+                <p className="mt-0.5">
+                  <BenchmarkRefreshButton
+                    propertyId={benchmark.propertyId}
+                    label="Refresh estimate"
+                  />
+                </p>
+              ) : (
+                <p className="mt-0.5 text-lg font-semibold text-muted">
+                  —
+                </p>
+              )}
             </div>
           </div>
         </div>

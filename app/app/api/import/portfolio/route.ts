@@ -3,7 +3,7 @@ import Papa from "papaparse";
 import type { Prisma } from "@prisma/client";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit, canAddProperty } from "@/lib/plans";
+import { getPropertyLimit, canAddProperty, getEffectiveTier } from "@/lib/plans";
 import { parseRow, type ImportRow } from "@/lib/import/csv-parser";
 
 export async function POST(req: NextRequest) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
     where: { userId: user.id },
   });
 
-  const tier = user.subscriptionTier ?? "free";
+  const tier = getEffectiveTier(user);
   const limit = getPropertyLimit(tier);
   const canAdd = canAddProperty(tier, propertyCount);
 

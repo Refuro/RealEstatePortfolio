@@ -1,7 +1,7 @@
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getDealLimit } from "@/lib/plans";
+import { getDealLimit, getEffectiveTier } from "@/lib/plans";
 import { DealAnalyzerForm } from "./deal-analyzer-form";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export default async function AnalyzePage({
   const dealCount = await prisma.savedDeal.count({
     where: { userId: user.id },
   });
-  const dealLimit = getDealLimit(user.subscriptionTier);
+  const dealLimit = getDealLimit(getEffectiveTier(user));
 
   return (
     <div>

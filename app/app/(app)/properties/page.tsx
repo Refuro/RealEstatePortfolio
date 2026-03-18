@@ -1,18 +1,56 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
+import { BenchmarkRefreshButton } from "./benchmark-refresh-button";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit } from "@/lib/plans";
+import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
+import {
+  isBenchmarkFresh,
+  getBenchmarkLabel,
+} from "@/lib/benchmark-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+
+function BenchmarkLine({
+  propertyId,
+  userRent,
+  marketRent,
+  marketRentAsOf,
+}: {
+  propertyId: string;
+  userRent: number;
+  marketRent: number | null;
+  marketRentAsOf: Date | null;
+}) {
+  if (marketRent == null || marketRent <= 0) {
+    return (
+      <div className="mt-3">
+        <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />
+      </div>
+    );
+  }
+  const fresh = isBenchmarkFresh(marketRentAsOf);
+  if (fresh) {
+    return (
+      <p className="mt-3 text-sm text-muted">
+        {getBenchmarkLabel(userRent, marketRent)}
+      </p>
+    );
+  }
+  return (
+    <div className="mt-3">
+      <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />
+    </div>
+  );
+}
 
 function PropertyTypeBadge({
   propertyType,
@@ -38,7 +76,7 @@ export default async function PropertiesPage() {
     include: { mortgages: true },
   });
 
-  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
   const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
   const totalCount = allProperties.length;
   const overLimit = totalCount > propertyLimit;
@@ -159,52 +197,59 @@ export default async function PropertiesPage() {
               );
               return (
                 <li key={p.id}>
-                  <Link
-                    href={`/properties/${p.id}`}
-                    className="block rounded-lg border border-border bg-card p-4 transition hover:bg-subtle"
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="font-medium text-foreground">
-                        {p.nickname || p.addressLine1}
+                  <div className="rounded-lg border border-border bg-card p-4 transition hover:bg-subtle">
+                    <Link href={`/properties/${p.id}`} className="block">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="font-medium text-foreground">
+                          {p.nickname || p.addressLine1}
+                        </div>
+                        <PropertyTypeBadge
+                          propertyType={p.propertyType}
+                          units={p.units}
+                        />
                       </div>
-                      <PropertyTypeBadge
-                        propertyType={p.propertyType}
-                        units={p.units}
-                      />
-                    </div>
-                    <div className="mt-1 text-base text-muted">
-                      {p.addressLine1}
-                      {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
-                    </div>
-                    <p className="mt-1 text-xs text-muted">
-                      Updated {formatTimeAgo(p.updatedAt)}
-                      {isDataStale(p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)) && (
-                        <span className="ml-1">· Consider updating</span>
-                      )}
-                    </p>
-                    <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
-                      <div>
-                        <dt className="font-medium text-muted">Value</dt>
-                        <dd className="font-medium text-foreground">
-                          {formatCurrency(Number(p.currentEstimatedValue))}
-                        </dd>
+                      <div className="mt-1 text-base text-muted">
+                        {p.addressLine1}
+                        {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
                       </div>
-                      <div>
-                        <dt className="font-medium text-muted">Equity</dt>
-                        <dd className="font-medium text-foreground">
-                          {formatCurrency(metrics.equity)}
-                        </dd>
-                      </div>
-                      <div>
-                        <dt className="font-medium text-muted">Cash flow</dt>
-                        <dd
-                          className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
-                        >
-                          {formatCurrency(metrics.monthlyCashFlow)}
-                        </dd>
-                      </div>
-                    </dl>
-                  </Link>
+                      <p className="mt-1 text-xs text-muted">
+                        Updated {formatTimeAgo(p.updatedAt)}
+                        {isDataStale(p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)) && (
+                          <span className="ml-1">· Consider updating</span>
+                        )}
+                      </p>
+                      <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                        <div>
+                          <dt className="font-medium text-muted">Value</dt>
+                          <dd className="font-medium text-foreground">
+                            {formatCurrency(Number(p.currentEstimatedValue))}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-muted">Equity</dt>
+                          <dd className="font-medium text-foreground">
+                            {formatCurrency(metrics.equity)}
+                          </dd>
+                        </div>
+                        <div>
+                          <dt className="font-medium text-muted">Cash flow</dt>
+                          <dd
+                            className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+                          >
+                            {formatCurrency(metrics.monthlyCashFlow)}
+                          </dd>
+                        </div>
+                      </dl>
+                    </Link>
+                    <BenchmarkLine
+                      propertyId={p.id}
+                      userRent={getPropertyTotalRent(p)}
+                      marketRent={
+                        p.marketRent != null ? Number(p.marketRent) : null
+                      }
+                      marketRentAsOf={p.marketRentAsOf}
+                    />
+                  </div>
                 </li>
               );
             })}

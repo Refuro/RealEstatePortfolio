@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveBalance } from "@/lib/amortization";
-import { getPropertyLimit } from "@/lib/plans";
+import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
@@ -27,7 +27,7 @@ export async function GET() {
     include: { mortgages: true },
   });
 
-  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
   const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
 
   const headers = [

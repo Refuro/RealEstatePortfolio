@@ -1,8 +1,10 @@
 import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveTier } from "@/lib/plans";
 import { redirect } from "next/navigation";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
 import { LocalDateTime } from "@/components/local-date-time";
+import { AdminUserTierSelect } from "./admin-user-tier-select";
 
 export const dynamic = "force-dynamic";
 
@@ -52,6 +54,7 @@ export default async function AdminPage() {
         id: true,
         email: true,
         subscriptionTier: true,
+        subscriptionTierOverride: true,
         createdAt: true,
         updatedAt: true,
         _count: { select: { properties: true } },
@@ -317,7 +320,10 @@ export default async function AdminPage() {
                   Email
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted">
-                  Plan
+                  Plan (effective)
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-medium text-muted">
+                  Override
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-medium text-muted">
                   Properties
@@ -328,20 +334,30 @@ export default async function AdminPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {users.map((u) => (
-                <tr key={u.id} className="hover:bg-subtle/50">
-                  <td className="px-4 py-3 text-sm text-foreground">{u.email}</td>
-                  <td className="px-4 py-3 text-sm text-muted capitalize">
-                    {u.subscriptionTier}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-foreground">
-                    {u._count.properties}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted">
-                    <LocalDateTime value={u.updatedAt.toISOString()} />
-                  </td>
-                </tr>
-              ))}
+              {users.map((u) => {
+                const effectiveTier = getEffectiveTier(u);
+                return (
+                  <tr key={u.id} className="hover:bg-subtle/50">
+                    <td className="px-4 py-3 text-sm text-foreground">{u.email}</td>
+                    <td className="px-4 py-3 text-sm text-muted capitalize">
+                      {effectiveTier}
+                    </td>
+                    <td className="px-4 py-3 text-sm">
+                      <AdminUserTierSelect
+                        userId={u.id}
+                        currentOverride={u.subscriptionTierOverride}
+                        currentTier={effectiveTier}
+                      />
+                    </td>
+                    <td className="px-4 py-3 text-sm text-foreground">
+                      {u._count.properties}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-muted">
+                      <LocalDateTime value={u.updatedAt.toISOString()} />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

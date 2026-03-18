@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createDealSchema } from "@/lib/validations/deal";
-import { canAddDeal } from "@/lib/plans";
+import { canAddDeal, getEffectiveTier } from "@/lib/plans";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 
 function serializeDeal(deal: {
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
   const currentCount = await prisma.savedDeal.count({
     where: { userId: user.id },
   });
-  if (!canAddDeal(user.subscriptionTier, currentCount)) {
+  if (!canAddDeal(getEffectiveTier(user), currentCount)) {
     return NextResponse.json(
       {
         error: "Deal limit reached. Upgrade your plan or remove a deal to save more.",

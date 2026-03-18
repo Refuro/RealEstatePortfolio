@@ -1,6 +1,6 @@
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getDealLimit, getPropertyLimit } from "@/lib/plans";
+import { getDealLimit, getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
 import { SubscriptionBillingDisplay } from "@/app/(app)/settings/subscription-billing-display";
@@ -20,9 +20,11 @@ export default async function SettingsPage() {
     prisma.savedDeal.count({ where: { userId: user.id } }),
   ]);
 
-  const limit = getPropertyLimit(user.subscriptionTier);
+  const effectiveTier = getEffectiveTier(user);
+  const hasOverride = !!(user as { subscriptionTierOverride?: string | null }).subscriptionTierOverride;
+  const limit = getPropertyLimit(effectiveTier);
   const canAddMore = propertyCount < limit;
-  const dealLimit = getDealLimit(user.subscriptionTier);
+  const dealLimit = getDealLimit(effectiveTier);
   const canAddMoreDeals = dealCount < dealLimit;
 
   return (
@@ -75,9 +77,18 @@ export default async function SettingsPage() {
             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
               <dt className="text-sm font-medium text-muted">Current plan</dt>
               <dd className="text-base font-medium capitalize text-foreground">
-                {user.subscriptionTier}
+                {effectiveTier}
+                {hasOverride && " (admin override)"}
               </dd>
             </div>
+            {hasOverride && (
+              <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+                <dt className="text-sm font-medium text-muted">Underlying plan</dt>
+                <dd className="text-base font-medium capitalize text-foreground">
+                  {(user.subscriptionTier ?? "free").toLowerCase()}
+                </dd>
+              </div>
+            )}
             <div className="flex flex-wrap gap-x-8 gap-y-4 sm:col-span-2">
               <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
                 <dt className="text-sm font-medium text-muted">Properties</dt>
@@ -121,7 +132,7 @@ export default async function SettingsPage() {
               href="/plans"
               className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
-              {user.subscriptionTier === "free" ? "Upgrade plan" : "Change plan"}
+              {effectiveTier === "free" ? "Upgrade plan" : "Change plan"}
             </Link>
             {user.stripeCustomerId && (
               <BillingPortalButton />

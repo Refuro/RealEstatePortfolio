@@ -38,7 +38,17 @@ export type WizardData = {
   bathrooms: string;
   addMortgage: boolean | null;
   mortgage: MortgageFormData;
+  marketRent: string;
+  marketRentAsOf: string;
+  lastValueEstimate: string;
+  lastRentEstimate: string;
 };
+
+function parseCurrencyNum(s: string): number {
+  const cleaned = String(s ?? "").replace(/,/g, "").replace(/[^0-9.]/g, "");
+  const n = parseFloat(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
 
 const defaultWizardData: WizardData = {
   nickname: "",
@@ -63,6 +73,10 @@ const defaultWizardData: WizardData = {
   bathrooms: "",
   addMortgage: null,
   mortgage: defaultMortgageFormData,
+  marketRent: "",
+  marketRentAsOf: "",
+  lastValueEstimate: "",
+  lastRentEstimate: "",
 };
 
 const STEPS = [
@@ -77,6 +91,8 @@ const inputClass =
   "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
 const labelClass = "block text-sm font-medium text-muted";
 
+const ADDRESS_KEYS = ["addressLine1", "addressLine2", "city", "state", "zipCode"] as const;
+
 function StepAddressBasics({
   data,
   onChange,
@@ -87,7 +103,12 @@ function StepAddressBasics({
   errors: Record<string, string>;
 }) {
   function update<K extends keyof WizardData>(key: K, val: WizardData[K]) {
-    onChange({ ...data, [key]: val });
+    const next = { ...data, [key]: val };
+    if (ADDRESS_KEYS.includes(key as (typeof ADDRESS_KEYS)[number])) {
+      next.lastValueEstimate = "";
+      next.lastRentEstimate = "";
+    }
+    onChange(next);
   }
 
   return (
@@ -377,7 +398,8 @@ function StepPurchase({
       const res = await fetch(`/api/estimates/value?${params.toString()}`);
       const json = (await res.json()) as { value?: number; error?: string };
       if (json.value != null && Number.isFinite(json.value)) {
-        update("currentEstimatedValue", String(Math.round(json.value)));
+        const val = String(Math.round(json.value));
+        onChange({ ...data, currentEstimatedValue: val, lastValueEstimate: val });
       } else {
         setValueEstimateError(json.error ?? "Estimate unavailable for this address");
       }
@@ -441,14 +463,20 @@ function StepPurchase({
             <button
               type="button"
               onClick={handleEstimateValue}
-              disabled={valueEstimateLoading}
+              disabled={
+                valueEstimateLoading ||
+                Boolean(
+                  data.lastValueEstimate &&
+                    parseCurrencyNum(data.currentEstimatedValue) === parseCurrencyNum(data.lastValueEstimate)
+                )
+              }
               className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
             >
               {valueEstimateLoading ? "Estimating…" : "Estimate value"}
             </button>
           </div>
           {valueEstimateError && (
-            <p className="mt-0.5 text-sm text-muted">{valueEstimateError}</p>
+            <p className={`mt-0.5 text-sm ${valueEstimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{valueEstimateError}</p>
           )}
           {errors.currentEstimatedValue && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentEstimatedValue}</p>
@@ -528,6 +556,13 @@ function StepIncomeExpenses({
     0
   );
 
+  const rentMatchesLastEstimate = Boolean(
+    data.lastRentEstimate &&
+      (isMulti
+        ? Math.round(totalRent) === parseCurrencyNum(data.lastRentEstimate)
+        : parseCurrencyNum(data.currentMonthlyRent) === parseCurrencyNum(data.lastRentEstimate))
+  );
+
   async function handleEstimateRent() {
     if (!data.addressLine1?.trim() || !data.city?.trim() || !data.state?.trim() || !data.zipCode?.trim()) {
       setEstimateError("Enter address in Step 1 first");
@@ -549,14 +584,18 @@ function StepIncomeExpenses({
       if (data.bedrooms?.trim()) params.set("bedrooms", data.bedrooms);
       if (data.bathrooms?.trim()) params.set("bathrooms", data.bathrooms);
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
-      const json = (await res.json()) as { rent?: number; error?: string };
+      const json = (await res.json()) as { rent?: number; marketRent?: number; marketRentAsOf?: string; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
+        const today = new Date().toISOString().slice(0, 10);
+        const marketRent = String(Math.round(json.rent));
+        const marketRentAsOf = json.marketRentAsOf ?? today;
+        const lastRentEstimate = String(Math.round(json.rent));
         if (isMulti) {
           const perUnit = Math.round(json.rent / units);
           const rents = Array(units).fill(String(perUnit));
-          onChange({ ...data, unitRents: rents });
+          onChange({ ...data, unitRents: rents, marketRent, marketRentAsOf, lastRentEstimate });
         } else {
-          update("currentMonthlyRent", String(Math.round(json.rent)));
+          onChange({ ...data, currentMonthlyRent: lastRentEstimate, marketRent, marketRentAsOf, lastRentEstimate });
         }
       } else {
         setEstimateError(json.error ?? "Estimate unavailable for this address");
@@ -590,7 +629,7 @@ function StepIncomeExpenses({
             <button
               type="button"
               onClick={handleEstimateRent}
-              disabled={estimateLoading}
+              disabled={estimateLoading || rentMatchesLastEstimate}
               className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
             >
               {estimateLoading ? "Estimating…" : "Estimate rent"}
@@ -600,7 +639,7 @@ function StepIncomeExpenses({
             Total: ${totalRent.toLocaleString()}/mo
           </p>
           {estimateError && (
-            <p className="text-sm text-muted">{estimateError}</p>
+            <p className={`text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
           )}
           {(errors.unitRents || errors.currentMonthlyRent) && (
             <p className="text-sm text-negative">
@@ -626,14 +665,14 @@ function StepIncomeExpenses({
             <button
               type="button"
               onClick={handleEstimateRent}
-              disabled={estimateLoading}
+              disabled={estimateLoading || rentMatchesLastEstimate}
               className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
             >
               {estimateLoading ? "Estimating…" : "Estimate rent"}
             </button>
           </div>
           {estimateError && (
-            <p className="mt-0.5 text-sm text-muted">{estimateError}</p>
+            <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
           )}
           {errors.currentMonthlyRent && (
             <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyRent}</p>
@@ -1199,6 +1238,10 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
       notes: data.notes.trim() || undefined,
     };
     if (unitRentsArr != null) payload.unitRents = unitRentsArr;
+    if (data.marketRent?.trim() && !Number.isNaN(Number(data.marketRent))) {
+      payload.marketRent = Number(data.marketRent);
+      if (data.marketRentAsOf?.trim()) payload.marketRentAsOf = data.marketRentAsOf;
+    }
     const bed = Number(data.bedrooms);
     if (data.bedrooms?.trim() && !Number.isNaN(bed) && bed >= 1 && bed <= 10) payload.bedrooms = Math.round(bed);
     const bath = Number(data.bathrooms);

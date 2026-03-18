@@ -3,7 +3,7 @@ import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { createPropertySchema } from "@/lib/validations/property";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
-import { canAddProperty } from "@/lib/plans";
+import { canAddProperty, getEffectiveTier } from "@/lib/plans";
 
 export async function GET() {
   const user = await getActiveAppUser();
@@ -32,6 +32,8 @@ export async function GET() {
       unitMix: p.unitMix,
       currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
       cashInvested: p.cashInvested?.toString() ?? null,
+      marketRent: (p as { marketRent?: { toString(): string } | null }).marketRent?.toString() ?? null,
+      marketRentAsOf: (p as { marketRentAsOf?: Date | null }).marketRentAsOf?.toISOString().slice(0, 10) ?? null,
       ownershipPercent: p.ownershipPercent ?? 100,
       mortgages: p.mortgages.map((m: MortgageItem) => ({
         ...m,
@@ -114,7 +116,7 @@ export async function POST(request: NextRequest) {
   const currentCount = await prisma.property.count({
     where: { userId: user.id },
   });
-  if (!canAddProperty(user.subscriptionTier, currentCount)) {
+  if (!canAddProperty(getEffectiveTier(user), currentCount)) {
     return NextResponse.json(
       {
         error: "Property limit reached. Upgrade your plan or remove a property to add more.",
@@ -164,6 +166,8 @@ export async function POST(request: NextRequest) {
       vacancyPercent: data.vacancyPercent ?? 5,
       cashInvested: data.cashInvested ?? null,
       notes: data.notes ?? null,
+      marketRent: data.marketRent ?? null,
+      marketRentAsOf: data.marketRentAsOf ? new Date(data.marketRentAsOf) : null,
     },
   });
 
