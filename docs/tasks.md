@@ -20,13 +20,13 @@ Pricing update ($15/$29), Website performance, App layout performance, Settings 
 
 | Order | Item | Effort | Value | Recommendation |
 |-------|------|--------|-------|----------------|
-| **1** | Mortgage balance advancement | Medium | High | **Do first.** Metrics drift without balance advancement; equity/LTV/debt become inaccurate. Amortization projection + manual override; no Plaid. |
-| **2** | Admin membership override | Low | Medium | **Quick win.** Admins can set tier manually (demo accounts, partners). Small schema + admin UI. |
-| **3** | Benchmarking | Medium | High | **Do early.** "Your rent vs market" differentiator; RentCast API already integrated. |
-| **4** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic. |
-| **5** | Simulation page | High | High | Full modeling; extends scenario concept. |
-| **6** | Report section (PDF) | Medium | Medium | Professional output; share with partners/lenders. |
-| **7** | Automated testing | High | High | Quality foundation; plan per Module M. |
+| — | Mortgage balance advancement | ✓ Done | — | Balance advancement, escrow, amortization fix, loan type import, chart tooltip. |
+| **1** | Admin membership override | Low | Medium | **Quick win.** Admins can set tier manually (demo accounts, partners). Small schema + admin UI. |
+| **2** | Benchmarking | Medium | High | **Do early.** "Your rent vs market" differentiator; RentCast API already integrated. |
+| **3** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic. |
+| **4** | Simulation page | High | High | Full modeling; extends scenario concept. |
+| **5** | Report section (PDF) | Medium | Medium | Professional output; share with partners/lenders. |
+| **6** | Automated testing | High | High | Quality foundation; plan per Module M. |
 
 **Defer:** Rent gap email (cost scales), Referral system (validate first), Error tracking (post-MVP).
 
@@ -343,6 +343,252 @@ Replace raw `currentBalance` sum with `getEffectiveBalance` sum in:
 - [x] Add-property wizard: rate limit error shown in text-negative below Estimate button(s).
 - [x] Property form: rate limit error shown in text-negative below Estimate button(s).
 - [x] No flow interruption; form remains fully usable.
+- [x] `npm run check` passes.
+
+---
+
+### Benchmarking — rent vs market
+
+**Priority:** Medium. Differentiator; see `docs/benchmarking-proposal.md`.
+
+**Scope:** Show "Your rent is X% above/below market" per property. Reuse Estimate rent to populate benchmark; add Refresh benchmark for on-demand fetch. 60-day cache TTL.
+
+**1. Schema**
+- Add `marketRent Decimal? @db.Decimal(12, 2)` and `marketRentAsOf DateTime? @db.Date` to Property. Migration.
+
+**2. Estimate rent API** (`app/api/estimates/rent/route.ts`)
+- Accept optional `propertyId` query param.
+- On success: if `propertyId` provided, update property with `marketRent` and `marketRentAsOf` (today).
+- Return `{ rent, marketRent?, marketRentAsOf? }` so frontend can use for add flow.
+
+**3. Property create**
+- `app/api/properties/route.ts`: Accept optional `marketRent`, `marketRentAsOf` in POST body. Store when provided.
+- Add-property wizard: when user clicks Estimate rent and gets result, store `marketRent` and `marketRentAsOf` in wizard state; include in create payload.
+
+**4. Benchmark refresh endpoint**
+- `POST /api/properties/[id]/benchmark/refresh` — fetch RentCast rent for property address, update `marketRent` and `marketRentAsOf`, return `{ marketRent, marketRentAsOf, pctAboveBelow }`. Same rate limit as estimate rent. Requires auth.
+
+**5. Property API responses**
+- Include `marketRent` and `marketRentAsOf` in property fetch (detail, list). Property detail page needs them.
+
+**6. Property form (edit)**
+- Pass `propertyId` when calling estimate rent API so we can update property with marketRent on success.
+
+**7. Property detail UI**
+- Near "Monthly rent": when `marketRent` exists and `marketRentAsOf` ≤ 60 days ago, show "Rent: $X · Market: $Y (+Z%)" or "(-Z% below market)".
+- When no cache or stale: show "Refresh benchmark" button. On click, call refresh endpoint, update UI.
+- Use `getPropertyTotalRent` for user rent; compare to `marketRent`.
+
+**8. Cache TTL**
+- Consider fresh if `marketRentAsOf` within 60 days. Stale: show last value + "Updated X days ago · Refresh".
+
+**Acceptance criteria**
+
+- [x] Schema has marketRent, marketRentAsOf; migration applied.
+- [x] Estimate rent with propertyId updates property; add wizard passes marketRent on create.
+- [x] POST /api/properties/[id]/benchmark/refresh fetches and stores market rent.
+- [x] Property detail shows benchmark when cache fresh; "Refresh benchmark" when missing/stale.
+- [x] % above/below computed correctly: (userRent - marketRent) / marketRent × 100.
+- [x] Rate limit applies to refresh (same as estimate rent).
+- [x] `npm run check` passes.
+
+---
+
+### Estimate buttons — disable when value matches last estimate
+
+**Priority:** Low. Reduces accidental duplicate API calls.
+
+**Scope:** Gray out "Estimate value" and "Estimate rent" when the input field already contains the result from a prior estimate. Re-enable when the user edits the field. Apply to add-property-wizard and property-form. Clear "from estimate" when address changes so user can re-estimate for new address.
+
+**Acceptance criteria**
+
+- [x] Estimate value: disabled when current value matches last estimate; enabled when user edits.
+- [x] Estimate rent: same logic.
+- [x] Address change clears the flag (or value) so re-estimate is available.
+- [x] Rate limits still apply when button is enabled and clicked.
+- [x] `npm run check` passes.
+
+---
+
+### Benchmarking surfacing — Option A: Benchmark line on property cards
+
+**Priority:** Medium. Surfaces rent vs. market at a glance; see `docs/benchmarking-surfacing-proposal.md`.
+
+**Scope:** Add a compact benchmark line below the metrics grid on each property card in the properties list (`/properties`).
+
+**Requirements:**
+- **When benchmark exists and fresh** (marketRentAsOf ≤ 60 days): One line — "Rent X% below market" or "Rent X% above market" or "Rent at market". Use `text-muted` and `text-sm`.
+- **When benchmark stale** (>60 days): "Rent vs. market: updated X days ago" with link to property detail (where user can refresh).
+- **When no benchmark:** "Refresh benchmark" link to property detail.
+- Use `getPropertyTotalRent` for user rent; compare to `marketRent`. Formula: `(userRent - marketRent) / marketRent × 100`.
+- Properties API already returns `marketRent` and `marketRentAsOf` for list.
+
+**Acceptance criteria**
+
+- [x] Property cards with fresh benchmark show "Rent X% below/above/at market" below metrics grid.
+- [x] Property cards with stale benchmark show "Rent vs. market: updated X days ago" with link to property.
+- [x] Property cards without benchmark show "Refresh benchmark" link to property.
+- [x] Copy uses `text-muted` and `text-sm`; does not dominate the card.
+- [x] % computed correctly; "at market" when within ±1%.
+- [x] `npm run check` passes.
+
+---
+
+### Benchmarking surfacing — Option C: "Rent vs. market" section on dashboard
+
+**Priority:** Medium. Dedicated dashboard section; see `docs/benchmarking-surfacing-proposal.md`.
+
+**Scope:** Add a "Rent vs. market" section on the dashboard after metric cards (or before charts). Show up to 3–5 properties with benchmarks, sorted by most below market.
+
+**Requirements:**
+- Filter properties with `marketRent != null` and `marketRentAsOf` within 60 days.
+- Sort by % below market (most below first).
+- Show up to 3–5 properties: "123 Main St: 12% below market" (link to property).
+- If none: "See how your rent compares to market" with link to properties.
+- Compact layout; does not dominate dashboard.
+
+**Acceptance criteria**
+
+- [x] Dashboard has "Rent vs. market" section after metric cards.
+- [x] Section shows up to 3–5 properties with fresh benchmarks, sorted by most below market.
+- [x] Each property links to its property detail page.
+- [x] When no properties have benchmarks: show "See how your rent compares to market" with link to properties.
+- [x] Section is compact; styling consistent with dashboard.
+- [x] `npm run check` passes.
+
+---
+
+### Dashboard — integrate Rent vs. market into Property at a glance (single property)
+
+**Priority:** Medium. UX polish — the standalone "Rent vs. market" section feels odd with one property.
+
+**Scope:** When the user has a single property, integrate the rent vs. market line into the "Property at a glance" card instead of showing it as a separate section. When multiple properties, keep the separate Rent vs. market section (optionally style as card for consistency).
+
+**Requirements:**
+- **Single property:** Add "Rent vs. market" as a fifth row in the "Property at a glance" card grid (Value, Debt, Equity, Monthly cash flow, Rent vs. market).
+- When benchmark exists and fresh: show "1.6% below market" or "X% above market" or "At market".
+- When benchmark stale or missing: show "Add benchmark" or "Refresh benchmark" as a link to the property detail page.
+- **Single property:** Remove the standalone Rent vs. market section from the dashboard (it's now in the card).
+- **Multiple properties:** Keep the Rent vs. market section as-is (or optionally give it card styling to match). Do not show "Property at a glance" for multi-property — that card is single-property only.
+
+**Files:**
+- `app/(app)/dashboard/page.tsx` — conditionally render RentVsMarketSection only when propertyCount > 1.
+- `app/(app)/dashboard/dashboard-charts.tsx` — add Rent vs. market row to "Property at a glance" card; needs benchmark data passed in (marketRent, marketRentAsOf, propertyId for link).
+
+**Acceptance criteria**
+
+- [x] Single property: "Property at a glance" card includes Rent vs. market row (fresh/stale/missing handled).
+- [x] Single property: Standalone Rent vs. market section is hidden.
+- [x] Multiple properties: Rent vs. market section remains visible; Property at a glance card not shown (existing behavior).
+- [x] Rent vs. market row links to property when stale/missing ("Refresh benchmark" / "Add benchmark").
+- [x] `npm run check` passes.
+
+---
+
+### Benchmark refresh — inline "Refresh estimate" button
+
+**Priority:** Medium. UX — action where you need it; no navigation required.
+
+**Scope:** Replace links to property page with inline "Refresh estimate" buttons that call the benchmark refresh API directly. Use on dashboard (Property at a glance) and properties list.
+
+**Requirements:**
+- **Dashboard (Property at a glance):** When benchmark stale or missing, show "Refresh estimate" **button** (not link). Button calls `POST /api/properties/[id]/benchmark/refresh`, shows loading, handles errors, then `router.refresh()`.
+- **Properties list:** Restructure property cards so the benchmark line is **outside** the card Link (valid HTML). When no benchmark or stale: show "Refresh estimate" **button** that does the same. When fresh: show label only (no button).
+- **Label:** Use "Refresh estimate" for both add (first time) and refresh (stale).
+- Reuse or extend `BenchmarkRefreshButton`; add optional `label` prop if needed.
+- Properties list: benchmark area must be a sibling to the Link, not nested (button inside anchor is invalid).
+
+**Acceptance criteria**
+
+- [x] Dashboard: stale/missing benchmark shows "Refresh estimate" button; clicking refreshes inline (no navigation).
+- [x] Properties list: benchmark line outside card Link; "Refresh estimate" button when no/stale benchmark.
+- [x] Button shows loading state; error displayed inline on failure.
+- [x] Property detail page: keep existing BenchmarkRefreshButton (optional: rename label to "Refresh estimate" for consistency).
+- [x] `npm run check` passes.
+
+---
+
+### Admin membership override
+
+**Priority:** Medium. Quick win — admins can set tier manually for demos, partners, goodwill. See `docs/admin-membership-override-proposal.md`.
+
+**Scope:** Add `subscriptionTierOverride` to User; admins can set/clear via admin UI. Effective tier = override ?? subscriptionTier. Billing sync skips downgrade when override set.
+
+**1. Schema**
+- Add `subscriptionTierOverride String?` to User model. Migration.
+
+**2. Lib — `lib/plans.ts`**
+- Add `getEffectiveTier(user: { subscriptionTier, subscriptionTierOverride? }): string`. Returns override when valid (free|investor|pro); else subscriptionTier ?? "free".
+
+**3. Consumers — use getEffectiveTier**
+- Dashboard, properties, layout, settings, deals, analyze, plans pages.
+- API: properties, deals, estimates/rent, estimates/value, benchmark/refresh, import, export, portfolio/summary, billing/status, me.
+- App layout client (banner).
+
+**4. Billing sync**
+- If `subscriptionTierOverride` set, return early; do not downgrade.
+
+**5. Admin API**
+- `PATCH /api/admin/users/[id]/tier` — body `{ tier: "free" | "investor" | "pro" | null }`. Admin only. Set or clear override.
+
+**6. Admin UI**
+- Users table: add tier dropdown (Free, Investor, Pro, Clear override) per row. On change, call PATCH API. Show effective tier and override status.
+
+**Acceptance criteria**
+
+- [x] Schema has subscriptionTierOverride; migration applied.
+- [x] getEffectiveTier in lib/plans.ts; all consumers use it.
+- [x] Billing sync skips downgrade when override set.
+- [x] PATCH /api/admin/users/[id]/tier works; admin only.
+- [x] Admin users table has tier control; can set/clear override.
+- [x] `npm run check` passes.
+
+---
+
+### Settings — show override status in Plan & billing
+
+**Priority:** Low. UX clarity for users with admin override.
+
+**Scope:** On the Settings page, when the user has `subscriptionTierOverride` set, show that their plan is overridden and display their underlying plan (subscriptionTier from Stripe).
+
+**Requirements:**
+- When `subscriptionTierOverride` is set: show "Current plan: Pro (admin override)" (or Investor/Free as applicable).
+- Add a row "Underlying plan: Free" (or whatever subscriptionTier is) so they know what their Stripe/billing status is.
+- When no override: keep current display (just "Current plan: Pro" etc.); no underlying row.
+
+**File:** `app/(app)/settings/page.tsx`
+
+**Acceptance criteria**
+
+- [x] Override users: "Current plan: X (admin override)" and "Underlying plan: Y".
+- [x] Non-override users: unchanged (just "Current plan: X").
+- [x] `npm run check` passes.
+
+---
+
+### Sentry error tracking
+
+**Priority:** Medium. Production visibility; catch errors before users report them.
+
+**Scope:** Integrate Sentry for error monitoring. Free tier (5K errors/month) is sufficient for launch. Use `@sentry/nextjs` with Next.js wizard or manual setup.
+
+**Requirements:**
+- Install `@sentry/nextjs`.
+- Wrap `next.config.ts` (or `next.config.js`) with `withSentryConfig`.
+- Create SDK init files: `instrumentation.ts` (or `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` per Next.js/Sentry docs).
+- Env: `SENTRY_DSN` (required); `SENTRY_AUTH_TOKEN` (optional, for source maps).
+- Only enable in production (`NODE_ENV === "production"`) or when `SENTRY_DSN` is set.
+- Add `SENTRY_DSN` and `SENTRY_AUTH_TOKEN` to `.env.example` with placeholder comments.
+
+**References:**
+- [Sentry for Next.js](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
+- `npx @sentry/wizard@latest -i nextjs` for automated setup
+
+**Acceptance criteria**
+
+- [x] Sentry SDK installed and configured for Next.js.
+- [x] Errors in production are captured and visible in Sentry dashboard.
+- [x] Env vars documented in .env.example.
 - [x] `npm run check` passes.
 
 ---

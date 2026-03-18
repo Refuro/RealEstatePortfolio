@@ -63,6 +63,19 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [estimateError, setEstimateError] = useState<string | null>(null);
   const [valueEstimateLoading, setValueEstimateLoading] = useState(false);
   const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
+  const [lastValueEstimate, setLastValueEstimate] = useState<string>("");
+  const [lastRentEstimate, setLastRentEstimate] = useState<string>("");
+
+  function parseCurrencyNum(s: string): number {
+    const cleaned = String(s ?? "").replace(/,/g, "").replace(/[^0-9.]/g, "");
+    const n = parseFloat(cleaned);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function clearEstimatesOnAddressChange() {
+    setLastValueEstimate("");
+    setLastRentEstimate("");
+  }
   const [propertyType, setPropertyType] = useState(property?.propertyType ?? "single_family");
   const [units, setUnits] = useState(property?.units ?? 1);
   const [purchasePrice, setPurchasePrice] = useState(property?.purchasePrice ?? "");
@@ -93,6 +106,20 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
     while (arr.length < unitCount) arr.push("");
     return arr.length > unitCount ? arr.slice(0, unitCount) : arr;
   })();
+  const totalRentDisplay = unitRentsDisplay.reduce(
+    (s, r) => s + parseCurrencyNum(r),
+    0
+  );
+  const valueMatchesLastEstimate = Boolean(
+    lastValueEstimate &&
+      parseCurrencyNum(currentEstimatedValue) === parseCurrencyNum(lastValueEstimate)
+  );
+  const rentMatchesLastEstimate = Boolean(
+    lastRentEstimate &&
+      (isMulti && hasExistingUnitRents
+        ? Math.round(totalRentDisplay) === parseCurrencyNum(lastRentEstimate)
+        : parseCurrencyNum(currentMonthlyRent) === parseCurrencyNum(lastRentEstimate))
+  );
   const values = property
     ? {
         nickname: property.nickname ?? "",
@@ -141,7 +168,9 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const res = await fetch(`/api/estimates/value?${params.toString()}`);
       const json = (await res.json()) as { value?: number; error?: string };
       if (json.value != null && Number.isFinite(json.value)) {
-        setCurrentEstimatedValue(String(Math.round(json.value)));
+        const val = String(Math.round(json.value));
+        setCurrentEstimatedValue(val);
+        setLastValueEstimate(val);
       } else {
         setValueEstimateError(json.error ?? "Estimate unavailable for this address");
       }
@@ -179,14 +208,17 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       if (isMulti) params.set("units", String(unitCount));
       if (bedrooms.trim()) params.set("bedrooms", bedrooms);
       if (bathrooms.trim()) params.set("bathrooms", bathrooms);
+      if (property?.id) params.set("propertyId", property.id);
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
+        const val = String(Math.round(json.rent));
+        setLastRentEstimate(val);
         if (isMulti && hasExistingUnitRents) {
           const perUnit = Math.round(json.rent / unitCount);
           setUnitRents(Array(unitCount).fill(String(perUnit)));
         } else {
-          setCurrentMonthlyRent(String(Math.round(json.rent)));
+          setCurrentMonthlyRent(val);
         }
       } else {
         setEstimateError(json.error ?? "Estimate unavailable for this address");
@@ -324,6 +356,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             required
             autoComplete="street-address"
             defaultValue={values.addressLine1}
+            onChange={clearEstimatesOnAddressChange}
             className={inputClass}
           />
         </div>
@@ -338,6 +371,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             type="text"
             autoComplete="address-line2"
             defaultValue={values.addressLine2}
+            onChange={clearEstimatesOnAddressChange}
             className={inputClass}
           />
         </div>
@@ -354,6 +388,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               required
               autoComplete="address-level2"
               defaultValue={values.city}
+              onChange={clearEstimatesOnAddressChange}
               className={inputClass}
             />
           </div>
@@ -366,6 +401,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               name="state"
               required
               defaultValue={values.state || ""}
+              onChange={clearEstimatesOnAddressChange}
               className={inputClass}
             >
               <option value="">Select state</option>
@@ -388,6 +424,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               inputMode="numeric"
               autoComplete="postal-code"
               defaultValue={values.zipCode}
+              onChange={clearEstimatesOnAddressChange}
               className={inputClass}
             />
           </div>
@@ -585,7 +622,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               <button
                 type="button"
                 onClick={handleEstimateValue}
-                disabled={valueEstimateLoading}
+                disabled={valueEstimateLoading || valueMatchesLastEstimate}
                 className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
               >
                 {valueEstimateLoading ? "Estimating…" : "Estimate value"}
@@ -633,7 +670,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 <button
                   type="button"
                   onClick={handleEstimateRent}
-                  disabled={estimateLoading}
+                  disabled={estimateLoading || rentMatchesLastEstimate}
                   className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
                 >
                   {estimateLoading ? "Estimating…" : "Estimate rent"}
@@ -668,7 +705,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 <button
                   type="button"
                   onClick={handleEstimateRent}
-                  disabled={estimateLoading}
+                  disabled={estimateLoading || rentMatchesLastEstimate}
                   className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
                 >
                   {estimateLoading ? "Estimating…" : "Estimate rent"}
@@ -699,7 +736,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 <button
                   type="button"
                   onClick={handleEstimateRent}
-                  disabled={estimateLoading}
+                  disabled={estimateLoading || rentMatchesLastEstimate}
                   className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
                 >
                   {estimateLoading ? "Estimating…" : "Estimate rent"}

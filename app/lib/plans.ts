@@ -24,6 +24,18 @@ export const RENTCAST_HOURLY_LIMITS = {
 
 export type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
 
+/** Effective tier = override when valid (free|investor|pro); else subscriptionTier ?? "free". */
+export function getEffectiveTier(user: {
+  subscriptionTier: string | null;
+  subscriptionTierOverride?: string | null;
+}): string {
+  const override = user.subscriptionTierOverride?.trim().toLowerCase();
+  if (override && ["free", "investor", "pro"].includes(override)) {
+    return override;
+  }
+  return (user.subscriptionTier ?? "free").toLowerCase();
+}
+
 export function getRentCastHourlyLimit(tier: string): number {
   const key = tier.toLowerCase() as PlanTier;
   return RENTCAST_HOURLY_LIMITS[key] ?? RENTCAST_HOURLY_LIMITS.free;

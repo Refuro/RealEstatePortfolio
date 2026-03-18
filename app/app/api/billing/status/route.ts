@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit } from "@/lib/plans";
+import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 
 export async function GET() {
   const user = await getActiveAppUser();
@@ -16,11 +16,12 @@ export async function GET() {
   const propertyCount = await prisma.property.count({
     where: { userId: user.id },
   });
-  const limit = getPropertyLimit(user.subscriptionTier);
+  const effectiveTier = getEffectiveTier(user);
+  const limit = getPropertyLimit(effectiveTier);
   const canAddMore = propertyCount < limit;
 
   return NextResponse.json({
-    subscriptionTier: user.subscriptionTier,
+    subscriptionTier: effectiveTier,
     propertyCount,
     propertyLimit: limit,
     canAddMore,

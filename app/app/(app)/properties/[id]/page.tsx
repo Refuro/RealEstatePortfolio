@@ -7,6 +7,7 @@ import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import { getEffectiveBalance, getBalanceSource } from "@/lib/amortization";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { PropertyActions } from "../property-actions";
+import { BenchmarkDisplay } from "../benchmark-display";
 import { MortgageSection } from "../mortgage-section";
 import { PropertyMetricsSection } from "../property-metrics-section";
 import { ScenarioSection } from "./scenario-section";
@@ -132,6 +133,12 @@ export default async function PropertyDetailPage({
                   `$${totalRent.toLocaleString()}`
                 )}
               </dd>
+              <BenchmarkDisplay
+                propertyId={property.id}
+                totalRent={totalRent}
+                marketRent={property.marketRent != null ? Number(property.marketRent) : null}
+                marketRentAsOf={property.marketRentAsOf}
+              />
             </div>
             {(property.bedrooms != null || property.bathrooms != null || property.unitMix) && (
               <div>

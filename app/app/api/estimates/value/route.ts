@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { fetchValueEstimate } from "@/lib/integrations/rentcast";
-import { getRentCastHourlyLimit } from "@/lib/plans";
+import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { US_STATES } from "@/lib/us-states";
 
 const valueEstimateQuerySchema = z.object({
@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tier = user.subscriptionTier ?? "free";
+  const tier = getEffectiveTier(user);
   const hourlyLimit = getRentCastHourlyLimit(tier);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const recentCallCount = await prisma.rentCastApiCall.count({

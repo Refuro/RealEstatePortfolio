@@ -3,7 +3,7 @@ import { z } from "zod";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
-import { getRentCastHourlyLimit } from "@/lib/plans";
+import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { US_STATES } from "@/lib/us-states";
 
 const rentEstimateQuerySchema = z.object({
@@ -25,6 +25,7 @@ const rentEstimateQuerySchema = z.object({
   units: z.coerce.number().int().min(1).max(999).optional(),
   bedrooms: z.coerce.number().int().min(1).max(10).optional(),
   bathrooms: z.coerce.number().min(0.5).max(10).optional(),
+  propertyId: z.string().optional(),
 });
 
 export async function GET(req: NextRequest) {
@@ -33,7 +34,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const tier = user.subscriptionTier ?? "free";
+  const tier = getEffectiveTier(user);
   const hourlyLimit = getRentCastHourlyLimit(tier);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   const recentCallCount = await prisma.rentCastApiCall.count({
@@ -57,6 +58,7 @@ export async function GET(req: NextRequest) {
     units: searchParams.get("units") ?? undefined,
     bedrooms: searchParams.get("bedrooms") ?? undefined,
     bathrooms: searchParams.get("bathrooms") ?? undefined,
+    propertyId: searchParams.get("propertyId") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -88,10 +90,22 @@ export async function GET(req: NextRequest) {
       },
       apiKey
     );
+    const now = new Date();
+    if (parsed.data.propertyId) {
+      await prisma.property.updateMany({
+        where: { id: parsed.data.propertyId, userId: user.id },
+        data: { marketRent: result.rent, marketRentAsOf: now },
+      });
+    }
     await prisma.rentCastApiCall.create({
-      data: { userId: user.id },
+      data: { userId: user.id, propertyId: parsed.data.propertyId ?? null },
     });
-    return NextResponse.json({ rent: result.rent });
+    const marketRentAsOfStr = now.toISOString().slice(0, 10);
+    return NextResponse.json({
+      rent: result.rent,
+      marketRent: result.rent,
+      marketRentAsOf: marketRentAsOfStr,
+    });
   } catch (err) {
     await prisma.rentCastApiCall.create({
       data: { userId: user.id },

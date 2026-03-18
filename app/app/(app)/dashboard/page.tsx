@@ -3,10 +3,18 @@ import { getAppUser } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit } from "@/lib/plans";
+import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
-import { getPropertyTotalRent } from "@/lib/property-utils";
+import {
+  getPropertyTotalRent,
+  type PropertyWithRent,
+} from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
+import {
+  isBenchmarkFresh,
+  getBenchmarkPct,
+  getBenchmarkLabel,
+} from "@/lib/benchmark-utils";
 import {
   computePortfolioMetrics,
   type PortfolioPropertyInput,
@@ -14,6 +22,67 @@ import {
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
+
+type PropertyForBenchmark = PropertyWithRent & {
+  id: string;
+  nickname: string | null;
+  addressLine1: string;
+  marketRent: { toString(): string } | number | null;
+  marketRentAsOf: Date | null;
+};
+
+function RentVsMarketSection({
+  properties,
+}: {
+  properties: PropertyForBenchmark[];
+}) {
+  const withFreshBenchmark = properties.filter(
+    (p) =>
+      p.marketRent != null &&
+      Number(p.marketRent) > 0 &&
+      isBenchmarkFresh(p.marketRentAsOf)
+  );
+  const marketRentNum = (p: PropertyForBenchmark) =>
+    p.marketRent != null ? Number(p.marketRent) : 0;
+  const sorted = [...withFreshBenchmark].sort((a, b) => {
+    const pctA = getBenchmarkPct(getPropertyTotalRent(a), marketRentNum(a));
+    const pctB = getBenchmarkPct(getPropertyTotalRent(b), marketRentNum(b));
+    return pctA - pctB;
+  });
+  const display = sorted.slice(0, 5);
+
+  return (
+    <div className="mt-8">
+      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
+        Rent vs. market
+      </h2>
+      {display.length === 0 ? (
+        <p className="mt-3 text-sm text-muted">
+          <Link
+            href="/properties"
+            className="font-medium text-foreground hover:underline"
+          >
+            See how your rent compares to market
+          </Link>
+        </p>
+      ) : (
+        <ul className="mt-3 space-y-1">
+          {display.map((p) => (
+            <li key={p.id}>
+              <Link
+                href={`/properties/${p.id}`}
+                className="text-sm text-muted hover:text-foreground hover:underline"
+              >
+                {p.nickname || p.addressLine1}:{" "}
+                {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const user = await getAppUser();
@@ -24,7 +93,7 @@ export default async function DashboardPage() {
     include: { mortgages: true },
   });
 
-  const propertyLimit = getPropertyLimit(user.subscriptionTier ?? "free");
+  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
   const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
 
   type PropertyWithMortgages = (typeof properties)[number];
@@ -171,7 +240,34 @@ export default async function DashboardPage() {
         )}
       </div>
 
-      <DashboardCharts data={chartData} propertyCount={metrics.propertyCount} />
+      {metrics.propertyCount > 1 && (
+        <RentVsMarketSection properties={properties} />
+      )}
+
+      <DashboardCharts
+        data={chartData}
+        propertyCount={metrics.propertyCount}
+        benchmark={
+          metrics.propertyCount === 1 && properties[0]
+            ? (() => {
+                const p = properties[0] as PropertyForBenchmark;
+                const userRent = getPropertyTotalRent(p);
+                const marketRent =
+                  p.marketRent != null ? Number(p.marketRent) : 0;
+                const fresh =
+                  marketRent > 0 && isBenchmarkFresh(p.marketRentAsOf);
+                if (fresh) {
+                  return {
+                    benchmarkLabel: getBenchmarkLabel(userRent, marketRent),
+                  };
+                }
+                return {
+                  propertyId: p.id,
+                };
+              })()
+            : undefined
+        }
+      />
 
       {metrics.propertyCount === 1 && (
         <div className="mt-6 rounded-lg border border-border bg-card p-5">

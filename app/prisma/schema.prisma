@@ -19,7 +19,8 @@ model User {
   email                 String
   firstName             String?
   lastName              String?
-  subscriptionTier      String    @default("free") // free | investor | pro
+  subscriptionTier       String    @default("free") // free | investor | pro
+  subscriptionTierOverride String? // When set, overrides Stripe; null = use subscriptionTier
   stripeCustomerId      String?
   ownershipDisplayMode  String?   // proportional (default) | full_liability
   deletedAt             DateTime?
@@ -81,6 +82,8 @@ model Property {
   vacancyPercent         Int      @default(5) // 0-100, expected vacancy; reduces rent in cash flow
   cashInvested           Decimal? @db.Decimal(14, 2)
   notes                  String?
+  marketRent             Decimal? @db.Decimal(12, 2)
+  marketRentAsOf         DateTime? @db.Date
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 

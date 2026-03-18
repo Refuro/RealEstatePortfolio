@@ -33,6 +33,8 @@ function serializeProperty(p: {
   currentMonthlyExpenses: { toString(): string };
   cashInvested: { toString(): string } | null;
   notes: string | null;
+  marketRent?: { toString(): string } | null;
+  marketRentAsOf?: Date | null;
   createdAt: Date;
   updatedAt: Date;
   mortgages: Array<{
@@ -58,6 +60,8 @@ function serializeProperty(p: {
     unitMix: p.unitMix ?? null,
     currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
     cashInvested: p.cashInvested?.toString() ?? null,
+    marketRent: p.marketRent?.toString() ?? null,
+    marketRentAsOf: p.marketRentAsOf?.toISOString().slice(0, 10) ?? null,
     ownershipPercent: p.ownershipPercent ?? 100,
     mortgages: p.mortgages.map((m) => ({
       ...m,
@@ -160,6 +164,8 @@ export async function PATCH(
   if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
+  if (data.marketRent !== undefined) updatePayload.marketRent = data.marketRent;
+  if (data.marketRentAsOf !== undefined) updatePayload.marketRentAsOf = data.marketRentAsOf;
 
   if (data.currentMonthlyRent !== undefined && !(data.unitRents !== undefined && Array.isArray(data.unitRents) && data.unitRents.length > 0)) {
     const total = Number(data.currentMonthlyRent) || 0;
