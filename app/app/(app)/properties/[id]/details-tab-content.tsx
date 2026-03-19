@@ -695,10 +695,10 @@ export function DetailsTabContent({
         <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Mortgage terms</h3>
           <Link
-            href={`/properties/${propertyId}/edit`}
+            href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
             className="text-xs font-medium text-accent hover:underline"
           >
-            Edit property inputs
+            Open Mortgage workspace
           </Link>
         </div>
         <MortgageSection

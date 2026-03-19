@@ -5,6 +5,7 @@
 
 import {
   computePropertyMetrics,
+  getAnnualDebtService,
   type PropertyMetricsInput,
   type OwnershipDisplayMode,
 } from "./property-metrics";
@@ -66,7 +67,7 @@ export function computePortfolioMetrics(
   let totalMonthlyCashFlow = 0;
   let totalNoi = 0;
   let totalCashInvested = 0;
-  let totalMonthlyPayment = 0;
+  let totalAnnualDebtService = 0;
 
   for (const p of properties) {
     const metrics = computePropertyMetrics(p, displayMode);
@@ -78,9 +79,11 @@ export function computePortfolioMetrics(
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
     totalNoi += metrics.noi;
     totalEquity += metrics.equity;
-    totalMonthlyPayment += fullLiability
-      ? p.totalMonthlyPayment
-      : p.totalMonthlyPayment * scale;
+    totalAnnualDebtService += getAnnualDebtService(
+      p.totalMonthlyPayment,
+      p.ownershipPercent,
+      displayMode
+    );
 
     if (fullLiability) {
       totalDebt += p.totalMortgageBalance; // 100% debt
@@ -94,7 +97,6 @@ export function computePortfolioMetrics(
   }
 
   const totalAnnualRent = totalMonthlyRent * 12;
-  const totalAnnualDebtService = totalMonthlyPayment * 12;
   const dscr =
     totalAnnualDebtService > 0 ? totalNoi / totalAnnualDebtService : null;
 

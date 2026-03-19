@@ -1,17 +1,73 @@
 # Documentation
 
-| Doc | Purpose |
-|-----|--------|
-| [product-overview.md](product-overview.md) | **Shareable overview** — Full application outline for sharing with others |
-| [ai-development-process-extraction.md](ai-development-process-extraction.md) | **Process extraction** — Replicate this AI-assisted workflow on new projects |
-| [mvp-spec.md](mvp-spec.md) | Product vision, scope, and MVP features |
-| [engineering-spec.md](engineering-spec.md) | Engineering backlog, stack, modules, and build order |
-| [setup.md](setup.md) | Local setup and deployment notes |
-| [manual-steps.md](manual-steps.md) | Manual steps to do yourself (Vercel, Clerk, Stripe, etc.) |
-| [tasks.md](tasks.md) | Builder task list (current work) |
-| [roadmap.md](roadmap.md) | Value-add backlog, initiatives, long-term vision |
-| [architecture-and-build-practices.md](architecture-and-build-practices.md) | Architecture principles, security, anti-spaghetti, value-add roadmap |
-| [pm-agent-workflow.md](pm-agent-workflow.md) | PM agent: keep builder moving through phases and gate risk |
-| [pm-review-checklist.md](pm-review-checklist.md) | PM review checklist (use every phase approval) |
-| [security-notes.md](security-notes.md) | Security notes (recorded as we go) |
-| [run-and-smoke-test.md](run-and-smoke-test.md) | How to run the app, what works without envs, smoke-test checklist |
+## Quick links
+
+- [Tasks](tasks.md) — Current builder work
+- [Roadmap](reference/roadmap.md) — Backlog
+- [Run & smoke test](setup/run-and-smoke-test.md)
+- [Manual steps](setup/manual-steps.md)
+
+## Reference
+
+- [Product overview](reference/product-overview.md)
+- [MVP spec](reference/mvp-spec.md)
+- [Engineering spec](reference/engineering-spec.md)
+- [Design spec](policies/design-spec.md)
+- [Architecture & build practices](architecture-and-build-practices.md)
+
+## Policies (canonical)
+
+- [Ownership metrics](policies/ownership-metrics.md)
+- [Analytics math policy](policies/analytics-math-policy.md)
+- [Shell risk policy](policies/shell-risk-policy.md)
+
+## Process
+
+- [PM agent workflow](process/pm-agent-workflow.md)
+- [PM review checklist](process/pm-review-checklist.md)
+- [Code audit process](process/code-audit-process.md)
+- [Math audit process](process/math-logic-audit.md)
+- [Audit report template](process/audit-report-template.md)
+- [Feature/UX audit process](process/feature-ux-audit-process.md)
+- [Security audit process](process/security-audit-process.md)
+- [Performance/cost audit process](process/performance-cost-audit-process.md)
+- [Reliability/ops audit process](process/reliability-ops-audit-process.md)
+- [Data integrity audit process](process/data-integrity-audit-process.md)
+- [Business/valuation audit process](process/business-valuation-audit-process.md)
+- [Growth funnel audit process](process/growth-funnel-audit-process.md)
+- [Agent governance audit process](process/agent-governance-audit-process.md)
+
+## Audits
+
+- [Code audits](audits/code/)
+- [Math audits](audits/math/)
+- [Feature/UX audits](audits/feature/)
+- [Security audits](audits/security/)
+- [Performance/cost audits](audits/performance-cost/)
+- [Reliability/ops audits](audits/reliability-ops/)
+- [Data integrity audits](audits/data-integrity/)
+- [Business/valuation audits](audits/business/)
+- [Growth funnel audits](audits/growth-funnel/)
+- [Agent governance audits](audits/agent-governance/)
+
+## Proposals
+
+- [Refinance / payoff](proposals/refinance-payoff-proposal.md)
+
+## Security
+
+- [Security notes](security/security-notes.md)
+- [Security audit](security/security-audit.md)
+
+## Other
+
+- [Cursor agent setup](cursor-agent-setup.md)
+- [AI development process](ai-development-process-extraction.md)
+- [Visual assets guide](visual-assets-guide.md)
+- [Plaid considerations](plaid-considerations.md)
+- [Business launch checklist](business-launch-checklist.md)
+- [Owner notes](owner_notes/notes.md)
+
+## Archive
+
+Implemented proposals and deprecated docs: [archive/](archive/)

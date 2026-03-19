@@ -34,6 +34,7 @@ export function ScenarioSection({
   const [mortgageChange, setMortgageChange] = useState(0);
 
   const hasOverrides = rentChange !== 0 || valueChange !== 0 || mortgageChange !== 0;
+  const isFullLiability = displayMode === "full_liability";
 
   const adjustedRent = monthlyRent * (1 + rentChange / 100);
   const adjustedValue = estimatedValue * (1 + valueChange / 100);
@@ -86,10 +87,14 @@ export function ScenarioSection({
                 Effective rent = monthly rent × (1 − vacancy %). Then:
               </p>
               <p className="mt-1 font-mono text-xs">
-                (effective rent − expenses − mortgage) × ownership %
+                {isFullLiability
+                  ? "(effective rent × ownership %) − (expenses × ownership %) − mortgage"
+                  : "(effective rent − expenses − mortgage) × ownership %"}
               </p>
               <p className="mt-2">
-                In proportional mode, your share applies to the whole property: rent, expenses, and mortgage are all scaled by your ownership %. Vacancy reduces rent before the calculation.
+                {isFullLiability
+                  ? "In full liability mode, rent and expenses are ownership-scaled, but debt payment remains 100% to reflect joint liability."
+                  : "In proportional mode, rent, expenses, and mortgage payment are all scaled by your ownership %. Vacancy reduces rent before the calculation."}
               </p>
             </div>
           </details>

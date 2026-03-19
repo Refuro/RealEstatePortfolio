@@ -239,13 +239,13 @@ export default async function PropertiesPage({
             href="/modeling"
             className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
-            Open Modeling
+            Open Modeling workspace
           </Link>
           <Link
             href="/mortgage"
             className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
-            Open Mortgage
+            Open Mortgage workspace
           </Link>
         </div>
       </div>
@@ -424,14 +424,14 @@ export default async function PropertiesPage({
                         href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
                         className="text-sm font-medium text-foreground hover:underline"
                       >
-                        Model scenarios
+                        Open Modeling
                       </Link>
                       {p.mortgages.length > 0 ? (
                         <Link
                           href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
                           className="text-sm font-medium text-foreground hover:underline"
                         >
-                          Mortgage simulator
+                          Open Mortgage
                         </Link>
                       ) : (
                         <Link
@@ -520,14 +520,14 @@ export default async function PropertiesPage({
                           href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
                           className="font-medium text-foreground hover:underline"
                         >
-                          Model scenarios
+                          Open Modeling
                         </Link>
                         {p.mortgages.length > 0 ? (
                           <Link
                             href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
                             className="font-medium text-foreground hover:underline"
                           >
-                            Mortgage simulator
+                            Open Mortgage
                           </Link>
                         ) : (
                           <Link

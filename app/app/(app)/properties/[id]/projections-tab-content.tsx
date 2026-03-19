@@ -3,7 +3,12 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { getPiForAmortization } from "@/lib/amortization";
-import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
+import {
+  computeAnnualCashFlowFromAnnualInputs,
+  scaleLiabilityAmount,
+  type AnalyticsDebtServiceSource,
+  type OwnershipDisplayMode,
+} from "@/lib/metrics/property-metrics";
 import { formatCurrency } from "@/lib/format-currency";
 import {
   Area,
@@ -89,6 +94,11 @@ const PRESETS: Record<
 function getPctChange(current: number, baseline: number): number | null {
   if (baseline === 0) return null;
   return ((current - baseline) / Math.abs(baseline)) * 100;
+}
+
+function getCashFlowPositiveYear(rows: ProjectionRow[]): number | null {
+  const row = rows.find((r) => r.annualCashFlow > 0);
+  return row ? row.year : null;
 }
 
 function getRemainingTermMonths(startDateIso: string, termYears: number): number {
@@ -185,6 +195,36 @@ function projectLoanSeriesByMonth(
   return { balanceByMonth, debtServiceByMonth };
 }
 
+function getAnnualDebtServiceFullForYear({
+  source,
+  year,
+  debtServiceByMonth,
+  balanceByMonth,
+  allInMonthlyPayment,
+}: {
+  source: AnalyticsDebtServiceSource;
+  year: number;
+  debtServiceByMonth: number[];
+  balanceByMonth: number[];
+  allInMonthlyPayment: number;
+}): number {
+  if (source === "amortized_pi") {
+    return Array.from({ length: 12 }, (_, idx) => {
+      const monthIdx = year * 12 + idx + 1;
+      return debtServiceByMonth[monthIdx] ?? 0;
+    }).reduce((sum, v) => sum + v, 0);
+  }
+
+  let activeMonths = 0;
+  for (let idx = 0; idx < 12; idx++) {
+    const monthIdx = year * 12 + idx + 1;
+    const priorBalance = balanceByMonth[Math.max(0, monthIdx - 1)] ?? 0;
+    if (priorBalance > 0) activeMonths += 1;
+  }
+
+  return allInMonthlyPayment > 0 ? activeMonths * allInMonthlyPayment : 0;
+}
+
 export function ProjectionsTabContent({
   propertyId,
   workspaceVariant = "default",
@@ -219,7 +259,7 @@ export function ProjectionsTabContent({
   );
 
   const scale = ownershipPercent / 100;
-  const fullLiability = displayMode === "full_liability";
+  const cashFlowDebtServiceSource: AnalyticsDebtServiceSource = "all_in_payment";
 
   const projectionRows = useMemo<ProjectionRow[]>(() => {
     const rows: ProjectionRow[] = [];
@@ -230,16 +270,23 @@ export function ProjectionsTabContent({
       const rentForYear = monthlyRent * Math.pow(1 + rentGrowth / 100, year);
       const expenseForYear = monthlyExpenses * Math.pow(1 + expenseGrowth / 100, year);
       const effectiveRentMonthly = rentForYear * (1 - projectionVacancy / 100);
-      const annualDebtService = Array.from({ length: 12 }, (_, idx) => {
-        const monthIdx = year * 12 + idx + 1;
-        return projectedLoanSeries.debtServiceByMonth[monthIdx] ?? 0;
-      }).reduce((sum, v) => sum + v, 0);
+      const annualDebtServiceFull = getAnnualDebtServiceFullForYear({
+        source: cashFlowDebtServiceSource,
+        year,
+        debtServiceByMonth: projectedLoanSeries.debtServiceByMonth,
+        balanceByMonth: projectedLoanSeries.balanceByMonth,
+        allInMonthlyPayment: totalMonthlyPayment,
+      });
 
       const annualRentFull = effectiveRentMonthly * 12;
       const annualExpensesFull = expenseForYear * 12;
-      const annualCashFlowRaw = fullLiability
-        ? annualRentFull * scale - annualExpensesFull * scale - annualDebtService
-        : (annualRentFull - annualExpensesFull - annualDebtService) * scale;
+      const annualCashFlowRaw = computeAnnualCashFlowFromAnnualInputs({
+        annualRentFull,
+        annualExpensesFull,
+        annualDebtServiceFull,
+        ownershipPercent,
+        displayMode,
+      });
 
       const reinvestedContribution =
         reinvestCashFlow && annualCashFlowRaw > 0 ? annualCashFlowRaw * (reinvestPct / 100) : 0;
@@ -264,9 +311,11 @@ export function ProjectionsTabContent({
 
       rows.push({
         year,
-        label: year === 0 ? "Today" : `Year ${year}`,
+        label: year === 0 ? "Year 0 (Today snapshot)" : `Year ${year}`,
         cashFlowWindowLabel:
-          year === 0 ? "Next 12 months from today" : `Year ${year} to Year ${year + 1}`,
+          year === 0
+            ? "Forward 12-month cash flow: Today to Year 1"
+            : `Forward 12-month cash flow: Year ${year} to Year ${year + 1}`,
         propertyValue,
         loanBalance,
         equity,
@@ -285,13 +334,16 @@ export function ProjectionsTabContent({
     monthlyRent,
     projectedLoanSeries,
     projectionVacancy,
-    fullLiability,
     scale,
+    displayMode,
+    ownershipPercent,
     reinvestCashFlow,
     reinvestPct,
     rentGrowth,
+    totalMonthlyPayment,
     totalMortgageBalance,
     valueGrowth,
+    cashFlowDebtServiceSource,
   ]);
 
   const baselineLoanSeries = useMemo(
@@ -307,16 +359,23 @@ export function ProjectionsTabContent({
       const expenseForYear =
         monthlyExpenses * Math.pow(1 + PRESETS.base.expenseGrowth / 100, year);
       const effectiveRentMonthly = rentForYear * (1 - PRESETS.base.vacancy / 100);
-      const annualDebtService = Array.from({ length: 12 }, (_, idx) => {
-        const monthIdx = year * 12 + idx + 1;
-        return baselineLoanSeries.debtServiceByMonth[monthIdx] ?? 0;
-      }).reduce((sum, v) => sum + v, 0);
+      const annualDebtServiceFull = getAnnualDebtServiceFullForYear({
+        source: cashFlowDebtServiceSource,
+        year,
+        debtServiceByMonth: baselineLoanSeries.debtServiceByMonth,
+        balanceByMonth: baselineLoanSeries.balanceByMonth,
+        allInMonthlyPayment: totalMonthlyPayment,
+      });
 
       const annualRentFull = effectiveRentMonthly * 12;
       const annualExpensesFull = expenseForYear * 12;
-      const annualCashFlow = fullLiability
-        ? annualRentFull * scale - annualExpensesFull * scale - annualDebtService
-        : (annualRentFull - annualExpensesFull - annualDebtService) * scale;
+      const annualCashFlow = computeAnnualCashFlowFromAnnualInputs({
+        annualRentFull,
+        annualExpensesFull,
+        annualDebtServiceFull,
+        ownershipPercent,
+        displayMode,
+      });
       if (year > 0) runningCashFlow += annualCashFlow;
 
       const monthIndex = year * 12;
@@ -331,9 +390,11 @@ export function ProjectionsTabContent({
 
       rows.push({
         year,
-        label: year === 0 ? "Today" : `Year ${year}`,
+        label: year === 0 ? "Year 0 (Today snapshot)" : `Year ${year}`,
         cashFlowWindowLabel:
-          year === 0 ? "Next 12 months from today" : `Year ${year} to Year ${year + 1}`,
+          year === 0
+            ? "Forward 12-month cash flow: Today to Year 1"
+            : `Forward 12-month cash flow: Year ${year} to Year ${year + 1}`,
         propertyValue,
         loanBalance,
         equity,
@@ -343,10 +404,32 @@ export function ProjectionsTabContent({
       });
     }
     return rows;
-  }, [baselineLoanSeries, estimatedValue, holdYears, monthlyExpenses, monthlyRent, totalMortgageBalance, fullLiability, scale]);
+  }, [
+    baselineLoanSeries,
+    estimatedValue,
+    holdYears,
+    monthlyExpenses,
+    monthlyRent,
+    totalMonthlyPayment,
+    totalMortgageBalance,
+    scale,
+    displayMode,
+    ownershipPercent,
+    cashFlowDebtServiceSource,
+  ]);
 
   const finalRow = projectionRows[projectionRows.length - 1];
   const baselineFinalRow = baselineRows[baselineRows.length - 1];
+  const finalMonthIndex = holdYears * 12;
+  const finalLoanBalanceFull =
+    projectedLoanSeries.balanceByMonth[finalMonthIndex] ??
+    projectedLoanSeries.balanceByMonth[projectedLoanSeries.balanceByMonth.length - 1] ??
+    totalMortgageBalance;
+  const projectedDebtExposure = scaleLiabilityAmount(
+    finalLoanBalanceFull,
+    ownershipPercent,
+    displayMode
+  );
   const grossSaleValue = finalRow?.propertyValue ?? 0;
   const sellingCosts = includeSaleAnalysis ? grossSaleValue * (sellingCostPct / 100) : 0;
   const netSaleProceeds = grossSaleValue - sellingCosts - (finalRow?.loanBalance ?? 0);
@@ -375,6 +458,12 @@ export function ProjectionsTabContent({
     baselineNetPosition
   );
   const holdYearCashFlow = finalRow?.annualCashFlow ?? 0;
+  const cashFlowPositiveYear = getCashFlowPositiveYear(projectionRows);
+  const payoffMonthWithinHorizon = projectedLoanSeries.balanceByMonth.findIndex(
+    (balance, month) => month > 0 && month <= projectionHorizonMonths && balance <= 0
+  );
+  const payoffYearWithinHorizon =
+    payoffMonthWithinHorizon > 0 ? Math.ceil(payoffMonthWithinHorizon / 12) : null;
 
   function applyPreset(id: Exclude<PresetId, "custom">) {
     const p = PRESETS[id];
@@ -402,7 +491,7 @@ export function ProjectionsTabContent({
   const summaryCards = (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="rounded-md border border-border bg-card p-3">
-        <p className="text-xs text-muted">Projected equity (year {holdYears})</p>
+        <p className="text-xs text-muted">Projected equity (end of Year {holdYears})</p>
         <p className="mt-1 text-sm font-medium text-foreground">
           {finalRow ? formatCurrency(finalRow.equity) : "—"}
         </p>
@@ -415,14 +504,19 @@ export function ProjectionsTabContent({
       </div>
 
       <div className="rounded-md border border-border bg-card p-3">
-        <p className="text-xs text-muted">Projected loan balance (year {holdYears})</p>
+        <p className="text-xs text-muted">Projected debt exposure (end of Year {holdYears})</p>
         <p className="mt-1 text-sm font-medium text-foreground">
-          {finalRow ? formatCurrency(finalRow.loanBalance) : "—"}
+          {formatCurrency(projectedDebtExposure)}
         </p>
+        {displayMode === "full_liability" && (
+          <p className="mt-1 text-xs text-muted">Full-liability lens applied</p>
+        )}
       </div>
 
       <div className="rounded-md border border-border bg-card p-3">
-        <p className="text-xs text-muted">Annual cash flow (year {holdYears})</p>
+        <p className="text-xs text-muted">
+          Annual cash flow (forward window: Year {holdYears} to Year {holdYears + 1})
+        </p>
         <p
           className={`mt-1 text-sm font-medium ${
             (finalRow?.annualCashFlow ?? 0) >= 0 ? "text-positive" : "text-negative"
@@ -440,13 +534,25 @@ export function ProjectionsTabContent({
             {annualCashFlowDeltaPct.toFixed(1)}% vs base
           </p>
         )}
+        <p className="mt-1 text-xs text-muted">
+          Cash-flow positive year:{" "}
+          {cashFlowPositiveYear == null
+            ? `Not reached through Year ${holdYears}`
+            : cashFlowPositiveYear === 0
+              ? "Year 0 (next 12 months)"
+              : `Year ${cashFlowPositiveYear}`}
+        </p>
       </div>
 
       <div className="rounded-md border border-border bg-card p-3">
         <p className="text-xs text-muted">
           {includeSaleAnalysis
-            ? "Net sale proceeds + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")
-            : "Equity + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")}
+            ? `Exit value at Year ${holdYears} + cumulative cash flow (Years 1-${holdYears})${
+                reinvestCashFlow ? " + reinvested balance" : ""
+              }`
+            : `Equity at Year ${holdYears} + cumulative cash flow (Years 1-${holdYears})${
+                reinvestCashFlow ? " + reinvested balance" : ""
+              }`}
         </p>
         <p className="mt-1 text-sm font-medium text-foreground">
           {formatCurrency(includeSaleAnalysis ? saleAdjustedNetPosition : netPosition)}
@@ -465,7 +571,7 @@ export function ProjectionsTabContent({
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="rounded-md border border-border bg-subtle/30 p-3">
-          <p className="text-xs text-muted">Reinvested balance (year {holdYears})</p>
+          <p className="text-xs text-muted">Reinvested balance (end of Year {holdYears})</p>
           <p className="mt-1 text-sm font-medium text-foreground">
             {formatCurrency(reinvestCashFlow ? (finalRow?.reinvestmentBalance ?? 0) : 0)}
           </p>
@@ -483,6 +589,12 @@ export function ProjectionsTabContent({
               ? `Compounding at value growth (${valueGrowth.toFixed(1)}%/yr)`
               : "Compounding off"}
           </p>
+          {reinvestCashFlow && (
+            <p className="mt-1 text-xs text-muted">
+              Positive annual cash flow contributions continue through the hold year, including
+              post-payoff years when debt service falls to zero.
+            </p>
+          )}
         </div>
       </div>
 
@@ -710,8 +822,16 @@ export function ProjectionsTabContent({
             </div>
           </div>
           <p className={`mt-2 text-xs text-muted ${reinvestCashFlow ? "opacity-100" : "opacity-0"}`}>
-            Applies only to positive annual cash flow.
+            Applies only to positive annual cash flow in each forward 12-month window. Reinvestment
+            contributions continue through the hold year, including after payoff if it occurs.
           </p>
+          {reinvestCashFlow && (
+            <p className="mt-1 text-xs text-muted">
+              {payoffYearWithinHorizon != null
+                ? `Projected payoff occurs around Year ${payoffYearWithinHorizon}; post-payoff cash flow may increase because debt service drops.`
+                : `No full payoff projected by Year ${holdYears}; debt service remains in effect through this horizon.`}
+            </p>
+          )}
         </div>
 
         <div className="rounded-lg border border-border/70 bg-background/55 p-4">
@@ -755,7 +875,8 @@ export function ProjectionsTabContent({
       </h3>
       <p className="mb-3 text-xs text-muted">
         Property value grows by your value-growth input. Loan balance declines using current mortgage
-        terms plus optional extra principal. Equity is value minus balance.
+        terms plus optional extra principal. Equity is value minus balance. Annual cash flow is shown
+        as a forward 12-month window for each year marker.
       </p>
       <div className={isModelingWorkspace ? "h-[300px] xl:flex-1 xl:min-h-[340px]" : "h-[240px] sm:h-[300px] lg:h-[340px]"}>
         <ResponsiveContainer width="100%" height="100%">
@@ -820,7 +941,9 @@ export function ProjectionsTabContent({
       Baseline inputs: rent {formatCurrency(monthlyRent)}/mo, expenses {formatCurrency(monthlyExpenses)}
       /mo, debt service {formatCurrency(totalMonthlyPayment)}/mo, ownership {ownershipPercent.toFixed(1)}%, cash invested{" "}
       {cashInvested != null ? formatCurrency(cashInvested) : "—"}. Baseline for % deltas uses the
-      Base preset with no extra principal and no reinvestment, using the same ownership mode.
+      Base preset with no extra principal and no reinvestment, using the same ownership mode. Year 0
+      is today&apos;s balance/value snapshot and annual cash flow at each marker reflects the next
+      12-month window using all-in monthly payment assumptions.
     </div>
   );
 

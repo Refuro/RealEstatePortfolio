@@ -1,0 +1,20 @@
+---
+description: Performance/cost audit command — run perf and cost audit to docs/audits/performance-cost
+alwaysApply: false
+---
+
+# Performance & Cost Audit Command
+
+When the user says **"run performance audit"**, **"performance audit"**, or **"run cost audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/performance-cost-audit-process.md`.
+2. Require output report at `docs/audits/performance-cost/YYYY-MM-DD-performance-cost-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/performance-cost-audit-process.md`
+- Reports: `docs/audits/performance-cost/`

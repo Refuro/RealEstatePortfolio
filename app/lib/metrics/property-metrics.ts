@@ -1,6 +1,6 @@
 /**
  * Property-level investment metrics (pure functions).
- * Formulas from docs/engineering-spec.md §6.
+ * Formulas from docs/reference/engineering-spec.md §6.
  */
 
 export type OwnershipDisplayMode = "proportional" | "full_liability";
@@ -31,6 +31,45 @@ export type PropertyMetrics = {
   ltv: number | null;
   cashOnCashReturn: number | null;
 };
+
+export type AnalyticsDebtServiceSource = "all_in_payment" | "amortized_pi";
+
+export function scaleLiabilityAmount(
+  amount: number,
+  ownershipPercent: number | undefined,
+  displayMode?: OwnershipDisplayMode | null
+): number {
+  const scale = (ownershipPercent ?? 100) / 100;
+  const fullLiability = displayMode === "full_liability";
+  return fullLiability ? amount : amount * scale;
+}
+
+export function getAnnualDebtService(
+  totalMonthlyPayment: number,
+  ownershipPercent: number | undefined,
+  displayMode?: OwnershipDisplayMode | null
+): number {
+  const monthlyDebtService = scaleLiabilityAmount(totalMonthlyPayment, ownershipPercent, displayMode);
+  return monthlyDebtService * 12;
+}
+
+export function computeAnnualCashFlowFromAnnualInputs({
+  annualRentFull,
+  annualExpensesFull,
+  annualDebtServiceFull,
+  ownershipPercent,
+  displayMode,
+}: {
+  annualRentFull: number;
+  annualExpensesFull: number;
+  annualDebtServiceFull: number;
+  ownershipPercent: number | undefined;
+  displayMode?: OwnershipDisplayMode | null;
+}): number {
+  const scale = (ownershipPercent ?? 100) / 100;
+  const debtService = scaleLiabilityAmount(annualDebtServiceFull, ownershipPercent, displayMode);
+  return annualRentFull * scale - annualExpensesFull * scale - debtService;
+}
 
 export function computePropertyMetrics(
   input: PropertyMetricsInput,

@@ -1,0 +1,20 @@
+---
+description: Reliability audit command — run reliability/ops audit to docs/audits/reliability-ops
+alwaysApply: false
+---
+
+# Reliability & Ops Audit Command
+
+When the user says **"run reliability audit"**, **"reliability audit"**, or **"run ops audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/reliability-ops-audit-process.md`.
+2. Require output report at `docs/audits/reliability-ops/YYYY-MM-DD-reliability-ops-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/reliability-ops-audit-process.md`
+- Reports: `docs/audits/reliability-ops/`

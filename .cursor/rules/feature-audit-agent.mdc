@@ -1,0 +1,20 @@
+---
+description: Feature/UX audit command — run UX/IA audit and report to docs/audits/feature
+alwaysApply: false
+---
+
+# Feature / UX Audit Command
+
+When the user says **"run feature audit"**, **"feature audit"**, **"run ux audit"**, or **"ux audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose or explore) and instruct it to follow `docs/process/feature-ux-audit-process.md`.
+2. Require output report at `docs/audits/feature/YYYY-MM-DD-feature-ux-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/feature-ux-audit-process.md`
+- Reports: `docs/audits/feature/`

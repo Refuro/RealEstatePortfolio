@@ -72,8 +72,9 @@ export function OwnershipDisplayToggle({
         </div>
       </div>
       <p className="text-sm text-muted">
-        Proportional shows your share of each metric. Full liability shows 100% of
-        debt and mortgage payment (joint liability).
+        Proportional scales rent, expenses, debt balances, and debt service by your ownership
+        share. Full liability keeps rent and expenses ownership-scaled, but shows 100% debt
+        and debt service to reflect joint liability exposure.
       </p>
     </div>
   );

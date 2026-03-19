@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
 import { ProjectionsTabContent } from "../properties/[id]/projections-tab-content";
+import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 
 type ModelingProperty = {
   id: string;
@@ -28,9 +29,11 @@ function getPropertyLabel(property: ModelingProperty): string {
 export function ModelingWorkspace({
   properties,
   initialSelectedPropertyId,
+  displayMode,
 }: {
   properties: ModelingProperty[];
   initialSelectedPropertyId?: string;
+  displayMode: OwnershipDisplayMode;
 }) {
   const [selectedPropertyId, setSelectedPropertyId] = useState(
     initialSelectedPropertyId && properties.some((property) => property.id === initialSelectedPropertyId)
@@ -120,13 +123,6 @@ export function ModelingWorkspace({
         {selectedProperty && (
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
             <Link
-              href={`/properties/${selectedProperty.id}?tab=projections`}
-              className="text-muted hover:text-foreground hover:underline"
-            >
-              Open property projections
-            </Link>
-            <span className="text-muted">•</span>
-            <Link
               href={`/properties/${selectedProperty.id}`}
               className="text-muted hover:text-foreground hover:underline"
             >
@@ -148,7 +144,7 @@ export function ModelingWorkspace({
             totalMonthlyPayment={selectedMortgageTotals.totalPayment}
             ownershipPercent={selectedProperty.ownershipPercent}
             vacancyPercent={selectedProperty.vacancyPercent}
-            displayMode={null}
+            displayMode={displayMode}
             mortgageData={selectedProperty.mortgageData}
           />
         </div>

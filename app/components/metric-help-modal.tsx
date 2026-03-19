@@ -12,7 +12,7 @@ const METRIC_DEFINITIONS = [
   {
     term: "Total debt",
     definition:
-      "Sum of outstanding mortgage balances across all properties. This is what you still owe to lenders.",
+      "Sum of outstanding mortgage balances across all properties. In proportional mode this shows your ownership-scaled share; in full liability mode this shows 100% of balances.",
   },
   {
     term: "Total equity",
@@ -32,7 +32,7 @@ const METRIC_DEFINITIONS = [
   {
     term: "Portfolio LTV",
     definition:
-      "Loan-to-value ratio for your portfolio. Total debt divided by total property value. Lower LTV means more equity and less leverage.",
+      "Loan-to-value ratio for your portfolio: total debt divided by total property value. In full liability mode, debt can be 100% while value remains ownership-scaled, so LTV may increase materially.",
   },
   {
     term: "NOI (Net Operating Income)",
@@ -52,7 +52,7 @@ const METRIC_DEFINITIONS = [
   {
     term: "DSCR",
     definition:
-      "Debt service coverage ratio: NOI divided by annual mortgage payments. Lenders typically require 1.25 or higher for refinancing. Above 1.0 means income covers debt; below 1.0 means a shortfall.",
+      "Debt service coverage ratio: NOI divided by annual debt service. In proportional mode, debt service is ownership-scaled; in full liability mode, debt service is 100%. Above 1.0 means income covers debt; below 1.0 means a shortfall.",
   },
 ];
 

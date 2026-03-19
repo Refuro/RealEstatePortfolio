@@ -5,7 +5,7 @@ import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
-import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { computePropertyMetrics, getAnnualDebtService } from "@/lib/metrics/property-metrics";
 import { PropertyActions } from "../property-actions";
 import { PropertyDetailTabs } from "./property-detail-tabs";
 
@@ -80,8 +80,8 @@ export default async function PropertyDetailPage({
     };
   });
 
-  const dscr =
-    totalMonthlyPayment > 0 ? metrics.noi / (totalMonthlyPayment * 12) : null;
+  const annualDebtService = getAnnualDebtService(totalMonthlyPayment, ownershipPercent, displayMode);
+  const dscr = annualDebtService > 0 ? metrics.noi / annualDebtService : null;
 
   const unitRents = Array.isArray(property.unitRents)
     ? (property.unitRents as number[]).map((r) => (typeof r === "number" ? r : Number(r)))

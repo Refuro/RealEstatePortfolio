@@ -47,7 +47,7 @@
 
 ## 3. Design principles (consistency)
 
-All assets must align with the product design spec. See `docs/design-spec.md` for full details.
+All assets must align with the product design spec. See `docs/policies/design-spec.md` for full details.
 
 ### 3.1 Visual style
 

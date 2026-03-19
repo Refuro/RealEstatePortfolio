@@ -135,10 +135,10 @@ export function MortgageWorkspace({
         {selectedProperty && selectedProperty.mortgages.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
             <Link
-              href={`/properties/${selectedProperty.id}?tab=mortgage`}
+              href={`/properties/${selectedProperty.id}`}
               className="text-muted hover:text-foreground hover:underline"
             >
-              Open property mortgage tab
+              Open property detail
             </Link>
             <span className="text-muted">•</span>
             <Link

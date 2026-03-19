@@ -1,22 +1,19 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { isBenchmarkFresh } from "@/lib/benchmark-utils";
+import { formatCurrency } from "@/lib/format-currency";
+import { BenchmarkRefreshButton } from "../benchmark-refresh-button";
 import { PropertyHero } from "./property-hero";
-import { QuickActions } from "./quick-actions";
-import { PropertyMetricsSection } from "../property-metrics-section";
-import { MortgageTabContent } from "./mortgage-tab-content";
-import { ProjectionsTabContent } from "./projections-tab-content";
 import { DetailsTabContent } from "./details-tab-content";
 import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 
-export type TabId = "overview" | "mortgage" | "projections" | "details";
+export type TabId = "overview" | "details";
 
 const TABS: { id: TabId; label: string }[] = [
   { id: "overview", label: "Overview" },
-  { id: "mortgage", label: "Mortgage" },
-  { id: "projections", label: "Projections" },
   { id: "details", label: "Details" },
 ];
 
@@ -86,9 +83,20 @@ export type PropertyDetailTabsProps = {
   displayMode: OwnershipDisplayMode | null;
 };
 
-function useTabState(): [TabId, (tab: TabId) => void] {
+function useTabState(propertyId: string): [TabId, (tab: TabId) => void] {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+
+  useEffect(() => {
+    if (requestedTab === "mortgage") {
+      router.replace(`/mortgage?propertyId=${encodeURIComponent(propertyId)}`, { scroll: false });
+      return;
+    }
+    if (requestedTab === "projections") {
+      router.replace(`/modeling?propertyId=${encodeURIComponent(propertyId)}`, { scroll: false });
+    }
+  }, [requestedTab, propertyId, router]);
 
   const tab = (searchParams.get("tab") as TabId) || "overview";
   const validTab = TABS.some((t) => t.id === tab) ? tab : "overview";
@@ -106,7 +114,7 @@ function useTabState(): [TabId, (tab: TabId) => void] {
 }
 
 export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
-  const [activeTab, setTab] = useTabState();
+  const [activeTab, setTab] = useTabState(props.propertyId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const showRefreshBenchmark =
@@ -165,34 +173,6 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
           <OverviewTab
             {...props}
             showRefreshBenchmark={showRefreshBenchmark}
-            onNavigateToProjections={() => setTab("projections")}
-          />
-        )}
-        {activeTab === "mortgage" && (
-          <MortgageTabContent
-            propertyId={props.propertyId}
-            mortgageData={props.mortgageData}
-            onNavigateToDetails={() => {
-              setTab("details");
-              setTimeout(() => {
-                document.getElementById("mortgages")?.scrollIntoView({ behavior: "smooth" });
-              }, 100);
-            }}
-          />
-        )}
-        {activeTab === "projections" && (
-          <ProjectionsTabContent
-            propertyId={props.propertyId}
-            monthlyRent={props.totalRent}
-            monthlyExpenses={props.property.currentMonthlyExpenses}
-            estimatedValue={props.property.currentEstimatedValue}
-            cashInvested={props.property.cashInvested}
-            totalMortgageBalance={props.totalMortgageBalance}
-            totalMonthlyPayment={props.totalMonthlyPayment}
-            ownershipPercent={props.ownershipPercent}
-            vacancyPercent={props.vacancyPercent}
-            displayMode={props.displayMode}
-            mortgageData={props.mortgageData}
           />
         )}
         {activeTab === "details" && (
@@ -213,48 +193,186 @@ function OverviewTab({
   propertyId,
   property,
   address,
-  totalRent,
+  mortgageData,
   metrics,
   dscr,
   showRefreshBenchmark,
-  onNavigateToProjections,
 }: PropertyDetailTabsProps & {
   showRefreshBenchmark: boolean;
-  onNavigateToProjections: () => void;
 }) {
+  const hasMortgage = mortgageData.length > 0;
+  const primaryMortgage = mortgageData[0] ?? null;
+  const ownershipLabel =
+    property.ownershipPercent != null ? `${property.ownershipPercent}%` : "100%";
+  const vacancyLabel =
+    property.vacancyPercent != null ? `${property.vacancyPercent}%` : "5%";
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <PropertyHero
-        propertyId={propertyId}
         nickname={property.nickname}
         address={address}
-        value={property.currentEstimatedValue}
         equity={metrics.equity}
         monthlyCashFlow={metrics.monthlyCashFlow}
-        totalRent={totalRent}
-        marketRent={property.marketRent}
-        marketRentAsOf={property.marketRentAsOf}
+        ltv={metrics.ltv}
         dscr={dscr}
       />
-      <QuickActions propertyId={propertyId} showRefreshBenchmark={showRefreshBenchmark} />
-      <PropertyMetricsSection
-        metrics={{
-          noi: metrics.noi,
-          capRate: metrics.capRate,
-          ltv: metrics.ltv,
-          cashOnCashReturn: metrics.cashOnCashReturn,
-          annualRent: metrics.grossAnnualRent,
-        }}
-      />
-      <p>
-        <button
-          type="button"
-          onClick={onNavigateToProjections}
-          className="text-sm font-medium text-accent hover:underline"
+
+      <section className="flex flex-wrap items-center gap-2">
+        <Link
+          href={`/properties/${propertyId}/edit`}
+          className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
         >
-          Model scenarios →
-        </button>
-      </p>
+          Edit property
+        </Link>
+        <Link
+          href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
+          className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+        >
+          Open Modeling workspace
+        </Link>
+        {showRefreshBenchmark && (
+          <span className="rounded-md border border-border px-3 py-1.5">
+            <BenchmarkRefreshButton propertyId={propertyId} label="Refresh benchmark" />
+          </span>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border/70 bg-card/90 p-3">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted">Verification</p>
+        <div className="mt-2 grid gap-2 md:grid-cols-2">
+          <div className="rounded-md bg-subtle/30 px-3 py-2">
+            <p className="text-xs text-muted">Property inputs</p>
+            <p className="mt-0.5 text-sm font-medium text-foreground">
+              {formatCurrency(property.purchasePrice)} purchase · {formatCurrency(property.currentMonthlyExpenses)}/mo expenses
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {ownershipLabel} ownership · {vacancyLabel} vacancy
+            </p>
+            <p className="mt-1">
+              <Link
+                href={`/properties/${propertyId}/edit`}
+                className="text-sm font-medium text-accent hover:underline"
+              >
+                Edit property
+              </Link>
+            </p>
+          </div>
+          <div className="rounded-md bg-subtle/30 px-3 py-2">
+            <p className="text-xs text-muted">Mortgage inputs</p>
+            {!hasMortgage ? (
+              <>
+                <p className="mt-0.5 text-sm font-medium text-foreground">No mortgage on file</p>
+                <p className="mt-1">
+                  <Link
+                    href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
+                    className="text-sm font-medium text-accent hover:underline"
+                  >
+                    Add mortgage details
+                  </Link>
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="mt-0.5 text-sm font-medium text-foreground">
+                  {formatCurrency(
+                    primaryMortgage?.effectiveBalance ?? Number(primaryMortgage?.currentBalance ?? 0)
+                  )}{" "}
+                  · {(Number(primaryMortgage?.interestRate ?? 0) * 100).toFixed(2)}% ·{" "}
+                  {primaryMortgage?.termYears ?? 0} years
+                </p>
+                <p className="text-sm font-medium text-foreground">
+                  {formatCurrency(Number(primaryMortgage?.monthlyPayment ?? 0))}/mo payment
+                </p>
+                <p className="mt-1">
+                  <Link
+                    href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
+                    className="text-sm font-medium text-accent hover:underline"
+                  >
+                    Edit mortgage
+                  </Link>
+                </p>
+              </>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-4">
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted mb-3">
+          Performance at a glance
+        </h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-md bg-subtle/30 p-3">
+            <p className="text-xs font-medium text-muted">Monthly cash flow</p>
+            <p className={`mt-1 text-lg font-semibold ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}>
+              {formatCurrency(metrics.monthlyCashFlow)}
+            </p>
+          </div>
+          <div className="rounded-md bg-subtle/30 p-3">
+            <p className="text-xs font-medium text-muted">DSCR</p>
+            <p className={`mt-1 text-lg font-semibold ${dscr != null && dscr >= 1 ? "text-positive" : "text-negative"}`}>
+              {dscr != null ? dscr.toFixed(2) : "—"}
+            </p>
+          </div>
+          <div className="rounded-md bg-subtle/30 p-3">
+            <p className="text-xs font-medium text-muted">Equity</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(metrics.equity)}</p>
+          </div>
+          <div className="rounded-md bg-subtle/30 p-3">
+            <p className="text-xs font-medium text-muted">Loan-to-value</p>
+            <p className="mt-1 text-lg font-semibold text-foreground">
+              {metrics.ltv != null ? `${(metrics.ltv * 100).toFixed(1)}%` : "—"}
+            </p>
+          </div>
+        </div>
+        <details className="mt-3 rounded-md border border-border/70 bg-subtle/20 px-3 py-2">
+          <summary className="cursor-pointer text-sm font-medium text-foreground">
+            Show supporting metrics
+          </summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div>
+              <p className="text-xs font-medium text-muted">NOI</p>
+              <p className="text-sm font-medium text-foreground">{formatCurrency(metrics.noi)}</p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Cap rate</p>
+              <p className="text-sm font-medium text-foreground">
+                {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Cash-on-cash return</p>
+              <p className="text-sm font-medium text-foreground">
+                {metrics.cashOnCashReturn != null
+                  ? `${(metrics.cashOnCashReturn * 100).toFixed(2)}%`
+                  : "—"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Annual rent</p>
+              <p className="text-sm font-medium text-foreground">
+                {formatCurrency(metrics.grossAnnualRent)}
+              </p>
+            </div>
+          </div>
+        </details>
+
+        <div className="mt-3 flex flex-wrap gap-2">
+          <Link
+            href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+          >
+            Open Modeling workspace
+          </Link>
+          <Link
+            href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+          >
+            Open Mortgage workspace
+          </Link>
+        </div>
+      </section>
     </div>
   );
 }

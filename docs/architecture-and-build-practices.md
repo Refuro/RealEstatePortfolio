@@ -3,6 +3,8 @@
 **Purpose:** Ensure future features align with design, security, and continuity. Prevent spaghetti code as the codebase evolves.
 
 **Status:** Active — builder and PM must follow these practices.
+**Last reviewed:** 2026-03-19
+**Review cadence:** Quarterly or after major architecture changes
 
 **Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
 
@@ -60,6 +62,8 @@ UI (pages, components)
 
 ### 2.2 Single Source of Truth
 - **Metrics:** `lib/metrics/portfolio-metrics.ts` and `lib/metrics/property-metrics.ts` — all calculations here. Dashboard, property detail, export, etc. use these. Do not duplicate formulas.
+- **Ownership semantics policy:** `docs/policies/ownership-metrics.md` — canonical formulas and copy expectations for `proportional` vs `full_liability`.
+- **Analytics math policy:** `docs/policies/analytics-math-policy.md` — canonical contracts for time windows, debt-service source, and UI/API/export reconciliation.
 - **Plans/limits:** `lib/plans.ts` — property limits, tier names.
 - **Pricing display:** `lib/pricing-display.ts` — display prices for UI.
 
@@ -119,7 +123,7 @@ Before shipping any new feature, verify:
 - [ ] **IDs:** Never trust IDs from URL/body; always resolve via `userId`-scoped query
 - [ ] **External APIs:** If calling third-party APIs, use server-side only; store keys in env
 
-Update `docs/security-notes.md` when adding new security-relevant behavior.
+Update `docs/security/security-notes.md` when adding new security-relevant behavior.
 
 ---
 
@@ -145,13 +149,13 @@ When adding external integrations (RentCast, Zillow, etc.):
 2. Use env vars for API keys; never expose to client
 3. Call from API route only; route returns data to client
 4. Handle rate limits, timeouts, and failures gracefully
-5. Document in `docs/manual-steps.md` if user must obtain API key
+5. Document in `docs/setup/manual-steps.md` if user must obtain API key
 
 ---
 
 ## 5. Value-Add Roadmap
 
-**See `docs/roadmap.md`** for the prioritized value-add backlog, medium-term initiatives, external API opportunities, and deferred items. PM promotes items from there to `docs/tasks.md` when ready to build.
+**See `docs/reference/roadmap.md`** for the prioritized value-add backlog, medium-term initiatives, external API opportunities, and deferred items. PM promotes items from there to `docs/tasks.md` when ready to build.
 
 ---
 
@@ -159,7 +163,9 @@ When adding external integrations (RentCast, Zillow, etc.):
 
 ### 6.1 Pre-Build Checklist (Builder)
 Before implementing a task:
-- [ ] Read `docs/design-spec.md` for UI work
+- [ ] Read `docs/policies/design-spec.md` for UI work
+- [ ] If ownership/metrics behavior is touched, read `docs/policies/ownership-metrics.md` first
+- [ ] If analytics math is touched, read `docs/policies/analytics-math-policy.md` first
 - [ ] Check `lib/` for existing logic to reuse
 - [ ] Check `components/` for existing components to reuse
 - [ ] Plan where new code goes (which module, which file)
@@ -169,9 +175,11 @@ Before marking task complete:
 - [ ] Run `npm run check`; fix errors
 - [ ] No new `any` types; no duplicated logic
 - [ ] New API routes follow auth + validation pattern
-- [ ] Update `docs/security-notes.md` if new security behavior
-- [ ] Update `docs/manual-steps.md` if new env vars or manual steps
-- [ ] **If this task implements a roadmap feature:** mark it done in docs/roadmap.md (add to Completed table or update status).
+- [ ] If ownership behavior changed, verify formulas and copy match `docs/policies/ownership-metrics.md`
+- [ ] If analytics math changed, verify basis/time-window labels and UI/API/export reconciliation against `docs/policies/analytics-math-policy.md`
+- [ ] Update `docs/security/security-notes.md` if new security behavior
+- [ ] Update `docs/setup/manual-steps.md` if new env vars or manual steps
+- [ ] **If this task implements a roadmap feature:** mark it done in docs/reference/roadmap.md (add to Completed table or update status).
 
 ### 6.3 Builder Checklist — Context-Specific
 
@@ -180,14 +188,14 @@ Apply these when the task matches the context:
 **When adding a new third-party service (API, auth, payments, analytics, etc.):**
 - [ ] Add the service to Privacy Policy (`app/privacy/page.tsx` — "Data We Collect" section). Describe what data is collected, how it's used, and link to provider's privacy policy if relevant.
 - [ ] Update Terms of Service (`app/terms/page.tsx`) if the service affects payments, data handling, or user obligations.
-- [ ] Add env vars to `app/.env.example` and `docs/manual-steps.md`.
-- [ ] Document in `docs/manual-steps.md` any manual setup (API keys, webhooks, dashboard config).
+- [ ] Add env vars to `app/.env.example` and `docs/setup/manual-steps.md`.
+- [ ] Document in `docs/setup/manual-steps.md` any manual setup (API keys, webhooks, dashboard config).
 
 **When adding a new page:**
 - [ ] **Public page (guest-accessible):** Add route to `proxy.ts` `isPublicRoute` so unauthenticated users can access it.
 - [ ] **SEO:** Add `metadata` with `title`, `description`, `alternates.canonical`, and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Add to `sitemap.ts` if it should be indexed.
 - [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered.
-- [ ] **Design:** Use semantic tokens from `docs/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
+- [ ] **Design:** Use semantic tokens from `docs/policies/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
 - [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).
 - [ ] **Mobile-also:** Test on both desktop and narrow viewport (375px) or real device. Nav should not be squished on mobile; use hamburger or simplified nav if many links. Touch targets at least 44px. Avoid horizontal overflow.
 
@@ -216,9 +224,23 @@ When adding tasks to `docs/tasks.md`:
 
 ## 7. References
 
-- **Design:** `docs/design-spec.md`
-- **Security:** `docs/security-notes.md`
-- **Manual steps:** `docs/manual-steps.md`
-- **Ownership metrics:** `docs/ownership-metrics.md` — how partial ownership scales metrics
+- **Design:** `docs/policies/design-spec.md`
+- **Security:** `docs/security/security-notes.md`
+- **Manual steps:** `docs/setup/manual-steps.md`
+- **Ownership metrics:** `docs/policies/ownership-metrics.md` — how partial ownership scales metrics
+- **Analytics math:** `docs/policies/analytics-math-policy.md` — canonical analytics contracts and reconciliation rules
 - **Builder rule:** `.cursor/rules/builder-agent.mdc`
-- **PM checklist:** `docs/pm-review-checklist.md`
+- **PM checklist:** `docs/process/pm-review-checklist.md`
+- **Audit index:** `docs/audits/README.md`
+- **Audit processes:** `docs/process/`
+
+---
+
+## 8. Audit governance alignment
+
+Architecture decisions and implementations must remain audit-ready:
+
+- Every release should be compatible with code, security, and data-integrity audits.
+- Math/ownership-affecting work must remain compatible with analytics + ownership audit lanes.
+- New cross-cutting systems (new integrations, pipelines, major UI flows) should include at least one corresponding focused audit lane or explicit note why existing lanes are sufficient.
+- PM approval is blocked if required audit docs/checklists are not updated for significant architecture changes.

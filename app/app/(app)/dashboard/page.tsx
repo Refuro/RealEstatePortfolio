@@ -162,13 +162,13 @@ export default async function DashboardPage({
               href={modelingHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
-              Open Modeling
+              Open Modeling workspace
             </Link>
             <Link
               href={mortgageHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
-              Open Mortgage
+              Open Mortgage workspace
             </Link>
           </div>
         </div>

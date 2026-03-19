@@ -18,7 +18,7 @@ try {
 }
 
 if ($status -eq "completed") {
-    Write-Output '{"followup_message": "PM: Review the builder output above for this phase. If the phase is complete and correct, approve and instruct the builder to proceed to the next phase (see docs/engineering-spec.md §8). If something is wrong or missing, list the fixes, then tell the builder to address them and then proceed to the next phase."}'
+    Write-Output '{"followup_message": "PM: Review the builder output above for this phase. If the phase is complete and correct, approve and instruct the builder to proceed to the next phase (see docs/reference/engineering-spec.md §8). If something is wrong or missing, list the fixes, then tell the builder to address them and then proceed to the next phase."}'
 } else {
     Write-Output '{}'
 }
