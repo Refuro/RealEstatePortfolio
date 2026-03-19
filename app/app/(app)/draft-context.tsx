@@ -61,6 +61,7 @@ export type WizardData = {
   notes: string;
   bedrooms: string;
   bathrooms: string;
+  squareFeet?: string;
   addMortgage: boolean | null;
   mortgage: Record<string, unknown>;
 };
@@ -139,6 +140,8 @@ type DraftContextValue = {
   hasDraft: boolean;
   draftData: DraftPayload | null;
   savedAt: string | null;
+  /** Increments when user chooses &quot;Start fresh&quot; on restore modal — add-property form resets + scroll top. */
+  startFreshKey: number;
   setHasDraft: (v: boolean) => void;
   saveDraft: (data: WizardData) => void;
   clearDraft: () => void;
@@ -163,6 +166,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [leaveModal, setLeaveModal] = useState<{ href: string } | null>(null);
   const [restoreModal, setRestoreModal] = useState<DraftPayload | null>(null);
+  const [startFreshKey, setStartFreshKey] = useState(0);
   const wizardGetDataRef = useRef<(() => WizardData) | null>(null);
   const leaveModalRef = useRef<HTMLDivElement>(null);
   const restoreModalRef = useRef<HTMLDivElement>(null);
@@ -240,11 +244,12 @@ export function DraftProvider({ children }: { children: ReactNode }) {
         setSavedAt(restoreModal.savedAt);
         setHasDraftState(true);
       } else {
-        clearDraftFromStorage();
+        clearDraft();
+        setStartFreshKey((k) => k + 1);
       }
       setRestoreModal(null);
     },
-    [restoreModal]
+    [restoreModal, clearDraft]
   );
 
   useEffect(() => {
@@ -278,6 +283,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     hasDraft,
     draftData,
     savedAt,
+    startFreshKey,
     setHasDraft,
     saveDraft,
     clearDraft,
@@ -303,7 +309,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
               Unsaved changes
             </h2>
             <p className="mt-2 text-sm text-muted">
-              You have unsaved data in the add property wizard. What would you like to do?
+              You have unsaved data in the add property form. What would you like to do?
             </p>
             <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
               <button

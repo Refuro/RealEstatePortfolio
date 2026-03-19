@@ -43,7 +43,9 @@ Use this template for all AI-run audits unless a lane process explicitly require
 2. <priority 2 recommendation>
 3. <priority 3 recommendation>
 
-## Task candidates
+## Task candidates (optional)
+
+Include only if findings warrant implementation work. Omit section if audit found no actionable gaps.
 
 - [ ] <task candidate 1>
 - [ ] <task candidate 2>
@@ -68,5 +70,5 @@ Use this template for all AI-run audits unless a lane process explicitly require
 - Findings must be evidence-backed (path/surface references).
 - Severity must reflect impact and urgency.
 - Recommendations must be implementation-oriented.
-- Task candidates must be small enough to move into active backlog quickly.
+- When present, task candidates must be small enough to move into active backlog quickly. Omit the Task candidates section if there are no actionable findings — do not invent work.
 - Audits are review-only; do not make code changes during audit runs.

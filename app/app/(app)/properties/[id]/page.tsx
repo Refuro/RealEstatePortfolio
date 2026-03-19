@@ -99,6 +99,7 @@ export default async function PropertyDetailPage({
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms != null ? Number(property.bathrooms) : null,
     unitMix: property.unitMix,
+    squareFeet: property.squareFeet,
     purchasePrice: Number(property.purchasePrice),
     purchaseDate: property.purchaseDate,
     currentEstimatedValue: Number(property.currentEstimatedValue),

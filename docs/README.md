@@ -6,6 +6,7 @@
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
+- [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add / edit / detail tabs (when those areas change)
 
 ## Reference
 
@@ -20,6 +21,17 @@
 - [Ownership metrics](policies/ownership-metrics.md)
 - [Analytics math policy](policies/analytics-math-policy.md)
 - [Shell risk policy](policies/shell-risk-policy.md)
+
+## Launch & growth
+
+- [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
+
+## QA & regression
+
+- [QA index](qa/README.md)
+- [Test infrastructure review](qa/test-infrastructure-review.md) — suite review, correctness, next coverage, Docker/E2E notes
+- [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add property, edit, Overview/Details, APIs
+- [Testing implementation plan](proposals/testing-implementation-plan.md) — Vitest phases, what to test when
 
 ## Process
 
@@ -36,6 +48,7 @@
 - [Business/valuation audit process](process/business-valuation-audit-process.md)
 - [Growth funnel audit process](process/growth-funnel-audit-process.md)
 - [Agent governance audit process](process/agent-governance-audit-process.md)
+- [Full audit synthesis](process/full-audit-synthesis.md)
 
 ## Audits
 
@@ -49,6 +62,7 @@
 - [Business/valuation audits](audits/business/)
 - [Growth funnel audits](audits/growth-funnel/)
 - [Agent governance audits](audits/agent-governance/)
+- [Audit synthesis](audits/synthesis/)
 
 ## Proposals
 

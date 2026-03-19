@@ -3,7 +3,7 @@
 **Purpose:** Ensure future features align with design, security, and continuity. Prevent spaghetti code as the codebase evolves.
 
 **Status:** Active — builder and PM must follow these practices.
-**Last reviewed:** 2026-03-19
+**Last reviewed:** 2026-03-19 (property detail / add-edit surfaces documented)
 **Review cadence:** Quarterly or after major architecture changes
 
 **Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
@@ -36,6 +36,17 @@ app/
 │   └── ...
 └── prisma/
 ```
+
+### Property detail, add, and edit (post–add-property overhaul)
+
+| Route / area | Primary files | Notes |
+|--------------|---------------|--------|
+| **`/properties/new`** | `add-property-wizard.tsx` | Sectioned create; optional mortgage; deal `?from=`; drafts in `draft-context`. |
+| **`/properties/[id]/edit`** | `property-form.tsx`, `lib/property-form-section-nav.ts` | PATCH `/api/properties/[id]`; section nav mirrors add flow. |
+| **`/properties/[id]`** | `property-detail-tabs.tsx`, `overview-tab-content.tsx`, `details-tab-content.tsx` | Tabs: **Overview** (metrics + inputs snapshot + health strip) and **Details** (read-only ledger + embedded `MortgageSection`). Shared **`property-health-strip.tsx`**. Types in **`property-detail-types.ts`**. |
+| **Workspaces** | `modeling-workspace.tsx` → `projections-tab-content`; `mortgage-workspace.tsx` → `mortgage-tab-content` | Deep-link with `?propertyId=`. |
+
+**IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see `epic-a-discovery.md` A3). Do not reintroduce triple inline PATCH without an explicit product decision.
 
 ### Established Patterns
 - **Auth:** Every API route and protected page calls `getAppUser()` first; return 401 if null
@@ -173,6 +184,7 @@ Before implementing a task:
 ### 6.2 Post-Build Checklist (Builder)
 Before marking task complete:
 - [ ] Run `npm run check`; fix errors
+- [ ] Run `npm run test` when the task touches `lib/metrics/`, `lib/amortization.ts`, or `lib/validations/property.ts` (see [`docs/proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md)); understand CI vs local parity via [`docs/qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
 - [ ] No new `any` types; no duplicated logic
 - [ ] New API routes follow auth + validation pattern
 - [ ] If ownership behavior changed, verify formulas and copy match `docs/policies/ownership-metrics.md`
@@ -180,6 +192,7 @@ Before marking task complete:
 - [ ] Update `docs/security/security-notes.md` if new security behavior
 - [ ] Update `docs/setup/manual-steps.md` if new env vars or manual steps
 - [ ] **If this task implements a roadmap feature:** mark it done in docs/reference/roadmap.md (add to Completed table or update status).
+- [ ] **If this task touches property add/edit/detail or property APIs:** run or spot-check [`docs/qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md) before marking complete.
 
 ### 6.3 Builder Checklist — Context-Specific
 
@@ -189,6 +202,7 @@ Apply these when the task matches the context:
 - [ ] Add the service to Privacy Policy (`app/privacy/page.tsx` — "Data We Collect" section). Describe what data is collected, how it's used, and link to provider's privacy policy if relevant.
 - [ ] Update Terms of Service (`app/terms/page.tsx`) if the service affects payments, data handling, or user obligations.
 - [ ] Add env vars to `app/.env.example` and `docs/setup/manual-steps.md`.
+- [ ] For incidents: see [docs/runbooks/incident-response.md](runbooks/incident-response.md).
 - [ ] Document in `docs/setup/manual-steps.md` any manual setup (API keys, webhooks, dashboard config).
 
 **When adding a new page:**
@@ -224,6 +238,10 @@ When adding tasks to `docs/tasks.md`:
 
 ## 7. References
 
+- **Property flow regression:** [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md)
+- **Testing plan (Vitest phases):** [`proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md)
+- **Test infrastructure review (CI, correctness, next steps):** [`qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
+- **Test follow-up tasks (Phase 1 & 2):** [`tasks.md`](tasks.md) — *Active tasks → Test infrastructure follow-up*
 - **Design:** `docs/policies/design-spec.md`
 - **Security:** `docs/security/security-notes.md`
 - **Manual steps:** `docs/setup/manual-steps.md`

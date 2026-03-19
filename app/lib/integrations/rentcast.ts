@@ -20,6 +20,8 @@ export type RentCastParams = {
   bedrooms?: number;
   /** Bathrooms (single-family) or typical unit bathrooms (multi-family). RentCast supported. */
   bathrooms?: number;
+  /** Living area; RentCast query param `squareFootage` — improves AVM accuracy. */
+  squareFootage?: number;
 };
 
 export type RentCastResult = { rent: number };
@@ -71,6 +73,9 @@ export async function fetchRentEstimate(
   }
   if (params.bathrooms != null && params.bathrooms >= 0.5) {
     searchParams.set("bathrooms", String(params.bathrooms));
+  }
+  if (params.squareFootage != null && params.squareFootage >= 100) {
+    searchParams.set("squareFootage", String(Math.round(params.squareFootage)));
   }
 
   const url = `${RENTCAST_RENT_BASE}?${searchParams.toString()}`;
@@ -133,6 +138,8 @@ export type ValueEstimateParams = {
   zipCode: string;
   addressLine2?: string;
   propertyType?: "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment";
+  /** RentCast `squareFootage` when available. */
+  squareFootage?: number;
 };
 
 export type ValueEstimateResult = { value: number };
@@ -156,6 +163,9 @@ export async function fetchValueEstimate(
   });
   if (params.propertyType) {
     searchParams.set("propertyType", toRentCastPropertyType(params.propertyType));
+  }
+  if (params.squareFootage != null && params.squareFootage >= 100) {
+    searchParams.set("squareFootage", String(Math.round(params.squareFootage)));
   }
 
   const url = `${RENTCAST_VALUE_BASE}?${searchParams.toString()}`;

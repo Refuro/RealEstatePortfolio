@@ -19,14 +19,14 @@ type Metrics = {
 
 export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
   return (
-    <section className="rounded-lg border border-border bg-card p-6">
+    <section className="rounded-xl border border-border/70 bg-card p-4 shadow-sm">
       <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
         Investment metrics
       </h2>
-      <dl className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+      <dl className="flex flex-wrap gap-x-6 gap-y-3">
         {metrics.monthlyCashFlow != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Monthly cash flow</dt>
+            <dt className="text-sm font-medium text-muted">Monthly cash flow</dt>
             <dd
               className={`text-base font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
             >
@@ -36,7 +36,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
         )}
         {metrics.annualCashFlow != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Annual cash flow</dt>
+            <dt className="text-sm font-medium text-muted">Annual cash flow</dt>
             <dd
               className={`text-base font-medium ${metrics.annualCashFlow >= 0 ? "text-positive" : "text-negative"}`}
             >
@@ -46,31 +46,31 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
         )}
         {metrics.equity != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Equity</dt>
+            <dt className="text-sm font-medium text-muted">Equity</dt>
             <dd className="text-base font-medium text-foreground">{formatCurrency(metrics.equity)}</dd>
           </div>
         )}
         {metrics.capRate != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Cap rate</dt>
+            <dt className="text-sm font-medium text-muted">Cap rate</dt>
             <dd className="text-base font-medium text-foreground">{(metrics.capRate * 100).toFixed(2)}%</dd>
           </div>
         )}
         {metrics.ltv != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Loan-to-value</dt>
+            <dt className="text-sm font-medium text-muted">Loan-to-value</dt>
             <dd className="text-base font-medium text-foreground">{(metrics.ltv * 100).toFixed(1)}%</dd>
           </div>
         )}
         {metrics.noi != null && (
           <div>
-            <dt className="text-base font-medium text-muted">NOI</dt>
+            <dt className="text-sm font-medium text-muted">NOI</dt>
             <dd className="text-base font-medium text-foreground">{formatCurrency(metrics.noi)}</dd>
           </div>
         )}
         {metrics.cashOnCashReturn != null && (
           <div>
-            <dt className="text-base font-medium text-muted">Cash-on-cash return</dt>
+            <dt className="text-sm font-medium text-muted">Cash-on-cash</dt>
             <dd className="text-base font-medium text-foreground">
               {(metrics.cashOnCashReturn * 100).toFixed(2)}%
             </dd>
@@ -78,7 +78,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
         )}
         {metrics.dscr != null && (
           <div>
-            <dt className="text-base font-medium text-muted">DSCR</dt>
+            <dt className="text-sm font-medium text-muted">DSCR</dt>
             <dd
               className={`text-base font-medium ${
                 metrics.dscr >= 1 ? "text-positive" : "text-negative"
@@ -90,7 +90,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
         )}
         {metrics.annualRent != null && metrics.annualRent > 0 && (
           <div>
-            <dt className="text-base font-medium text-muted">Annual rent</dt>
+            <dt className="text-sm font-medium text-muted">Annual rent</dt>
             <dd className="text-base font-medium text-foreground">
               {formatCurrency(metrics.annualRent)}
             </dd>

@@ -1,34 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { LocalDate } from "@/components/local-date";
 
 type SubscriptionBillingDisplayProps = {
-  initialCurrentPeriodEnd: string;
-  initialCancelAtPeriodEnd: boolean | null;
+  currentPeriodEnd: string;
+  cancelAtPeriodEnd: boolean | null;
 };
 
 export function SubscriptionBillingDisplay({
-  initialCurrentPeriodEnd,
-  initialCancelAtPeriodEnd,
+  currentPeriodEnd,
+  cancelAtPeriodEnd,
 }: SubscriptionBillingDisplayProps) {
-  const [currentPeriodEnd, setCurrentPeriodEnd] = useState(initialCurrentPeriodEnd);
-  const [cancelAtPeriodEnd, setCancelAtPeriodEnd] = useState(initialCancelAtPeriodEnd);
-
-  useEffect(() => {
-    if (!initialCurrentPeriodEnd) return;
-
-    fetch("/api/billing/subscription-details")
-      .then((res) => res.json())
-      .then((data: { currentPeriodEnd?: string | null; cancelAtPeriodEnd?: boolean | null }) => {
-        if (data.currentPeriodEnd != null) setCurrentPeriodEnd(data.currentPeriodEnd);
-        if (data.cancelAtPeriodEnd !== undefined) setCancelAtPeriodEnd(data.cancelAtPeriodEnd ?? null);
-      })
-      .catch(() => {
-        // Keep initial values on fetch failure
-      });
-  }, [initialCurrentPeriodEnd]);
-
   return (
     <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
       <dt className="text-sm font-medium text-muted">

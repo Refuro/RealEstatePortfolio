@@ -29,6 +29,7 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 
 - When the builder finishes a phase, the **subagentStop** hook can send a follow-up so the PM is prompted to review.
 - I (the PM) follow **`docs/process/pm-review-checklist.md`** every time: build, lint (errors must be cleaned up before approval; ignore Prisma schema URL), tests, scope, **design compliance** (for UI phases; see checklist), docs/handoff, then approve or request changes.
+- **Tests & CI:** What the suite proves (and what it does not) is summarized in [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md). Planned hardening and follow-up work lives in [`docs/tasks.md`](../tasks.md) under **Active tasks → Test infrastructure follow-up** (Phase 1 & 2).
 - For major risk-bearing changes, run or verify required focused audits per `docs/audits/README.md` before final approval.
 - **Builder handoff:** The builder adds new env vars to `app/.env.example` and manual steps to `docs/setup/manual-steps.md` when done. The PM checks this during review.
 - **Resume:** Resume the builder with one message: e.g. "Approved. Proceed to Phase N — [scope]." or "Fix X and Y, then proceed to Phase N as above."
@@ -67,6 +68,6 @@ The PM uses these phases when approving and when instructing the builder ("proce
 ## Summary
 
 - **PM (this agent):** Follows `docs/process/pm-review-checklist.md` every review. Keeps the builder moving through phases by approving and resuming with "proceed to Phase N" or with fixes. Uses `docs/reference/engineering-spec.md`, `docs/policies/design-spec.md`, and `docs/setup/manual-steps.md` as reference. Design compliance is part of PM approval for UI work.
-- **Builder handoff:** Builder adds env vars and manual steps to `.env.example` and `manual-steps.md` when done; PM ensures they're complete during review.
+- **Builder handoff:** Builder adds env vars and manual steps to `app/.env.example` and `docs/setup/manual-steps.md` when done; PM ensures they're complete during review.
 - **Command risk:** Handled by the **beforeShellExecution** hook (allow/deny/ask).
 - **Handoff (other chat):** When the builder runs in another chat, you bring agent ID and output here so the PM can review and resume.

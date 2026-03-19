@@ -1,5 +1,6 @@
 "use client";
 
+import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 
 export default function Error({
@@ -9,6 +10,7 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  Sentry.captureException(error);
   void error; // Required by Next.js; not displayed to avoid leaking internal details
   return (
     <div className="rounded-lg border border-border bg-card p-8 text-center">

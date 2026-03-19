@@ -1,0 +1,2 @@
+# Husky hook scripts must use LF so shebang works on macOS/Linux/Git Bash
+.husky/** text eol=lf

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { updatePropertySchema } from "@/lib/validations/property";
+import {
+  updatePropertySchema,
+  parseUnitRentsFromDb,
+} from "@/lib/validations/property";
 
 async function getPropertyForUser(propertyId: string, userId: string) {
   return prisma.property.findFirst({
@@ -30,6 +33,7 @@ function serializeProperty(p: {
   bedrooms?: number | null;
   bathrooms?: { toString(): string } | null;
   unitMix?: string | null;
+  squareFeet?: number | null;
   currentMonthlyExpenses: { toString(): string };
   cashInvested: { toString(): string } | null;
   notes: string | null;
@@ -54,10 +58,11 @@ function serializeProperty(p: {
     purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
     currentEstimatedValue: p.currentEstimatedValue.toString(),
     currentMonthlyRent: p.currentMonthlyRent.toString(),
-    unitRents: (p.unitRents as number[] | null) ?? null,
+    unitRents: parseUnitRentsFromDb(p.unitRents),
     bedrooms: p.bedrooms ?? null,
     bathrooms: p.bathrooms?.toString() ?? null,
     unitMix: p.unitMix ?? null,
+    squareFeet: p.squareFeet ?? null,
     currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
     cashInvested: p.cashInvested?.toString() ?? null,
     marketRent: p.marketRent?.toString() ?? null,
@@ -160,6 +165,7 @@ export async function PATCH(
   if (data.bedrooms !== undefined) updatePayload.bedrooms = data.bedrooms;
   if (data.bathrooms !== undefined) updatePayload.bathrooms = data.bathrooms;
   if (data.unitMix !== undefined) updatePayload.unitMix = data.unitMix;
+  if (data.squareFeet !== undefined) updatePayload.squareFeet = data.squareFeet;
   if (data.currentMonthlyExpenses !== undefined) updatePayload.currentMonthlyExpenses = data.currentMonthlyExpenses;
   if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;

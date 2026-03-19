@@ -668,9 +668,9 @@ export function MortgageTabContent({
 
   const baselineNote = (
     <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
-      Baseline inputs: monthly payment{" "}
-      {normalizedMortgage ? formatCurrency(getPiForAmortization(normalizedMortgage)) : "—"} /
-      mo, extra principal {formatCurrency(extraPayment)}/mo.
+      Baseline assumes no extra principal payments. Monthly payment{" "}
+      {normalizedMortgage ? formatCurrency(getPiForAmortization(normalizedMortgage)) : "—"}
+      /mo. &quot;With extra payment&quot; adds {formatCurrency(extraPayment)}/mo in extra principal.
     </div>
   );
 

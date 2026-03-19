@@ -2,6 +2,8 @@
  * Utilities for property data.
  */
 
+import { parseUnitRentsFromDb } from "@/lib/validations/property";
+
 export const PROPERTY_TYPE_LABELS: Record<string, string> = {
   single_family: "Single family",
   condo: "Condo",
@@ -30,9 +32,9 @@ export type PropertyWithRent = {
  * When unitRents is null (existing data): use currentMonthlyRent.
  */
 export function getPropertyTotalRent(property: PropertyWithRent): number {
-  const unitRents = property.unitRents;
-  if (Array.isArray(unitRents) && unitRents.length > 0) {
-    const sum = unitRents.reduce((a, b) => a + (typeof b === "number" ? b : Number(b) || 0), 0);
+  const unitRents = parseUnitRentsFromDb(property.unitRents);
+  if (unitRents && unitRents.length > 0) {
+    const sum = unitRents.reduce((a, b) => a + b, 0);
     if (Number.isFinite(sum)) return sum;
   }
   const rent = property.currentMonthlyRent;

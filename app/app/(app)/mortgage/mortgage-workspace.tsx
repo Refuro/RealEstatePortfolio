@@ -1,10 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
-import { MortgageTabContent } from "../properties/[id]/mortgage-tab-content";
+
+const MortgageTabContent = dynamic(
+  () =>
+    import("../properties/[id]/mortgage-tab-content").then((m) => ({
+      default: m.MortgageTabContent,
+    })),
+  { ssr: false }
+);
 
 type MortgageProperty = {
   id: string;

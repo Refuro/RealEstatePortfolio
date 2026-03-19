@@ -68,7 +68,7 @@ Create `.cursor/rules/` with:
 
 - **Purpose:** Gate risky shell commands (deny `rm -rf`, force push, prod DB access)
 - **Policy:** Allow install, migrate, build, lint; deny destructive; ask for first-time push
-- **File:** `.cursor/hooks.json` + policy in `docs/shell-risk-policy.md`
+- **File:** `.cursor/hooks.json` + policy in `docs/policies/shell-risk-policy.md`
 
 ### subagentStop
 
@@ -145,7 +145,7 @@ docs/
 
 ### Optional
 
-- `docs/shell-risk-policy.md` — If using beforeShellExecution hook
+- `docs/policies/shell-risk-policy.md` — If using beforeShellExecution hook
 - `docs/cursor-agent-setup.md` — Setup guide for collaborators
 - `docs/code-audit-process.md` — If you want code audit capability
 

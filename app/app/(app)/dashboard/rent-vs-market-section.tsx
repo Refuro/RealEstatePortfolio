@@ -78,22 +78,21 @@ export function RentVsMarketSection({
       });
     });
 
-    Promise.all(
-      staleOrMissing.map(async (p) => {
+    (async () => {
+      const results: { id: string; ok: boolean }[] = [];
+      for (const p of staleOrMissing) {
         try {
           const res = await fetch(`/api/properties/${p.id}/benchmark/refresh`, {
             method: "POST",
           });
           const json = (await res.json()) as { error?: string };
-          if (res.ok && !json.error) {
-            return { id: p.id, ok: true } as const;
-          }
-          return { id: p.id, ok: false } as const;
+          results.push({ id: p.id, ok: res.ok && !json.error });
         } catch {
-          return { id: p.id, ok: false } as const;
+          results.push({ id: p.id, ok: false });
         }
-      })
-    ).then((results) => {
+      }
+      return results;
+    })().then((results) => {
       const anySuccess = results.some((r) => r.ok);
       if (anySuccess) {
         router.refresh();

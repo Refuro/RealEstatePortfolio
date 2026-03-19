@@ -110,12 +110,20 @@ export default async function DashboardPage({
             Track your rental properties and see equity, cash flow, and more at a
             glance.
           </p>
-          <Link
-            href="/properties/new"
-            className="mt-6 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add your first property
-          </Link>
+          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/properties/new"
+              className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            >
+              Add your first property
+            </Link>
+            <Link
+              href="/analyze"
+              className="rounded-md border border-border px-4 py-2 text-base font-medium text-foreground hover:bg-subtle"
+            >
+              Analyze a deal
+            </Link>
+          </div>
           <p className="mt-4 text-sm text-muted">
             Have a spreadsheet?{" "}
             <Link href="/settings#export" className="font-medium text-foreground hover:underline">
@@ -137,8 +145,34 @@ export default async function DashboardPage({
             Property added. Your portfolio is now live.
           </p>
           <p className="mt-1 text-sm text-muted">
-            Great start. Review your metrics below, then explore Modeling or Mortgage when ready.
+            Great start. Here are some things to try next:
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/analyze"
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Analyze a deal
+            </Link>
+            <Link
+              href={modelingHref}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Run projections
+            </Link>
+            <Link
+              href={mortgageHref}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Simulate mortgage payoff
+            </Link>
+            <Link
+              href="/properties/new"
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Add another property
+            </Link>
+          </div>
         </div>
       )}
       <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
@@ -200,86 +234,82 @@ export default async function DashboardPage({
         </div>
       </div>
 
-      {metrics.propertyCount > 1 && (
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          <MetricCard
-            label="Total property value"
-            value={formatCurrency(metrics.totalMarketValue)}
-            primary
-            compact
-          />
-          <MetricCard
-            label="Total debt"
-            value={formatCurrency(metrics.totalDebt)}
-            primary
-            compact
-          />
-          <MetricCard
-            label="Total equity"
-            value={formatCurrency(metrics.totalEquity)}
-            primary
-            compact
-          />
-          <MetricCard
-            label="Monthly cash flow"
-            value={formatCurrency(metrics.totalMonthlyCashFlow)}
-            cashFlow={metrics.totalMonthlyCashFlow}
-            compact
-          />
-          <MetricCard
-            label="Portfolio cap rate"
-            value={
-              metrics.weightedCapRate != null
-                ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
-                : "—"
-            }
-            primary={false}
-            compact
-          />
-        </div>
-      )}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <MetricCard
+          label={metrics.propertyCount > 1 ? "Total property value" : "Property value"}
+          value={formatCurrency(metrics.totalMarketValue)}
+          primary
+          compact
+        />
+        <MetricCard
+          label={metrics.propertyCount > 1 ? "Total debt" : "Debt"}
+          value={formatCurrency(metrics.totalDebt)}
+          primary
+          compact
+        />
+        <MetricCard
+          label={metrics.propertyCount > 1 ? "Total equity" : "Equity"}
+          value={formatCurrency(metrics.totalEquity)}
+          primary
+          compact
+        />
+        <MetricCard
+          label="Monthly cash flow"
+          value={formatCurrency(metrics.totalMonthlyCashFlow)}
+          cashFlow={metrics.totalMonthlyCashFlow}
+          compact
+        />
+        <MetricCard
+          label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
+          value={
+            metrics.weightedCapRate != null
+              ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+              : "—"
+          }
+          primary={false}
+          compact
+        />
+      </div>
 
-      {metrics.propertyCount > 1 && (
-        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {metrics.portfolioLtv != null && (
-            <MetricCard
-              label="Portfolio LTV"
-              value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
-              primary={false}
-              compact
-            />
-          )}
+      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {metrics.portfolioLtv != null && (
           <MetricCard
-            label="NOI (Net Operating Income)"
-            value={formatCurrency(metrics.totalNoi)}
+            label={metrics.propertyCount > 1 ? "Portfolio LTV" : "LTV"}
+            value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
             primary={false}
             compact
           />
-          {metrics.portfolioCashOnCashReturn != null && (
-            <MetricCard
-              label="Cash-on-cash return"
-              value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
-              primary={false}
-              compact
-            />
-          )}
+        )}
+        <MetricCard
+          label="NOI (Net Operating Income)"
+          value={formatCurrency(metrics.totalNoi)}
+          primary={false}
+          compact
+        />
+        {metrics.portfolioCashOnCashReturn != null && (
           <MetricCard
-            label="Annual rent"
-            value={formatCurrency(metrics.totalAnnualRent)}
+            label="Cash-on-cash return"
+            value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
             primary={false}
             compact
           />
-          {metrics.dscr != null && (
-            <MetricCard
-              label="DSCR"
-              value={metrics.dscr.toFixed(2)}
-              primary={false}
-              cashFlow={metrics.dscr >= 1 ? 1 : -1}
-              compact
-            />
-          )}
-        </div>
-      )}
+        )}
+        <MetricCard
+          label="Annual rent"
+          value={formatCurrency(metrics.totalAnnualRent)}
+          primary={false}
+          compact
+        />
+        {metrics.dscr != null && (
+          <MetricCard
+            label="DSCR"
+            value={metrics.dscr.toFixed(2)}
+            primary={false}
+            cashFlow={metrics.dscr >= 1 ? 1 : -1}
+            compact
+          />
+        )}
+      </div>
 
       {metrics.propertyCount > 1 && (
         <RentVsMarketSection

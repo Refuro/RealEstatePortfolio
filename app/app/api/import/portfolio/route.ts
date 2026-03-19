@@ -3,6 +3,11 @@ import Papa from "papaparse";
 import type { Prisma } from "@prisma/client";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getPropertyLimit, canAddProperty, getEffectiveTier } from "@/lib/plans";
 import { parseRow, type ImportRow } from "@/lib/import/csv-parser";
 
@@ -10,6 +15,15 @@ export async function POST(req: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, req);
+  const { allowed } = await checkRateLimit(identifier, "import:portfolio");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later.", imported: 0, errors: [] },
+      { status: 429 }
+    );
   }
 
   const formData = await req.formData();
@@ -172,6 +186,8 @@ export async function POST(req: NextRequest) {
       imported++;
     }
   });
+
+  await recordRateLimit(identifier, "import:portfolio");
 
   const limitErrors =
     rowsToImport.length < validRows.length

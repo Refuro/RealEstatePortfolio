@@ -221,7 +221,13 @@ export function parseRow(
       : 100;
 
   const mortgageBalance = parseNum(
-    getCol(row, "mortgage balance", "mortgageBalance")
+    getCol(
+      row,
+      "mortgage balance",
+      "mortgage balance (effective)",
+      "mortgage balance (stored)",
+      "mortgageBalance"
+    )
   );
   const balanceAsOfRaw = parseDate(
     getCol(row, "balance as of", "balanceAsOfDate")

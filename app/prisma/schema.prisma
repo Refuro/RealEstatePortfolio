@@ -81,6 +81,7 @@ model Property {
   bedrooms               Int?
   bathrooms              Decimal? @db.Decimal(4, 2)
   unitMix                String?  // e.g. "2BR, 3BR" for multi-family
+  squareFeet             Int?     // optional; improves RentCast AVM when set
   currentMonthlyExpenses Decimal  @db.Decimal(12, 2)
   vacancyPercent         Int      @default(5) // 0-100, expected vacancy; reduces rent in cash flow
   cashInvested           Decimal? @db.Decimal(14, 2)
@@ -130,6 +131,16 @@ model ContactFormSubmission {
   createdAt  DateTime @default(now())
 
   @@index([identifier, createdAt])
+}
+
+// Generic rate limit for API write endpoints (properties, deals, import, account/delete, billing)
+model ApiRateLimitEntry {
+  id         String   @id @default(cuid())
+  identifier String   // user:userId or ip:xxx
+  action     String   // e.g. "properties:create", "deals:create"
+  createdAt  DateTime @default(now())
+
+  @@index([identifier, action, createdAt])
 }
 
 model Subscription {

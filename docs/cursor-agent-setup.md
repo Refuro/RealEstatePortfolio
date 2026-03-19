@@ -34,6 +34,7 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | **`.cursor/rules/business-valuation-audit-agent.mdc`** | Business/valuation audit command. Trigger phrases: "run business audit", "run valuation audit". Writes to `docs/audits/business/`. |
 | **`.cursor/rules/growth-funnel-audit-agent.mdc`** | Growth-funnel audit command. Trigger phrases: "run growth audit". Writes to `docs/audits/growth-funnel/`. |
 | **`.cursor/rules/agent-governance-audit-agent.mdc`** | AI-agent governance audit command. Trigger phrases: "run agent governance audit". Writes to `docs/audits/agent-governance/`. |
+| **`.cursor/rules/full-audit-agent.mdc`** | Full audit command. Trigger phrases: "run full audit", "run all audits". Runs all lanes, then synthesis pass per `docs/process/full-audit-synthesis.md`. Outputs `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
 | **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
 | **`.cursor/hooks/on-subagent-stop.ps1`** | PowerShell variant for Windows when Git Bash/WSL is not available. Edit `hooks.json` to use this path instead of the `.sh` script if needed. |
@@ -45,7 +46,7 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | Doc | Role |
 |-----|------|
 | `docs/reference/engineering-spec.md` | Phase list and scope (§8). |
-| `docs/tasks.md` | Task list; builder checks off items when done. New env vars and manual steps go to `.env.example` and `docs/setup/manual-steps.md`. |
+| `docs/tasks.md` | Task list; builder checks off items when done. New env vars and manual steps go to `app/.env.example` and `docs/setup/manual-steps.md`. |
 | `docs/reference/roadmap.md` | Value-add backlog, initiatives, long-term vision; PM promotes items to tasks.md when ready to build. |
 | `docs/process/pm-review-checklist.md` | Checklist the PM runs before approving a phase (build, lint, tests, scope, docs). |
 | `docs/process/pm-agent-workflow.md` | How to start the builder, task-based workflow, command-level risk. |
@@ -63,6 +64,9 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/process/business-valuation-audit-process.md` | Process for business/valuation audits. |
 | `docs/process/growth-funnel-audit-process.md` | Process for growth/activation audits. |
 | `docs/process/agent-governance-audit-process.md` | Process for AI-agent governance audits. |
+| `docs/process/full-audit-synthesis.md` | Synthesis pass when running all audits; produces deduplicated task list. |
+| `docs/process/command-integrity-check.md` | Recurring check that audit rules reference correct process docs. |
+| `docs/audits/synthesis/` | Folder for full audit synthesis reports (`YYYY-MM-DD-audit-synthesis.md`). |
 
 If any of these are missing, the PM rule or workflow doc will reference them; add minimal stubs or copy from this repo.
 
@@ -88,6 +92,7 @@ Do this in the project root (same level as `app/` and `docs/`).
   - `.cursor/rules/business-valuation-audit-agent.mdc`
   - `.cursor/rules/growth-funnel-audit-agent.mdc`
   - `.cursor/rules/agent-governance-audit-agent.mdc`
+  - `.cursor/rules/full-audit-agent.mdc`
   - `.cursor/hooks.json`
   - `.cursor/hooks/on-subagent-stop.sh`
   - `.cursor/hooks/on-subagent-stop.ps1` (optional, for Windows)
@@ -127,5 +132,7 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 **Math & Logic audit:** Say "run math audit" or "math audit" to trigger a math and logic audit. The agent follows `docs/process/math-logic-audit.md` and writes a report to `docs/audits/math/`. Review the report and create tasks in `docs/tasks.md` for any formula or edge-case fixes you want.
 
 **Other focused audits:** You can also run feature/UX, security, performance-cost, reliability-ops, data-integrity, business-valuation, growth-funnel, and agent-governance audits with the matching "run <lane> audit" phrase shown in `docs/audits/README.md`.
+
+**Full audit:** Say "run full audit" or "run all audits" to run all 10 lanes and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
 
 No API keys, no Cursor account config, and no duplicate files—just the repo and an executable hook script.

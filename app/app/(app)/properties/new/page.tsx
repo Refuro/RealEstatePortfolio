@@ -20,7 +20,7 @@ export default async function NewPropertyPage({
       </div>
       <h1 className="text-2xl font-semibold text-foreground">Add property</h1>
       <p className="mt-1 text-sm text-muted">
-        Follow the steps below to add your property.
+        Complete each section below, then create your property. Use the links at the top to jump between sections.
       </p>
       {dealId && (
         <div className="mt-4 rounded-lg border border-border/70 bg-card/90 p-3">
@@ -28,7 +28,7 @@ export default async function NewPropertyPage({
             Converting a saved deal into a portfolio property.
           </p>
           <p className="mt-1 text-xs text-muted">
-            We prefilled the wizard from your analyzed deal. Review assumptions before saving.
+            We prefilled the form from your analyzed deal. Review assumptions before saving.
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-3 text-sm">
             <Link

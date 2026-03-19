@@ -6,9 +6,9 @@
 
 ## Quick setup
 
-**Repo layout:** `/app` — Next.js app (run and deploy from here). `/docs` — Product and engineering docs.
+**Repo layout:** `/app` — Next.js app (run and deploy from here). `/docs` — Product and engineering docs. The repo root has a **minimal `package.json`** (Husky only) so git hooks can live at the git root.
 
-**Local setup:** From repo root: `cd app` → `cp .env.example .env` → `npm install && npm run dev` → Open http://localhost:3000. When using Prisma: run `npx prisma migrate dev` and optionally `npx prisma db seed`.
+**Local setup:** From repo root: **`npm install`** (installs Husky and wires git hooks) → `cd app` → `cp .env.example .env` → `npm install && npm run dev` → Open http://localhost:3000. When using Prisma: run `npx prisma migrate dev` and optionally `npx prisma db seed`.
 
 **Deploying:** Vercel — set Root Directory to `app`, add env vars from `.env.example`, connect Postgres. Run `prisma migrate deploy` for production DB.
 
@@ -56,6 +56,8 @@ Then run `npm run dev` and open http://localhost:3000. Sign up, sign in, and you
 
 Use this before deploying or before approving a release.
 
+**Deeper property flows:** If the release changed add/edit/detail property UX or property APIs, also run [Property flow regression matrix](../qa/property-flow-regression-matrix.md) (tabs, workspaces, PATCH validation).
+
 ### Core (needs Clerk + DB)
 
 - [ ] **Landing** — `/` shows "Veld Portfolio" and Sign in / Sign up (or "Go to dashboard" when signed in).
@@ -74,6 +76,39 @@ Use this before deploying or before approving a release.
 - [ ] **Checkout** — "Upgrade" goes to Stripe Checkout (test mode); success redirects to `/billing/success`.
 - [ ] **Settings / billing** — Settings shows current plan, property count/limit, "Manage billing"; opens Stripe Billing Portal.
 - [ ] **Webhook** — After a test checkout, subscription/plan in the app reflects the new plan (webhook endpoint must be reachable by Stripe, e.g. ngrok for local).
+
+### Before push (recommended)
+
+Run from `app/` before pushing or opening a PR — **same order as CI** ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)): lint after install, then tests.
+
+```bash
+npm run lint
+npm run test
+```
+
+Optional: `npm run test:coverage` for coverage on configured modules. **CI does not run `npm run build`** (needs DB + secrets — see [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md) §3.5); use local `npm run build` or Vercel preview for compile verification.
+
+### Git hooks (Husky)
+
+If you ran **`npm install` at the repo root**, [Husky](https://typicode.github.io/husky/) installs hooks that run the same checks as CI from **`app/`**: `npm run lint` then `npm run test`.
+
+- **pre-commit** — runs before each **`git commit`** completes (blocks the commit if lint or tests fail).
+- **pre-push** — runs before **`git push`** (same checks again, so a clean commit that later breaks tests still gets caught before the remote).
+
+**Skip only when necessary** (broken laptop env, urgent hotfix): disable hooks for one command with `HUSKY=0` (e.g. `HUSKY=0 git commit` / `HUSKY=0 git push` on macOS/Linux/Git Bash) or PowerShell: `$env:HUSKY='0'; git commit`. Alternatively `git commit --no-verify` / `git push --no-verify` bypasses hook scripts—use sparingly; CI will still run on the remote.
+
+**Fresh clone:** `npm install` at **repo root** (hooks) **and** `cd app && npm install` (app dependencies), or the hook may fail when `app/node_modules` is missing.
+
+### Unit tests (Vitest)
+
+From `app/`:
+
+```bash
+npm run test
+npm run test:coverage   # optional — coverage for lib metrics, amortization, property validation, selected API routes
+```
+
+See [`docs/proposals/testing-implementation-plan.md`](../proposals/testing-implementation-plan.md). CI runs **`npm run lint`** then **`npm run test`** on push/PR ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)). Process notes: [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md).
 
 ### Sanity
 

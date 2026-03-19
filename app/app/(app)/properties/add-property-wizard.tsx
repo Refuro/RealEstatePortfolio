@@ -14,6 +14,7 @@ import {
   defaultMortgageFormData,
   type MortgageFormData,
 } from "./mortgage-form-fields";
+import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
 
 export type WizardData = {
   nickname: string;
@@ -36,6 +37,7 @@ export type WizardData = {
   notes: string;
   bedrooms: string;
   bathrooms: string;
+  squareFeet: string;
   addMortgage: boolean | null;
   mortgage: MortgageFormData;
   marketRent: string;
@@ -71,6 +73,7 @@ const defaultWizardData: WizardData = {
   notes: "",
   bedrooms: "",
   bathrooms: "",
+  squareFeet: "",
   addMortgage: null,
   mortgage: defaultMortgageFormData,
   marketRent: "",
@@ -79,12 +82,13 @@ const defaultWizardData: WizardData = {
   lastRentEstimate: "",
 };
 
-const STEPS = [
-  { id: 1, title: "Address & basics" },
-  { id: 2, title: "Purchase" },
-  { id: 3, title: "Income & expenses" },
-  { id: 4, title: "Mortgage" },
-  { id: 5, title: "Review" },
+/** Sticky nav + anchor targets (Epic C — single-page add flow). */
+const ADD_SECTION_NAV = [
+  { id: "section-location", label: "Location & profile" },
+  { id: "section-economics", label: "Purchase & value" },
+  { id: "section-income", label: "Income & expenses" },
+  { id: "section-mortgage", label: "Mortgage" },
+  { id: "section-review", label: "Review" },
 ] as const;
 
 const inputClass =
@@ -359,6 +363,11 @@ function StepAddressBasics({
           </div>
         </div>
       )}
+      <PropertySquareFeetField
+        value={data.squareFeet}
+        onChange={(v) => update("squareFeet", v)}
+        className="max-w-xs"
+      />
     </div>
   );
 }
@@ -395,6 +404,8 @@ function StepPurchase({
       });
       if (data.addressLine2?.trim()) params.set("addressLine2", data.addressLine2);
       if (data.propertyType) params.set("propertyType", data.propertyType);
+      const sq = parseInt(data.squareFeet?.trim() ?? "", 10);
+      if (!Number.isNaN(sq) && sq >= 100) params.set("squareFootage", String(sq));
       const res = await fetch(`/api/estimates/value?${params.toString()}`);
       const json = (await res.json()) as { value?: number; error?: string };
       if (json.value != null && Number.isFinite(json.value)) {
@@ -583,6 +594,8 @@ function StepIncomeExpenses({
         params.set("units", data.units);
       if (data.bedrooms?.trim()) params.set("bedrooms", data.bedrooms);
       if (data.bathrooms?.trim()) params.set("bathrooms", data.bathrooms);
+      const sqFt = parseInt(data.squareFeet?.trim() ?? "", 10);
+      if (!Number.isNaN(sqFt) && sqFt >= 100) params.set("squareFootage", String(sqFt));
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; marketRent?: number; marketRentAsOf?: string; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
@@ -751,7 +764,9 @@ function StepMortgage({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted">
-        Would you like to add a mortgage for this property? You can add one later from the property detail page.
+        <strong className="font-medium text-foreground">Optional.</strong> You can skip and add or edit loan
+        details anytime from the property page after you save. Choosing &quot;No, skip&quot; does not block
+        creating the property.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
         <button
@@ -797,13 +812,7 @@ function StepMortgage({
   );
 }
 
-function StepReview({
-  data,
-  onEditStep,
-}: {
-  data: WizardData;
-  onEditStep: (step: number) => void;
-}) {
+function StepReview({ data }: { data: WizardData }) {
   const address = [data.addressLine1, data.addressLine2, data.city, data.state, data.zipCode]
     .filter(Boolean)
     .join(", ");
@@ -819,13 +828,12 @@ function StepReview({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Address & basics
           </h3>
-          <button
-            type="button"
-            onClick={() => onEditStep(1)}
-            className="text-sm font-medium text-foreground hover:underline"
+          <a
+            href="#section-location"
+            className="text-sm font-medium text-accent hover:underline"
           >
             Edit
-          </button>
+          </a>
         </div>
         <dl className="mt-3 space-y-2 text-sm">
           {data.nickname && (
@@ -855,13 +863,12 @@ function StepReview({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Purchase
           </h3>
-          <button
-            type="button"
-            onClick={() => onEditStep(2)}
-            className="text-sm font-medium text-foreground hover:underline"
+          <a
+            href="#section-economics"
+            className="text-sm font-medium text-accent hover:underline"
           >
             Edit
-          </button>
+          </a>
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
@@ -896,13 +903,12 @@ function StepReview({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Income & expenses
           </h3>
-          <button
-            type="button"
-            onClick={() => onEditStep(3)}
-            className="text-sm font-medium text-foreground hover:underline"
+          <a
+            href="#section-income"
+            className="text-sm font-medium text-accent hover:underline"
           >
             Edit
-          </button>
+          </a>
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
@@ -937,13 +943,12 @@ function StepReview({
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Mortgage
           </h3>
-          <button
-            type="button"
-            onClick={() => onEditStep(4)}
-            className="text-sm font-medium text-foreground hover:underline"
+          <a
+            href="#section-mortgage"
+            className="text-sm font-medium text-accent hover:underline"
           >
             Edit
-          </button>
+          </a>
         </div>
         <div className="mt-3 text-sm">
           {data.addMortgage === true ? (
@@ -1070,6 +1075,30 @@ function validateStep4(data: WizardData): Record<string, string> {
   return {};
 }
 
+/** Run all step validators; merge errors and pick first section with an error for scroll. */
+function runAllValidations(data: WizardData): {
+  errors: Record<string, string>;
+  firstSectionId: string | null;
+} {
+  const sections: {
+    id: string;
+    validate: (d: WizardData) => Record<string, string>;
+  }[] = [
+    { id: "section-location", validate: validateStep1 },
+    { id: "section-economics", validate: validateStep2 },
+    { id: "section-income", validate: validateStep3 },
+    { id: "section-mortgage", validate: validateStep4 },
+  ];
+  const errors: Record<string, string> = {};
+  let firstSectionId: string | null = null;
+  for (const { id, validate } of sections) {
+    const e = validate(data);
+    Object.assign(errors, e);
+    if (Object.keys(e).length > 0 && !firstSectionId) firstSectionId = id;
+  }
+  return { errors, firstSectionId };
+}
+
 function mergeWithDefaults(restored: Partial<WizardData>): WizardData {
   const m = restored.mortgage as Partial<MortgageFormData> | undefined;
   return {
@@ -1082,12 +1111,10 @@ function mergeWithDefaults(restored: Partial<WizardData>): WizardData {
 export function AddPropertyWizard({ dealId }: { dealId?: string }) {
   const router = useRouter();
   const draft = useDraft();
-  const [step, setStep] = useState(1);
   const [data, setData] = useState<WizardData>(defaultWizardData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const stepContainerRef = useRef<HTMLDivElement>(null);
   const hasRestoredRef = useRef(false);
   const dealPrefilledRef = useRef(false);
 
@@ -1140,8 +1167,10 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     if (draft?.draftData && !hasRestoredRef.current) {
       const id = setTimeout(() => {
         setData(mergeWithDefaults(draft.draftData!.data as Partial<WizardData>));
-        setStep(5); // Go directly to review when continuing from draft
         hasRestoredRef.current = true;
+        requestAnimationFrame(() => {
+          document.getElementById("section-review")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
       }, 0);
       return () => clearTimeout(id);
     }
@@ -1156,46 +1185,35 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     return () => draft?.registerWizardGetData(null);
   }, [draft, data]);
 
+  const prevStartFreshKey = useRef<number | null>(null);
   useEffect(() => {
-    const first = stepContainerRef.current?.querySelector<HTMLElement>(
-      'input:not([type="hidden"]), select, textarea, button'
-    );
-    first?.focus();
-  }, [step]);
-
-  function goNext() {
-    const stepErrors =
-      step === 1
-        ? validateStep1(data)
-        : step === 2
-          ? validateStep2(data)
-          : step === 3
-            ? validateStep3(data)
-            : step === 4
-              ? validateStep4(data)
-              : {};
-    setErrors(stepErrors);
-    if (Object.keys(stepErrors).length > 0) return;
-
-    if (step < 5) {
-      setStep(step + 1);
+    const key = draft?.startFreshKey ?? 0;
+    if (prevStartFreshKey.current === null) {
+      prevStartFreshKey.current = key;
+      return;
     }
-  }
-
-  function goBack() {
-    setErrors({});
-    if (step > 1) setStep(step - 1);
-  }
-
-  function handleEditStep(s: number) {
-    setErrors({});
-    setStep(s);
-  }
+    if (key !== prevStartFreshKey.current) {
+      prevStartFreshKey.current = key;
+      // Defer state updates out of the effect body (avoids react-hooks/set-state-in-effect cascade warning).
+      queueMicrotask(() => {
+        setData(defaultWizardData);
+        setErrors({});
+        hasRestoredRef.current = false;
+        setError(null);
+        requestAnimationFrame(() => {
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        });
+      });
+    }
+  }, [draft?.startFreshKey, draft]);
 
   async function handleSubmit() {
-    const step4Errors = validateStep4(data);
-    if (Object.keys(step4Errors).length > 0) {
-      setErrors(step4Errors);
+    const { errors: allErrors, firstSectionId } = runAllValidations(data);
+    setErrors(allErrors);
+    if (Object.keys(allErrors).length > 0) {
+      if (firstSectionId) {
+        document.getElementById(firstSectionId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
       return;
     }
 
@@ -1246,6 +1264,8 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     if (data.bedrooms?.trim() && !Number.isNaN(bed) && bed >= 1 && bed <= 10) payload.bedrooms = Math.round(bed);
     const bath = Number(data.bathrooms);
     if (data.bathrooms?.trim() && !Number.isNaN(bath) && bath >= 0.5 && bath <= 10) payload.bathrooms = bath;
+    const sq = parseInt(data.squareFeet?.trim() ?? "", 10);
+    if (!Number.isNaN(sq) && sq >= 100) payload.squareFeet = sq;
 
     const body =
       data.addMortgage === true
@@ -1291,28 +1311,29 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
 
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (step < 5) goNext();
-    else handleSubmit();
+    void handleSubmit();
   }
 
   return (
     <form onSubmit={handleFormSubmit} className="rounded-lg border border-border bg-card p-6">
-      {/* Progress indicator */}
-      <div className="mb-6">
-        <p className="text-sm font-medium text-muted">
-          Step {step} of 5 — {STEPS[step - 1].title}
-        </p>
-        <div className="mt-2 flex gap-1">
-          {STEPS.map((s) => (
-            <div
-              key={s.id}
-              className={`h-1 flex-1 rounded-full ${
-                s.id <= step ? "bg-accent" : "bg-subtle"
-              }`}
-            />
+      <nav
+        aria-label="Add property sections"
+        className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/85"
+      >
+        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
+        <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          {ADD_SECTION_NAV.map((s) => (
+            <li key={s.id}>
+              <a
+                href={`#${s.id}`}
+                className="text-accent hover:underline"
+              >
+                {s.label}
+              </a>
+            </li>
           ))}
-        </div>
-      </div>
+        </ul>
+      </nav>
 
       {error && (
         <div className="mb-4 rounded-md px-4 py-2 text-sm text-negative">
@@ -1329,51 +1350,99 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
         </div>
       )}
 
-      {/* Step content */}
-      <div ref={stepContainerRef} key={step}>
-        {step === 1 && (
-          <StepAddressBasics data={data} onChange={setData} errors={errors} />
-        )}
-        {step === 2 && (
-          <StepPurchase data={data} onChange={setData} errors={errors} />
-        )}
-        {step === 3 && (
-          <StepIncomeExpenses data={data} onChange={setData} errors={errors} />
-        )}
-        {step === 4 && (
-          <StepMortgage data={data} onChange={setData} errors={errors} />
-        )}
-        {step === 5 && (
-          <>
-            <StepReview data={data} onEditStep={handleEditStep} />
-            <div className="mt-6">
-            <label htmlFor="wizard-notes" className={labelClass}>
-              Notes (optional)
-            </label>
-            <textarea
-              id="wizard-notes"
-              rows={3}
-              value={notesValue}
-              onChange={(e) => setNotes(e.target.value)}
-              className={inputClass}
-            />
+      <div className="space-y-10">
+        <section
+          id="section-location"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-location"
+        >
+          <h2 id="heading-location" className="text-lg font-semibold text-foreground">
+            Location &amp; profile
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Address, property type, units, and optional details that improve rent estimates.
+          </p>
+          <div className="mt-4">
+            <StepAddressBasics data={data} onChange={setData} errors={errors} />
           </div>
-        </>
-        )}
+        </section>
+
+        <section
+          id="section-economics"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-economics"
+        >
+          <h2 id="heading-economics" className="text-lg font-semibold text-foreground">
+            Purchase &amp; value
+          </h2>
+          <p className="mt-1 text-sm text-muted">What you paid, current value, and ownership.</p>
+          <div className="mt-4">
+            <StepPurchase data={data} onChange={setData} errors={errors} />
+          </div>
+        </section>
+
+        <section
+          id="section-income"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-income"
+        >
+          <h2 id="heading-income" className="text-lg font-semibold text-foreground">
+            Income &amp; expenses
+          </h2>
+          <p className="mt-1 text-sm text-muted">Rent, operating expenses, and vacancy assumption.</p>
+          <div className="mt-4">
+            <StepIncomeExpenses data={data} onChange={setData} errors={errors} />
+          </div>
+        </section>
+
+        <section
+          id="section-mortgage"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-mortgage"
+        >
+          <h2 id="heading-mortgage" className="text-lg font-semibold text-foreground">
+            Mortgage
+          </h2>
+          <div className="mt-4">
+            <StepMortgage data={data} onChange={setData} errors={errors} />
+          </div>
+        </section>
+
+        <section
+          id="section-review"
+          tabIndex={-1}
+          className="scroll-mt-28"
+          aria-labelledby="heading-review"
+        >
+          <h2 id="heading-review" className="text-lg font-semibold text-foreground">
+            Review &amp; create
+          </h2>
+          <p className="mt-1 text-sm text-muted">Confirm the summary below, add optional notes, then create the property.</p>
+          <div className="mt-4 space-y-6">
+            <StepReview data={data} />
+            <div>
+              <label htmlFor="wizard-notes" className={labelClass}>
+                Notes (optional)
+              </label>
+              <textarea
+                id="wizard-notes"
+                rows={3}
+                value={notesValue}
+                onChange={(e) => setNotes(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* Navigation */}
-      <div className="mt-8 flex items-center justify-between gap-4">
+      <div className="mt-10 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
         <div>
-          {step > 1 ? (
-            <button
-              type="button"
-              onClick={goBack}
-              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
-            >
-              Back
-            </button>
-          ) : draft?.hasDraft ? (
+          {draft?.hasDraft ? (
             <button
               type="button"
               onClick={() => draft.navigateTo("/properties")}
@@ -1384,30 +1453,19 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
           ) : (
             <Link
               href="/properties"
-              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
+              className="inline-flex rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
               Cancel
             </Link>
           )}
         </div>
-        <div>
-          {step < 5 ? (
-            <button
-              type="submit"
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="submit"
-              disabled={submitting}
-              className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
-            >
-              {submitting ? "Creating…" : "Create property"}
-            </button>
-          )}
-        </div>
+        <button
+          type="submit"
+          disabled={submitting}
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
+        >
+          {submitting ? "Creating…" : "Create property"}
+        </button>
       </div>
     </form>
   );

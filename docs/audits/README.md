@@ -14,8 +14,20 @@ Periodic AI-run audits of the product and codebase. Each lane has a process doc 
 | **Business & Valuation** | [business-valuation-audit-process.md](../process/business-valuation-audit-process.md) | [business/](business/) |
 | **Growth Funnel & Activation** | [growth-funnel-audit-process.md](../process/growth-funnel-audit-process.md) | [growth-funnel/](growth-funnel/) |
 | **AI Agent Governance** | [agent-governance-audit-process.md](../process/agent-governance-audit-process.md) | [agent-governance/](agent-governance/) |
+| **Synthesis** (full audit) | [full-audit-synthesis.md](../process/full-audit-synthesis.md) | [synthesis/](synthesis/) |
 
 ## Running audits
+
+### Full audit (all lanes)
+
+- **Trigger:** Say "run full audit" or "run all audits".
+- **Flow:**
+  1. Run all 10 audit lanes.
+  2. After all reports are written, run the **synthesis pass** per [full-audit-synthesis.md](../process/full-audit-synthesis.md).
+  3. Output: `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
+  4. PM reviews synthesis and promotes approved items to [docs/tasks.md](../tasks.md).
+
+### Single-lane audits
 
 - **Code audit:** Say "run code audit" or "code audit" in chat. Agent follows the process and writes to `audits/code/`.
 - **Math audit:** Say "run math audit" or "math audit" in chat. Agent follows the process and writes to `audits/math/`.
@@ -37,6 +49,7 @@ Use daily ISO naming for all report files:
 Examples:
 
 - `2026-03-19-code-audit.md`
+- `2026-03-19-math-logic-audit.md`
 - `2026-03-19-security-audit.md`
 - `2026-03-19-business-valuation-audit.md`
 
@@ -59,4 +72,6 @@ For major launches, run at least: Security, Growth Funnel, Reliability/Ops, Data
 
 ## After review
 
-Create tasks from findings in your active backlog workflow (current: [docs/tasks.md](../tasks.md)). The builder implements approved items.
+- **Single-lane audit:** PM reviews the report and manually promotes task candidates to [docs/tasks.md](../tasks.md) if desired.
+- **Full audit:** PM reviews the synthesis output (`docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`) and promotes approved items to [docs/tasks.md](../tasks.md). Synthesis already deduplicates across lanes.
+- The builder implements approved items.

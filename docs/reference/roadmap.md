@@ -196,6 +196,7 @@ Defer until validated or user base justifies:
 - **Advanced analytics** — Defer until core analytics proven.
 - **Mobile app** — Defer until web usage justifies.
 - **OAuth login, two-factor authentication** — Auth enhancements (mvp-spec).
+- **Add-property experience overhaul (active priority)** — Full redesign of add-property (wizard), **Edit property** page, and **Details tab inline editing** (same data, three patterns today). Prefer complete overhaul over retooling. Backlog: `docs/proposals/add-property-experience-overhaul.md`. **Audit Batch 8 deferred** until this ships or is reprioritized (2026-03-19).
 
 ---
 

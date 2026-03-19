@@ -1,0 +1,23 @@
+---
+description: Full audit command — run all audit lanes and produce consolidated synthesis
+alwaysApply: false
+---
+
+# Full Audit Command
+
+When the user says **"run full audit"** or **"run all audits"** or **"full audit"**:
+
+## What to do
+
+1. Run all 10 audit lanes (Code, Math, Feature/UX, Security, Performance-Cost, Reliability-Ops, Data-Integrity, Business-Valuation, Growth-Funnel, Agent-Governance) following their respective process docs.
+2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-<lane>-audit.md` (use today's date).
+3. After all reports are written, run the **synthesis pass** per `docs/process/full-audit-synthesis.md`.
+4. Write synthesis output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
+5. Audit only. Do not make code changes.
+6. After completion, summarize top findings and report locations. Point the user to the synthesis file for PM review and task promotion.
+
+## References
+
+- Synthesis process: `docs/process/full-audit-synthesis.md`
+- Lane processes: `docs/process/*-audit*.md` and `docs/process/*-audit-process.md`
+- Audit index: `docs/audits/README.md`

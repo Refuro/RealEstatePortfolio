@@ -181,9 +181,9 @@ Sizes: `px-4 py-2 text-sm font-medium` for standard buttons.
 
 - **Tailwind:** Extend `@theme` in `globals.css` with semantic color tokens. Use `text-muted`, `bg-subtle`, `border-default`, `text-positive`, `text-negative`, `bg-accent`, etc.
 - **Dark mode:** Support `prefers-color-scheme: dark` via CSS variables. Ensure contrast meets accessibility guidelines.
-- **Builder reference:** When implementing UI, always check new components against this spec. PM approval includes design compliance (see `pm-review-checklist.md`).
+- **Builder reference:** When implementing UI, always check new components against this spec. PM approval includes design compliance (see [pm-review-checklist.md](../process/pm-review-checklist.md)).
 - **Audit reference:** Feature/UX audits must cite this spec and explicitly call out where modernized UI patterns require spec updates.
 
 ---
 
-*Reference: [engineering-spec.md §20](engineering-spec.md) (Visual refresh).*
+*Reference: [engineering-spec.md §20](../reference/engineering-spec.md) (Visual refresh).*

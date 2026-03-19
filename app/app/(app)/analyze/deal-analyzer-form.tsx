@@ -376,7 +376,7 @@ export function DealAnalyzerForm({
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
               Debt and ownership
             </h3>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
               <div>
                 <label htmlFor="mortgageBalance" className={labelClass}>
                   Mortgage balance (optional)
@@ -410,25 +410,25 @@ export function DealAnalyzerForm({
                   className={inputClass}
                 />
               </div>
-              <div>
-                <label htmlFor="ownershipPercent" className={labelClass}>
-                  Ownership %
-                </label>
-                <input
-                  id="ownershipPercent"
-                  type="number"
-                  min={1}
-                  max={100}
-                  inputMode="numeric"
-                  value={ownershipPercent}
-                  onChange={(e) => setOwnershipPercent(e.target.value)}
-                  className={inputClass}
-                />
-                <p className="mt-1 text-xs text-muted">
-                  Analyze uses proportional ownership semantics (your share of rent, expenses,
-                  and debt service). Full liability mode does not apply in this workspace.
-                </p>
-              </div>
+            </div>
+            <div className="mt-4">
+              <label htmlFor="ownershipPercent" className={labelClass}>
+                Ownership %
+              </label>
+              <input
+                id="ownershipPercent"
+                type="number"
+                min={1}
+                max={100}
+                inputMode="numeric"
+                value={ownershipPercent}
+                onChange={(e) => setOwnershipPercent(e.target.value)}
+                className={`${inputClass} max-w-xs`}
+              />
+              <p className="mt-1 text-xs text-muted">
+                Analyze uses proportional ownership semantics (your share of rent, expenses,
+                and debt service). Full liability mode does not apply in this workspace.
+              </p>
             </div>
           </div>
         </div>

@@ -306,8 +306,12 @@ export function ProjectionsTabContent({
 
       const propertyValueFull = estimatedValue * Math.pow(1 + valueGrowth / 100, year);
       const propertyValue = propertyValueFull * scale;
-      const loanBalance = loanBalanceFull * scale;
-      const equity = Math.max(0, propertyValue - loanBalance);
+      const loanBalance = scaleLiabilityAmount(
+        loanBalanceFull,
+        ownershipPercent,
+        displayMode
+      );
+      const equity = Math.max(0, (propertyValueFull - loanBalanceFull) * scale);
 
       rows.push({
         year,
@@ -385,8 +389,12 @@ export function ProjectionsTabContent({
         totalMortgageBalance;
 
       const propertyValue = estimatedValue * Math.pow(1 + PRESETS.base.valueGrowth / 100, year) * scale;
-      const loanBalance = loanBalanceFull * scale;
-      const equity = Math.max(0, propertyValue - loanBalance);
+      const loanBalance = scaleLiabilityAmount(
+        loanBalanceFull,
+        ownershipPercent,
+        displayMode
+      );
+      const equity = Math.max(0, propertyValue - loanBalanceFull * scale);
 
       rows.push({
         year,

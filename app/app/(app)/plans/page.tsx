@@ -7,7 +7,7 @@ import Link from "next/link";
 import { BillingPortalButton } from "../settings/billing-portal-button";
 
 export const metadata: Metadata = {
-  title: "Pricing",
+  title: "Plans & billing",
   description:
     "Veld Portfolio plans: Free, Investor, and Pro. Upgrade to track more properties.",
 };
@@ -35,7 +35,7 @@ export default async function PlansPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-foreground">Pricing</h1>
+      <h1 className="text-2xl font-semibold text-foreground">Plans & billing</h1>
       <p className="mt-1 text-base text-muted">
         Choose a plan based on how many properties you track.
       </p>

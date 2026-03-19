@@ -1,10 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
-import { ProjectionsTabContent } from "../properties/[id]/projections-tab-content";
 import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
+
+const ProjectionsTabContent = dynamic(
+  () =>
+    import("../properties/[id]/projections-tab-content").then((m) => ({
+      default: m.ProjectionsTabContent,
+    })),
+  { ssr: false }
+);
 
 type ModelingProperty = {
   id: string;

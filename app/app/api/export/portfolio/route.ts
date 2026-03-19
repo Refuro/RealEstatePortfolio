@@ -52,6 +52,8 @@ export async function GET() {
     "monthly payment",
     "escrow amount",
     "lender",
+    "NOI",
+    "annual cash flow",
     "equity",
     "monthly cash flow",
     "cap rate",
@@ -140,6 +142,8 @@ export async function GET() {
       escapeCsvCell(monthlyPayment ?? ""),
       escapeCsvCell(escrowAmount ?? ""),
       escapeCsvCell(lender ?? ""),
+      escapeCsvCell(metrics.noi),
+      escapeCsvCell(metrics.annualCashFlow),
       escapeCsvCell(metrics.equity),
       escapeCsvCell(metrics.monthlyCashFlow),
       escapeCsvCell(

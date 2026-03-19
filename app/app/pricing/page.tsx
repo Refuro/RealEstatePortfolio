@@ -56,6 +56,40 @@ export default async function PricingPage() {
             className="mt-10"
             showSignUp={!user}
           />
+
+          {!user && (
+            <section className="mt-12">
+              <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+                See what you get
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <img
+                  src="/ScreenDashboard.png"
+                  alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg md:col-span-2"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <img
+                  src="/ScreenMortgage.png"
+                  alt="Mortgage workspace with payoff simulation and balance projection chart"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <img
+                  src="/ScreenDeal.png"
+                  alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+              </div>
+            </section>
+          )}
           {!user && (
             <section className="mt-12 rounded-2xl border border-border/70 bg-card/95 p-6 shadow-sm md:p-8">
               <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr] md:items-center">

@@ -61,7 +61,18 @@ export async function GET() {
     // Keep current tier; past_due banner will show
     return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
   } catch (err) {
-    console.error("Billing sync error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    const name = err instanceof Error ? err.name : "Error";
+    console.error(
+      JSON.stringify({
+        action: "billing_sync_error",
+        errorType: name,
+        errorMessage: message,
+        userId: user.id,
+        stripeCustomerId: user.stripeCustomerId ?? null,
+        timestamp: new Date().toISOString(),
+      })
+    );
     return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
   }
 }

@@ -1,5 +1,6 @@
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getSubscriptionDetails } from "@/lib/billing/get-subscription-details";
 import { getDealLimit, getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
@@ -14,8 +15,8 @@ export default async function SettingsPage() {
   const user = await getAppUser();
   if (!user) return null;
 
-  const [subscription, propertyCount, dealCount] = await Promise.all([
-    prisma.subscription.findUnique({ where: { userId: user.id } }),
+  const [subscriptionDetails, propertyCount, dealCount] = await Promise.all([
+    getSubscriptionDetails(user.id),
     prisma.property.count({ where: { userId: user.id } }),
     prisma.savedDeal.count({ where: { userId: user.id } }),
   ]);
@@ -116,14 +117,10 @@ export default async function SettingsPage() {
                 </dd>
               </div>
             </div>
-            {subscription?.currentPeriodEnd && (
+            {subscriptionDetails.currentPeriodEnd && (
               <SubscriptionBillingDisplay
-                initialCurrentPeriodEnd={
-                  typeof subscription.currentPeriodEnd === "string"
-                    ? subscription.currentPeriodEnd
-                    : subscription.currentPeriodEnd.toISOString()
-                }
-                initialCancelAtPeriodEnd={subscription.cancelAtPeriodEnd ?? null}
+                currentPeriodEnd={subscriptionDetails.currentPeriodEnd}
+                cancelAtPeriodEnd={subscriptionDetails.cancelAtPeriodEnd}
               />
             )}
           </dl>

@@ -1,0 +1,68 @@
+import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
+
+export type MortgageForTabs = {
+  id: string;
+  originalLoanAmount: string;
+  currentBalance: string;
+  balanceAsOfDate?: string | null;
+  interestRate: string;
+  termYears: number;
+  startDate: string;
+  monthlyPayment: string;
+  paymentEffectiveDate?: string | null;
+  escrowIncluded?: boolean;
+  escrowAmount?: string | null;
+  lenderName: string | null;
+  loanType: string | null;
+  effectiveBalance?: number;
+  balanceSource?: "stored" | "projected";
+  payoffProjection?: { payoffDate: string | null; remainingAtTermEnd: number | null };
+};
+
+export type PropertyDetailTabsProps = {
+  propertyId: string;
+  property: {
+    nickname: string | null;
+    addressLine1: string;
+    addressLine2: string | null;
+    city: string;
+    state: string;
+    zipCode: string;
+    propertyType: string;
+    units: number;
+    bedrooms: number | null;
+    bathrooms: number | null;
+    unitMix: string | null;
+    squareFeet: number | null;
+    purchasePrice: number;
+    purchaseDate: Date | string;
+    currentEstimatedValue: number;
+    currentMonthlyExpenses: number;
+    unitRents: number[] | null;
+    ownershipPercent: number | null;
+    vacancyPercent: number | null;
+    cashInvested: number | null;
+    notes: string | null;
+    marketRent: number | null;
+    marketRentAsOf: Date | string | null;
+    updatedAt: Date | string;
+  };
+  address: string;
+  totalRent: number;
+  mortgageData: MortgageForTabs[];
+  metrics: {
+    equity: number;
+    monthlyCashFlow: number;
+    noi: number;
+    capRate: number | null;
+    ltv: number | null;
+    cashOnCashReturn: number | null;
+    grossAnnualRent: number;
+  };
+  dscr: number | null;
+  totalMortgageBalance: number;
+  totalMonthlyPayment: number;
+  ownershipPercent: number;
+  vacancyPercent: number;
+  displayMode: OwnershipDisplayMode | null;
+};

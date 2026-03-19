@@ -66,13 +66,15 @@ export function MortgageSection({
   }
 
   const Wrapper = embedded ? "div" : "section";
-  const wrapperClassName = embedded ? "" : "rounded-lg border border-border bg-card p-6";
+  const wrapperClassName = embedded ? "" : "rounded-lg border border-border bg-card p-4";
 
   return (
     <Wrapper className={wrapperClassName}>
-      <div className="flex items-center justify-between">
+      <div
+        className={`flex items-center gap-2 ${embedded ? "justify-end" : "justify-between"}`}
+      >
         {!embedded && (
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+          <h2 className="mb-0 text-xs font-semibold uppercase tracking-wide text-muted">
             Mortgages
           </h2>
         )}
@@ -80,7 +82,7 @@ export function MortgageSection({
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="text-base font-medium text-foreground hover:underline"
+            className="text-sm font-medium text-accent hover:underline"
           >
             Add mortgage
           </button>
@@ -132,15 +134,15 @@ export function MortgageSection({
       )}
 
       {!showForm && !editingId && mortgages.length === 0 && (
-        <div className="mt-4 rounded-md border border-dashed border-border bg-subtle/50 p-6 text-center">
-          <p className="text-base text-muted">No mortgage on file.</p>
-          <p className="mt-1 text-sm text-muted">
+        <div className="mt-4 rounded-md border border-dashed border-border bg-subtle/50 p-4 text-center">
+          <p className="text-sm text-muted">No mortgage on file.</p>
+          <p className="mt-1 text-xs text-muted">
             Add a mortgage to see equity, LTV, payoff timeline, and amortization.
           </p>
           <button
             type="button"
             onClick={() => setShowForm(true)}
-            className="mt-4 rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add mortgage
           </button>
@@ -153,14 +155,14 @@ export function MortgageSection({
           {mortgages.map((m) => (
             <li
               key={m.id}
-              className="rounded-md border border-border bg-subtle/50 p-5"
+              className="rounded-md border border-border bg-subtle/50 p-4"
             >
               <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
                 <div>
-                  <dt className="text-base text-muted">
+                  <dt className="text-sm font-medium text-muted">
                     {m.balanceSource === "stored" ? "Balance" : "Estimated balance"}
                   </dt>
-                  <dd className="text-lg font-medium text-foreground">
+                  <dd className="text-sm font-medium text-foreground">
                     ${(m.effectiveBalance ?? Number(m.currentBalance)).toLocaleString()}
                     {m.balanceSource === "stored" && m.balanceAsOfDate ? (
                       <span className="ml-1 text-xs text-muted font-normal">
@@ -179,18 +181,18 @@ export function MortgageSection({
                   )}
                 </div>
                 <div>
-                  <dt className="text-base text-muted">Rate</dt>
-                  <dd className="text-lg font-medium text-foreground">
+                  <dt className="text-sm font-medium text-muted">Rate</dt>
+                  <dd className="text-sm font-medium text-foreground">
                     {(Number(m.interestRate) * 100).toFixed(2)}%
                   </dd>
                 </div>
                 <div>
-                  <dt className="text-base text-muted">Term</dt>
-                  <dd className="text-lg font-medium text-foreground">{m.termYears} years</dd>
+                  <dt className="text-sm font-medium text-muted">Term</dt>
+                  <dd className="text-sm font-medium text-foreground">{m.termYears} years</dd>
                 </div>
                 <div>
-                  <dt className="text-base text-muted">Monthly payment</dt>
-                  <dd className="text-lg font-medium text-foreground">
+                  <dt className="text-sm font-medium text-muted">Monthly payment</dt>
+                  <dd className="text-sm font-medium text-foreground">
                     ${Number(m.monthlyPayment).toLocaleString()}
                     {m.paymentEffectiveDate && (
                       <span className="ml-1 text-xs text-muted font-normal">
@@ -201,32 +203,32 @@ export function MortgageSection({
                 </div>
                 {m.originalLoanAmount && (
                   <div>
-                    <dt className="text-base text-muted">Original loan amount</dt>
-                    <dd className="text-lg font-medium text-foreground">
+                    <dt className="text-sm font-medium text-muted">Original loan amount</dt>
+                    <dd className="text-sm font-medium text-foreground">
                       ${Number(m.originalLoanAmount).toLocaleString()}
                     </dd>
                   </div>
                 )}
                 {m.loanType && (
                   <div>
-                    <dt className="text-base text-muted">Loan type</dt>
-                    <dd className="text-lg font-medium text-foreground">
+                    <dt className="text-sm font-medium text-muted">Loan type</dt>
+                    <dd className="text-sm font-medium text-foreground">
                       {formatLoanType(m.loanType)}
                     </dd>
                   </div>
                 )}
                 {m.startDate && (
                   <div>
-                    <dt className="text-base text-muted">Loan start date</dt>
-                    <dd className="text-lg font-medium text-foreground">
+                    <dt className="text-sm font-medium text-muted">Loan start date</dt>
+                    <dd className="text-sm font-medium text-foreground">
                       {new Date(m.startDate).toLocaleDateString()}
                     </dd>
                   </div>
                 )}
                 {m.lenderName && (
                   <div className="col-span-2">
-                    <dt className="text-base text-muted">Lender</dt>
-                    <dd className="text-lg font-medium text-foreground">{m.lenderName}</dd>
+                    <dt className="text-sm font-medium text-muted">Lender</dt>
+                    <dd className="text-sm font-medium text-foreground">{m.lenderName}</dd>
                   </div>
                 )}
               </dl>
@@ -234,7 +236,7 @@ export function MortgageSection({
                 <button
                   type="button"
                   onClick={() => setEditingId(m.id)}
-                  className="text-base font-medium text-muted hover:text-foreground hover:underline"
+                  className="text-sm font-medium text-accent hover:underline"
                 >
                   Edit
                 </button>
@@ -248,7 +250,7 @@ export function MortgageSection({
                     );
                     if (res.ok) refreshMortgages();
                   }}
-                  className="text-base font-medium text-negative hover:underline"
+                  className="text-sm font-medium text-negative hover:underline"
                 >
                   Delete
                 </button>

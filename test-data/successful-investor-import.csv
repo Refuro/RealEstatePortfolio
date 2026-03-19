@@ -1,0 +1,4 @@
+address,nickname,property type,units,purchase price,purchase date,value,rent,unit rents,expenses,vacancy %,cash invested,ownership %,mortgage balance,original loan amount,balance as of,mortgage rate,mortgage term,monthly payment,escrow amount,lender,loan type
+"1847 Maple Dr, Austin, TX, 78701",Maple House,Single family,1,325000,2021-06-15,415000,2450,,550,5,50000,100,261800,275000,2025-03-01,6.25,30,1693,320,First National Bank,conventional
+"4521 Oak Ave, Dallas, TX, 75201",Oak Duplex,Multi family,2,385000,2021-03-01,465000,1900,"950, 950",620,5,77000,100,290700,308000,2025-03-01,5.75,30,1797,240,WestGate Mortgage,conventional
+"8923 Pine Blvd, Houston, TX, 77001",Pine Fourplex,Multi family,4,485000,2021-09-15,565000,3180,"785, 795, 800, 800",950,5,97000,100,370500,388000,2025-03-01,6,30,2326,320,Heritage Lending,conventional

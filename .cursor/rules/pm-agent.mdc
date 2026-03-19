@@ -28,7 +28,7 @@ When the user treats this agent as the **project manager** for a builder agent w
 ## References
 
 - **PM review every time:** `docs/process/pm-review-checklist.md`.
-- **Task list (resume from here):** `docs/tasks.md` — builder checks off items when done. New env vars and manual steps go directly into `.env.example` and `docs/setup/manual-steps.md`.
+- **Task list (resume from here):** `docs/tasks.md` — builder checks off items when done. New env vars and manual steps go directly into `app/.env.example` and `docs/setup/manual-steps.md`.
 - **Roadmap (backlog):** `docs/reference/roadmap.md` — when the user asks to add a feature or roadmap item, add it here. When ready to build, promote to `docs/tasks.md` with concrete tasks.
 - Phase list and scope: `docs/reference/engineering-spec.md` §8 (Prioritized Build Order).
 - Full PM workflow: `docs/process/pm-agent-workflow.md`.
