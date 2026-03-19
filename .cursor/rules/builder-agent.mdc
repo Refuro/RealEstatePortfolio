@@ -8,25 +8,29 @@ When the PM (or user) instructs you to work on a phase or tasks:
 
 ## Responsibilities
 
-1. **Stay in scope** — Work only on items from `docs/tasks.md` or the PM's instructions. Do not add out-of-scope features. When a task references a roadmap item, read `docs/roadmap.md` for full scope and acceptance criteria.
+1. **Stay in scope** — Work only on items from `docs/tasks.md` or the PM's instructions. Do not add out-of-scope features. When a task references a roadmap item, read `docs/reference/roadmap.md` for full scope and acceptance criteria.
 
-2. **Follow the design spec** — All UI work (layouts, components, styling, charts) must align with `docs/design-spec.md`. Use semantic color tokens, typography scale, spacing, and component patterns from the spec. Do not introduce styles that conflict with the design direction (e.g. heavy shadows, decorative gradients, inconsistent spacing). When in doubt, prefer the design spec over ad-hoc styling.
+2. **Follow the design spec** — All UI work (layouts, components, styling, charts) must align with `docs/policies/design-spec.md`. Use semantic color tokens, typography scale, spacing, and component patterns from the spec. Do not introduce styles that conflict with the design direction (e.g. heavy shadows, decorative gradients, inconsistent spacing). When in doubt, prefer the design spec over ad-hoc styling.
 
 3. **Follow architecture practices** — Read `docs/architecture-and-build-practices.md`. Reuse existing components (CurrencyInput, ChartWrapper, etc.) and lib modules. Do not duplicate logic; extract to `lib/` if the same logic appears in multiple places. API routes: always `getAppUser()`, validate with Zod, scope data by `userId`. Keep files focused; avoid spaghetti.
 
-4. **Update progress** — When done, check off completed items in `docs/tasks.md`.
+4. **Follow ownership policy when applicable** — If a task touches ownership behavior, metric formulas, DSCR/LTV semantics, or related copy, read and follow `docs/policies/ownership-metrics.md` before coding. Treat it as canonical.
 
-5. **Handoff** — When you add new env vars, commands, or manual steps, update `app/.env.example` and `docs/manual-steps.md` directly. Do not leave them only in a Handoff section.
+5. **Follow analytics math policy when applicable** — If a task touches projections, cash flow math, debt-service sourcing, ratio semantics, or metric labels/tooltips, read and follow `docs/policies/analytics-math-policy.md` before coding. Treat it as canonical.
 
-6. **Never do manual steps** — Do not create Vercel projects, Clerk apps, Stripe products, or production databases. See `docs/manual-steps.md`. Document what the user must do instead.
+6. **Update progress** — When done, check off completed items in `docs/tasks.md`.
 
-7. **Lint before stopping** — Before finishing a phase or stopping for PM review, run `npm run check` from `app/` and fix any TypeScript or ESLint errors. **Ignore** the Prisma `schema.prisma` datasource URL warning (required for Prisma 6). Do not approve or hand off until `npm run check` passes.
+7. **Handoff** — When you add new env vars, commands, or manual steps, update `app/.env.example` and `docs/setup/manual-steps.md` directly. Do not leave them only in a Handoff section.
 
-8. **Tasks** — If the PM says "complete tasks in tasks.md", work through `docs/tasks.md` and check off items when done.
+8. **Never do manual steps** — Do not create Vercel projects, Clerk apps, Stripe products, or production databases. See `docs/setup/manual-steps.md`. Document what the user must do instead.
 
-9. **Security** — New API routes must call `getAppUser()` and return 401 if null. All data access scoped by `userId`. Validate input with Zod. Update `docs/security-notes.md` if adding security-relevant behavior.
+9. **Lint before stopping** — Before finishing a phase or stopping for PM review, run `npm run check` from `app/` and fix any TypeScript or ESLint errors. **Ignore** the Prisma `schema.prisma` datasource URL warning (required for Prisma 6). Do not approve or hand off until `npm run check` passes.
 
-10. **Context-specific checklists** — When adding a new service, page, or plan-gated feature, follow the applicable checklist in `docs/architecture-and-build-practices.md` §6.3:
+10. **Tasks** — If the PM says "complete tasks in tasks.md", work through `docs/tasks.md` and check off items when done.
+
+11. **Security** — New API routes must call `getAppUser()` and return 401 if null. All data access scoped by `userId`. Validate input with Zod. Update `docs/security/security-notes.md` if adding security-relevant behavior.
+
+12. **Context-specific checklists** — When adding a new service, page, or plan-gated feature, follow the applicable checklist in `docs/architecture-and-build-practices.md` §6.3:
     - **New third-party service:** Update Privacy Policy and Terms; add env vars and manual steps.
     - **New page:** Public route → proxy.ts; SEO metadata (title, description, canonical, openGraph); robots/sitemap as needed.
     - **Plan-gated feature:** lib/plans.ts; in-app links → /plans, public links → /pricing.
@@ -35,8 +39,10 @@ When the PM (or user) instructs you to work on a phase or tasks:
 ## References
 
 - Task list: `docs/tasks.md`
-- Roadmap (scope for tasks that reference it): `docs/roadmap.md`
-- Phase scope: `docs/engineering-spec.md` §8
-- **Design spec (UI compliance):** `docs/design-spec.md`
+- Roadmap (scope for tasks that reference it): `docs/reference/roadmap.md`
+- Phase scope: `docs/reference/engineering-spec.md` §8
+- **Design spec (UI compliance):** `docs/policies/design-spec.md`
 - **Architecture & build practices:** `docs/architecture-and-build-practices.md`
-- Manual steps (do not do these): `docs/manual-steps.md`
+- **Ownership semantics policy:** `docs/policies/ownership-metrics.md`
+- **Analytics math policy:** `docs/policies/analytics-math-policy.md`
+- Manual steps (do not do these): `docs/setup/manual-steps.md`

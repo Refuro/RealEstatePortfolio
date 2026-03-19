@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getStripe } from "@/lib/stripe-config";
 import { deleteAccountSchema } from "@/lib/validations/account";
 
@@ -9,6 +14,15 @@ export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "account:delete");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   let body: unknown;
@@ -80,6 +94,8 @@ export async function POST(request: NextRequest) {
         ]
       : []),
   ]);
+
+  await recordRateLimit(identifier, "account:delete");
 
   return NextResponse.json({ success: true });
 }

@@ -18,6 +18,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  console.info(
+    JSON.stringify({
+      action: "admin_export_users",
+      adminId: user.id,
+      adminEmail: user.email,
+      timestamp: new Date().toISOString(),
+    })
+  );
+
   const users = await prisma.user.findMany({
     where: { deletedAt: null },
     select: {

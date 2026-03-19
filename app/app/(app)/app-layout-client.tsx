@@ -135,11 +135,14 @@ export function AppLayoutClient({
       </header>
 
       {/* Desktop sidebar - hidden on < md */}
-      <aside className="hidden md:flex w-56 xl:w-64 2xl:w-72 flex-col border-r border-border bg-card">
+      <aside className="hidden md:flex w-56 xl:w-64 2xl:w-72 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
           <LogoLink />
         </div>
-        <AppNav showAdmin={showAdmin} />
+        <AppNav
+          showAdmin={showAdmin}
+          propertyCount={bannerProps?.propertyCount ?? 0}
+        />
         <div className="mt-auto border-t border-border px-4 py-4">
           <div className="flex items-center gap-2 rounded-md px-3 py-2">
             <UserButton afterSignOutUrl="/" />
@@ -168,7 +171,11 @@ export function AppLayoutClient({
         <div className="flex h-14 items-center gap-2 border-b border-border px-4" onClick={closeDrawer}>
           <LogoLink />
         </div>
-        <AppNav onClose={closeDrawer} showAdmin={showAdmin} />
+        <AppNav
+          onClose={closeDrawer}
+          showAdmin={showAdmin}
+          propertyCount={bannerProps?.propertyCount ?? 0}
+        />
         <div className="mt-auto border-t border-border px-4 py-4">
           <div className="flex items-center gap-2 rounded-md px-3 py-2">
             <UserButton afterSignOutUrl="/" />

@@ -138,6 +138,53 @@ export default async function HomePage({
           )}
         </section>
 
+        {/* Product screenshots */}
+        <section className="border-t border-border bg-card/30 px-4 py-10 sm:py-14">
+          <div className="mx-auto max-w-5xl">
+            <h2 className="mb-8 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+              See it in action
+            </h2>
+            <div className="grid gap-6 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <img
+                  src="/ScreenDashboard.png"
+                  alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+              </div>
+              <div>
+                <img
+                  src="/ScreenMortgage.png"
+                  alt="Mortgage workspace with payoff simulation, extra payment controls, and balance projection chart"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <p className="mt-2 text-center text-sm text-muted">
+                  Mortgage payoff simulator
+                </p>
+              </div>
+              <div>
+                <img
+                  src="/ScreenDeal.png"
+                  alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <p className="mt-2 text-center text-sm text-muted">
+                  Deal analyzer
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
         {/* Value props */}
         <section className="border-t border-border bg-card/50 px-4 py-10 sm:py-16">
           <div className="mx-auto max-w-4xl">

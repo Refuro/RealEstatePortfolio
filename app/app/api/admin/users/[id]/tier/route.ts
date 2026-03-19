@@ -35,6 +35,17 @@ export async function PATCH(
 
   const { tier } = parsed.data;
 
+  console.info(
+    JSON.stringify({
+      action: "admin_tier_override",
+      adminId: admin.id,
+      adminEmail: admin.email,
+      targetUserId: userId,
+      tier,
+      timestamp: new Date().toISOString(),
+    })
+  );
+
   const targetUser = await prisma.user.findUnique({
     where: { id: userId },
     select: { id: true },

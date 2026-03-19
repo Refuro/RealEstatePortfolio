@@ -1,7 +1,7 @@
 /**
  * Required environment variables for the app to run.
  * Validated at first use (when db is imported).
- * See .env.example and docs/manual-steps.md for setup.
+ * See .env.example and docs/setup/manual-steps.md for setup.
  */
 const REQUIRED_ENV_VARS = [
   "DATABASE_URL",
@@ -16,7 +16,7 @@ export function validateEnv(): void {
   if (missing.length > 0) {
     throw new Error(
       `Missing required environment variables: ${missing.join(", ")}. ` +
-        `See .env.example and docs/manual-steps.md for setup.`
+        `See .env.example and docs/setup/manual-steps.md for setup.`
     );
   }
 }

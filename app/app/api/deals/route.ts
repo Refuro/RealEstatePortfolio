@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { createDealSchema } from "@/lib/validations/deal";
 import { canAddDeal, getEffectiveTier } from "@/lib/plans";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
@@ -97,6 +102,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "deals:create");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
+  }
+
   let body: unknown;
   try {
     body = await request.json();
@@ -156,6 +170,8 @@ export async function POST(request: NextRequest) {
       notes: data.notes?.trim() || null,
     },
   });
+
+  await recordRateLimit(identifier, "deals:create");
 
   return NextResponse.json(serializeDeal(deal));
 }

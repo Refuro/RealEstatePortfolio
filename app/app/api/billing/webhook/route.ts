@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 
 /**
  * Stripe webhook handler. Verifies signature with STRIPE_WEBHOOK_SECRET
- * per docs/security-notes.md. Syncs subscription state to DB.
+ * per docs/security/security-notes.md. Syncs subscription state to DB.
  */
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");

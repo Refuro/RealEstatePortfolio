@@ -26,12 +26,16 @@ export default async function EditPropertyPage({
           href={`/properties/${id}`}
           className="text-sm text-muted hover:text-foreground"
         >
-          ← Property detail
+          ← Back to property
         </Link>
       </div>
       <h1 className="text-2xl font-semibold text-foreground">Edit property</h1>
-      <p className="mt-1 text-sm text-muted">
-        Update the property details below.
+      <p className="mt-1 max-w-2xl text-sm text-muted">
+        Update location, purchase &amp; value, income, and notes. Use the{" "}
+        <Link href={`/properties/${id}`} className="font-medium text-accent hover:underline">
+          property detail
+        </Link>{" "}
+        page for mortgages, modeling, and scenarios.
       </p>
       <PropertyForm
         className="mt-6"
@@ -59,6 +63,7 @@ export default async function EditPropertyPage({
           bedrooms: property.bedrooms ?? undefined,
           bathrooms: property.bathrooms?.toString(),
           unitMix: property.unitMix ?? undefined,
+          squareFeet: property.squareFeet ?? undefined,
           notes: property.notes ?? undefined,
         }}
       />

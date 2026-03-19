@@ -1,0 +1,20 @@
+---
+description: Security audit command — run security/privacy audit and report to docs/audits/security
+alwaysApply: false
+---
+
+# Security Audit Command
+
+When the user says **"run security audit"** or **"security audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/security-audit-process.md`.
+2. Require output report at `docs/audits/security/YYYY-MM-DD-security-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/security-audit-process.md`
+- Reports: `docs/audits/security/`

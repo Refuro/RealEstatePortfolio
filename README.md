@@ -14,4 +14,4 @@ npm install
 npm run dev
 ```
 
-See [docs/setup.md](docs/setup.md) and [app/README.md](app/README.md) for full setup and deployment.
+See [docs/setup/run-and-smoke-test.md](docs/setup/run-and-smoke-test.md) and [app/README.md](app/README.md) for full setup and deployment.

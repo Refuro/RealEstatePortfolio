@@ -209,3 +209,76 @@ All tasks in this batch were verified implemented and marked complete:
 ---
 
 *Full implementation details available in git history. This archive summarizes completed work for reference.*
+
+---
+
+## Archive sync (2026-03-19) ✓
+
+Moved from `docs/tasks.md` to reduce noise in active task tracking.
+
+### Recently completed notes (moved) ✓
+
+- [x] Projections tab accuracy hardening summary + AC status notes.
+- [x] Property detail overhaul phase summaries (Phase 1/2/3).
+- [x] Multi-property Rent vs. Market auto-refresh summary.
+- [x] Single-property dashboard restore-metrics summary.
+
+### Property detail overhaul — test checklist (verified complete) ✓
+
+- [x] Hero & layout checks complete.
+- [x] Investment metrics checks complete.
+- [x] Scenario controls/reset/help checks complete.
+- [x] Payoff card + accelerator + balance-source checks complete.
+- [x] Collapsible sections behavior checks complete.
+- [x] Regression checks complete (edit/delete/add mortgage, amortization, benchmark refresh).
+- [x] Mobile checks complete.
+- [x] Edge-case checks complete (no mortgage, paid-off, multiple mortgages).
+- [x] Phase 2 sticky-nav checks complete.
+- [x] Phase 3 amortization sub-page + quick-actions checks complete.
+
+### Property detail tabs & UX refinements — test checklist (verified complete) ✓
+
+- [x] Refresh benchmark AC-1..AC-4 checks complete.
+- [x] Duplicate metrics AC-5..AC-6 checks complete.
+- [x] Tabs AC-7..AC-9 checks complete.
+- [x] Overview tab AC-10..AC-13 checks complete.
+- [x] Mortgage tab AC-14..AC-17 checks complete.
+- [x] Projections tab AC-18..AC-22 checks complete.
+- [x] Details tab AC-23..AC-25 checks complete.
+- [x] No-regressions AC-26..AC-28 checks complete (`npm run check` passed).
+
+### Details tab — Phase B inline editing (moved) ✓
+
+- [x] Inline edit mode for Property facts.
+- [x] Inline edit mode for Financial inputs.
+- [x] Inline edit mode for Notes.
+- [x] Section saves wired to `PATCH /api/properties/[id]` + refresh on success.
+- [x] In-card validation/save error handling.
+- [x] Existing full-page edit flow preserved.
+- [x] `npm run check` passed.
+
+### Completed batch ledger moved from `tasks.md` (2026-03-19) ✓
+
+All batches below were fully checked off in `tasks.md` and moved to keep active tracking concise:
+
+- [x] Onboarding + Dashboard polish split (Batch 1-3)
+- [x] Modeling workspace revamp (Batch A-I)
+- [x] Mortgage workspace revamp (Batch M1-M8)
+- [x] Properties page overhaul (Batch P1, P2, P2.1)
+- [x] Analyze deal overhaul (Batch A1-A5)
+- [x] Plans page overhaul `/plans` (Batch PL1-PL4)
+- [x] Public pricing overhaul `/pricing` (Batch PR1-PR4)
+- [x] Owner notes follow-up (Batch ON1, ON2, ON3, ON3B, ON4)
+- [x] Onboarding scope correction (activation-first)
+
+### Legacy completed summary moved from `tasks.md` (2026-03-19) ✓
+
+- [x] Completed (verified — smoke test passed 2025-03-15) summary block moved.
+- [x] Mortgage estimate & polish summary moved.
+- [x] Batch verified 2025-03-15 summary moved.
+- [x] Code audit follow-ups (2026-03-17) summary moved.
+- [x] Date fields (2026-03-17) summary moved.
+- [x] Payoff timeline Phase 1 summary moved.
+- [x] Payoff Accelerator Phase 2 summary moved.
+- [x] Dashboard single-property overhaul summary moved.
+- [x] Dashboard overhaul — single vs multi summary moved.

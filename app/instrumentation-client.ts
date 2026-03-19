@@ -8,3 +8,6 @@ if (dsn) {
     tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
   });
 }
+
+/** Enables client-side navigation tracing for the App Router (stops SDK “ACTION REQUIRED” warning). */
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

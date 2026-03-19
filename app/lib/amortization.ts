@@ -81,6 +81,7 @@ export type MortgageRecord = {
   startDate: Date | string;
   monthlyPayment: number | { toString(): string };
   balanceAsOfDate?: Date | string | null;
+  paymentEffectiveDate?: Date | string | null;
   escrowIncluded?: boolean;
   escrowAmount?: number | { toString(): string } | null;
 };
@@ -191,6 +192,85 @@ export type PayoffProjection = {
   remainingAtTermEnd: number | null;
 };
 
+export type PayoffToleranceOptions = {
+  termEndMonthTolerance?: number;
+  minResidualDollars?: number;
+  residualPiMultiplier?: number;
+  maxLagMonths?: number;
+};
+
+export type ToleranceAwarePayoffProjection = PayoffProjection & {
+  toleranceApplied: boolean;
+};
+
+const DEFAULT_TOLERANCE_OPTIONS: Required<PayoffToleranceOptions> = {
+  termEndMonthTolerance: 2,
+  minResidualDollars: 1500,
+  residualPiMultiplier: 2,
+  maxLagMonths: 3,
+};
+
+function mergeToleranceOptions(
+  options?: PayoffToleranceOptions
+): Required<PayoffToleranceOptions> {
+  return { ...DEFAULT_TOLERANCE_OPTIONS, ...options };
+}
+
+export function getPaymentStartLagMonths(
+  mortgage: MortgageRecord,
+  options?: PayoffToleranceOptions
+): number {
+  const { maxLagMonths } = mergeToleranceOptions(options);
+  if (!mortgage.paymentEffectiveDate) return 0;
+  const start = new Date(mortgage.startDate);
+  const effective = new Date(mortgage.paymentEffectiveDate);
+  const startNorm = new Date(start.getFullYear(), start.getMonth(), 1);
+  const effectiveNorm = new Date(effective.getFullYear(), effective.getMonth(), 1);
+  const months =
+    (effectiveNorm.getFullYear() - startNorm.getFullYear()) * 12 +
+    (effectiveNorm.getMonth() - startNorm.getMonth());
+  return Math.min(maxLagMonths, Math.max(0, months));
+}
+
+export function getToleranceResidualThreshold(
+  mortgage: MortgageRecord,
+  options?: PayoffToleranceOptions
+): number {
+  const { minResidualDollars, residualPiMultiplier } = mergeToleranceOptions(options);
+  const pi = getPiForAmortization(mortgage);
+  const lagMonths = getPaymentStartLagMonths(mortgage, options);
+  return Math.max(minResidualDollars, pi * (residualPiMultiplier + lagMonths));
+}
+
+export function isWithinTermEndTolerance(
+  remainingAtTermEnd: number | null | undefined,
+  mortgage: MortgageRecord,
+  options?: PayoffToleranceOptions
+): boolean {
+  if (remainingAtTermEnd == null || remainingAtTermEnd <= 0) return false;
+  const threshold = getToleranceResidualThreshold(mortgage, options);
+  return remainingAtTermEnd <= threshold;
+}
+
+export function getToleranceAdjustedPayoffDate(
+  mortgage: MortgageRecord,
+  options?: PayoffToleranceOptions
+): Date {
+  const { termEndMonthTolerance } = mergeToleranceOptions(options);
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const baseTermEnd = new Date(
+    startNorm.getFullYear(),
+    startNorm.getMonth() + mortgage.termYears * 12,
+    1
+  );
+  const lagMonths = Math.min(
+    termEndMonthTolerance,
+    getPaymentStartLagMonths(mortgage, options)
+  );
+  return new Date(baseTermEnd.getFullYear(), baseTermEnd.getMonth() + lagMonths, 1);
+}
+
 /**
  * Project payoff from effective balance forward.
  * Returns payoff date when payment fully amortizes; else remaining balance at term end.
@@ -244,6 +324,24 @@ export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection 
   };
 }
 
+export function getToleranceAwarePayoffProjection(
+  mortgage: MortgageRecord,
+  options?: PayoffToleranceOptions
+): ToleranceAwarePayoffProjection {
+  const projection = getPayoffProjection(mortgage);
+  if (projection.payoffDate) {
+    return { ...projection, toleranceApplied: false };
+  }
+  if (isWithinTermEndTolerance(projection.remainingAtTermEnd, mortgage, options)) {
+    return {
+      payoffDate: getToleranceAdjustedPayoffDate(mortgage, options),
+      remainingAtTermEnd: null,
+      toleranceApplied: true,
+    };
+  }
+  return { ...projection, toleranceApplied: false };
+}
+
 /**
  * Run month-by-month payoff simulation with base P&I + extra payment.
  * Returns number of months to payoff, or null if doesn't pay off within maxMonths.
@@ -252,7 +350,8 @@ export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection 
 function getMonthsToPayoffWithExtra(
   mortgage: MortgageRecord,
   extraPayment: number,
-  maxMonths: number
+  maxMonths: number,
+  options?: PayoffToleranceOptions
 ): number | null {
   const balance = getEffectiveBalance(mortgage);
   const basePi = getPiForAmortization(mortgage);
@@ -284,6 +383,9 @@ function getMonthsToPayoffWithExtra(
     runningBalance = Math.max(0, runningBalance - principal);
     if (runningBalance <= 0) return i + 1;
   }
+  if (isWithinTermEndTolerance(Math.round(runningBalance), mortgage, options)) {
+    return cap;
+  }
   return null;
 }
 
@@ -296,7 +398,7 @@ export function getExtraPaymentForYearsEarlier(
   mortgage: MortgageRecord,
   yearsEarlier: number
 ): number | null {
-  const projection = getPayoffProjection(mortgage);
+  const projection = getToleranceAwarePayoffProjection(mortgage);
   if (projection.payoffDate == null) return null;
 
   const today = new Date();
@@ -339,7 +441,7 @@ export function getPayoffYearsWithExtra(
   extraPayment: number
 ): number | null {
   if (extraPayment < 0) return null;
-  const projection = getPayoffProjection(mortgage);
+  const projection = getToleranceAwarePayoffProjection(mortgage);
   if (projection.payoffDate == null) return null; // base doesn't amortize
 
   const termYears = mortgage.termYears;

@@ -1,5 +1,9 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
+/**
+ * Next.js 16+ uses proxy.ts (not middleware.ts) for the network boundary.
+ * This file is the auth proxy: protects non-public routes via Clerk.
+ */
 const isPublicRoute = createRouteMatcher([
   "/",
   "/sign-in(.*)",
@@ -10,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   "/contact",
   "/api/billing/webhook",
   "/api/contact",
+  "/api/health",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

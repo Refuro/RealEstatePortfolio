@@ -1,0 +1,11 @@
+{
+  "name": "realestateportfolio",
+  "private": true,
+  "description": "Root package for Husky git hooks only; Next.js app lives in app/",
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

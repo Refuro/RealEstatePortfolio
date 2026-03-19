@@ -6,6 +6,19 @@ import { useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
+import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
+import { PROPERTY_EDIT_SECTION_NAV } from "@/lib/property-form-section-nav";
+
+function formatZodApiDetails(details: unknown): string | null {
+  if (!details || typeof details !== "object") return null;
+  const d = details as { fieldErrors?: Record<string, string[]>; formErrors?: string[] };
+  const parts: string[] = [];
+  if (Array.isArray(d.formErrors) && d.formErrors.length) parts.push(...d.formErrors);
+  for (const [key, msgs] of Object.entries(d.fieldErrors ?? {})) {
+    if (Array.isArray(msgs) && msgs.length) parts.push(`${key}: ${msgs.join(", ")}`);
+  }
+  return parts.length ? parts.join(" · ") : null;
+}
 
 type PropertyFormData = {
   nickname?: string;
@@ -28,6 +41,8 @@ type PropertyFormData = {
   bedrooms?: number;
   bathrooms?: string;
   unitMix?: string;
+  /** Optional; improves RentCast estimates when set */
+  squareFeet?: number | null;
   notes?: string;
 };
 
@@ -93,6 +108,10 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [vacancyPercent, setVacancyPercent] = useState(property?.vacancyPercent != null ? String(property.vacancyPercent) : "5");
   const [bedrooms, setBedrooms] = useState(property?.bedrooms != null ? String(property.bedrooms) : "");
   const [bathrooms, setBathrooms] = useState(property?.bathrooms ?? "");
+  const [squareFeet, setSquareFeet] = useState(
+    () => (property?.squareFeet != null ? String(property.squareFeet) : "")
+  );
+  const [unitMix, setUnitMix] = useState(() => property?.unitMix ?? "");
 
   const isEdit = !!property;
   const unitCount =
@@ -165,6 +184,8 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const addressLine2 = (fd.get("addressLine2") as string)?.trim();
       if (addressLine2) params.set("addressLine2", addressLine2);
       params.set("propertyType", propertyType);
+      const sq = parseInt(squareFeet.trim(), 10);
+      if (!Number.isNaN(sq) && sq >= 100) params.set("squareFootage", String(sq));
       const res = await fetch(`/api/estimates/value?${params.toString()}`);
       const json = (await res.json()) as { value?: number; error?: string };
       if (json.value != null && Number.isFinite(json.value)) {
@@ -209,6 +230,8 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       if (bedrooms.trim()) params.set("bedrooms", bedrooms);
       if (bathrooms.trim()) params.set("bathrooms", bathrooms);
       if (property?.id) params.set("propertyId", property.id);
+      const sqFt = parseInt(squareFeet.trim(), 10);
+      if (!Number.isNaN(sqFt) && sqFt >= 100) params.set("squareFootage", String(sqFt));
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
@@ -279,6 +302,18 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const b = Number(bathrooms);
       if (!Number.isNaN(b) && b >= 0.5 && b <= 10) payload.bathrooms = b;
     }
+    if (squareFeet.trim()) {
+      const s = parseInt(squareFeet.trim(), 10);
+      if (!Number.isNaN(s) && s >= 100) payload.squareFeet = s;
+    } else if (isEdit) {
+      payload.squareFeet = null;
+    }
+
+    if (isEdit) {
+      payload.unitMix = unitMix.trim() ? unitMix.trim() : null;
+    } else if (unitMix.trim()) {
+      payload.unitMix = unitMix.trim();
+    }
 
     try {
       const url = isEdit ? `/api/properties/${property.id}` : "/api/properties";
@@ -289,13 +324,19 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = (await res.json().catch(() => ({}))) as {
+        error?: string;
+        code?: string;
+        details?: unknown;
+        id?: string;
+      };
       if (!res.ok) {
-        setError(
+        const planMsg =
           data.code === "PLAN_LIMIT_REACHED"
             ? "Property limit reached. Upgrade your plan or remove a property to add more."
-            : data.error || "Something went wrong"
-        );
+            : null;
+        const detailMsg = formatZodApiDetails(data.details);
+        setError(planMsg ?? detailMsg ?? data.error ?? "Something went wrong");
         setSubmitting(false);
         return;
       }
@@ -331,7 +372,38 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         </div>
       )}
 
-      <div className="space-y-4">
+      {isEdit && (
+        <nav
+          aria-label="Edit property sections"
+          className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/85"
+        >
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
+          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+            {PROPERTY_EDIT_SECTION_NAV.map((s) => (
+              <li key={s.id}>
+                <a href={`#${s.id}`} className="text-accent hover:underline">
+                  {s.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      )}
+
+      <div className="space-y-10">
+        <section
+          id="section-location"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-edit-location"
+        >
+          <h2 id="heading-edit-location" className="text-lg font-semibold text-foreground">
+            Location &amp; profile
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            Address, property type, units, and optional details that improve rent estimates.
+          </p>
+          <div className="mt-4 space-y-4">
         <div>
           <label htmlFor="nickname" className={labelClass}>
             Nickname (optional)
@@ -557,25 +629,46 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           </div>
         )}
 
+        <PropertySquareFeetField
+          value={squareFeet}
+          onChange={setSquareFeet}
+          className="max-w-xs"
+        />
+
         <div>
-          <label htmlFor="ownershipPercent" className={labelClass}>
-            Ownership %
+          <label htmlFor="unitMix" className={labelClass}>
+            Unit mix (optional)
           </label>
-          <input
-            id="ownershipPercent"
-            name="ownershipPercent"
-            type="number"
-            min={1}
-            max={100}
-            inputMode="numeric"
-            defaultValue={values.ownershipPercent}
+          <textarea
+            id="unitMix"
+            rows={2}
+            value={unitMix}
+            onChange={(e) => setUnitMix(e.target.value)}
+            placeholder="e.g. 4×2BR, 1×1BR"
+            maxLength={100}
             className={inputClass}
           />
           <p className="mt-0.5 text-xs text-muted">
-            Your share of the property (1–100%). Use 100 for full ownership.
+            Short summary of unit types (shown on property detail). Max 100 characters.
           </p>
         </div>
 
+          </div>
+        </section>
+
+        <section
+          id="section-economics"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-edit-economics"
+        >
+          <h2 id="heading-edit-economics" className="text-lg font-semibold text-foreground">
+            Purchase &amp; value
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            What you paid, current value, cash invested, and ownership—aligned with the add-property flow.
+          </p>
+          <div className="mt-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="purchasePrice" className={labelClass}>
@@ -645,6 +738,39 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           </div>
         </div>
 
+        <div>
+          <label htmlFor="ownershipPercent" className={labelClass}>
+            Ownership %
+          </label>
+          <input
+            id="ownershipPercent"
+            name="ownershipPercent"
+            type="number"
+            min={1}
+            max={100}
+            inputMode="numeric"
+            defaultValue={values.ownershipPercent}
+            className={inputClass}
+          />
+          <p className="mt-0.5 text-xs text-muted">
+            Your share of the property (1–100%). Use 100 for full ownership.
+          </p>
+        </div>
+
+          </div>
+        </section>
+
+        <section
+          id="section-income"
+          tabIndex={-1}
+          className="scroll-mt-28 border-b border-border pb-10"
+          aria-labelledby="heading-edit-income"
+        >
+          <h2 id="heading-edit-income" className="text-lg font-semibold text-foreground">
+            Income &amp; expenses
+          </h2>
+          <p className="mt-1 text-sm text-muted">Rent, operating expenses, and vacancy assumption.</p>
+          <div className="mt-4 space-y-4">
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {isMulti && hasExistingUnitRents ? (
             <div className="space-y-2">
@@ -781,6 +907,20 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           </p>
         </div>
 
+          </div>
+        </section>
+
+        <section
+          id="section-notes"
+          tabIndex={-1}
+          className="scroll-mt-28"
+          aria-labelledby="heading-edit-notes"
+        >
+          <h2 id="heading-edit-notes" className="text-lg font-semibold text-foreground">
+            Notes
+          </h2>
+          <p className="mt-1 text-sm text-muted">Optional context for your portfolio (not required for calculations).</p>
+          <div className="mt-4 space-y-4">
         <div>
           <label htmlFor="notes" className={labelClass}>
             Notes (optional)
@@ -793,9 +933,11 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             className={inputClass}
           />
         </div>
+          </div>
+        </section>
       </div>
 
-      <div className="flex gap-3">
+      <div className="mt-10 flex gap-3 border-t border-border pt-6">
         <button
           type="submit"
           disabled={submitting}

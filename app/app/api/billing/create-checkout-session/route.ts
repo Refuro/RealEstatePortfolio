@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getStripe, getPriceIdForPlan } from "@/lib/stripe-config";
 import { createCheckoutSessionSchema } from "@/lib/validations/checkout";
 
@@ -8,6 +13,15 @@ export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "billing:create-checkout");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   let body: unknown;
@@ -72,9 +86,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await recordRateLimit(identifier, "billing:create-checkout");
+
     return NextResponse.json({ url: session.url });
   } catch (err) {
-    console.error("Checkout session error:", err);
+    const message = err instanceof Error ? err.message : String(err);
+    const name = err instanceof Error ? err.name : "Error";
+    console.error(
+      JSON.stringify({
+        action: "billing_create_checkout_error",
+        errorType: name,
+        errorMessage: message,
+        userId: user.id,
+        plan,
+        billingCycle,
+        timestamp: new Date().toISOString(),
+      })
+    );
     return NextResponse.json(
       { error: "Failed to create checkout session" },
       { status: 500 }

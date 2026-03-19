@@ -16,6 +16,25 @@ const unitRentsSchema = z
   .optional()
   .nullable();
 
+const unitRentsFromDbSchema = z.unknown().transform((val): number[] | null => {
+  if (val == null) return null;
+  if (!Array.isArray(val)) return null;
+  const nums = val
+    .map((v) => (typeof v === "number" ? v : Number(v)))
+    .filter((n) => Number.isFinite(n) && n >= 0);
+  return nums.length > 0 ? nums : null;
+});
+
+/**
+ * Validates and sanitizes unitRents from DB (JSON field) using Zod.
+ * Returns number[] if valid, null if invalid or empty.
+ * Use when reading unitRents from Prisma.
+ */
+export function parseUnitRentsFromDb(value: unknown): number[] | null {
+  const result = unitRentsFromDbSchema.safeParse(value);
+  return result.success ? result.data : null;
+}
+
 const propertySchemaBase = z.object({
   nickname: z.string().max(200).optional().nullable(),
   addressLine1: z.string().min(1, "Address is required").max(200),
@@ -45,6 +64,21 @@ const propertySchemaBase = z.object({
     .optional()
     .nullable(),
   unitMix: z.string().max(100).optional().nullable(),
+  /** Optional; passed to RentCast as squareFootage for better AVM accuracy. */
+  squareFeet: z
+    .union([z.string(), z.number()])
+    .optional()
+    .nullable()
+    .transform((v) => {
+      if (v === undefined) return undefined;
+      if (v === null || v === "") return null;
+      const n = typeof v === "number" ? v : parseInt(String(v).replace(/[^\d]/g, ""), 10);
+      return Number.isFinite(n) ? n : null;
+    })
+    .refine(
+      (n) => n === undefined || n === null || (Number.isInteger(n) && n >= 100 && n <= 500_000),
+      { message: "Square feet must be between 100 and 500,000, or left empty" }
+    ),
   currentMonthlyExpenses: decimalString,
   vacancyPercent: z.coerce.number().int().min(0).max(100).default(5),
   cashInvested: z

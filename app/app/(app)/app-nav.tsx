@@ -13,6 +13,7 @@ import {
   CreditCard,
   Settings,
   Shield,
+  Lightbulb,
 } from "lucide-react";
 
 const nav = [
@@ -22,16 +23,22 @@ const nav = [
   { href: "/mortgage", label: "Mortgage", icon: Landmark },
   { href: "/analyze", label: "Analyze deal", icon: Calculator },
   { href: "/deals", label: "Deals", icon: Briefcase },
-  { href: "/plans", label: "Pricing", icon: CreditCard },
+  { href: "/plans", label: "Plans", icon: CreditCard },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 interface AppNavProps {
   onClose?: () => void;
   showAdmin?: boolean;
+  /** From layout; drives "Getting started" vs "Add property" label. */
+  propertyCount?: number;
 }
 
-export function AppNav({ onClose, showAdmin }: AppNavProps) {
+export function AppNav({
+  onClose,
+  showAdmin,
+  propertyCount = 0,
+}: AppNavProps) {
   const pathname = usePathname();
   const draft = useDraft();
   const useNavigateTo =
@@ -74,6 +81,30 @@ export function AppNav({ onClose, showAdmin }: AppNavProps) {
         );
       }
       )}
+      <div className="mt-auto border-t border-border pt-2">
+        {useNavigateTo ? (
+          <button
+            type="button"
+            onClick={() => {
+              draft.navigateTo("/properties/new");
+              onClose?.();
+            }}
+            className="flex w-full items-center gap-2 rounded-md px-4 py-2 text-left text-sm text-muted hover:bg-subtle hover:text-foreground"
+          >
+            <Lightbulb size={16} />
+            {propertyCount === 0 ? "Getting started" : "Add property"}
+          </button>
+        ) : (
+          <Link
+            href="/properties/new"
+            onClick={onClose}
+            className="flex items-center gap-2 rounded-md px-4 py-2 text-sm text-muted hover:bg-subtle hover:text-foreground"
+          >
+            <Lightbulb size={16} />
+            {propertyCount === 0 ? "Getting started" : "Add property"}
+          </Link>
+        )}
+      </div>
     </nav>
   );
 }

@@ -1,7 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { createPropertySchema } from "@/lib/validations/property";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
+import {
+  createPropertySchema,
+  parseUnitRentsFromDb,
+} from "@/lib/validations/property";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
 import { canAddProperty, getEffectiveTier } from "@/lib/plans";
 
@@ -26,10 +34,11 @@ export async function GET() {
       purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
       currentEstimatedValue: p.currentEstimatedValue.toString(),
       currentMonthlyRent: p.currentMonthlyRent.toString(),
-      unitRents: p.unitRents as number[] | null,
+      unitRents: parseUnitRentsFromDb(p.unitRents),
       bedrooms: p.bedrooms,
       bathrooms: p.bathrooms?.toString() ?? null,
       unitMix: p.unitMix,
+      squareFeet: p.squareFeet,
       currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
       cashInvested: p.cashInvested?.toString() ?? null,
       marketRent: (p as { marketRent?: { toString(): string } | null }).marketRent?.toString() ?? null,
@@ -52,6 +61,15 @@ export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "properties:create");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   let body: unknown;
@@ -163,6 +181,7 @@ export async function POST(request: NextRequest) {
       bedrooms: data.bedrooms ?? null,
       bathrooms: data.bathrooms ?? null,
       unitMix: data.unitMix ?? null,
+      squareFeet: data.squareFeet ?? null,
       currentMonthlyExpenses: data.currentMonthlyExpenses,
       vacancyPercent: data.vacancyPercent ?? 5,
       cashInvested: data.cashInvested ?? null,
@@ -181,6 +200,8 @@ export async function POST(request: NextRequest) {
     });
   }
 
+  await recordRateLimit(identifier, "properties:create");
+
   return NextResponse.json({
     ...property,
     createdFirstProperty,
@@ -192,6 +213,7 @@ export async function POST(request: NextRequest) {
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms?.toString() ?? null,
     unitMix: property.unitMix,
+    squareFeet: property.squareFeet,
     currentMonthlyExpenses: property.currentMonthlyExpenses.toString(),
     cashInvested: property.cashInvested?.toString() ?? null,
   });

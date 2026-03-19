@@ -29,41 +29,126 @@ export default async function PricingPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <LandingNav userId={user?.id ?? null} />
       <main className="flex-1 px-4 py-12">
-        <div className="mx-auto max-w-5xl">
-          <h1 className="text-2xl font-semibold text-foreground">Pricing</h1>
-          <p className="mt-1 text-base text-muted">
-            {user
-              ? "Choose a plan based on how many properties you track."
-              : "Simple pricing. Start free, upgrade as you grow."}
-          </p>
-          {!user && (
-            <p className="mt-2 text-sm text-muted">
-              No credit card required for Free.
+        <div className="mx-auto max-w-6xl">
+          <div className="text-center">
+            <h1 className="text-3xl font-semibold text-foreground">Pricing</h1>
+            <p className="mx-auto mt-2 max-w-2xl text-base text-muted">
+              {user
+                ? "Choose a plan based on how many properties you track."
+                : "Simple pricing for serious portfolio tracking. Start free, then scale as your portfolio grows."}
             </p>
-          )}
+            {!user && (
+              <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted">
+                <span className="rounded-full border border-border/70 px-3 py-1">
+                  Secure billing via Stripe
+                </span>
+                <span className="rounded-full border border-border/70 px-3 py-1">
+                  No card required for Free
+                </span>
+                <span className="rounded-full border border-border/70 px-3 py-1">
+                  Cancel anytime
+                </span>
+              </div>
+            )}
+          </div>
           <PricingCards
             currentTier={user ? getEffectiveTier(user) : ""}
-            className="mt-8"
+            className="mt-10"
             showSignUp={!user}
           />
+
           {!user && (
-            <div className="mt-12 flex flex-col items-center gap-4 text-center">
-              <p className="text-base font-medium text-foreground">
-                Ready to get started?
-              </p>
-              <Link
-                href="/sign-up"
-                className="rounded-lg bg-accent px-8 py-3 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-              >
-                Create free account
-              </Link>
-              <p className="text-sm text-muted">
-                Already have an account?{" "}
-                <Link href="/sign-in" className="text-foreground underline hover:no-underline">
-                  Sign in
-                </Link>
-              </p>
-            </div>
+            <section className="mt-12">
+              <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-muted">
+                See what you get
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                <img
+                  src="/ScreenDashboard.png"
+                  alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg md:col-span-2"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <img
+                  src="/ScreenMortgage.png"
+                  alt="Mortgage workspace with payoff simulation and balance projection chart"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+                <img
+                  src="/ScreenDeal.png"
+                  alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
+                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  loading="lazy"
+                  width={1280}
+                  height={800}
+                />
+              </div>
+            </section>
+          )}
+          {!user && (
+            <section className="mt-12 rounded-2xl border border-border/70 bg-card/95 p-6 shadow-sm md:p-8">
+              <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr] md:items-center">
+                <div>
+                  <h2 className="text-xl font-semibold text-foreground">
+                    Start free and make your first property decision with confidence.
+                  </h2>
+                  <p className="mt-2 text-sm text-muted">
+                    Create your account in under a minute. Track properties, analyze
+                    deals, and model scenarios right away.
+                  </p>
+                  <div className="mt-6 space-y-2">
+                    <details className="group rounded-lg border border-border/70 p-3">
+                      <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
+                        Do I need a credit card to start?
+                      </summary>
+                      <p className="mt-2 text-sm text-muted">
+                        No. Free accounts start without a credit card.
+                      </p>
+                    </details>
+                    <details className="group rounded-lg border border-border/70 p-3">
+                      <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
+                        What changes between monthly and annual billing?
+                      </summary>
+                      <p className="mt-2 text-sm text-muted">
+                        Features and plan limits are the same. Annual billing lowers
+                        total cost.
+                      </p>
+                    </details>
+                    <details className="group rounded-lg border border-border/70 p-3">
+                      <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
+                        Can I cancel or upgrade later?
+                      </summary>
+                      <p className="mt-2 text-sm text-muted">
+                        Yes. You can update your plan anytime from account settings.
+                      </p>
+                    </details>
+                  </div>
+                </div>
+                <div className="rounded-xl border border-border/70 bg-background/45 p-4 md:self-center">
+                  <p className="text-sm font-medium text-foreground">New to Veld?</p>
+                  <Link
+                    href="/sign-up"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                  >
+                    Create free account
+                  </Link>
+                  <p className="mt-4 text-sm font-medium text-foreground">
+                    Returning user?
+                  </p>
+                  <Link
+                    href="/sign-in"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-subtle"
+                  >
+                    Sign in
+                  </Link>
+                </div>
+              </div>
+            </section>
           )}
         </div>
       </main>

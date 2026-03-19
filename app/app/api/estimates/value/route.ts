@@ -22,6 +22,14 @@ const valueEstimateQuerySchema = z.object({
   propertyType: z
     .enum(["single_family", "condo", "townhouse", "manufactured", "multi_family", "apartment"])
     .optional(),
+  squareFootage: z.preprocess(
+    (v) => {
+      if (v === "" || v === undefined || v === null) return undefined;
+      const n = typeof v === "number" ? v : parseInt(String(v), 10);
+      return Number.isFinite(n) ? n : undefined;
+    },
+    z.number().int().min(100).max(500_000).optional()
+  ),
 });
 
 export async function GET(req: NextRequest) {
@@ -51,6 +59,7 @@ export async function GET(req: NextRequest) {
     state: searchParams.get("state") ?? "",
     zipCode: searchParams.get("zipCode") ?? "",
     propertyType: searchParams.get("propertyType") ?? undefined,
+    squareFootage: searchParams.get("squareFootage") ?? undefined,
   });
 
   if (!parsed.success) {
@@ -76,6 +85,7 @@ export async function GET(req: NextRequest) {
         state: parsed.data.state,
         zipCode: parsed.data.zipCode,
         propertyType: parsed.data.propertyType,
+        squareFootage: parsed.data.squareFootage,
       },
       apiKey
     );

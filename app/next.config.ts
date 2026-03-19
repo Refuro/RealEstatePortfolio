@@ -9,6 +9,12 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
+  // CSP report-only: logs violations without blocking; use report-uri or report-to when ready
+  {
+    key: "Content-Security-Policy-Report-Only",
+    value:
+      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+  },
 ];
 
 const nextConfig: NextConfig = {

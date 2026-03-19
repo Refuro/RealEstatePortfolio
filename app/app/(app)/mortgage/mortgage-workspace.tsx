@@ -1,10 +1,18 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
-import { MortgageTabContent } from "../properties/[id]/mortgage-tab-content";
+
+const MortgageTabContent = dynamic(
+  () =>
+    import("../properties/[id]/mortgage-tab-content").then((m) => ({
+      default: m.MortgageTabContent,
+    })),
+  { ssr: false }
+);
 
 type MortgageProperty = {
   id: string;
@@ -135,10 +143,10 @@ export function MortgageWorkspace({
         {selectedProperty && selectedProperty.mortgages.length > 0 && (
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
             <Link
-              href={`/properties/${selectedProperty.id}?tab=mortgage`}
+              href={`/properties/${selectedProperty.id}`}
               className="text-muted hover:text-foreground hover:underline"
             >
-              Open property mortgage tab
+              Open property detail
             </Link>
             <span className="text-muted">•</span>
             <Link
