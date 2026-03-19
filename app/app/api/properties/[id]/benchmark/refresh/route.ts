@@ -85,6 +85,6 @@ export async function POST(
       data: { userId: user.id, propertyId },
     }).catch(() => {});
     const message = err instanceof Error ? err.message : "Benchmark unavailable";
-    return NextResponse.json({ error: message }, { status: 200 });
+    return NextResponse.json({ error: message }, { status: 502 });
   }
 }

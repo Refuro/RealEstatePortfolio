@@ -23,6 +23,9 @@ export type PortfolioMetrics = {
   totalMonthlyCashFlow: number;
   totalNoi: number;
   totalCashInvested: number;
+  totalAnnualRent: number;
+  totalAnnualDebtService: number;
+  dscr: number | null;
   weightedCapRate: number | null;
   portfolioLtv: number | null;
   portfolioCashOnCashReturn: number | null;
@@ -43,6 +46,9 @@ export function computePortfolioMetrics(
       totalMonthlyCashFlow: 0,
       totalNoi: 0,
       totalCashInvested: 0,
+      totalAnnualRent: 0,
+      totalAnnualDebtService: 0,
+      dscr: null,
       weightedCapRate: null,
       portfolioLtv: null,
       portfolioCashOnCashReturn: null,
@@ -60,6 +66,7 @@ export function computePortfolioMetrics(
   let totalMonthlyCashFlow = 0;
   let totalNoi = 0;
   let totalCashInvested = 0;
+  let totalMonthlyPayment = 0;
 
   for (const p of properties) {
     const metrics = computePropertyMetrics(p, displayMode);
@@ -71,6 +78,9 @@ export function computePortfolioMetrics(
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
     totalNoi += metrics.noi;
     totalEquity += metrics.equity;
+    totalMonthlyPayment += fullLiability
+      ? p.totalMonthlyPayment
+      : p.totalMonthlyPayment * scale;
 
     if (fullLiability) {
       totalDebt += p.totalMortgageBalance; // 100% debt
@@ -82,6 +92,12 @@ export function computePortfolioMetrics(
       totalCashInvested += p.cashInvested * scale;
     }
   }
+
+  const totalAnnualRent = totalMonthlyRent * 12;
+  const totalAnnualDebtService = totalMonthlyPayment * 12;
+  const dscr =
+    totalAnnualDebtService > 0 ? totalNoi / totalAnnualDebtService : null;
+
   const weightedCapRate = totalMarketValue > 0 ? totalNoi / totalMarketValue : null;
   const portfolioLtv = totalMarketValue > 0 ? totalDebt / totalMarketValue : null;
   const portfolioCashOnCashReturn =
@@ -96,6 +112,9 @@ export function computePortfolioMetrics(
     totalMonthlyCashFlow,
     totalNoi,
     totalCashInvested,
+    totalAnnualRent,
+    totalAnnualDebtService,
+    dscr,
     weightedCapRate,
     portfolioLtv,
     portfolioCashOnCashReturn,

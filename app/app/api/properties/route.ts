@@ -116,6 +116,7 @@ export async function POST(request: NextRequest) {
   const currentCount = await prisma.property.count({
     where: { userId: user.id },
   });
+  const createdFirstProperty = currentCount === 0;
   if (!canAddProperty(getEffectiveTier(user), currentCount)) {
     return NextResponse.json(
       {
@@ -182,6 +183,7 @@ export async function POST(request: NextRequest) {
 
   return NextResponse.json({
     ...property,
+    createdFirstProperty,
     purchasePrice: property.purchasePrice.toString(),
     purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
     currentEstimatedValue: property.currentEstimatedValue.toString(),

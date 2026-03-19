@@ -109,3 +109,19 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+/* Date inputs: improve calendar icon visibility (Option A) */
+input[type="date"] {
+  accent-color: var(--accent);
+}
+[data-theme="light"] input[type="date"] {
+  color-scheme: light;
+}
+[data-theme="dark"] input[type="date"] {
+  color-scheme: dark;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) input[type="date"] {
+    color-scheme: dark;
+  }
+}

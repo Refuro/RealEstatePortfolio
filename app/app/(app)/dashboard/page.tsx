@@ -5,14 +5,10 @@ import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
-import {
-  getPropertyTotalRent,
-  type PropertyWithRent,
-} from "@/lib/property-utils";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
   isBenchmarkFresh,
-  getBenchmarkPct,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
 import {
@@ -22,71 +18,16 @@ import {
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
+import { RentVsMarketSection } from "./rent-vs-market-section";
 
-type PropertyForBenchmark = PropertyWithRent & {
-  id: string;
-  nickname: string | null;
-  addressLine1: string;
-  marketRent: { toString(): string } | number | null;
-  marketRentAsOf: Date | null;
-};
-
-function RentVsMarketSection({
-  properties,
+export default async function DashboardPage({
+  searchParams,
 }: {
-  properties: PropertyForBenchmark[];
+  searchParams: Promise<{ onboarding?: string }>;
 }) {
-  const withFreshBenchmark = properties.filter(
-    (p) =>
-      p.marketRent != null &&
-      Number(p.marketRent) > 0 &&
-      isBenchmarkFresh(p.marketRentAsOf)
-  );
-  const marketRentNum = (p: PropertyForBenchmark) =>
-    p.marketRent != null ? Number(p.marketRent) : 0;
-  const sorted = [...withFreshBenchmark].sort((a, b) => {
-    const pctA = getBenchmarkPct(getPropertyTotalRent(a), marketRentNum(a));
-    const pctB = getBenchmarkPct(getPropertyTotalRent(b), marketRentNum(b));
-    return pctA - pctB;
-  });
-  const display = sorted.slice(0, 5);
-
-  return (
-    <div className="mt-8">
-      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-        Rent vs. market
-      </h2>
-      {display.length === 0 ? (
-        <p className="mt-3 text-sm text-muted">
-          <Link
-            href="/properties"
-            className="font-medium text-foreground hover:underline"
-          >
-            See how your rent compares to market
-          </Link>
-        </p>
-      ) : (
-        <ul className="mt-3 space-y-1">
-          {display.map((p) => (
-            <li key={p.id}>
-              <Link
-                href={`/properties/${p.id}`}
-                className="text-sm text-muted hover:text-foreground hover:underline"
-              >
-                {p.nickname || p.addressLine1}:{" "}
-                {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
-export default async function DashboardPage() {
   const user = await getAppUser();
   if (!user) return null;
+  const { onboarding } = await searchParams;
 
   const allProperties = await prisma.property.findMany({
     where: { userId: user.id },
@@ -122,6 +63,14 @@ export default async function DashboardPage() {
 
   const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
   const metrics = computePortfolioMetrics(portfolioInput, displayMode);
+  const singleProperty = metrics.propertyCount === 1 ? properties[0] : null;
+  const propertyHref = singleProperty ? `/properties/${singleProperty.id}` : "/properties";
+  const modelingHref = singleProperty
+    ? `/modeling?propertyId=${encodeURIComponent(singleProperty.id)}`
+    : "/modeling";
+  const mortgageHref = singleProperty
+    ? `/mortgage?propertyId=${encodeURIComponent(singleProperty.id)}`
+    : "/mortgage";
 
   type PortfolioInputItem = PortfolioPropertyInput & { name: string };
   const fullLiability = displayMode === "full_liability";
@@ -182,75 +131,190 @@ export default async function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-      <div className="mt-2 space-y-1">
-        <p className="text-base text-muted">
-          Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
-        </p>
-        <div>
-          <MetricHelpLink />
+      {onboarding === "first-property" && (
+        <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <p className="text-sm font-semibold text-foreground">
+            Property added. Your portfolio is now live.
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Great start. Review your metrics below, then explore Modeling or Mortgage when ready.
+          </p>
+        </div>
+      )}
+      <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted">
+              Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
+            </p>
+            <div className="mt-1">
+              <MetricHelpLink />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={propertyHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              {singleProperty ? "Open property" : "View properties"}
+            </Link>
+            <Link
+              href={modelingHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Modeling
+            </Link>
+            <Link
+              href={mortgageHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Mortgage
+            </Link>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/properties/new"
+            className="font-medium text-foreground hover:underline"
+          >
+            Add property
+          </Link>
+          <span className="text-muted">•</span>
+          <Link
+            href="/analyze"
+            className="font-medium text-foreground hover:underline"
+          >
+            Analyze a deal
+          </Link>
+          {singleProperty && (
+            <>
+              <span className="text-muted">•</span>
+              <Link
+                href={propertyHref}
+                className="font-medium text-foreground hover:underline"
+              >
+                See full property details
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
-      <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
-        <MetricCard
-          label="Total property value"
-          value={formatCurrency(metrics.totalMarketValue)}
-          primary
-        />
-        <MetricCard
-          label="Total debt"
-          value={formatCurrency(metrics.totalDebt)}
-          primary
-        />
-        <MetricCard
-          label="Total equity"
-          value={formatCurrency(metrics.totalEquity)}
-          primary
-        />
-        <MetricCard
-          label="Monthly cash flow"
-          value={formatCurrency(metrics.totalMonthlyCashFlow)}
-          cashFlow={metrics.totalMonthlyCashFlow}
-        />
-        {metrics.weightedCapRate != null && (
+      {metrics.propertyCount > 1 && (
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+          <MetricCard
+            label="Total property value"
+            value={formatCurrency(metrics.totalMarketValue)}
+            primary
+            compact
+          />
+          <MetricCard
+            label="Total debt"
+            value={formatCurrency(metrics.totalDebt)}
+            primary
+            compact
+          />
+          <MetricCard
+            label="Total equity"
+            value={formatCurrency(metrics.totalEquity)}
+            primary
+            compact
+          />
+          <MetricCard
+            label="Monthly cash flow"
+            value={formatCurrency(metrics.totalMonthlyCashFlow)}
+            cashFlow={metrics.totalMonthlyCashFlow}
+            compact
+          />
           <MetricCard
             label="Portfolio cap rate"
-            value={`${(metrics.weightedCapRate * 100).toFixed(2)}%`}
+            value={
+              metrics.weightedCapRate != null
+                ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+                : "—"
+            }
             primary={false}
+            compact
           />
-        )}
-        {metrics.portfolioLtv != null && (
-          <MetricCard
-            label="Portfolio LTV"
-            value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
-            primary={false}
-          />
-        )}
-        <MetricCard
-          label="NOI (Net Operating Income)"
-          value={formatCurrency(metrics.totalNoi)}
-          primary={false}
-        />
-        {metrics.portfolioCashOnCashReturn != null && (
-          <MetricCard
-            label="Cash-on-cash return"
-            value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
-            primary={false}
-          />
-        )}
-      </div>
+        </div>
+      )}
 
       {metrics.propertyCount > 1 && (
-        <RentVsMarketSection properties={properties} />
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {metrics.portfolioLtv != null && (
+            <MetricCard
+              label="Portfolio LTV"
+              value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+              primary={false}
+              compact
+            />
+          )}
+          <MetricCard
+            label="NOI (Net Operating Income)"
+            value={formatCurrency(metrics.totalNoi)}
+            primary={false}
+            compact
+          />
+          {metrics.portfolioCashOnCashReturn != null && (
+            <MetricCard
+              label="Cash-on-cash return"
+              value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
+              primary={false}
+              compact
+            />
+          )}
+          <MetricCard
+            label="Annual rent"
+            value={formatCurrency(metrics.totalAnnualRent)}
+            primary={false}
+            compact
+          />
+          {metrics.dscr != null && (
+            <MetricCard
+              label="DSCR"
+              value={metrics.dscr.toFixed(2)}
+              primary={false}
+              cashFlow={metrics.dscr >= 1 ? 1 : -1}
+              compact
+            />
+          )}
+        </div>
+      )}
+
+      {metrics.propertyCount > 1 && (
+        <RentVsMarketSection
+          properties={properties.map((p) => ({
+            id: p.id,
+            nickname: p.nickname,
+            addressLine1: p.addressLine1,
+            marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+            marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
+            currentMonthlyRent: Number(p.currentMonthlyRent),
+            unitRents: p.unitRents,
+          }))}
+        />
       )}
 
       <DashboardCharts
         data={chartData}
         propertyCount={metrics.propertyCount}
+        singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
+        singlePropertyMetrics={
+          metrics.propertyCount === 1
+            ? {
+                weightedCapRate: metrics.weightedCapRate,
+                portfolioLtv: metrics.portfolioLtv,
+                totalNoi: metrics.totalNoi,
+                portfolioCashOnCashReturn: metrics.portfolioCashOnCashReturn,
+                totalAnnualRent: metrics.totalAnnualRent,
+                dscr: metrics.dscr,
+              }
+            : undefined
+        }
         benchmark={
           metrics.propertyCount === 1 && properties[0]
             ? (() => {
-                const p = properties[0] as PropertyForBenchmark;
+                const p = properties[0];
                 const userRent = getPropertyTotalRent(p);
                 const marketRent =
                   p.marketRent != null ? Number(p.marketRent) : 0;
@@ -270,38 +334,23 @@ export default async function DashboardPage() {
       />
 
       {metrics.propertyCount === 1 && (
-        <div className="mt-6 rounded-lg border border-border bg-card p-5">
-          <p className="text-lg text-muted">
-            Add another property to compare performance across your portfolio.
-          </p>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Ready to compare performance side by side?
+            </p>
+            <p className="text-sm text-muted">
+              Add another property to unlock portfolio comparison charts.
+            </p>
+          </div>
           <Link
             href="/properties/new"
-            className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add another property
-          </Link>
-        </div>
-      )}
-
-      <div className="mt-8">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-          Quick actions
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-3">
-          <Link
-            href="/properties/new"
-            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add property
           </Link>
-          <Link
-            href="/properties"
-            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
-          >
-            View all properties
-          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

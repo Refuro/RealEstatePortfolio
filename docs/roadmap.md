@@ -19,6 +19,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 | Property value estimate (RentCast AVM) | Done |
 | CSV import | Done |
 | Deal analyzer / scratchpad | Done |
+| Benchmarking (rent vs market) | Done |
+| Admin membership override | Done |
+| Error tracking (Sentry) | Done |
 
 ### Mortgage balance advancement (Phase 1 — amortization projection + manual override)
 
@@ -52,11 +55,17 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Benchmarking
+### Benchmarking — ✓ Done
+
+**Scope:** "Your rent is X% above/below market" (RentCast). Surfacing on properties list, dashboard, inline refresh. See `docs/benchmarking-surfacing-proposal.md`.
+
+---
+
+### Dashboard — single-property improvements
 
 **Priority:** 9
 
-**Scope:** "Your rent is X% above/below market" (RentCast). "Your cap rate vs market" if API supports. Differentiator.
+**Scope:** Improve dashboard for single-property users so they see charts and discover tools (equity, cash flow, value breakdown, property detail). See `docs/dashboard-single-property-proposal.md` for all six items: show Equity & Cash flow charts, add View property path, value breakdown for debt vs. value, refine Add property CTA, contextual Quick actions, property page teaser.
 
 ---
 
@@ -64,7 +73,7 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 **Priority:** 10
 
-**Scope:** "When to refinance" or "Payoff timeline".
+**Scope:** "When to refinance" or "Payoff timeline". See `docs/refinance-payoff-proposal.md` for phased approach (payoff timeline first, then accelerator, then refinance what-if) and property detail page considerations.
 
 ---
 
@@ -92,11 +101,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Admin membership override
+### Admin membership override — ✓ Done
 
-**Priority:** 14
-
-**Scope:** Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill.
+**Scope:** Admins can manually set a user's tier (e.g. free Pro for realtors/demo accounts). Bypasses Stripe; useful for partner accounts, demos, and goodwill. See `docs/admin-membership-override-proposal.md`.
 
 ---
 
@@ -108,17 +115,21 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Error tracking (Sentry or similar)
+### Error tracking (Sentry) — ✓ Done
 
-**Priority:** 16
-
-**Scope:** Add production error tracking and alerting. Defer until post-MVP.
+**Scope:** Production error monitoring via Sentry. Set `NEXT_PUBLIC_SENTRY_DSN` in Vercel for production.
 
 ---
 
 ## 2. Medium-term (Larger Initiatives)
 
 Not yet scheduled; captured as backlog. Promote to `tasks.md` when ready.
+
+### Property detail page overhaul
+
+**Scope:** Redesign the property detail page as a user-centric home base. Current page stacks many sections (property details, mortgages, metrics, scenarios, amortization); tools are easy to miss. Target: card-based layout, clearer section headers, better discoverability. Consider collapsible sections or progressive disclosure. See `docs/refinance-payoff-proposal.md` §7 for options and rationale.
+
+---
 
 ### Property evaluation tool
 

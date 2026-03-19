@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getDealLimit, getEffectiveTier } from "@/lib/plans";
+import { buildOnboardingProgress } from "@/lib/onboarding";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
 
@@ -46,6 +47,12 @@ export default async function AppLayout({
   let dealLimit = 5;
   let subscriptionStatus: string | null = null;
   let overLimit = false;
+  let onboardingProps:
+    | {
+        welcomeSeenAt: string | null;
+        dismissedAt: string | null;
+      }
+    | undefined;
 
   if (user) {
     const { propertyCount: pc, dealCount: dc, subscriptionStatus: ss } =
@@ -56,6 +63,7 @@ export default async function AppLayout({
     propertyLimit = getPropertyLimit(getEffectiveTier(user));
     dealLimit = getDealLimit(getEffectiveTier(user));
     overLimit = propertyCount > propertyLimit || dealCount > dealLimit;
+    onboardingProps = buildOnboardingProgress(user);
   }
 
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
@@ -65,6 +73,7 @@ export default async function AppLayout({
       user={user}
       showAdmin={user ? isAdmin(user) : false}
       supportEmail={supportEmail}
+      onboardingProps={onboardingProps}
       bannerProps={{
         propertyCount,
         dealCount,

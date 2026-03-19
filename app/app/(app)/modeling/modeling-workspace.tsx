@@ -1,0 +1,158 @@
+"use client";
+
+import Link from "next/link";
+import { useMemo, useState } from "react";
+import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
+import { ProjectionsTabContent } from "../properties/[id]/projections-tab-content";
+
+type ModelingProperty = {
+  id: string;
+  nickname: string | null;
+  addressLine1: string;
+  propertyType: string;
+  units: number;
+  monthlyRent: number;
+  monthlyExpenses: number;
+  currentEstimatedValue: number;
+  cashInvested: number | null;
+  ownershipPercent: number;
+  vacancyPercent: number;
+  mortgageCount: number;
+  mortgageData: MortgageForTabs[];
+};
+
+function getPropertyLabel(property: ModelingProperty): string {
+  return property.nickname?.trim() || property.addressLine1;
+}
+
+export function ModelingWorkspace({
+  properties,
+  initialSelectedPropertyId,
+}: {
+  properties: ModelingProperty[];
+  initialSelectedPropertyId?: string;
+}) {
+  const [selectedPropertyId, setSelectedPropertyId] = useState(
+    initialSelectedPropertyId && properties.some((property) => property.id === initialSelectedPropertyId)
+      ? initialSelectedPropertyId
+      : properties[0]?.id ?? ""
+  );
+
+  const selectedProperty = useMemo(
+    () => properties.find((p) => p.id === selectedPropertyId) ?? properties[0] ?? null,
+    [properties, selectedPropertyId]
+  );
+
+  const selectedMortgageTotals = useMemo(() => {
+    if (!selectedProperty) {
+      return { totalBalance: 0, totalPayment: 0 };
+    }
+    return selectedProperty.mortgageData.reduce(
+      (sum, mortgage) => ({
+        totalBalance: sum.totalBalance + Number(mortgage.effectiveBalance ?? Number(mortgage.currentBalance)),
+        totalPayment: sum.totalPayment + Number(mortgage.monthlyPayment),
+      }),
+      { totalBalance: 0, totalPayment: 0 }
+    );
+  }, [selectedProperty]);
+
+  const selectedPropertyLabel = selectedProperty ? getPropertyLabel(selectedProperty) : "";
+
+  if (properties.length === 0) {
+    return (
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
+        <p className="mt-2 text-base text-muted">
+          Run portfolio-style what-if scenarios from one place.
+        </p>
+        <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center">
+          <h2 className="text-lg font-medium text-foreground">
+            Add your first property to start modeling
+          </h2>
+          <p className="mt-2 text-base text-muted">
+            Once a property exists, you can run rent, value, and debt assumptions here.
+          </p>
+          <Link
+            href="/properties/new"
+            className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+          >
+            Add your first property
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
+            <p className="mt-1 text-sm text-muted">
+              Run scenario assumptions in a global workspace.
+            </p>
+            {selectedProperty && (
+              <p className="mt-2 text-sm text-muted">
+                Active property:{" "}
+                <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
+                  {selectedPropertyLabel}
+                </span>
+              </p>
+            )}
+          </div>
+          <label className="w-full text-xs font-medium uppercase tracking-wide text-muted lg:w-80">
+            Modeling context
+            <select
+              value={selectedProperty?.id ?? ""}
+              onChange={(e) => setSelectedPropertyId(e.target.value)}
+              disabled={properties.length <= 1}
+              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+            >
+              {properties.map((property) => (
+                <option key={property.id} value={property.id}>
+                  {getPropertyLabel(property)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+        {selectedProperty && (
+          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+            <Link
+              href={`/properties/${selectedProperty.id}?tab=projections`}
+              className="text-muted hover:text-foreground hover:underline"
+            >
+              Open property projections
+            </Link>
+            <span className="text-muted">•</span>
+            <Link
+              href={`/properties/${selectedProperty.id}`}
+              className="text-muted hover:text-foreground hover:underline"
+            >
+              Open property detail
+            </Link>
+          </div>
+        )}
+      </div>
+
+      {selectedProperty && (
+        <div className="mt-4">
+          <ProjectionsTabContent
+            workspaceVariant="modeling"
+            monthlyRent={selectedProperty.monthlyRent}
+            monthlyExpenses={selectedProperty.monthlyExpenses}
+            estimatedValue={selectedProperty.currentEstimatedValue}
+            cashInvested={selectedProperty.cashInvested}
+            totalMortgageBalance={selectedMortgageTotals.totalBalance}
+            totalMonthlyPayment={selectedMortgageTotals.totalPayment}
+            ownershipPercent={selectedProperty.ownershipPercent}
+            vacancyPercent={selectedProperty.vacancyPercent}
+            displayMode={null}
+            mortgageData={selectedProperty.mortgageData}
+          />
+        </div>
+      )}
+    </div>
+  );
+}

@@ -8,6 +8,8 @@ import {
   Building2,
   Briefcase,
   Calculator,
+  SlidersHorizontal,
+  Landmark,
   CreditCard,
   Settings,
   Shield,
@@ -16,6 +18,8 @@ import {
 const nav = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/properties", label: "Properties", icon: Building2 },
+  { href: "/modeling", label: "Modeling", icon: SlidersHorizontal },
+  { href: "/mortgage", label: "Mortgage", icon: Landmark },
   { href: "/analyze", label: "Analyze deal", icon: Calculator },
   { href: "/deals", label: "Deals", icon: Briefcase },
   { href: "/plans", label: "Pricing", icon: CreditCard },

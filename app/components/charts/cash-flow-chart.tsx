@@ -24,6 +24,13 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
   const isEmpty = data.length === 0;
   const allZero = data.length > 0 && data.every((d) => d.monthlyCashFlow === 0);
 
+  // Domain: symmetric around zero so negative bars are visible; pad if all same sign
+  const values = data.map((d) => d.monthlyCashFlow);
+  const dataMin = values.length ? Math.min(...values) : 0;
+  const dataMax = values.length ? Math.max(...values) : 0;
+  const range = Math.max(Math.abs(dataMin), Math.abs(dataMax), 1);
+  const domain: [number, number] = [-range, range];
+
   // Diverging bar: horizontal layout — bars extend left (negative) and right (positive) from center
   return (
     <ChartWrapper
@@ -41,9 +48,9 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
             <XAxis
               type="number"
-              tickFormatter={(v) => `$${v}`}
+              tickFormatter={(v) => formatCurrency(v)}
               tick={{ fontSize: 11 }}
-              domain={["dataMin", "dataMax"]}
+              domain={domain}
             />
             <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
             <Tooltip

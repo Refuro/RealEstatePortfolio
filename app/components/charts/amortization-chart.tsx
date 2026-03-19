@@ -86,7 +86,7 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
                 const dateLabel = p.date ? formatDateTooltip(p.date) : "";
                 const balanceVal = p.balance;
                 return (
-                  <div className="rounded border border-border bg-card px-3 py-2 text-sm shadow-lg">
+                  <div className="rounded border border-border bg-card px-3 py-2 text-sm shadow-sm">
                     <div className="font-medium text-foreground">{dateLabel}</div>
                     <div className="text-muted">
                       Remaining balance: {formatCurrency(balanceVal)}

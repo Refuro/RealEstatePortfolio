@@ -44,6 +44,16 @@ const METRIC_DEFINITIONS = [
     definition:
       "Annual cash flow divided by cash invested. For partial ownership, uses your share of cash flow and invested capital. Shows the return on your actual money.",
   },
+  {
+    term: "Annual rent",
+    definition:
+      "Total gross rent collected per year across your portfolio. This is income before expenses and mortgage payments.",
+  },
+  {
+    term: "DSCR",
+    definition:
+      "Debt service coverage ratio: NOI divided by annual mortgage payments. Lenders typically require 1.25 or higher for refinancing. Above 1.0 means income covers debt; below 1.0 means a shortfall.",
+  },
 ];
 
 export function MetricHelpModal({

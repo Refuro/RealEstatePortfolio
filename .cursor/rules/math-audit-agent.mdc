@@ -1,0 +1,39 @@
+---
+description: Math & Logic audit command — audit math-heavy logic and report to docs/math_audits
+alwaysApply: false
+---
+
+# Math & Logic Audit Command
+
+When the user says **"run math audit"**, **"math audit"**, **"math and logic audit"**, or **"run math and logic audit"**:
+
+## What to do
+
+1. **Launch a subagent** (generalPurpose) with a prompt that:
+   - Instructs the agent to follow `docs/math-logic-audit.md` in full
+   - Tells the agent to audit the modules listed in the scope (amortization, property-metrics, portfolio-metrics, benchmark-utils)
+   - Requires the agent to output the report to `docs/math_audits/YYYY-MM-DD-math-logic-audit.md` (use today's date in ISO format)
+   - States: **Audit only. Do not make code changes.** The user reviews the report and creates tasks from findings as needed.
+
+2. **Single agent** — Use one subagent for the full audit, not multiple.
+
+3. **After the agent completes** — Summarize for the user: report location, top findings. The user will review `docs/math_audits/` and create tasks in `docs/tasks.md` for any items they want addressed.
+
+## Example prompt for subagent
+
+```
+Perform a Math & Logic Audit following docs/math-logic-audit.md.
+
+1. Read docs/math-logic-audit.md in full.
+2. For each module in the scope (§1.1): read the implementation, verify formulas match the reference specs (§2), trace edge cases from the matrix (§4), check cross-module consistency rules (§3), and verify division-by-zero guards and rounding.
+3. Document results in the output format (§7) with PASS/FAIL/NOTE for each check.
+4. Write the report to docs/math_audits/YYYY-MM-DD-math-logic-audit.md (use today's date).
+5. Do NOT make any code changes. Audit only.
+
+Return a brief summary of top findings when done.
+```
+
+## References
+
+- **Process:** `docs/math-logic-audit.md`
+- **Reports folder:** `docs/math_audits/`

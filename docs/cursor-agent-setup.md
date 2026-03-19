@@ -25,6 +25,7 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | **`.cursor/rules/pm-agent.mdc`** | Rule that defines the PM agent. `alwaysApply: true` so it’s active in any chat. Tells the agent to use the phase workflow, the review checklist, and when to pause or gate phases. |
 | **`.cursor/rules/builder-agent.mdc`** | Rule that reinforces builder behavior: stay in scope, update `tasks.md`, add env vars and manual steps to `.env.example` and `manual-steps.md`, never do manual steps. |
 | **`.cursor/rules/code-audit-agent.mdc`** | Code audit command. When the user says "run code audit" or "code audit", the agent launches a subagent that follows `docs/code-audit-process.md` and writes a report to `docs/code_audits/`. |
+| **`.cursor/rules/math-audit-agent.mdc`** | Math & Logic audit command. When the user says "run math audit" or "math audit", the agent launches a subagent that follows `docs/math-logic-audit.md` and writes a report to `docs/math_audits/`. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
 | **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
 | **`.cursor/hooks/on-subagent-stop.ps1`** | PowerShell variant for Windows when Git Bash/WSL is not available. Edit `hooks.json` to use this path instead of the `.sh` script if needed. |
@@ -44,6 +45,8 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/shell-risk-policy.md` | Canonical shell risk policy (allow/deny/ask). The `beforeShellExecution` hook implements this; keep them in sync. |
 | `docs/code-audit-process.md` | Process the code audit agent follows when the user runs a code audit. |
 | `docs/code_audits/` | Folder for code audit reports. User reviews reports and creates tasks from findings as needed. |
+| `docs/math-logic-audit.md` | Process the math audit agent follows when the user runs a math & logic audit. |
+| `docs/math_audits/` | Folder for math & logic audit reports. User reviews reports and creates tasks from findings as needed. |
 
 If any of these are missing, the PM rule or workflow doc will reference them; add minimal stubs or copy from this repo.
 
@@ -60,6 +63,7 @@ Do this in the project root (same level as `app/` and `docs/`).
   - `.cursor/rules/pm-agent.mdc`
   - `.cursor/rules/builder-agent.mdc`
   - `.cursor/rules/code-audit-agent.mdc`
+  - `.cursor/rules/math-audit-agent.mdc`
   - `.cursor/hooks.json`
   - `.cursor/hooks/on-subagent-stop.sh`
   - `.cursor/hooks/on-subagent-stop.ps1` (optional, for Windows)
@@ -95,5 +99,7 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 4. Use the workflow from `docs/pm-agent-workflow.md` (start builder, review with `docs/pm-review-checklist.md`, approve/advance or pause as described).
 
 **Code audit:** Say "run code audit" or "code audit" to trigger a codebase audit. The agent follows `docs/code-audit-process.md` and writes a report to `docs/code_audits/`. Review the report and create tasks in `docs/tasks.md` for any fixes you want.
+
+**Math & Logic audit:** Say "run math audit" or "math audit" to trigger a math and logic audit. The agent follows `docs/math-logic-audit.md` and writes a report to `docs/math_audits/`. Review the report and create tasks in `docs/tasks.md` for any formula or edge-case fixes you want.
 
 No API keys, no Cursor account config, and no duplicate files—just the repo and an executable hook script.

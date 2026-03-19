@@ -14,6 +14,20 @@ Pricing update ($15/$29), Website performance, App layout performance, Settings 
 
 **Mortgage estimate & polish (2025-03-13):** Balance advancement (projected/stored, 6‑month staleness), escrow amount for P&I, amortization steep dropoff fix, import loan type, amortization chart tooltip (month/year + balance). All tasks below marked complete.
 
+**Batch verified 2025-03-15:** Mortgage balance advancement, Escrow amount, Import template (original loan amount), Monthly rent display (single-unit), Import loan type, Amortization chart tooltip, Amortization steep dropoff fix, RentCast plan-based limits, RentCast rate limit messaging, Benchmarking (rent vs market), Estimate buttons (disable when matches last), Benchmarking surfacing (Option A & C), Dashboard Rent vs. market integration, Benchmark refresh inline button, Admin membership override, Settings override display, Sentry error tracking. **Archived:** `docs/tasks-archived.md` (section: Open tasks batch 2025-03-15).
+
+**Code audit follow-ups (2026-03-17):** Benchmark refresh return 502 on RentCast failure; amortization chart tooltip shadow-sm; BenchmarkDisplay refactor to use lib/benchmark-utils.
+
+**Date fields (2026-03-17):** Calendar button visibility — `accent-color` and `color-scheme` on `input[type="date"]` in globals.css.
+
+**Payoff timeline Phase 1 (2026-03-13):** `getPayoffProjection` in lib/amortization.ts; payoff insight per mortgage in mortgage section; "Mortgages & payoff" heading; balance source copy; edge cases (no mortgages, invalid data, paid off); disclaimer. Proposal: `docs/refinance-payoff-proposal.md`.
+
+**Payoff Accelerator Phase 2 (2026-03-13):** `getExtraPaymentForYearsEarlier`, `getPayoffYearsWithExtra` in lib/amortization.ts; years-earlier selector (5, 10, 15); extra payment input with reverse calc. Proposal: `docs/refinance-payoff-proposal.md`.
+
+**Dashboard single-property overhaul (2025-03-13):** Equity & Cash flow charts for single property; View property path; Value breakdown (stacked bar); refined Add another property CTA; contextual Quick actions; "What's on property page" teaser. Proposal: `docs/dashboard-single-property-proposal.md`.
+
+**Dashboard overhaul — single vs multi (2025-03-13):** Inline value bar in Property at a glance; hide Portfolio charts for single-property; fix Cash flow chart (formatCurrency, symmetric domain); consolidate add-property messaging. Proposal: `docs/dashboard-single-property-proposal.md` (revised).
+
 ---
 
 ## Roadmap priority (value vs effort — 2025-03-15)
@@ -21,576 +35,546 @@ Pricing update ($15/$29), Website performance, App layout performance, Settings 
 | Order | Item | Effort | Value | Recommendation |
 |-------|------|--------|-------|----------------|
 | — | Mortgage balance advancement | ✓ Done | — | Balance advancement, escrow, amortization fix, loan type import, chart tooltip. |
-| **1** | Admin membership override | Low | Medium | **Quick win.** Admins can set tier manually (demo accounts, partners). Small schema + admin UI. |
-| **2** | Benchmarking | Medium | High | **Do early.** "Your rent vs market" differentiator; RentCast API already integrated. |
-| **3** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic. |
-| **4** | Simulation page | High | High | Full modeling; extends scenario concept. |
-| **5** | Report section (PDF) | Medium | Medium | Professional output; share with partners/lenders. |
-| **6** | Automated testing | High | High | Quality foundation; plan per Module M. |
+| — | Admin membership override | ✓ Done | — | Tier override, admin UI, settings override display. |
+| — | Benchmarking | ✓ Done | — | Rent vs market, surfacing on list/dashboard, inline refresh. |
+| — | Error tracking (Sentry) | ✓ Done | — | Production error monitoring; set NEXT_PUBLIC_SENTRY_DSN in Vercel. |
+| — | Dashboard single-property | ✓ Done | — | Property at a glance, metrics, Rent vs. Market auto-refresh. |
+| **1** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic. |
+| **3** | Simulation page | High | High | Full modeling; extends scenario concept. |
+| **4** | Report section (PDF) | Medium | Medium | Professional output; share with partners/lenders. |
+| **5** | Automated testing | High | High | Quality foundation; plan per Module M. |
 
-**Defer:** Rent gap email (cost scales), Referral system (validate first), Error tracking (post-MVP).
+**Defer:** Rent gap email (cost scales), Referral system (validate first).
 
 ---
 
 ## Open tasks remaining
 
-### Mortgage balance advancement (Phase 1)
-
-**Priority:** High. Metrics (equity, LTV, debt) drift over time as principal is paid down. Without balance advancement, users see stale numbers.
-
-**Scope:** Hybrid approach — amortization projection as default, optional manual override when user has a statement. No Plaid/bank connection in Phase 1.
-
-**Context:** `lib/amortization.ts` has `generateAmortizationSchedule`. Mortgage model has `originalLoanAmount`, `currentBalance`, `interestRate`, `termYears`, `startDate`, `monthlyPayment`. All metrics consumers (dashboard, properties, property detail, export, portfolio summary, property metrics API) compute `totalMortgageBalance` as sum of `currentBalance`. We centralize balance logic and add projection + override.
-
----
-
-**1. Schema**
-
-- Add `balanceAsOfDate DateTime? @db.Date` to Mortgage model. Migration.
-- When user updates `currentBalance` from a statement dated X, they set `balanceAsOfDate = X`. Null = no manual override; use projected.
-
----
-
-**2. Lib — `lib/amortization.ts`**
-
-- **`getProjectedBalanceAsOf(input: AmortizationInput, asOfDate: Date): number`**
-  - Generate schedule; find the row whose date is ≤ asOfDate and is the latest.
-  - Return that row's `balance`. If asOfDate is before `startDate`, return 0. If asOfDate is after schedule end (loan paid off), return 0.
-  - If schedule is empty (invalid inputs), return 0.
-
-- **`getEffectiveBalance(mortgage: MortgageRecord): number`**
-  - Input: mortgage with `originalLoanAmount`, `currentBalance`, `interestRate`, `termYears`, `startDate`, `monthlyPayment`, `balanceAsOfDate`.
-  - If `balanceAsOfDate` exists and is within 6 months of today (≥ today − 180 days) → return `currentBalance`.
-  - Else → return `getProjectedBalanceAsOf(...)` with mortgage's amortization inputs. If projection returns 0 (empty schedule), fall back to `currentBalance`.
-
-- **`getBalanceSource(mortgage: MortgageRecord): 'stored' | 'projected'`**
-  - Returns `'stored'` when `balanceAsOfDate` exists and within 6 months; else `'projected'`.
-  - Used for display copy.
-
----
-
-**3. Metrics — all consumers**
-
-Replace raw `currentBalance` sum with `getEffectiveBalance` sum in:
-
-- `app/(app)/dashboard/page.tsx` — portfolioInput
-- `app/(app)/properties/page.tsx` — portfolioInput and property cards
-- `app/(app)/properties/[id]/page.tsx` — totalMortgageBalance for metrics; pass `effectiveBalance` and `balanceSource` per mortgage to MortgageSection
-- `app/api/properties/[id]/metrics/route.ts`
-- `app/api/portfolio/summary/route.ts`
-- `app/api/export/portfolio/route.ts` — use effective balance for metrics; export stored `currentBalance` and `balanceAsOfDate` as columns
-
----
-
-**4. Mortgage form**
-
-- Add optional "Balance as of" date picker to `MortgageFormFields` and `MortgageFormData`.
-- When user updates `currentBalance`, auto-set `balanceAsOfDate` to today if not provided (encourages accuracy).
-- Validation: `balanceAsOfDate` optional; if present, must be valid date.
-- API: extend `createMortgageSchema` and `updateMortgageSchema`; create/update mortgage routes accept and store `balanceAsOfDate`.
-
----
-
-**5. Mortgage display**
-
-- Show which source: **"Balance: $X (as of [date])"** when `balanceSource === 'stored'`.
-- **"Estimated balance: $X (from amortization — update from your statement for accuracy)"** when `balanceSource === 'projected'`.
-- When projected and `balanceAsOfDate` is null or >6 months old: add subtle nudge "Consider updating from your latest statement."
-- MortgageSection receives `effectiveBalance` and `balanceSource` per mortgage from parent (property page).
-
----
-
-**6. Import / export**
-
-- **Export:** Add `balance as of` column (YYYY-MM-DD when present). Export stored `currentBalance`; metrics in export use effective balance.
-- **Import:** Add optional `balance as of` / `balanceAsOfDate` column. When present, parse and store. When absent, null.
-- **Import — original loan amount:** Add optional `original loan amount` column. When present, use for mortgage `originalLoanAmount`; else keep current behavior (`originalLoanAmount = mortgageBalance`). Enables accurate projection for imported mortgages.
-
----
-
-**7. Amortization chart**
-
-- Unchanged. Chart uses original loan for schedule (existing behavior). Effective balance for metrics may differ when user overrides.
-
----
-
-**Acceptance criteria**
-
-- [x] Schema has `balanceAsOfDate`; migration applied.
-- [x] `getProjectedBalanceAsOf` and `getEffectiveBalance` in `lib/amortization.ts`; `getBalanceSource` for display.
-- [x] All consumers use `getEffectiveBalance` for `totalMortgageBalance` in metrics.
-- [x] Mortgage form has "Balance as of" date; auto-set to today when updating balance.
-- [x] Mortgage display shows stored vs estimated with correct copy; nudge when projected and stale.
-- [x] Export includes `balance as of`; import accepts optional `balance as of` and `original loan amount`.
-- [x] Amortization chart unchanged.
-- [x] `npm run check` passes. Manual smoke: add mortgage → verify projected balance; update balance + date → verify stored; wait or backdate → verify projected.
-
----
-
-**Out of scope (Phase 1):** Plaid, bank connection, automatic balance refresh. See `docs/roadmap.md`.
-
----
-
-### Escrow amount for accurate balance projection (Option A)
-
-**Priority:** High. When users check "Escrow included in payment," the full monthly payment (P&I + escrow) is used for amortization. Escrow does not reduce principal, so projected balance is artificially low. This task adds an optional escrow amount so we use P&I only for balance projection.
-
-**Scope:** Add `escrowAmount`; use (monthlyPayment − escrowAmount) for amortization when set. Cash flow continues to use full `monthlyPayment` (user's actual outflow).
-
-**Current setup analysis:**
-- **Amortization / balance projection:** `lib/amortization.ts` `getEffectiveBalance` → `getProjectedBalanceAsOf` → `generateAmortizationSchedule` uses `monthlyPayment` directly. **Change:** Use P&I only when escrowAmount present.
-- **Amortization chart API:** `api/properties/[id]/amortization/route.ts` passes `monthlyPayment` to `generateAmortizationSchedule`. **Change:** Use P&I only.
-- **Cash flow / metrics:** Dashboard, properties, property detail, export, portfolio summary, property metrics API use `totalMonthlyPayment` = sum of `monthlyPayment` for cash flow. **No change** — user pays full amount.
-- **Mortgage form:** Has `monthlyPayment`, `escrowIncluded` (checkbox). **Add:** `escrowAmount` field, shown when `escrowIncluded` is checked.
-- **Deals:** SavedDeal has flat `totalMonthlyPayment`; no amortization. **No change.**
-
----
-
-**1. Schema**
-
-- Add `escrowAmount Decimal? @db.Decimal(12, 2)` to Mortgage model. Migration.
-- Optional; when `escrowIncluded` is true and `escrowAmount` is set, P&I = `monthlyPayment - escrowAmount` for amortization.
-
----
-
-**2. Lib — `lib/amortization.ts`**
-
-- Extend `MortgageRecord` with `escrowIncluded?: boolean`, `escrowAmount?: number | { toString(): string } | null`.
-- Add **`getPiForAmortization(mortgage: MortgageRecord): number`**
-  - When `escrowIncluded` and `escrowAmount` is set and > 0: return `monthlyPayment - escrowAmount`, clamped to > 0 (avoid zero/negative P&I).
-  - Else: return `monthlyPayment`.
-- Update **`getEffectiveBalance`:** Pass `getPiForAmortization(mortgage)` instead of `monthlyPayment` when building `AmortizationInput` for projection.
-
----
-
-**3. Amortization chart API**
-
-- `api/properties/[id]/amortization/route.ts`: Use `getPiForAmortization(mortgage)` (or equivalent) instead of raw `monthlyPayment` when calling `generateAmortizationSchedule`.
-
----
-
-**4. Mortgage form**
-
-- Add optional "Escrow amount" field to `MortgageFormFields` and `MortgageFormData`.
-- Show only when "Escrow included in payment" is checked.
-- Helper text: "Used for balance projection. Your total payment above is used for cash flow."
-- Validation: when present, must be ≥ 0 and < monthlyPayment (escrow cannot exceed total payment).
-
----
-
-**5. Validation and API**
-
-- Extend `createMortgageSchema` and `updateMortgageSchema` with optional `escrowAmount` (decimal string, 0 to monthlyPayment when escrowIncluded).
-- Create/update mortgage API routes accept and store `escrowAmount`.
-- Mortgage list/detail API responses include `escrowAmount`.
-
----
-
-**6. Import / export**
-
-- **Export:** Add optional "escrow amount" column. When present, export value; else empty.
-- **Import:** Add optional "escrow amount" / "escrowAmount" column. When present, parse and store. When absent, null.
-
----
-
-**7. No changes**
-
-- Cash flow, metrics, dashboard, properties, scenario section — continue using full `monthlyPayment` (total outflow).
-- Deals — unchanged.
-
----
-
-**Acceptance criteria**
-
-- [x] Schema has `escrowAmount`; migration applied.
-- [x] `getPiForAmortization` in `lib/amortization.ts`; `getEffectiveBalance` and amortization chart use P&I only when escrowAmount set.
-- [x] Mortgage form has "Escrow amount" (shown when escrow included); validation escrowAmount < monthlyPayment.
-- [x] Create/update mortgage routes accept and store `escrowAmount`.
-- [x] Amortization chart uses P&I only when escrowAmount present.
-- [x] Export includes "escrow amount"; import accepts optional "escrow amount".
-- [x] Cash flow unchanged (still uses full monthlyPayment).
-- [x] `npm run check` passes. Manual smoke: add mortgage with escrow included + escrow amount → projected balance higher (more accurate) than without escrow amount.
-
----
-
-### Import template — add original loan amount
-
-**Priority:** Low. Import parser already supports `original loan amount`; template is missing it.
-
-**Scope:** Add `original loan amount` to the downloadable portfolio import template (`app/api/import/portfolio/template/route.ts`) so users know the column exists and can fill it when importing. Place after `mortgage balance` and before `balance as of` (or alongside other mortgage columns). Sample row: empty string.
-
-**Acceptance criteria**
-
-- [x] Template CSV includes `original loan amount` column.
-- [x] Column order matches export/import expectations (mortgage block: balance, original loan amount, balance as of, rate, term, payment, escrow, lender).
+### Onboarding + Dashboard polish split (2026-03-18)
+
+#### Batch 1 - Welcome modal visual overhaul (implement now)
+
+- [x] Redesign onboarding welcome modal to a modern, premium card with stronger hierarchy.
+- [x] Add concise value-forward content (benefit chips) without checklist-style language.
+- [x] Polish CTA presentation: prominent primary action, clear secondary action, improved spacing/contrast.
+- [x] Keep current onboarding behavior unchanged (`Add first property` -> `/properties/new`, `Maybe later` dismisses modal).
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Modal looks visually upgraded (elevated container, stronger typography, better spacing, cleaner CTA grouping).
+- [x] Copy is activation-focused and non-blocking (no required-step/checklist framing).
+- [x] Existing onboarding flow behavior remains exactly the same.
 - [x] `npm run check` passes.
 
----
+#### Batch 2 - Dashboard post-onboarding declutter (next)
 
-### Monthly rent display — simplify for single-unit
+- [x] Replace scattered action sections with one modern "Next actions" surface near the top of dashboard.
+- [x] Remove duplicated action zones (`Advanced tools`, bottom `Quick actions`, and single-property duplicate links) and keep one clear hierarchy.
+- [x] Keep Modeling and Mortgage highly discoverable via primary action buttons, with single-property contextual deep links.
+- [x] Refine first-property return state into a cleaner success + next-step pattern with reduced above-the-fold competition.
+- [x] Keep essential metric visibility while de-emphasizing non-primary CTAs and copy noise.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. UX polish.
-
-**Scope:** For properties with a single unit, show just the amount (e.g. `$2,195`) instead of `Unit 1: $2,195 (Total: $2,195)`.
-
-**Current behavior:** When `unitRents` has any values, display shows `Unit 1: $X (Total: $Y)` for single-unit; redundant.
-
-**Desired behavior:**
-- **Single unit** (`unitRents.length === 1`): show `$2,195` only.
-- **Multi-unit** (`unitRents.length > 1`): show `Unit 1: $X, Unit 2: $Y (Total: $Z)`.
-
-**Locations:**
-- `app/(app)/properties/[id]/page.tsx` — property detail "Monthly rent" in Property details section.
-- `app/(app)/properties/add-property-wizard.tsx` — StepReview "Monthly rent" in Income & expenses.
-
-**Acceptance criteria**
-
-- [x] Property detail page: single-unit shows amount only; multi-unit shows breakdown + total.
-- [x] Add-property wizard review step: same logic.
+Acceptance criteria:
+- [x] Dashboard has a single primary action area (no redundant top+bottom action clusters).
+- [x] First-property users see success confirmation and clear next actions without stacked repetitive cards.
+- [x] Users retain one-click access to Property, Modeling, Mortgage, Add property, and Analyze deal paths.
+- [x] Visual hierarchy is cleaner: primary actions prominent, secondary actions quieter.
 - [x] `npm run check` passes.
 
----
+#### Batch 3 - Multi-property dashboard density + insights revamp (implement now)
 
-### Import — add loan type
+- [x] Compact multi-property metric cards to reduce vertical height and improve scan speed.
+- [x] Reorganize multi-property metrics into clearer hierarchy (primary row first, secondary row second).
+- [x] Redesign `Rent vs. market` into a full insight card with stronger typography and per-property readability.
+- [x] Convert multi-property stacked chart area into a tabbed chart workspace to reduce scroll depth.
+- [x] Preserve existing calculations, benchmark refresh behavior, and chart data logic.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. Mortgage form and schema support `loanType`; import does not.
-
-**Scope:** Add optional `loan type` column to CSV parser, import route, and template. Values: conventional, fha, va, etc. Store in `mortgage.loanType`.
-
-**Acceptance criteria**
-
-- [x] Parser accepts optional "loan type" / "loanType".
-- [x] Import route stores `loanType` when creating mortgage.
-- [x] Template includes "loan type" column (empty in sample).
+Acceptance criteria:
+- [x] Multi-property dashboard shows denser metrics above the fold with visibly reduced card footprint.
+- [x] Rent-vs-market no longer appears as orphaned tiny text; it has clear structure and readable hierarchy.
+- [x] Users can switch between Equity, Debt vs Value, and Cash flow charts without long stacked scrolling.
+- [x] All existing metric values, chart values, and refresh behavior remain functionally unchanged.
 - [x] `npm run check` passes.
 
----
+### Modeling workspace revamp (2026-03-18)
 
-### Amortization chart — today marker and hover date
+#### Batch A - Context bar + property selection prominence (implement now)
 
-**Priority:** Low. UX polish.
+- [x] Replace current split header/layout with a single compact context bar that keeps active property visible.
+- [x] Make property selection the primary control in the top area (clear label, high contrast, easy to find).
+- [x] Demote utility links (`Open property projections`, `Open property detail`) to tertiary treatment within the same context bar.
+- [x] Remove extra top-space card stack to reduce above-the-fold height before controls/charts.
+- [x] Preserve all modeling calculations and selected-property behavior.
+- [x] Run `npm run check` and verify no regressions.
 
-**Scope:**
-- ~~Add a vertical "today" marker~~ (removed per user — low value, layout hassle).
-- In the tooltip, show the month/year of the hovered datapoint (in addition to balance info).
-
-**Acceptance criteria**
-
-- [x] Tooltip includes month/year for the hovered point.
+Acceptance criteria:
+- [x] Active property is always obvious on the Modeling page without scrolling.
+- [x] Users can switch properties from the top bar without hunting for the selector.
+- [x] Utility links remain available but no longer dominate above-the-fold space.
+- [x] Projections content starts higher on the page vs previous layout.
 - [x] `npm run check` passes.
 
----
+#### Batch B - Controls grouping + compact assumptions layout (next)
 
-### Amortization schedule — fix steep dropoff at end of term
+- [x] Reorganize simulation controls into clearer groups (horizon, growth, debt strategy, risk).
+- [x] Reduce control section vertical footprint with tighter spacing and cleaner label hierarchy.
+- [x] Keep presets prominent while de-emphasizing long helper copy.
+- [x] Preserve all existing input behavior and calculations.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** High. Chart shows balance ~$230k at month 360, then artificially drops to $0.
-
-**Root cause:** In `generateAmortizationSchedule`, when `monthIndex === totalMonths - 1`, we force `principal = balance` regardless of whether the payment is sufficient. With P&I of $2,000 (after escrow), the loan needs ~$2,217 to fully amortize in 30 years. The payment is too low, so ~$230k remains at month 360. Forcing payoff creates a fake "balloon" and a nonsensical drop on the chart.
-
-**Fix:** Remove the `monthIndex === totalMonths - 1` condition. Only set `principal = balance` when `principal >= balance` (natural payoff). If the payment doesn't fully amortize in the term, the last row shows the remaining balance; no artificial drop to zero.
-
-**Acceptance criteria**
-
-- [x] Schedule ends at term with remaining balance when payment is insufficient (no fake payoff).
-- [x] Chart curve ends naturally at remaining balance; no steep drop to $0.
-- [x] When payment *does* fully amortize, schedule still pays off correctly.
+Acceptance criteria:
+- [x] Controls are easier to scan and edit quickly.
+- [x] Above-the-fold density improves without loss of functionality.
+- [x] Existing modeling outputs remain mathematically unchanged.
 - [x] `npm run check` passes.
 
----
+#### Batch C - Desktop workspace density (next)
 
-### RentCast rate limits — plan-based per-hour
+- [x] Improve desktop information density so controls and outputs coexist with less scrolling.
+- [x] Keep mobile behavior practical and readable (no desktop-only assumptions).
+- [x] Preserve advanced breakdown access while reducing layout interruptions.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. Protects RentCast quota; aligns limits with plan value.
-
-**Scope:** Replace the fixed 20-calls-per-hour limit with plan-based limits:
-- **Free:** 5/hour
-- **Investor:** 10/hour
-- **Pro:** 20/hour
-
-**Files:**
-- `app/api/estimates/rent/route.ts` — use plan-based limit
-- `app/api/estimates/value/route.ts` — use plan-based limit
-
-**Implementation:**
-- Add helper `getRentCastHourlyLimit(tier: string): number` in `lib/plans.ts` or new `lib/rentcast-limits.ts`. Return 5 for "free", 10 for "investor", 20 for "pro"; default 5 for unknown.
-- Both estimate routes: get `user.subscriptionTier ?? "free"`, call helper, use result instead of hardcoded 20.
-- Error message unchanged: "Rate limit exceeded. Try again later."
-
-**Acceptance criteria**
-
-- [x] Free users: 5 RentCast calls per hour (rent + value combined).
-- [x] Investor users: 10 per hour.
-- [x] Pro users: 20 per hour.
+Acceptance criteria:
+- [x] Desktop view shows more actionable modeling context and output in one viewport.
+- [x] Mobile layout remains usable without clipped controls/charts.
+- [x] No functional regressions in scenario controls or chart rendering.
 - [x] `npm run check` passes.
 
----
+#### Batch D - Final visual polish + QA hardening (next)
 
-### RentCast rate limit — user-facing messaging
+- [x] Apply final typography/spacing polish for a cohesive modern workspace feel.
+- [x] Verify visual hierarchy (context > assumptions > outcomes) across common viewport sizes.
+- [x] Add desktop left-rail visual alignment treatment so controls column reads balanced against outcomes column.
+- [x] Complete manual smoke checks for property switching and major modeling flows.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. Users who hit the limit should see clear, friendly messaging without flow interruption.
-
-**Scope:** Improve the message shown when a user exceeds their RentCast estimate limit (rent or value). Keep it inline below the Estimate button; no modals or blocking UI.
-
-**API:** 429 response message: "You've used your estimate limit for this hour. Try again later."
-
-**Frontend:** When error contains "estimate limit", use `text-negative` (visible) instead of `text-muted`. Apply to rent and value estimate errors in add-property-wizard and property-form.
-
-**Constraints:** No modals, toasts, or blocking. Inline message only. Form flow unchanged.
-
-**Acceptance criteria**
-
-- [x] API returns friendly message on 429.
-- [x] Add-property wizard: rate limit error shown in text-negative below Estimate button(s).
-- [x] Property form: rate limit error shown in text-negative below Estimate button(s).
-- [x] No flow interruption; form remains fully usable.
+Acceptance criteria:
+- [x] Modeling page feels visually consistent with upgraded onboarding/dashboard quality.
+- [x] Left control rail appears intentionally aligned/balanced with right outcomes region on desktop.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+#### Batch E - Left rail usability and spacing refactor (implement now)
 
-### Benchmarking — rent vs market
+- [x] Widen desktop modeling workspace split so the controls rail has more usable width.
+- [x] Flatten nested card density in the controls rail to reduce boxed-in visual clutter.
+- [x] Improve section-level control composition (label/input rhythm, checkbox/input flow, reset placement).
+- [x] Preserve all modeling formulas, state behavior, and chart outputs.
+- [x] Keep mobile/tablet layout practical and readable.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Medium. Differentiator; see `docs/benchmarking-proposal.md`.
-
-**Scope:** Show "Your rent is X% above/below market" per property. Reuse Estimate rent to populate benchmark; add Refresh benchmark for on-demand fetch. 60-day cache TTL.
-
-**1. Schema**
-- Add `marketRent Decimal? @db.Decimal(12, 2)` and `marketRentAsOf DateTime? @db.Date` to Property. Migration.
-
-**2. Estimate rent API** (`app/api/estimates/rent/route.ts`)
-- Accept optional `propertyId` query param.
-- On success: if `propertyId` provided, update property with `marketRent` and `marketRentAsOf` (today).
-- Return `{ rent, marketRent?, marketRentAsOf? }` so frontend can use for add flow.
-
-**3. Property create**
-- `app/api/properties/route.ts`: Accept optional `marketRent`, `marketRentAsOf` in POST body. Store when provided.
-- Add-property wizard: when user clicks Estimate rent and gets result, store `marketRent` and `marketRentAsOf` in wizard state; include in create payload.
-
-**4. Benchmark refresh endpoint**
-- `POST /api/properties/[id]/benchmark/refresh` — fetch RentCast rent for property address, update `marketRent` and `marketRentAsOf`, return `{ marketRent, marketRentAsOf, pctAboveBelow }`. Same rate limit as estimate rent. Requires auth.
-
-**5. Property API responses**
-- Include `marketRent` and `marketRentAsOf` in property fetch (detail, list). Property detail page needs them.
-
-**6. Property form (edit)**
-- Pass `propertyId` when calling estimate rent API so we can update property with marketRent on success.
-
-**7. Property detail UI**
-- Near "Monthly rent": when `marketRent` exists and `marketRentAsOf` ≤ 60 days ago, show "Rent: $X · Market: $Y (+Z%)" or "(-Z% below market)".
-- When no cache or stale: show "Refresh benchmark" button. On click, call refresh endpoint, update UI.
-- Use `getPropertyTotalRent` for user rent; compare to `marketRent`.
-
-**8. Cache TTL**
-- Consider fresh if `marketRentAsOf` within 60 days. Stale: show last value + "Updated X days ago · Refresh".
-
-**Acceptance criteria**
-
-- [x] Schema has marketRent, marketRentAsOf; migration applied.
-- [x] Estimate rent with propertyId updates property; add wizard passes marketRent on create.
-- [x] POST /api/properties/[id]/benchmark/refresh fetches and stores market rent.
-- [x] Property detail shows benchmark when cache fresh; "Refresh benchmark" when missing/stale.
-- [x] % above/below computed correctly: (userRent - marketRent) / marketRent × 100.
-- [x] Rate limit applies to refresh (same as estimate rent).
+Acceptance criteria:
+- [x] Left rail no longer feels cramped at standard desktop widths.
+- [x] Control labels/inputs avoid awkward wrapping at normal zoom levels.
+- [x] Section structure remains clear while visually lighter and easier to scan.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+#### Batch F - Modeling canvas alignment lock (implement now)
 
-### Estimate buttons — disable when value matches last estimate
+- [x] Build a dedicated desktop canvas row that pairs Simulation Controls (left) and Graph card (right) in the same stretched grid row.
+- [x] Ensure the bottom edge of the Simulation Controls card aligns with the bottom edge of the Graph card (excluding notes).
+- [x] Make Advanced Breakdown always expanded in Modeling workspace and place it inside the Graph card to prevent layout jumps.
+- [x] Keep baseline notes outside the aligned canvas row.
+- [x] Preserve all modeling formulas, state behavior, and chart outputs.
+- [x] Keep mobile/tablet layout readable and functional.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. Reduces accidental duplicate API calls.
-
-**Scope:** Gray out "Estimate value" and "Estimate rent" when the input field already contains the result from a prior estimate. Re-enable when the user edits the field. Apply to add-property-wizard and property-form. Clear "from estimate" when address changes so user can re-estimate for new address.
-
-**Acceptance criteria**
-
-- [x] Estimate value: disabled when current value matches last estimate; enabled when user edits.
-- [x] Estimate rent: same logic.
-- [x] Address change clears the flag (or value) so re-estimate is available.
-- [x] Rate limits still apply when button is enabled and clicked.
+Acceptance criteria:
+- [x] On desktop, Simulation Controls card bottom and Graph card bottom remain aligned at normal zoom.
+- [x] Advanced breakdown no longer causes graph/column misalignment when interacting.
+- [x] Notes remain below the aligned cards and are excluded from alignment behavior.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+#### Batch G - Final modeling stability polish (implement now)
 
-### Benchmarking surfacing — Option A: Benchmark line on property cards
+- [x] Fix Growth assumptions field alignment by normalizing label length and field rhythm across all three inputs.
+- [x] Move Modeling tips below baseline inputs note.
+- [x] Remove reinvest-toggle vertical jump by reserving stable space in controls and advanced breakdown content.
+- [x] Preserve modeling formulas, state behavior, KPI values, and chart outputs.
+- [x] Keep desktop card-bottom alignment behavior from Batch F.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Medium. Surfaces rent vs. market at a glance; see `docs/benchmarking-surfacing-proposal.md`.
-
-**Scope:** Add a compact benchmark line below the metrics grid on each property card in the properties list (`/properties`).
-
-**Requirements:**
-- **When benchmark exists and fresh** (marketRentAsOf ≤ 60 days): One line — "Rent X% below market" or "Rent X% above market" or "Rent at market". Use `text-muted` and `text-sm`.
-- **When benchmark stale** (>60 days): "Rent vs. market: updated X days ago" with link to property detail (where user can refresh).
-- **When no benchmark:** "Refresh benchmark" link to property detail.
-- Use `getPropertyTotalRent` for user rent; compare to `marketRent`. Formula: `(userRent - marketRent) / marketRent × 100`.
-- Properties API already returns `marketRent` and `marketRentAsOf` for list.
-
-**Acceptance criteria**
-
-- [x] Property cards with fresh benchmark show "Rent X% below/above/at market" below metrics grid.
-- [x] Property cards with stale benchmark show "Rent vs. market: updated X days ago" with link to property.
-- [x] Property cards without benchmark show "Refresh benchmark" link to property.
-- [x] Copy uses `text-muted` and `text-sm`; does not dominate the card.
-- [x] % computed correctly; "at market" when within ±1%.
+Acceptance criteria:
+- [x] Growth assumptions inputs remain visually aligned at normal desktop zoom.
+- [x] Modeling tips render below baseline inputs note.
+- [x] Clicking `Reinvest cash flow` no longer pushes the page/canvas down.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+#### Batch H - Reinvest copy compression polish (implement now)
 
-### Benchmarking surfacing — Option C: "Rent vs. market" section on dashboard
+- [x] Shorten reinvest assumption card label/value copy to prevent wrap-driven expansion.
+- [x] Remove redundant reinvest percentage sentence from advanced breakdown card content.
+- [x] Preserve advanced breakdown grid structure and stable section height behavior.
+- [x] Preserve all formulas, state behavior, KPI values, and chart outputs.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Medium. Dedicated dashboard section; see `docs/benchmarking-surfacing-proposal.md`.
-
-**Scope:** Add a "Rent vs. market" section on the dashboard after metric cards (or before charts). Show up to 3–5 properties with benchmarks, sorted by most below market.
-
-**Requirements:**
-- Filter properties with `marketRent != null` and `marketRentAsOf` within 60 days.
-- Sort by % below market (most below first).
-- Show up to 3–5 properties: "123 Main St: 12% below market" (link to property).
-- If none: "See how your rent compares to market" with link to properties.
-- Compact layout; does not dominate dashboard.
-
-**Acceptance criteria**
-
-- [x] Dashboard has "Rent vs. market" section after metric cards.
-- [x] Section shows up to 3–5 properties with fresh benchmarks, sorted by most below market.
-- [x] Each property links to its property detail page.
-- [x] When no properties have benchmarks: show "See how your rent compares to market" with link to properties.
-- [x] Section is compact; styling consistent with dashboard.
+Acceptance criteria:
+- [x] Reinvestment assumption card no longer wraps into overly tall content at normal desktop zoom.
+- [x] Advanced breakdown no longer visibly expands due to verbose reinvest text.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+#### Batch I - Canvas density and inline reinvest final micro polish (implement now)
 
-### Dashboard — integrate Rent vs. market into Property at a glance (single property)
+- [x] Reduce modeled chart visual height on desktop so the canvas feels tighter and better balanced.
+- [x] Keep controls/graph card bottom alignment behavior while reducing visible dead space under controls.
+- [x] Make `Reinvest (%)` inline with `Reinvest cash flow` in Debt strategy without adding vertical height.
+- [x] Preserve formulas, KPI/chart values, and interaction behavior.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Medium. UX polish — the standalone "Rent vs. market" section feels odd with one property.
-
-**Scope:** When the user has a single property, integrate the rent vs. market line into the "Property at a glance" card instead of showing it as a separate section. When multiple properties, keep the separate Rent vs. market section (optionally style as card for consistency).
-
-**Requirements:**
-- **Single property:** Add "Rent vs. market" as a fifth row in the "Property at a glance" card grid (Value, Debt, Equity, Monthly cash flow, Rent vs. market).
-- When benchmark exists and fresh: show "1.6% below market" or "X% above market" or "At market".
-- When benchmark stale or missing: show "Add benchmark" or "Refresh benchmark" as a link to the property detail page.
-- **Single property:** Remove the standalone Rent vs. market section from the dashboard (it's now in the card).
-- **Multiple properties:** Keep the Rent vs. market section as-is (or optionally give it card styling to match). Do not show "Property at a glance" for multi-property — that card is single-property only.
-
-**Files:**
-- `app/(app)/dashboard/page.tsx` — conditionally render RentVsMarketSection only when propertyCount > 1.
-- `app/(app)/dashboard/dashboard-charts.tsx` — add Rent vs. market row to "Property at a glance" card; needs benchmark data passed in (marketRent, marketRentAsOf, propertyId for link).
-
-**Acceptance criteria**
-
-- [x] Single property: "Property at a glance" card includes Rent vs. market row (fresh/stale/missing handled).
-- [x] Single property: Standalone Rent vs. market section is hidden.
-- [x] Multiple properties: Rent vs. market section remains visible; Property at a glance card not shown (existing behavior).
-- [x] Rent vs. market row links to property when stale/missing ("Refresh benchmark" / "Add benchmark").
+Acceptance criteria:
+- [x] Graph card appears less tall on desktop and overall canvas is more compact.
+- [x] `Reinvest cash flow` and `Reinvest (%)` appear on one inline row.
+- [x] No additional vertical jump is introduced when toggling reinvest.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
 - [x] `npm run check` passes.
 
----
+### Mortgage workspace revamp (2026-03-18)
 
-### Benchmark refresh — inline "Refresh estimate" button
+#### Batch M1 - Context bar + top hierarchy (implement now)
 
-**Priority:** Medium. UX — action where you need it; no navigation required.
+- [x] Replace split mortgage header and context card with a single compact context bar.
+- [x] Keep active property obvious at top and make property selector the primary control.
+- [x] Demote utility links (`Open property mortgage tab`, `Edit mortgage details`) to tertiary inline links.
+- [x] Reduce top vertical stack height before simulator content.
+- [x] Preserve existing property selection and mortgage selection behavior.
+- [x] Run `npm run check` and verify no regressions.
 
-**Scope:** Replace links to property page with inline "Refresh estimate" buttons that call the benchmark refresh API directly. Use on dashboard (Property at a glance) and properties list.
-
-**Requirements:**
-- **Dashboard (Property at a glance):** When benchmark stale or missing, show "Refresh estimate" **button** (not link). Button calls `POST /api/properties/[id]/benchmark/refresh`, shows loading, handles errors, then `router.refresh()`.
-- **Properties list:** Restructure property cards so the benchmark line is **outside** the card Link (valid HTML). When no benchmark or stale: show "Refresh estimate" **button** that does the same. When fresh: show label only (no button).
-- **Label:** Use "Refresh estimate" for both add (first time) and refresh (stale).
-- Reuse or extend `BenchmarkRefreshButton`; add optional `label` prop if needed.
-- Properties list: benchmark area must be a sibling to the Link, not nested (button inside anchor is invalid).
-
-**Acceptance criteria**
-
-- [x] Dashboard: stale/missing benchmark shows "Refresh estimate" button; clicking refreshes inline (no navigation).
-- [x] Properties list: benchmark line outside card Link; "Refresh estimate" button when no/stale benchmark.
-- [x] Button shows loading state; error displayed inline on failure.
-- [x] Property detail page: keep existing BenchmarkRefreshButton (optional: rename label to "Refresh estimate" for consistency).
+Acceptance criteria:
+- [x] Active mortgage property is obvious without scrolling.
+- [x] Property switcher is easy to find and use from top bar.
+- [x] Utility links are available but no longer visually dominant.
+- [x] Simulator content starts higher vs previous layout.
 - [x] `npm run check` passes.
 
----
+#### Batch M2 - Simulator control composition + spacing (next)
 
-### Admin membership override
+- [x] Reorganize mortgage controls into cleaner groups with improved spacing rhythm.
+- [x] Normalize label/input alignment for primary control rows.
+- [x] Keep payoff and accelerator controls behavior unchanged.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Medium. Quick win — admins can set tier manually for demos, partners, goodwill. See `docs/admin-membership-override-proposal.md`.
-
-**Scope:** Add `subscriptionTierOverride` to User; admins can set/clear via admin UI. Effective tier = override ?? subscriptionTier. Billing sync skips downgrade when override set.
-
-**1. Schema**
-- Add `subscriptionTierOverride String?` to User model. Migration.
-
-**2. Lib — `lib/plans.ts`**
-- Add `getEffectiveTier(user: { subscriptionTier, subscriptionTierOverride? }): string`. Returns override when valid (free|investor|pro); else subscriptionTier ?? "free".
-
-**3. Consumers — use getEffectiveTier**
-- Dashboard, properties, layout, settings, deals, analyze, plans pages.
-- API: properties, deals, estimates/rent, estimates/value, benchmark/refresh, import, export, portfolio/summary, billing/status, me.
-- App layout client (banner).
-
-**4. Billing sync**
-- If `subscriptionTierOverride` set, return early; do not downgrade.
-
-**5. Admin API**
-- `PATCH /api/admin/users/[id]/tier` — body `{ tier: "free" | "investor" | "pro" | null }`. Admin only. Set or clear override.
-
-**6. Admin UI**
-- Users table: add tier dropdown (Free, Investor, Pro, Clear override) per row. On change, call PATCH API. Show effective tier and override status.
-
-**Acceptance criteria**
-
-- [x] Schema has subscriptionTierOverride; migration applied.
-- [x] getEffectiveTier in lib/plans.ts; all consumers use it.
-- [x] Billing sync skips downgrade when override set.
-- [x] PATCH /api/admin/users/[id]/tier works; admin only.
-- [x] Admin users table has tier control; can set/clear override.
+Acceptance criteria:
+- [x] Control panel is easier to scan at normal desktop zoom.
+- [x] No awkward wrapping in key control rows.
+- [x] Existing simulation outputs remain mathematically unchanged.
 - [x] `npm run check` passes.
 
----
+#### Batch M3 - Desktop aligned canvas for mortgage simulator (implement now)
 
-### Settings — show override status in Plan & billing
+- [x] Build dedicated desktop canvas row pairing controls (left) and outcomes/chart (right).
+- [x] Align controls-card bottom and chart-card bottom (notes excluded).
+- [x] Reduce chart visual height to improve balance and reduce scrolling.
+- [x] Keep baseline notes outside aligned canvas row.
+- [x] Run `npm run check` and verify no regressions.
 
-**Priority:** Low. UX clarity for users with admin override.
-
-**Scope:** On the Settings page, when the user has `subscriptionTierOverride` set, show that their plan is overridden and display their underlying plan (subscriptionTier from Stripe).
-
-**Requirements:**
-- When `subscriptionTierOverride` is set: show "Current plan: Pro (admin override)" (or Investor/Free as applicable).
-- Add a row "Underlying plan: Free" (or whatever subscriptionTier is) so they know what their Stripe/billing status is.
-- When no override: keep current display (just "Current plan: Pro" etc.); no underlying row.
-
-**File:** `app/(app)/settings/page.tsx`
-
-**Acceptance criteria**
-
-- [x] Override users: "Current plan: X (admin override)" and "Underlying plan: Y".
-- [x] Non-override users: unchanged (just "Current plan: X").
+Acceptance criteria:
+- [x] Controls and chart cards align at bottom on desktop.
+- [x] Canvas appears denser with less dead space.
+- [x] Notes are outside alignment target.
 - [x] `npm run check` passes.
 
+#### Batch M4 - Stability polish (no-jump interactions) (implement now)
+
+- [x] Stabilize optional controls and breakdown sections to avoid vertical jumps.
+- [x] Compress verbose copy in cards where wrapping inflates section height.
+- [x] Preserve formulas, KPI values, and chart behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Interaction toggles no longer cause noticeable canvas shifts.
+- [x] Card content remains readable without excessive wrapping.
+- [x] No regressions in mortgage selection, payoff simulation, or chart output.
+- [x] `npm run check` passes.
+
+#### Batch M5 - Final consistency polish + QA hardening (implement now)
+
+- [x] Apply final typography/spacing polish to match Modeling and Dashboard quality.
+- [x] Verify behavior across no-mortgage, single-mortgage, and multi-mortgage states.
+- [x] Preserve deep-linking behavior (`propertyId`, `mortgageId`).
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Mortgage workspace feels visually consistent with Modeling polish quality.
+- [x] Empty and edge states remain clear and actionable.
+- [x] No regressions in property/mortgage switching, payoff outputs, or chart rendering.
+- [x] `npm run check` passes.
+
+#### Batch M6 - Controls visual facelift (implement now)
+
+- [x] Increase spacing rhythm and section padding in Simulation controls for better visual hierarchy.
+- [x] Recompose Mortgage and payment panel to improve readability of selected mortgage, extra principal, and base P&I.
+- [x] Upgrade payoff target buttons with clearer hierarchy, stronger selected state, and consistent heights.
+- [x] Allow slightly taller workspace controls area to reduce cramped feeling.
+- [x] Preserve all payoff simulation logic and interaction behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls panel feels less cramped and visually consistent with Modeling polish.
+- [x] Primary control rows are easier to scan at normal desktop zoom.
+- [x] Payoff target cards are legible, balanced, and clearly state selection.
+- [x] No regressions in mortgage switching, payoff outputs, or chart rendering.
+- [x] `npm run check` passes.
+
+#### Batch M7 - Dense rail compression (implement now)
+
+- [x] Flatten simulation controls layout by removing nested heavy card structure.
+- [x] Convert controls header into compact toolbar with links + reset.
+- [x] Recompose mortgage/payment controls into tighter rows with clearer visual hierarchy.
+- [x] Convert payoff targets into compact chips and collapse to inline note when all targets are unavailable.
+- [x] Reduce workspace controls min-height to improve chart-to-controls balance.
+- [x] Preserve formulas, interactions, and deep-link behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Simulation controls occupy noticeably less vertical space on desktop.
+- [x] Controls are readable and scannable without stacked inner-card clutter.
+- [x] Payoff targets fit compactly and remain clear/interactive.
+- [x] No regressions in mortgage switching, payoff outputs, chart rendering, or URL sync.
+- [x] `npm run check` passes.
+
+#### Batch M8 - Balanced rail fill for empty-space polish (implement now)
+
+- [x] Add compact scenario-outcome strip inside simulation controls to use remaining vertical space intentionally.
+- [x] Add compact quick-assumptions row (rate, term, base P&I) to improve at-a-glance context.
+- [x] Keep additions low-height and visually aligned with dense-rail design language.
+- [x] Preserve all existing simulation formulas, interactions, and deep-link behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls column no longer has obvious dead space under normal desktop viewport.
+- [x] Added content is concise and useful (not filler), with readable hierarchy.
+- [x] Row composition remains balanced against chart panel.
+- [x] No regressions in mortgage switching, payoff outputs, chart rendering, or URL sync.
+- [x] `npm run check` passes.
+
+### Properties page overhaul (2026-03-18)
+
+#### Batch P1 - Triage + hierarchy polish (implement now)
+
+- [x] Replace standalone `Advanced tools` card with compact inline tools row in page header.
+- [x] Add filter/sort chip bar for triage (`All`, `Needs attention`, `No mortgage`, `Stale benchmark`, `Negative cash flow`; sort by updated or worst cash flow).
+- [x] Add lightweight insight tags on property cards (`No mortgage`, `Benchmark stale`, `Negative cash flow`) to improve scan speed.
+- [x] Preserve existing calculations, benchmark refresh behavior, and deep links to Modeling/Mortgage/property detail.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Properties page presents one compact global tools row (no large standalone tools card).
+- [x] Users can quickly focus the list by triage filters and sort mode.
+- [x] Property cards surface actionable status tags without overwhelming card layout.
+- [x] Existing metrics and benchmark refresh paths remain functionally unchanged.
+- [x] `npm run check` passes.
+
+#### Batch P2 - Card composition modernization (next)
+
+- [x] Tighten property card composition into modern dense layout with clearer identity > metrics > actions hierarchy.
+- [x] Promote one primary card action (`Open property`) while keeping Modeling/Mortgage as secondary links.
+- [x] Normalize card spacing/typography rhythm to match Mortgage/Modeling quality level.
+- [x] Add single-property mode behavior: hide filter/sort controls when exactly one property exists.
+- [x] Add single-property compact workspace card treatment (not dashboard duplicate) with focused status + next actions.
+- [x] Keep multi-property mode triage controls and card-list workflow unchanged in purpose.
+- [x] Preserve benchmark behavior, metric values, and existing route paths.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Card layout is denser and easier to scan at normal desktop zoom.
+- [x] Action hierarchy is clearer without reducing discoverability of advanced tools.
+- [x] When `properties.length === 1`, filter/sort controls are hidden and single-property workspace treatment renders.
+- [x] Single-property treatment does not replicate dashboard summary/charts; it remains properties-page specific.
+- [x] When `properties.length > 1`, triage controls remain available and list behavior is preserved.
+- [x] No regressions in metric values, benchmark state, or link behavior.
+- [x] `npm run check` passes.
+
+#### Batch P2.1 - Multi-property card height consistency polish (implement now)
+
+- [x] Normalize multi-property card structure so all cards in a row keep consistent vertical rhythm.
+- [x] Reserve stable space for status tags and benchmark row to avoid variable card heights.
+- [x] Pin actions row to card bottom so primary/secondary actions align across cards.
+- [x] Preserve all benchmark behavior, metric values, and action links.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Multi-property cards in the same row appear visually consistent in height.
+- [x] Actions align horizontally across cards regardless of content variance.
+- [x] No regressions in benchmark refresh behavior, metrics, or navigation.
+- [x] `npm run check` passes.
+
+### Onboarding scope correction (activation-first)
+
+- [x] Replace checklist flow with modal-only onboarding (no persistent setup panel).
+- [x] Keep `Modeling`, `Analyze deal`, and mortgage setup as optional discovery paths outside onboarding gating.
+- [x] Ensure users without mortgages are not blocked by onboarding.
+- [x] `Start setup` routes directly to `/properties/new`.
+- [x] After creating the first property, route user back to dashboard with success context.
+- [x] `Maybe later` dismisses modal and does not inject persistent onboarding UI.
+- [x] Run `npm run check` and verify onboarding flow works with no regressions.
+
+Acceptance criteria:
+- [x] No checklist UI renders in app layout after modal interaction.
+- [x] Users can complete core onboarding by adding first property only.
+- [x] Optional tools remain discoverable via nav and dashboard/properties entry points.
+- [x] First property creation from onboarding flow lands on dashboard.
+- [x] Existing property creation behavior remains unchanged for non-first properties.
+
 ---
 
-### Sentry error tracking
+## Recently completed (2026-03)
 
-**Priority:** Medium. Production visibility; catch errors before users report them.
+**Projections tab — accuracy hardening:** Replaced fixed annual debt service with simulated month-level debt service that drops after payoff; aligned projection math with ownership display mode; added reinvest UX guidance for non-positive cash flow; baseline delta comparisons now use ownership-aware math and sale-analysis context when enabled. Exploration completed using existing payoff/effective-balance patterns in `lib/amortization.ts` and current call sites across property/dashboard/API routes. `npm run check` passed.
 
-**Scope:** Integrate Sentry for error monitoring. Free tier (5K errors/month) is sufficient for launch. Use `@sentry/nextjs` with Next.js wizard or manual setup.
+AC status:
+- [x] AC-1..AC-5 (projected debt service by year, payoff-aware, reused amortization patterns, assumptions copy updated)
+- [x] AC-6..AC-8 (ownership-mode-aware cash flow/equity/value/debt projections and baseline deltas)
+- [x] AC-9..AC-11 (reinvest positive-cashflow guidance, non-positive hold-year messaging, primary-outcome visibility)
+- [x] AC-12..AC-13 (`npm run check` passed; negative/positive behavior represented by conditional UI and formula guards)
 
-**Requirements:**
-- Install `@sentry/nextjs`.
-- Wrap `next.config.ts` (or `next.config.js`) with `withSentryConfig`.
-- Create SDK init files: `instrumentation.ts` (or `sentry.client.config.ts`, `sentry.server.config.ts`, `sentry.edge.config.ts` per Next.js/Sentry docs).
-- Env: `SENTRY_DSN` (required); `SENTRY_AUTH_TOKEN` (optional, for source maps).
-- Only enable in production (`NODE_ENV === "production"`) or when `SENTRY_DSN` is set.
-- Add `SENTRY_DSN` and `SENTRY_AUTH_TOKEN` to `.env.example` with placeholder comments.
+**Property detail — Tabs & UX refinements (full proposal):** Four tabs (Overview | Mortgage | Projections | Details); refresh benchmark conditional; no duplicate metrics; combined mortgage view; Projections with live chart. All AC-1 through AC-28 passed. Proposal: `docs/property-detail-tabs-proposal.md`. Test steps below.
 
-**References:**
-- [Sentry for Next.js](https://docs.sentry.io/platforms/javascript/guides/nextjs/)
-- `npx @sentry/wizard@latest -i nextjs` for automated setup
+**Property detail overhaul — Phase 2 (Polish):** Sticky section nav (Overview | Property details | Mortgages | Amortization); Jump to dropdown on mobile; Edit property in hero and Property details header; scroll-margin-top for sections. Proposal: `docs/property-detail-overhaul-proposal.md` §7.
 
-**Acceptance criteria**
+**Property detail overhaul — Phase 3 (Optional enhancements):** Amortization sub-page at `/properties/[id]/amortization`; "View amortization schedule →" link on detail page; Quick actions row (Edit property | Add mortgage | Refresh benchmark). Proposal: `docs/property-detail-overhaul-proposal.md` §7.
 
-- [x] Sentry SDK installed and configured for Next.js.
-- [x] Errors in production are captured and visible in Sentry dashboard.
-- [x] Env vars documented in .env.example.
-- [x] `npm run check` passes.
+**Property detail page overhaul — Phase 1:** Hero (Value, Equity, Cash flow, Rent vs. market); Investment metrics always visible (no Show more); Scenario expanded by default; PayoffCard extracted; Property details, Mortgages, Amortization collapsible. Proposal: `docs/property-detail-overhaul-proposal.md`.
+
+**Test steps — Property detail overhaul:** See below.
+
+---
+
+**Multi-property Rent vs. Market — auto-refresh:** Show all properties; background refresh for stale/missing; "Unable to refresh" on failure. Proposal: `docs/benchmarking-proposal.md`.
+
+**Single-property dashboard — restore metrics:** Cap rate, LTV, NOI, Cash-on-cash, Annual rent, DSCR in Property at a glance; DSCR color; Rent vs. market col-span; teaser link "See amortization, scenarios & more →".
+
+---
+
+## Archived — Dashboard overhaul (detailed history)
+
+See `docs/tasks-archived.md` for full task lists. Summary: dashboard-single-property-proposal.md; inline value bar; hide Equity/Cash flow for single; fix Cash flow chart; consolidate add-property; Rent vs. Market auto-refresh.
+
+---
+
+---
+
+## Property detail overhaul — Test steps
+
+Run these after Phase 1 implementation to validate the new view.
+
+### Hero & layout
+- [ ] **Hero at top:** Property detail page opens with Hero card first (Value, Equity, Cash flow, Rent vs. market).
+- [ ] **Sticky section nav:** Appears when scrolling past hero; links (Overview, Property details, Mortgages, Amortization) scroll to correct sections; mobile shows "Jump to" dropdown.
+- [ ] **Edit link:** "Edit property" link visible in hero; navigates to edit page.
+- [ ] **Rent vs. market:** Shows benchmark label when fresh, or "Refresh estimate" when stale/missing.
+- [ ] **Section order:** Hero → Quick actions → Investment metrics → Scenario → Payoff → Property details → Mortgages → Amortization link.
+
+### Investment metrics
+- [ ] **All visible:** Monthly cash flow, Annual cash flow, Equity, Cap rate, LTV, Cash-on-cash, DSCR, Annual rent all shown (no "Show more").
+- [ ] **Cash flow color:** Positive = green, negative = red.
+- [ ] **DSCR color:** Green when ≥ 1, red when < 1 (if displayed).
+
+### Scenario
+- [ ] **Expanded by default:** Scenario section is open on load (sliders visible).
+- [ ] **Sliders work:** Rent %, Value %, Mortgage % sliders change recalculated metrics.
+- [ ] **Reset:** Reset button clears overrides.
+- [ ] **How is this calculated?:** Details/summary expands.
+
+### Payoff card
+- [ ] **Payoff insight:** "Pay off in X years" or "About $X remaining at term" per mortgage.
+- [ ] **Accelerator:** Years-earlier buttons (5, 10, 15) and extra payment input work.
+- [ ] **Balance source:** "Based on stored balance" or "Using projected balance" shown.
+- [ ] **No mortgages:** PayoffCard shows appropriate empty state or "Add a mortgage to see payoff timeline."
+
+### Collapsible sections
+- [ ] **Property details:** Collapsed by default. Expand to see type, purchase, value, rent, expenses, benchmark, notes. "Edit property" in header.
+- [ ] **Mortgages:** When 0 mortgages — expanded, "Add mortgage" visible. When 1+ — collapsed with summary "N mortgages, $X total balance". Expand to see list, Add/Edit/Delete.
+- [ ] **Amortization:** Replaced with "View amortization schedule →" link to sub-page. Sub-page shows chart and note "Original mortgage terms. Not affected by scenario."
+
+### No regressions
+- [ ] **Edit:** Edit property works from hero and property details header.
+- [ ] **Delete:** PropertyActions (Delete) still works.
+- [ ] **Add mortgage:** Add mortgage flow works when Mortgages expanded.
+- [ ] **Edit/delete mortgage:** Edit and delete mortgage work.
+- [ ] **Amortization:** "View amortization schedule →" link navigates to sub-page; chart renders; tooltip works.
+- [ ] **Benchmark refresh:** Refresh estimate updates Rent vs. market in hero.
+
+### Mobile
+- [ ] **Metrics stack:** Hero and Investment metrics stack vertically on narrow viewport.
+- [ ] **Collapsible:** Sections expand/collapse; no horizontal scroll.
+- [ ] **Touch targets:** Buttons and links adequately sized.
+
+### Edge cases
+- [ ] **No mortgages:** Page loads; PayoffCard handles empty; Mortgages section expanded with Add CTA.
+- [ ] **Paid-off mortgage:** PayoffCard shows "This mortgage is paid off" or equivalent.
+- [ ] **Multiple mortgages:** PayoffCard shows per-mortgage; Mortgages collapsed with count.
+
+### Phase 2 — Sticky section nav
+- [ ] **Nav appears:** Sticky nav shows when scrolling past hero.
+- [ ] **Links work:** Overview | Property details | Mortgages | Amortization scroll to correct sections.
+- [ ] **Mobile:** "Jump to" dropdown on narrow viewport.
+- [ ] **Scroll margin:** Section headings visible (not hidden under nav).
+
+### Phase 3 — Amortization sub-page & Quick actions
+- [ ] **Amortization link:** "View amortization schedule →" replaces collapsible; links to `/properties/[id]/amortization`.
+- [ ] **Amortization page:** Sub-page shows chart, "Original mortgage terms" note, back link to property.
+- [ ] **Quick actions:** Edit property | Add mortgage | Refresh benchmark row below hero.
+- [ ] **Edit property:** Navigates to edit page.
+- [ ] **Add mortgage:** Scrolls to Mortgages section and expands (or links appropriately).
+- [ ] **Refresh benchmark:** Triggers refresh; shows loading; updates hero Rent vs. market on success.
+
+---
+
+## Property detail — Tabs & UX refinements — Test steps
+
+Run after builder completes. Reference: `docs/property-detail-tabs-proposal.md` §9.
+
+### Refresh benchmark (AC-1 to AC-4)
+- [ ] Fresh benchmark: No "Refresh benchmark" in quick actions.
+- [ ] Stale/missing: "Refresh benchmark" visible; click → spinner, disabled; success → disappears.
+- [ ] Failure: Re-enables for retry.
+
+### Duplicate metrics (AC-5, AC-6)
+- [ ] Hero: Value, Equity, Cash flow, Rent vs. market, DSCR.
+- [ ] Investment metrics: Cap rate, LTV, NOI, Cash-on-cash, Annual rent only (no Equity, cash flow, DSCR).
+
+### Tabs (AC-7 to AC-9)
+- [ ] Tab nav: Overview | Mortgage | Projections | Details.
+- [ ] Default: Overview on load.
+- [ ] Mobile: Tabs scroll or dropdown.
+
+### Overview tab (AC-10 to AC-13)
+- [ ] Hero, quick actions, investment metrics in order.
+- [ ] "Model scenarios →" links to Projections tab.
+
+### Mortgage tab (AC-14 to AC-17)
+- [ ] Combined payoff + amortization (not stacked sections).
+- [ ] Compact context; "View mortgage details" → Details tab.
+- [ ] No full mortgage list in Mortgage tab.
+
+### Projections tab (AC-18 to AC-22)
+- [ ] Sliders work; live chart updates.
+- [ ] Reset; compare-to-baseline (if implemented).
+
+### Details tab (AC-23 to AC-25)
+- [ ] Property details + full mortgage list + Edit property.
+
+### No regressions (AC-26 to AC-28)
+- [ ] Edit/Delete property, Add/Edit/Delete mortgage, benchmark refresh work.
+- [ ] `npm run check` passes.
 
 ---
 
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*
+
+## Details tab — Phase B inline editing
+
+- [x] Add inline edit mode to `Property facts` card with Save/Cancel actions.
+- [x] Add inline edit mode to `Financial inputs` card with Save/Cancel actions.
+- [x] Add inline edit mode to `Notes` card with Save/Cancel actions.
+- [x] Wire inline section saves to `PATCH /api/properties/[id]` and refresh tab data on success.
+- [x] Show in-card validation/save errors when updates fail.
+- [x] Preserve existing `Edit property` full-page flow for advanced edits.
+- [x] Run `npm run check` and verify no regressions from Phase B.

@@ -120,4 +120,92 @@
 
 ---
 
+## Open tasks batch 2025-03-15 (verified complete)
+
+All tasks in this batch were verified implemented and marked complete:
+
+- [x] Mortgage balance advancement (Phase 1) — balanceAsOfDate, getEffectiveBalance, getBalanceSource, all consumers updated
+- [x] Escrow amount for accurate balance projection — getPiForAmortization, P&I-only amortization when escrow set
+- [x] Import template — add original loan amount
+- [x] Monthly rent display — simplify for single-unit (property detail, add-property-wizard)
+- [x] Import — add loan type
+- [x] Amortization chart — tooltip month/year
+- [x] Amortization schedule — fix steep dropoff at end of term
+- [x] RentCast rate limits — plan-based per-hour (5/10/20)
+- [x] RentCast rate limit — user-facing messaging (text-negative)
+- [x] Benchmarking — rent vs market (schema, API, refresh, property detail)
+- [x] Estimate buttons — disable when value matches last estimate
+- [x] Benchmarking surfacing — Option A (benchmark line on cards), Option C (dashboard section)
+- [x] Dashboard — integrate Rent vs. market into Property at a glance (single property)
+- [x] Benchmark refresh — inline "Refresh estimate" button
+- [x] Admin membership override — subscriptionTierOverride, getEffectiveTier, admin UI
+- [x] Settings — show override status in Plan & billing
+- [x] Sentry error tracking
+
+---
+
+## Payoff timeline Phase 1 (2026-03-13) ✓
+
+**Proposal:** `docs/refinance-payoff-proposal.md`
+
+- [x] `getPayoffProjection(mortgage)` in lib/amortization.ts — projects from effective balance, returns payoff date or remaining at term end
+- [x] Mortgage section payoff insight per mortgage — "At your current payment, you'll pay off in X years (around Month Year)" or remaining at term end
+- [x] Balance source copy — "Based on stored balance as of [date]" / "Using projected balance from amortization"
+- [x] Section heading "Mortgages & payoff"
+- [x] Edge cases — no mortgages, invalid data, paid off
+- [x] Disclaimer — "Estimates for informational purposes only. Not financial advice."
+
+---
+
+## Payoff Accelerator Phase 2 (2026-03-13) ✓
+
+**Proposal:** `docs/refinance-payoff-proposal.md` §3.2
+
+- [x] `getExtraPaymentForYearsEarlier(mortgage, yearsEarlier)` — binary search for extra monthly payment
+- [x] `getPayoffYearsWithExtra(mortgage, extraPayment)` — reverse: given extra, show payoff years
+- [x] Years-earlier selector (5, 10, 15) — only options where yearsEarlier < current payoff years
+- [x] Extra monthly payment input — user enters $, shows "Pay off in X years"
+- [x] Edge cases — hidden when payment doesn't amortize, paid off, or invalid
+
+---
+
+## Dashboard single-property overhaul (2025-03-13) ✓
+
+**Proposal:** `docs/dashboard-single-property-proposal.md`
+
+- [x] Equity & Cash flow charts for single property (one bar each)
+- [x] "View property" path in Property at a glance
+- [x] Value breakdown (stacked bar: debt + equity) for single-property
+- [x] Refined "Add another property" CTA with benefit copy
+- [x] Contextual Quick actions (View property / View all; Analyze a deal)
+- [x] "What's on property page" teaser
+
+---
+
+## Dashboard overhaul — single vs multi (2025-03-13) ✓
+
+**Proposal:** `docs/dashboard-single-property-proposal.md` (revised)
+
+- [x] Inline value bar in Property at a glance (debt + equity stacked bar)
+- [x] Hide Portfolio charts section for single-property (no Equity, Debt vs. value, Cash flow)
+- [x] Fix Cash flow chart for multi-property (formatCurrency, symmetric domain for negatives)
+- [x] Consolidate add-property messaging (one card, no redundant text)
+
+---
+
+## Dashboard — restore metrics + Rent vs. Market auto-refresh (2026-03) ✓
+
+**Single-property:**
+- [x] Restore Cap rate, LTV, NOI, Cash-on-cash in Property at a glance (hidden metric row)
+- [x] Add Annual rent, DSCR; DSCR color when < 1.0
+- [x] Teaser link "See amortization, scenarios & more →" (differentiated from "View property")
+- [x] Rent vs. market col-span-2 for wider display
+
+**Multi-property:**
+- [x] Rent vs. Market auto-refresh — show all properties; background refresh for stale/missing
+- [x] "Unable to refresh" on API failure; parallel refreshes; rate limit applies
+- [x] Serialize properties for client (Decimal → number) to fix Server/Client boundary error
+
+---
+
 *Full implementation details available in git history. This archive summarizes completed work for reference.*

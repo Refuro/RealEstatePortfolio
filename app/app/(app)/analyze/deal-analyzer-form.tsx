@@ -446,7 +446,6 @@ export function DealAnalyzerForm({
           </p>
         )}
         <PropertyMetricsSection
-          defaultExpanded
           metrics={{
             monthlyCashFlow: metrics.monthlyCashFlow,
             annualCashFlow: metrics.annualCashFlow,

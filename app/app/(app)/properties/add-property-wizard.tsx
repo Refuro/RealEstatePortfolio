@@ -1273,7 +1273,11 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
         return;
       }
       draft?.clearDraft();
-      router.push(`/properties/${resData.id}`);
+      if (resData.createdFirstProperty) {
+        router.push("/dashboard?onboarding=first-property");
+      } else {
+        router.push(`/properties/${resData.id}`);
+      }
       router.refresh();
     } catch {
       setError("Network error");
