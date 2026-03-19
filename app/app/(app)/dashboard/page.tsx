@@ -20,9 +20,14 @@ import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ onboarding?: string }>;
+}) {
   const user = await getAppUser();
   if (!user) return null;
+  const { onboarding } = await searchParams;
 
   const allProperties = await prisma.property.findMany({
     where: { userId: user.id },
@@ -58,6 +63,14 @@ export default async function DashboardPage() {
 
   const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
   const metrics = computePortfolioMetrics(portfolioInput, displayMode);
+  const singleProperty = metrics.propertyCount === 1 ? properties[0] : null;
+  const propertyHref = singleProperty ? `/properties/${singleProperty.id}` : "/properties";
+  const modelingHref = singleProperty
+    ? `/modeling?propertyId=${encodeURIComponent(singleProperty.id)}`
+    : "/modeling";
+  const mortgageHref = singleProperty
+    ? `/mortgage?propertyId=${encodeURIComponent(singleProperty.id)}`
+    : "/mortgage";
 
   type PortfolioInputItem = PortfolioPropertyInput & { name: string };
   const fullLiability = displayMode === "full_liability";
@@ -118,67 +131,143 @@ export default async function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-      <div className="mt-2 space-y-1">
-        <p className="text-base text-muted">
-          Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
-        </p>
-        <div>
-          <MetricHelpLink />
+      {onboarding === "first-property" && (
+        <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <p className="text-sm font-semibold text-foreground">
+            Property added. Your portfolio is now live.
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Great start. Review your metrics below, then explore Modeling or Mortgage when ready.
+          </p>
+        </div>
+      )}
+      <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted">
+              Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
+            </p>
+            <div className="mt-1">
+              <MetricHelpLink />
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <Link
+              href={propertyHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              {singleProperty ? "Open property" : "View properties"}
+            </Link>
+            <Link
+              href={modelingHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Modeling
+            </Link>
+            <Link
+              href={mortgageHref}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Mortgage
+            </Link>
+          </div>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+          <Link
+            href="/properties/new"
+            className="font-medium text-foreground hover:underline"
+          >
+            Add property
+          </Link>
+          <span className="text-muted">•</span>
+          <Link
+            href="/analyze"
+            className="font-medium text-foreground hover:underline"
+          >
+            Analyze a deal
+          </Link>
+          {singleProperty && (
+            <>
+              <span className="text-muted">•</span>
+              <Link
+                href={propertyHref}
+                className="font-medium text-foreground hover:underline"
+              >
+                See full property details
+              </Link>
+            </>
+          )}
         </div>
       </div>
 
       {metrics.propertyCount > 1 && (
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           <MetricCard
             label="Total property value"
             value={formatCurrency(metrics.totalMarketValue)}
             primary
+            compact
           />
           <MetricCard
             label="Total debt"
             value={formatCurrency(metrics.totalDebt)}
             primary
+            compact
           />
           <MetricCard
             label="Total equity"
             value={formatCurrency(metrics.totalEquity)}
             primary
+            compact
           />
           <MetricCard
             label="Monthly cash flow"
             value={formatCurrency(metrics.totalMonthlyCashFlow)}
             cashFlow={metrics.totalMonthlyCashFlow}
+            compact
           />
-          {metrics.weightedCapRate != null && (
-            <MetricCard
-              label="Portfolio cap rate"
-              value={`${(metrics.weightedCapRate * 100).toFixed(2)}%`}
-              primary={false}
-            />
-          )}
+          <MetricCard
+            label="Portfolio cap rate"
+            value={
+              metrics.weightedCapRate != null
+                ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+                : "—"
+            }
+            primary={false}
+            compact
+          />
+        </div>
+      )}
+
+      {metrics.propertyCount > 1 && (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {metrics.portfolioLtv != null && (
             <MetricCard
               label="Portfolio LTV"
               value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
               primary={false}
+              compact
             />
           )}
           <MetricCard
             label="NOI (Net Operating Income)"
             value={formatCurrency(metrics.totalNoi)}
             primary={false}
+            compact
           />
           {metrics.portfolioCashOnCashReturn != null && (
             <MetricCard
               label="Cash-on-cash return"
               value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
               primary={false}
+              compact
             />
           )}
           <MetricCard
             label="Annual rent"
             value={formatCurrency(metrics.totalAnnualRent)}
             primary={false}
+            compact
           />
           {metrics.dscr != null && (
             <MetricCard
@@ -186,6 +275,7 @@ export default async function DashboardPage() {
               value={metrics.dscr.toFixed(2)}
               primary={false}
               cashFlow={metrics.dscr >= 1 ? 1 : -1}
+              compact
             />
           )}
         </div>
@@ -244,71 +334,23 @@ export default async function DashboardPage() {
       />
 
       {metrics.propertyCount === 1 && (
-        <>
-          <div className="mt-6 rounded-lg border border-border bg-card p-5">
-            <p className="text-base text-muted">
-              Add another property to see equity, debt, and cash flow charts
-              side by side.
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <div>
+            <p className="text-sm font-medium text-foreground">
+              Ready to compare performance side by side?
             </p>
-            <Link
-              href="/properties/new"
-              className="mt-3 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-            >
-              Add property
-            </Link>
+            <p className="text-sm text-muted">
+              Add another property to unlock portfolio comparison charts.
+            </p>
           </div>
-
-          {properties[0] && (
-            <div className="mt-4 rounded-lg border border-border bg-card p-4">
-              <p className="text-sm text-muted">
-                More on your property page: Amortization schedule, scenario
-                modeling, rent vs. market details, and more.
-              </p>
-              <Link
-                href={`/properties/${properties[0].id}`}
-                className="mt-2 inline-block font-medium text-foreground hover:underline"
-              >
-                See amortization, scenarios & more →
-              </Link>
-            </div>
-          )}
-        </>
-      )}
-
-      <div className="mt-8">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-          Quick actions
-        </h2>
-        <div className="mt-3 flex flex-wrap gap-3">
-          {metrics.propertyCount === 1 && properties[0] ? (
-            <Link
-              href={`/properties/${properties[0].id}`}
-              className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
-            >
-              View property
-            </Link>
-          ) : (
-            <Link
-              href="/properties"
-              className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
-            >
-              View all properties
-            </Link>
-          )}
           <Link
             href="/properties/new"
-            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
+            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add property
           </Link>
-          <Link
-            href="/analyze"
-            className="rounded-md border border-border bg-transparent px-4 py-2 text-base font-medium hover:bg-subtle"
-          >
-            Analyze a deal
-          </Link>
         </div>
-      </div>
+      )}
     </div>
   );
 }

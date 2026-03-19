@@ -23,6 +23,9 @@ model User {
   subscriptionTierOverride String? // When set, overrides Stripe; null = use subscriptionTier
   stripeCustomerId      String?
   ownershipDisplayMode  String?   // proportional (default) | full_liability
+  onboardingWelcomeSeenAt DateTime?
+  onboardingDismissedAt   DateTime?
+  onboardingModeledAt     DateTime?
   deletedAt             DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useState } from "react";
 import { BenchmarkRefreshButton } from "@/app/(app)/properties/benchmark-refresh-button";
 import type { EquityDatum } from "@/components/charts/equity-chart";
 import type { DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
@@ -138,6 +139,9 @@ export function DashboardCharts({
   const isSingleProperty = propertyCount === 1;
   const singleProperty = isSingleProperty ? data.equity[0] : null;
   const debtVsValueFirst = data.debtVsValue[0];
+  const [activeChart, setActiveChart] = useState<"equity" | "debt_vs_value" | "cash_flow">(
+    "equity"
+  );
 
   // Single-property: Property at a glance only (with inline value bar). No Portfolio charts section.
   if (isSingleProperty && singleProperty && debtVsValueFirst) {
@@ -290,20 +294,65 @@ export function DashboardCharts({
     );
   }
 
-  // Multi-property: Portfolio charts section with Equity, Debt vs. value, Cash flow
+  // Multi-property: Tabbed portfolio chart workspace to reduce scroll.
+  const activeChartPanel =
+    activeChart === "equity" ? (
+      <EquityChart data={data.equity} />
+    ) : activeChart === "debt_vs_value" ? (
+      <DebtVsValueChart data={data.debtVsValue} />
+    ) : (
+      <CashFlowChart data={data.cashFlow} />
+    );
+
   return (
     <div className="mt-8 space-y-6">
-      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-        Portfolio charts
-      </h2>
-
-      <div className="grid gap-6 lg:grid-cols-2">
-        <EquityChart data={data.equity} />
-        <DebtVsValueChart data={data.debtVsValue} />
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
+          Portfolio charts
+        </h2>
+        <div className="flex flex-wrap gap-2">
+          <ChartTabButton
+            label="Equity"
+            active={activeChart === "equity"}
+            onClick={() => setActiveChart("equity")}
+          />
+          <ChartTabButton
+            label="Debt vs value"
+            active={activeChart === "debt_vs_value"}
+            onClick={() => setActiveChart("debt_vs_value")}
+          />
+          <ChartTabButton
+            label="Cash flow"
+            active={activeChart === "cash_flow"}
+            onClick={() => setActiveChart("cash_flow")}
+          />
+        </div>
       </div>
-      <div className="grid gap-6 lg:grid-cols-1">
-        <CashFlowChart data={data.cashFlow} />
-      </div>
+      <div>{activeChartPanel}</div>
     </div>
+  );
+}
+
+function ChartTabButton({
+  label,
+  active,
+  onClick,
+}: {
+  label: string;
+  active: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+        active
+          ? "border-accent/50 bg-accent/15 text-foreground"
+          : "border-border bg-transparent text-muted hover:bg-subtle hover:text-foreground"
+      }`}
+    >
+      {label}
+    </button>
   );
 }

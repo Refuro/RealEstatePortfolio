@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/format-currency";
 import {
   getExtraPaymentForYearsEarlier,
@@ -131,17 +131,29 @@ function yearsBetween(start: Date, end: Date): number {
 export function MortgageTabContent({
   propertyId,
   mortgageData,
+  initialSelectedMortgageId,
   onNavigateToDetails,
+  workspaceVariant = "default",
+  onSelectedMortgageChange,
 }: {
   propertyId: string;
   mortgageData: MortgageForTabs[];
+  initialSelectedMortgageId?: string;
   onNavigateToDetails: () => void;
+  workspaceVariant?: "default" | "workspace";
+  onSelectedMortgageChange?: (mortgageId: string | null) => void;
 }) {
+  const initialMortgageId =
+    initialSelectedMortgageId &&
+    mortgageData.some((mortgage) => mortgage.id === initialSelectedMortgageId)
+      ? initialSelectedMortgageId
+      : mortgageData[0]?.id ?? "";
   const [selectedMortgageId, setSelectedMortgageId] = useState<string>(
-    mortgageData[0]?.id ?? ""
+    initialMortgageId
   );
   const [selectedYearsEarlier, setSelectedYearsEarlier] = useState<number | null>(null);
   const [extraInput, setExtraInput] = useState("0");
+  const isMortgageWorkspace = workspaceVariant === "workspace";
 
   const selectedMortgage = useMemo(
     () =>
@@ -150,6 +162,10 @@ export function MortgageTabContent({
       null,
     [mortgageData, selectedMortgageId]
   );
+
+  useEffect(() => {
+    onSelectedMortgageChange?.(selectedMortgage?.id ?? null);
+  }, [onSelectedMortgageChange, selectedMortgage?.id]);
 
   const normalizedMortgage = useMemo(
     () => (selectedMortgage ? toMortgageRecordLike(selectedMortgage) : null),
@@ -181,21 +197,25 @@ export function MortgageTabContent({
     return yearsBetween(now, baseSimulation.payoffDate);
   }, [baseSimulation]);
 
-  const validYearsEarlierOptions = useMemo(() => {
-    if (!normalizedMortgage || !baselineYearsRemaining) return [];
-    return [5, 10, 15].filter((y) => y < baselineYearsRemaining);
-  }, [normalizedMortgage, baselineYearsRemaining]);
-
-  const payoffEarlierOptions = useMemo(
+  const payoffTargetOptions = useMemo(
     () =>
-      validYearsEarlierOptions.map((years) => ({
-        years,
-        extra:
-          normalizedMortgage != null
-            ? getExtraPaymentForYearsEarlier(normalizedMortgage, years)
-            : null,
-      })),
-    [normalizedMortgage, validYearsEarlierOptions]
+      [5, 10, 15].map((years) => {
+        const isAvailable = Boolean(
+          normalizedMortgage && baselineYearsRemaining && years < baselineYearsRemaining
+        );
+        return {
+          years,
+          extra:
+            isAvailable && normalizedMortgage
+              ? getExtraPaymentForYearsEarlier(normalizedMortgage, years)
+              : null,
+        };
+      }),
+    [normalizedMortgage, baselineYearsRemaining]
+  );
+  const hasAnyPayoffTarget = useMemo(
+    () => payoffTargetOptions.some((option) => option.extra != null),
+    [payoffTargetOptions]
   );
 
   const payoffDeltaYears = useMemo(() => {
@@ -208,6 +228,24 @@ export function MortgageTabContent({
     const saved = baseSimulation.interestPaidTotal - scenarioSimulation.interestPaidTotal;
     return saved > 0 ? saved : 0;
   }, [baseSimulation, scenarioSimulation]);
+  const scenarioPayoffLabel = scenarioSimulation?.payoffDate
+    ? scenarioSimulation.payoffDate.toLocaleDateString("en-US", {
+        month: "short",
+        year: "numeric",
+      })
+    : "Not amortizing";
+  const interestSavedLabel =
+    interestSaved != null ? formatCurrency(interestSaved) : "—";
+  const rateLabel =
+    selectedMortgage != null
+      ? `${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
+      : "—";
+  const termLabel =
+    selectedMortgage != null ? `${selectedMortgage.termYears} years` : "—";
+  const basePiLabel =
+    normalizedMortgage != null
+      ? `${formatCurrency(getPiForAmortization(normalizedMortgage))}/mo`
+      : "—";
 
   const chartData = useMemo<SimulationPoint[]>(() => {
     if (!baseSimulation || !scenarioSimulation) return [];
@@ -252,110 +290,131 @@ export function MortgageTabContent({
     );
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Simulation controls
-            </h3>
-            <p className="mt-1 text-xs text-muted">
-              Assumes current loan terms and applies extra principal monthly to show payoff impact.
-            </p>
-          </div>
+  const controlsPanel = (
+    <div
+      className={
+        isMortgageWorkspace
+          ? "h-full rounded-xl border border-border/70 bg-card p-4 shadow-sm xl:min-h-[340px]"
+          : "rounded-lg border border-border bg-card p-4"
+      }
+    >
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Simulation controls
+        </h3>
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+          <Link
+            href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}${
+              selectedMortgage?.id
+                ? `&mortgageId=${encodeURIComponent(selectedMortgage.id)}`
+                : ""
+            }`}
+            className="font-medium text-muted hover:text-foreground hover:underline"
+          >
+            Open workspace
+          </Link>
+          <span className="text-muted">•</span>
           <Link
             href={`/properties/${propertyId}?tab=details#mortgages`}
             onClick={(e) => {
               e.preventDefault();
               onNavigateToDetails();
             }}
-            className="text-sm font-medium text-accent hover:underline"
+            className="font-medium text-muted hover:text-foreground hover:underline"
           >
-            View mortgage details
+            Mortgage details
           </Link>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {mortgageData.length > 1 ? (
-            <label className="block text-xs font-medium text-muted">
-              Mortgage
-              <select
-                value={selectedMortgage?.id ?? ""}
-                onChange={(e) => {
-                  setSelectedMortgageId(e.target.value);
-                  setSelectedYearsEarlier(null);
-                  setExtraInput("0");
-                }}
-                className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-              >
-                {mortgageData.map((m, idx) => (
-                  <option key={m.id} value={m.id}>
-                    Mortgage {idx + 1} -{" "}
-                    {formatCurrency(m.effectiveBalance ?? Number(m.currentBalance))}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : (
-            <div className="rounded-md border border-border bg-subtle/30 p-3">
-              <p className="text-xs text-muted">Selected mortgage</p>
-              <p className="mt-1 text-sm font-medium text-foreground">
-                {selectedMortgage
-                  ? `${formatCurrency(
-                      selectedMortgage.effectiveBalance ??
-                        Number(selectedMortgage.currentBalance)
-                    )} at ${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
-                  : "—"}
-              </p>
-            </div>
-          )}
-
-          <label className="block text-xs font-medium text-muted">
-            Extra principal ($ / month)
-            <input
-              id="extra-payment"
-              type="text"
-              inputMode="decimal"
-              value={extraInput}
-              onChange={(e) => {
-                setSelectedYearsEarlier(null);
-                setExtraInput(e.target.value);
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-              placeholder="0"
-            />
-          </label>
-
-          <div className="rounded-md border border-border bg-subtle/30 p-3">
-            <p className="text-xs text-muted">Base principal + interest</p>
-            <p className="mt-1 text-sm font-medium text-foreground">
-              {normalizedMortgage
-                ? `${formatCurrency(getPiForAmortization(normalizedMortgage))}/mo`
-                : "—"}
-            </p>
-          </div>
-
+          <span className="text-muted">•</span>
           <button
             type="button"
             onClick={() => {
               setSelectedYearsEarlier(null);
               setExtraInput("0");
             }}
-            className="rounded-md border border-border bg-background px-3 py-2 text-sm font-medium text-muted transition hover:text-foreground"
+            className="font-medium text-muted transition-colors hover:text-foreground"
           >
             Reset
           </button>
         </div>
+      </div>
+      <p className="mb-3 text-xs text-muted">
+        Apply extra principal monthly to compare payoff speed and interest savings.
+      </p>
 
-        <div className="mt-3 rounded-md border border-border bg-subtle/30 p-3">
-          <p className="text-xs font-medium text-muted">Pay off earlier</p>
-          <p className="mt-0.5 text-xs text-muted">
-            Quick targets with suggested extra monthly payment.
+      <div className="space-y-3">
+        <div className="rounded-md bg-background/45 p-3">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Mortgage and payment
           </p>
-          {payoffEarlierOptions.length > 0 ? (
-            <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-              {payoffEarlierOptions.map(({ years, extra }) => {
+          <div className="grid gap-2.5 sm:grid-cols-2">
+            {mortgageData.length > 1 ? (
+              <label className="block text-xs font-medium text-muted sm:col-span-2">
+                Mortgage
+                <select
+                  value={selectedMortgage?.id ?? ""}
+                  onChange={(e) => {
+                    setSelectedMortgageId(e.target.value);
+                    setSelectedYearsEarlier(null);
+                    setExtraInput("0");
+                  }}
+                  className="mt-1 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+                >
+                  {mortgageData.map((m, idx) => (
+                    <option key={m.id} value={m.id}>
+                      Mortgage {idx + 1} -{" "}
+                      {formatCurrency(m.effectiveBalance ?? Number(m.currentBalance))}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : (
+              <div className="rounded-md border border-border/70 bg-subtle/35 px-3 py-2.5 sm:col-span-2">
+                <p className="text-[11px] text-muted">Selected mortgage</p>
+                <p className="mt-1 text-base font-semibold text-foreground">
+                  {selectedMortgage
+                    ? `${formatCurrency(
+                        selectedMortgage.effectiveBalance ??
+                          Number(selectedMortgage.currentBalance)
+                      )} at ${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
+                    : "—"}
+                </p>
+              </div>
+            )}
+
+            <label className="block text-xs font-medium text-muted">
+              Extra principal ($/month)
+              <input
+                id="extra-payment"
+                type="text"
+                inputMode="decimal"
+                value={extraInput}
+                onChange={(e) => {
+                  setSelectedYearsEarlier(null);
+                  setExtraInput(e.target.value);
+                }}
+                className="mt-1 min-h-[42px] w-full rounded-md border border-border bg-background px-2.5 py-2 text-base text-foreground"
+                placeholder="0"
+              />
+            </label>
+
+            <div className="rounded-md border border-border/70 bg-subtle/35 px-3 py-2.5">
+              <p className="text-[11px] text-muted">Base P&I</p>
+              <p className="mt-1 text-base font-semibold text-foreground">
+                {normalizedMortgage
+                  ? `${formatCurrency(getPiForAmortization(normalizedMortgage))}/mo`
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-md bg-background/45 p-3">
+          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Pay off earlier
+          </p>
+          {hasAnyPayoffTarget ? (
+            <div className="flex flex-wrap gap-2">
+              {payoffTargetOptions.map(({ years, extra }) => {
                 const isSelected = selectedYearsEarlier === years;
                 const isDisabled = !extra;
                 return (
@@ -371,83 +430,136 @@ export function MortgageTabContent({
                         return next === prev ? prev : next;
                       });
                     }}
-                    className={`rounded-md border px-3 py-2 text-left transition ${
+                    className={`rounded-md border px-3 py-1.5 text-sm transition ${
                       isSelected
-                        ? "border-accent bg-accent/10"
-                        : "border-border bg-background hover:bg-subtle"
+                        ? "border-accent bg-accent/12 text-foreground ring-1 ring-accent/25"
+                        : "border-border bg-background text-muted hover:bg-subtle/60 hover:text-foreground"
                     } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
                   >
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">
-                        {years} years earlier
-                      </span>
-                      <span className="text-xs text-muted">
-                        {extra ? `${formatCurrency(extra)}/mo` : "Unavailable"}
-                      </span>
-                    </div>
+                    <span className="font-semibold text-foreground">{years}y</span>{" "}
+                    <span>{extra ? `${formatCurrency(extra)}/mo` : "N/A"}</span>
                   </button>
                 );
               })}
             </div>
           ) : (
-            <p className="mt-2 text-xs text-muted">
-              No quick targets available for this mortgage yet.
+            <p className="text-xs text-muted">
+              No accelerated payoff targets available for this mortgage yet.
             </p>
           )}
         </div>
-      </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Baseline payoff</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {baseSimulation?.payoffDate
-              ? baseSimulation.payoffDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })
-              : "Not amortizing"}
-          </p>
-        </div>
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">With extra payment</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {scenarioSimulation?.payoffDate
-              ? scenarioSimulation.payoffDate.toLocaleDateString("en-US", {
-                  month: "long",
-                  year: "numeric",
-                })
-              : "Not amortizing"}
-          </p>
-        </div>
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Time saved</p>
-          <p className="mt-1 text-sm font-medium text-positive">
-            {payoffDeltaYears != null ? `${payoffDeltaYears} years` : "—"}
-          </p>
-        </div>
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Estimated interest saved</p>
-          <p className="mt-1 text-sm font-medium text-positive">
-            {interestSaved != null ? formatCurrency(interestSaved) : "—"}
-          </p>
-        </div>
-      </div>
+        {isMortgageWorkspace && (
+          <>
+            <div className="rounded-md border border-border/65 bg-subtle/30 p-3">
+              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Scenario outcome
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
+                  <p className="text-[11px] text-muted">Payoff with current extra</p>
+                  <p className="mt-1 text-sm font-semibold text-foreground">
+                    {scenarioPayoffLabel}
+                  </p>
+                </div>
+                <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
+                  <p className="text-[11px] text-muted">Interest saved (est.)</p>
+                  <p className="mt-1 text-sm font-semibold text-positive">
+                    {interestSavedLabel}
+                  </p>
+                </div>
+              </div>
+            </div>
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-1 text-sm font-semibold text-muted">
-          Mortgage balance projection (baseline vs extra principal)
-        </h3>
-        <p className="mb-3 text-xs text-muted">
-          Baseline follows current payment terms. &quot;With extra payment&quot; adds your extra
-          principal each month to accelerate payoff.
+            <div className="rounded-md border border-border/65 bg-subtle/20 p-2.5">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
+                  Rate: <span className="font-medium text-foreground">{rateLabel}</span>
+                </span>
+                <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
+                  Term: <span className="font-medium text-foreground">{termLabel}</span>
+                </span>
+                <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
+                  Base P&I: <span className="font-medium text-foreground">{basePiLabel}</span>
+                </span>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+
+  const summaryCards = (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Baseline payoff</p>
+        <p className="mt-1 min-h-5 text-sm font-medium text-foreground">
+          {baseSimulation?.payoffDate
+            ? baseSimulation.payoffDate.toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+              })
+            : "Not amortizing"}
         </p>
-        {chartData.length === 0 ? (
-          <div className="flex h-[220px] sm:h-[280px] lg:h-[320px] items-center justify-center text-sm text-muted">
-            Add mortgage details to see payoff simulation.
-          </div>
-        ) : (
-          <div className="h-[220px] sm:h-[280px] lg:h-[320px]">
+      </div>
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">With extra payment</p>
+        <p className="mt-1 min-h-5 text-sm font-medium text-foreground">
+          {scenarioSimulation?.payoffDate
+            ? scenarioSimulation.payoffDate.toLocaleDateString("en-US", {
+                month: "long",
+                year: "numeric",
+              })
+            : "Not amortizing"}
+        </p>
+      </div>
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Time saved</p>
+        <p className="mt-1 min-h-5 text-sm font-medium text-positive">
+          {payoffDeltaYears != null ? `${payoffDeltaYears} years` : "—"}
+        </p>
+      </div>
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Interest saved (est.)</p>
+        <p className="mt-1 min-h-5 text-sm font-medium text-positive">
+          {interestSaved != null ? formatCurrency(interestSaved) : "—"}
+        </p>
+      </div>
+    </div>
+  );
+
+  const chartPanel = (
+    <div
+      className={
+        isMortgageWorkspace
+          ? "flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+          : "rounded-lg border border-border bg-card p-4"
+      }
+    >
+      <h3 className="mb-1 text-sm font-semibold text-muted">
+        Balance projection (baseline vs extra principal)
+      </h3>
+      <p className="mb-3 text-xs text-muted">
+        Baseline follows current payment terms. &quot;With extra payment&quot; adds your extra
+        principal each month to accelerate payoff.
+      </p>
+      {chartData.length === 0 ? (
+        <div
+          className={`flex items-center justify-center text-sm text-muted ${
+            isMortgageWorkspace ? "h-[260px] xl:flex-1 xl:min-h-[320px]" : "h-[220px] sm:h-[280px] lg:h-[320px]"
+          }`}
+        >
+          Add mortgage details to see payoff simulation.
+        </div>
+      ) : (
+        <div
+          className={
+            isMortgageWorkspace
+              ? "h-[260px] xl:flex-1 xl:min-h-[320px]"
+              : "h-[220px] sm:h-[280px] lg:h-[320px]"
+          }
+        >
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -494,27 +606,54 @@ export function MortgageTabContent({
               />
             </LineChart>
           </ResponsiveContainer>
-          </div>
-        )}
-        <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-3)]" />
-            Baseline
-          </span>
-          <span className="inline-flex items-center gap-1">
-            <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-1)]" />
-            With extra payment
-          </span>
         </div>
+      )}
+      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
+        <span className="inline-flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-3)]" />
+          Baseline
+        </span>
+        <span className="inline-flex items-center gap-1">
+          <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-1)]" />
+          With extra payment
+        </span>
       </div>
+    </div>
+  );
 
-      <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
-        Baseline inputs: monthly payment{" "}
-        {normalizedMortgage ? formatCurrency(getPiForAmortization(normalizedMortgage)) : "—"} /
-        mo, extra principal {formatCurrency(extraPayment)}/mo.
+  const baselineNote = (
+    <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
+      Baseline inputs: monthly payment{" "}
+      {normalizedMortgage ? formatCurrency(getPiForAmortization(normalizedMortgage)) : "—"} /
+      mo, extra principal {formatCurrency(extraPayment)}/mo.
+    </div>
+  );
+
+  const disclaimer = (
+    <p className="text-xs text-muted">Estimates for informational purposes only. Not financial advice.</p>
+  );
+
+  if (isMortgageWorkspace) {
+    return (
+      <div className="space-y-4">
+        {summaryCards}
+        <div className="xl:grid xl:grid-cols-12 xl:items-stretch xl:gap-4">
+          <div className="xl:col-span-5">{controlsPanel}</div>
+          <div className="mt-4 xl:col-span-7 xl:mt-0">{chartPanel}</div>
+        </div>
+        {baselineNote}
+        {disclaimer}
       </div>
+    );
+  }
 
-      <p className="text-xs text-muted">Estimates for informational purposes only. Not financial advice.</p>
+  return (
+    <div className="space-y-6">
+      {controlsPanel}
+      {summaryCards}
+      {chartPanel}
+      {baselineNote}
+      {disclaimer}
     </div>
   );
 }

@@ -50,7 +50,377 @@ Pricing update ($15/$29), Website performance, App layout performance, Settings 
 
 ## Open tasks remaining
 
-*None.*
+### Onboarding + Dashboard polish split (2026-03-18)
+
+#### Batch 1 - Welcome modal visual overhaul (implement now)
+
+- [x] Redesign onboarding welcome modal to a modern, premium card with stronger hierarchy.
+- [x] Add concise value-forward content (benefit chips) without checklist-style language.
+- [x] Polish CTA presentation: prominent primary action, clear secondary action, improved spacing/contrast.
+- [x] Keep current onboarding behavior unchanged (`Add first property` -> `/properties/new`, `Maybe later` dismisses modal).
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Modal looks visually upgraded (elevated container, stronger typography, better spacing, cleaner CTA grouping).
+- [x] Copy is activation-focused and non-blocking (no required-step/checklist framing).
+- [x] Existing onboarding flow behavior remains exactly the same.
+- [x] `npm run check` passes.
+
+#### Batch 2 - Dashboard post-onboarding declutter (next)
+
+- [x] Replace scattered action sections with one modern "Next actions" surface near the top of dashboard.
+- [x] Remove duplicated action zones (`Advanced tools`, bottom `Quick actions`, and single-property duplicate links) and keep one clear hierarchy.
+- [x] Keep Modeling and Mortgage highly discoverable via primary action buttons, with single-property contextual deep links.
+- [x] Refine first-property return state into a cleaner success + next-step pattern with reduced above-the-fold competition.
+- [x] Keep essential metric visibility while de-emphasizing non-primary CTAs and copy noise.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Dashboard has a single primary action area (no redundant top+bottom action clusters).
+- [x] First-property users see success confirmation and clear next actions without stacked repetitive cards.
+- [x] Users retain one-click access to Property, Modeling, Mortgage, Add property, and Analyze deal paths.
+- [x] Visual hierarchy is cleaner: primary actions prominent, secondary actions quieter.
+- [x] `npm run check` passes.
+
+#### Batch 3 - Multi-property dashboard density + insights revamp (implement now)
+
+- [x] Compact multi-property metric cards to reduce vertical height and improve scan speed.
+- [x] Reorganize multi-property metrics into clearer hierarchy (primary row first, secondary row second).
+- [x] Redesign `Rent vs. market` into a full insight card with stronger typography and per-property readability.
+- [x] Convert multi-property stacked chart area into a tabbed chart workspace to reduce scroll depth.
+- [x] Preserve existing calculations, benchmark refresh behavior, and chart data logic.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Multi-property dashboard shows denser metrics above the fold with visibly reduced card footprint.
+- [x] Rent-vs-market no longer appears as orphaned tiny text; it has clear structure and readable hierarchy.
+- [x] Users can switch between Equity, Debt vs Value, and Cash flow charts without long stacked scrolling.
+- [x] All existing metric values, chart values, and refresh behavior remain functionally unchanged.
+- [x] `npm run check` passes.
+
+### Modeling workspace revamp (2026-03-18)
+
+#### Batch A - Context bar + property selection prominence (implement now)
+
+- [x] Replace current split header/layout with a single compact context bar that keeps active property visible.
+- [x] Make property selection the primary control in the top area (clear label, high contrast, easy to find).
+- [x] Demote utility links (`Open property projections`, `Open property detail`) to tertiary treatment within the same context bar.
+- [x] Remove extra top-space card stack to reduce above-the-fold height before controls/charts.
+- [x] Preserve all modeling calculations and selected-property behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Active property is always obvious on the Modeling page without scrolling.
+- [x] Users can switch properties from the top bar without hunting for the selector.
+- [x] Utility links remain available but no longer dominate above-the-fold space.
+- [x] Projections content starts higher on the page vs previous layout.
+- [x] `npm run check` passes.
+
+#### Batch B - Controls grouping + compact assumptions layout (next)
+
+- [x] Reorganize simulation controls into clearer groups (horizon, growth, debt strategy, risk).
+- [x] Reduce control section vertical footprint with tighter spacing and cleaner label hierarchy.
+- [x] Keep presets prominent while de-emphasizing long helper copy.
+- [x] Preserve all existing input behavior and calculations.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls are easier to scan and edit quickly.
+- [x] Above-the-fold density improves without loss of functionality.
+- [x] Existing modeling outputs remain mathematically unchanged.
+- [x] `npm run check` passes.
+
+#### Batch C - Desktop workspace density (next)
+
+- [x] Improve desktop information density so controls and outputs coexist with less scrolling.
+- [x] Keep mobile behavior practical and readable (no desktop-only assumptions).
+- [x] Preserve advanced breakdown access while reducing layout interruptions.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Desktop view shows more actionable modeling context and output in one viewport.
+- [x] Mobile layout remains usable without clipped controls/charts.
+- [x] No functional regressions in scenario controls or chart rendering.
+- [x] `npm run check` passes.
+
+#### Batch D - Final visual polish + QA hardening (next)
+
+- [x] Apply final typography/spacing polish for a cohesive modern workspace feel.
+- [x] Verify visual hierarchy (context > assumptions > outcomes) across common viewport sizes.
+- [x] Add desktop left-rail visual alignment treatment so controls column reads balanced against outcomes column.
+- [x] Complete manual smoke checks for property switching and major modeling flows.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Modeling page feels visually consistent with upgraded onboarding/dashboard quality.
+- [x] Left control rail appears intentionally aligned/balanced with right outcomes region on desktop.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+#### Batch E - Left rail usability and spacing refactor (implement now)
+
+- [x] Widen desktop modeling workspace split so the controls rail has more usable width.
+- [x] Flatten nested card density in the controls rail to reduce boxed-in visual clutter.
+- [x] Improve section-level control composition (label/input rhythm, checkbox/input flow, reset placement).
+- [x] Preserve all modeling formulas, state behavior, and chart outputs.
+- [x] Keep mobile/tablet layout practical and readable.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Left rail no longer feels cramped at standard desktop widths.
+- [x] Control labels/inputs avoid awkward wrapping at normal zoom levels.
+- [x] Section structure remains clear while visually lighter and easier to scan.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+#### Batch F - Modeling canvas alignment lock (implement now)
+
+- [x] Build a dedicated desktop canvas row that pairs Simulation Controls (left) and Graph card (right) in the same stretched grid row.
+- [x] Ensure the bottom edge of the Simulation Controls card aligns with the bottom edge of the Graph card (excluding notes).
+- [x] Make Advanced Breakdown always expanded in Modeling workspace and place it inside the Graph card to prevent layout jumps.
+- [x] Keep baseline notes outside the aligned canvas row.
+- [x] Preserve all modeling formulas, state behavior, and chart outputs.
+- [x] Keep mobile/tablet layout readable and functional.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] On desktop, Simulation Controls card bottom and Graph card bottom remain aligned at normal zoom.
+- [x] Advanced breakdown no longer causes graph/column misalignment when interacting.
+- [x] Notes remain below the aligned cards and are excluded from alignment behavior.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+#### Batch G - Final modeling stability polish (implement now)
+
+- [x] Fix Growth assumptions field alignment by normalizing label length and field rhythm across all three inputs.
+- [x] Move Modeling tips below baseline inputs note.
+- [x] Remove reinvest-toggle vertical jump by reserving stable space in controls and advanced breakdown content.
+- [x] Preserve modeling formulas, state behavior, KPI values, and chart outputs.
+- [x] Keep desktop card-bottom alignment behavior from Batch F.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Growth assumptions inputs remain visually aligned at normal desktop zoom.
+- [x] Modeling tips render below baseline inputs note.
+- [x] Clicking `Reinvest cash flow` no longer pushes the page/canvas down.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+#### Batch H - Reinvest copy compression polish (implement now)
+
+- [x] Shorten reinvest assumption card label/value copy to prevent wrap-driven expansion.
+- [x] Remove redundant reinvest percentage sentence from advanced breakdown card content.
+- [x] Preserve advanced breakdown grid structure and stable section height behavior.
+- [x] Preserve all formulas, state behavior, KPI values, and chart outputs.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Reinvestment assumption card no longer wraps into overly tall content at normal desktop zoom.
+- [x] Advanced breakdown no longer visibly expands due to verbose reinvest text.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+#### Batch I - Canvas density and inline reinvest final micro polish (implement now)
+
+- [x] Reduce modeled chart visual height on desktop so the canvas feels tighter and better balanced.
+- [x] Keep controls/graph card bottom alignment behavior while reducing visible dead space under controls.
+- [x] Make `Reinvest (%)` inline with `Reinvest cash flow` in Debt strategy without adding vertical height.
+- [x] Preserve formulas, KPI/chart values, and interaction behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Graph card appears less tall on desktop and overall canvas is more compact.
+- [x] `Reinvest cash flow` and `Reinvest (%)` appear on one inline row.
+- [x] No additional vertical jump is introduced when toggling reinvest.
+- [x] No regressions in property selection, presets, controls, KPIs, or charts.
+- [x] `npm run check` passes.
+
+### Mortgage workspace revamp (2026-03-18)
+
+#### Batch M1 - Context bar + top hierarchy (implement now)
+
+- [x] Replace split mortgage header and context card with a single compact context bar.
+- [x] Keep active property obvious at top and make property selector the primary control.
+- [x] Demote utility links (`Open property mortgage tab`, `Edit mortgage details`) to tertiary inline links.
+- [x] Reduce top vertical stack height before simulator content.
+- [x] Preserve existing property selection and mortgage selection behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Active mortgage property is obvious without scrolling.
+- [x] Property switcher is easy to find and use from top bar.
+- [x] Utility links are available but no longer visually dominant.
+- [x] Simulator content starts higher vs previous layout.
+- [x] `npm run check` passes.
+
+#### Batch M2 - Simulator control composition + spacing (next)
+
+- [x] Reorganize mortgage controls into cleaner groups with improved spacing rhythm.
+- [x] Normalize label/input alignment for primary control rows.
+- [x] Keep payoff and accelerator controls behavior unchanged.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Control panel is easier to scan at normal desktop zoom.
+- [x] No awkward wrapping in key control rows.
+- [x] Existing simulation outputs remain mathematically unchanged.
+- [x] `npm run check` passes.
+
+#### Batch M3 - Desktop aligned canvas for mortgage simulator (implement now)
+
+- [x] Build dedicated desktop canvas row pairing controls (left) and outcomes/chart (right).
+- [x] Align controls-card bottom and chart-card bottom (notes excluded).
+- [x] Reduce chart visual height to improve balance and reduce scrolling.
+- [x] Keep baseline notes outside aligned canvas row.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls and chart cards align at bottom on desktop.
+- [x] Canvas appears denser with less dead space.
+- [x] Notes are outside alignment target.
+- [x] `npm run check` passes.
+
+#### Batch M4 - Stability polish (no-jump interactions) (implement now)
+
+- [x] Stabilize optional controls and breakdown sections to avoid vertical jumps.
+- [x] Compress verbose copy in cards where wrapping inflates section height.
+- [x] Preserve formulas, KPI values, and chart behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Interaction toggles no longer cause noticeable canvas shifts.
+- [x] Card content remains readable without excessive wrapping.
+- [x] No regressions in mortgage selection, payoff simulation, or chart output.
+- [x] `npm run check` passes.
+
+#### Batch M5 - Final consistency polish + QA hardening (implement now)
+
+- [x] Apply final typography/spacing polish to match Modeling and Dashboard quality.
+- [x] Verify behavior across no-mortgage, single-mortgage, and multi-mortgage states.
+- [x] Preserve deep-linking behavior (`propertyId`, `mortgageId`).
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Mortgage workspace feels visually consistent with Modeling polish quality.
+- [x] Empty and edge states remain clear and actionable.
+- [x] No regressions in property/mortgage switching, payoff outputs, or chart rendering.
+- [x] `npm run check` passes.
+
+#### Batch M6 - Controls visual facelift (implement now)
+
+- [x] Increase spacing rhythm and section padding in Simulation controls for better visual hierarchy.
+- [x] Recompose Mortgage and payment panel to improve readability of selected mortgage, extra principal, and base P&I.
+- [x] Upgrade payoff target buttons with clearer hierarchy, stronger selected state, and consistent heights.
+- [x] Allow slightly taller workspace controls area to reduce cramped feeling.
+- [x] Preserve all payoff simulation logic and interaction behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls panel feels less cramped and visually consistent with Modeling polish.
+- [x] Primary control rows are easier to scan at normal desktop zoom.
+- [x] Payoff target cards are legible, balanced, and clearly state selection.
+- [x] No regressions in mortgage switching, payoff outputs, or chart rendering.
+- [x] `npm run check` passes.
+
+#### Batch M7 - Dense rail compression (implement now)
+
+- [x] Flatten simulation controls layout by removing nested heavy card structure.
+- [x] Convert controls header into compact toolbar with links + reset.
+- [x] Recompose mortgage/payment controls into tighter rows with clearer visual hierarchy.
+- [x] Convert payoff targets into compact chips and collapse to inline note when all targets are unavailable.
+- [x] Reduce workspace controls min-height to improve chart-to-controls balance.
+- [x] Preserve formulas, interactions, and deep-link behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Simulation controls occupy noticeably less vertical space on desktop.
+- [x] Controls are readable and scannable without stacked inner-card clutter.
+- [x] Payoff targets fit compactly and remain clear/interactive.
+- [x] No regressions in mortgage switching, payoff outputs, chart rendering, or URL sync.
+- [x] `npm run check` passes.
+
+#### Batch M8 - Balanced rail fill for empty-space polish (implement now)
+
+- [x] Add compact scenario-outcome strip inside simulation controls to use remaining vertical space intentionally.
+- [x] Add compact quick-assumptions row (rate, term, base P&I) to improve at-a-glance context.
+- [x] Keep additions low-height and visually aligned with dense-rail design language.
+- [x] Preserve all existing simulation formulas, interactions, and deep-link behavior.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Controls column no longer has obvious dead space under normal desktop viewport.
+- [x] Added content is concise and useful (not filler), with readable hierarchy.
+- [x] Row composition remains balanced against chart panel.
+- [x] No regressions in mortgage switching, payoff outputs, chart rendering, or URL sync.
+- [x] `npm run check` passes.
+
+### Properties page overhaul (2026-03-18)
+
+#### Batch P1 - Triage + hierarchy polish (implement now)
+
+- [x] Replace standalone `Advanced tools` card with compact inline tools row in page header.
+- [x] Add filter/sort chip bar for triage (`All`, `Needs attention`, `No mortgage`, `Stale benchmark`, `Negative cash flow`; sort by updated or worst cash flow).
+- [x] Add lightweight insight tags on property cards (`No mortgage`, `Benchmark stale`, `Negative cash flow`) to improve scan speed.
+- [x] Preserve existing calculations, benchmark refresh behavior, and deep links to Modeling/Mortgage/property detail.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Properties page presents one compact global tools row (no large standalone tools card).
+- [x] Users can quickly focus the list by triage filters and sort mode.
+- [x] Property cards surface actionable status tags without overwhelming card layout.
+- [x] Existing metrics and benchmark refresh paths remain functionally unchanged.
+- [x] `npm run check` passes.
+
+#### Batch P2 - Card composition modernization (next)
+
+- [x] Tighten property card composition into modern dense layout with clearer identity > metrics > actions hierarchy.
+- [x] Promote one primary card action (`Open property`) while keeping Modeling/Mortgage as secondary links.
+- [x] Normalize card spacing/typography rhythm to match Mortgage/Modeling quality level.
+- [x] Add single-property mode behavior: hide filter/sort controls when exactly one property exists.
+- [x] Add single-property compact workspace card treatment (not dashboard duplicate) with focused status + next actions.
+- [x] Keep multi-property mode triage controls and card-list workflow unchanged in purpose.
+- [x] Preserve benchmark behavior, metric values, and existing route paths.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Card layout is denser and easier to scan at normal desktop zoom.
+- [x] Action hierarchy is clearer without reducing discoverability of advanced tools.
+- [x] When `properties.length === 1`, filter/sort controls are hidden and single-property workspace treatment renders.
+- [x] Single-property treatment does not replicate dashboard summary/charts; it remains properties-page specific.
+- [x] When `properties.length > 1`, triage controls remain available and list behavior is preserved.
+- [x] No regressions in metric values, benchmark state, or link behavior.
+- [x] `npm run check` passes.
+
+#### Batch P2.1 - Multi-property card height consistency polish (implement now)
+
+- [x] Normalize multi-property card structure so all cards in a row keep consistent vertical rhythm.
+- [x] Reserve stable space for status tags and benchmark row to avoid variable card heights.
+- [x] Pin actions row to card bottom so primary/secondary actions align across cards.
+- [x] Preserve all benchmark behavior, metric values, and action links.
+- [x] Run `npm run check` and verify no regressions.
+
+Acceptance criteria:
+- [x] Multi-property cards in the same row appear visually consistent in height.
+- [x] Actions align horizontally across cards regardless of content variance.
+- [x] No regressions in benchmark refresh behavior, metrics, or navigation.
+- [x] `npm run check` passes.
+
+### Onboarding scope correction (activation-first)
+
+- [x] Replace checklist flow with modal-only onboarding (no persistent setup panel).
+- [x] Keep `Modeling`, `Analyze deal`, and mortgage setup as optional discovery paths outside onboarding gating.
+- [x] Ensure users without mortgages are not blocked by onboarding.
+- [x] `Start setup` routes directly to `/properties/new`.
+- [x] After creating the first property, route user back to dashboard with success context.
+- [x] `Maybe later` dismisses modal and does not inject persistent onboarding UI.
+- [x] Run `npm run check` and verify onboarding flow works with no regressions.
+
+Acceptance criteria:
+- [x] No checklist UI renders in app layout after modal interaction.
+- [x] Users can complete core onboarding by adding first property only.
+- [x] Optional tools remain discoverable via nav and dashboard/properties entry points.
+- [x] First property creation from onboarding flow lands on dashboard.
+- [x] Existing property creation behavior remains unchanged for non-first properties.
 
 ---
 

@@ -9,6 +9,7 @@ import { AppNav } from "./app-nav";
 import { DraftProvider, useDraft } from "./draft-context";
 import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
+import { OnboardingPanel } from "./onboarding-panel";
 import { Footer } from "@/components/footer";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
@@ -43,6 +44,7 @@ export function AppLayoutClient({
   showAdmin,
   supportEmail,
   bannerProps,
+  onboardingProps,
 }: {
   children: React.ReactNode;
   user?: { id: string; email: string } | null;
@@ -57,6 +59,10 @@ export function AppLayoutClient({
     subscriptionStatus: string | null;
     stripeCustomerId: string | null;
     subscriptionTier: string;
+  };
+  onboardingProps?: {
+    welcomeSeenAt: string | null;
+    dismissedAt: string | null;
   };
 }) {
   const pathname = usePathname();
@@ -187,6 +193,7 @@ export function AppLayoutClient({
                 />
               </>
             )}
+            {onboardingProps && <OnboardingPanel initialProgress={onboardingProps} />}
             {children}
           </div>
         </main>

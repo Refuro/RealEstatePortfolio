@@ -57,6 +57,13 @@ export function RentVsMarketSection({
   });
 
   const ordered = [...sortedFresh, ...staleOrMissing];
+  const aboveCount = fresh.filter(
+    (p) => getBenchmarkPct(getPropertyTotalRent(p), marketRentNum(p)) > 0
+  ).length;
+  const belowCount = fresh.filter(
+    (p) => getBenchmarkPct(getPropertyTotalRent(p), marketRentNum(p)) < 0
+  ).length;
+  const alignedCount = fresh.length - aboveCount - belowCount;
 
   useEffect(() => {
     if (staleOrMissing.length === 0 || hasTriggeredRefreshes.current) return;
@@ -103,11 +110,11 @@ export function RentVsMarketSection({
 
   if (ordered.length === 0) {
     return (
-      <div className="mt-8">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
+      <div className="mt-6 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
           Rent vs. market
         </h2>
-        <p className="mt-3 text-sm text-muted">
+        <p className="mt-2 text-sm text-muted">
           <Link
             href="/properties"
             className="font-medium text-foreground hover:underline"
@@ -120,11 +127,30 @@ export function RentVsMarketSection({
   }
 
   return (
-    <div className="mt-8">
-      <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-        Rent vs. market
-      </h2>
-      <ul className="mt-3 space-y-1">
+    <section className="mt-6 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Rent vs. market
+          </h2>
+          <p className="mt-1 text-sm text-muted">
+            {fresh.length} fresh benchmark{fresh.length === 1 ? "" : "s"} · {staleOrMissing.length}{" "}
+            refreshing
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2 text-xs">
+          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+            Above: <span className="font-semibold text-foreground">{aboveCount}</span>
+          </span>
+          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+            Below: <span className="font-semibold text-foreground">{belowCount}</span>
+          </span>
+          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+            Aligned: <span className="font-semibold text-foreground">{alignedCount}</span>
+          </span>
+        </div>
+      </div>
+      <ul className="mt-4 space-y-2">
         {ordered.map((p) => {
           const status = refreshStatus[p.id];
           const isFresh =
@@ -134,13 +160,28 @@ export function RentVsMarketSection({
           const name = p.nickname || p.addressLine1;
 
           if (isFresh) {
+            const pct = getBenchmarkPct(getPropertyTotalRent(p), marketRentNum(p));
+            const badge =
+              pct > 0
+                ? "text-positive"
+                : pct < 0
+                  ? "text-negative"
+                  : "text-foreground";
             return (
-              <li key={p.id}>
+              <li
+                key={p.id}
+                className="rounded-lg border border-border/70 bg-background/50 px-3 py-2"
+              >
                 <Link
                   href={`/properties/${p.id}`}
-                  className="text-sm text-muted hover:text-foreground hover:underline"
+                  className="flex flex-wrap items-center justify-between gap-2"
                 >
-                  {name}: {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
+                  <span className="text-sm font-medium text-foreground hover:underline">
+                    {name}
+                  </span>
+                  <span className={`text-sm font-semibold ${badge}`}>
+                    {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
+                  </span>
                 </Link>
               </li>
             );
@@ -164,22 +205,27 @@ export function RentVsMarketSection({
           const suffix = [stalePart, statusPart].filter(Boolean).join(" · ");
 
           return (
-            <li key={p.id} className="flex flex-wrap items-baseline gap-x-1">
+            <li
+              key={p.id}
+              className="rounded-lg border border-border/70 bg-background/50 px-3 py-2"
+            >
               <Link
                 href={`/properties/${p.id}`}
-                className="text-sm text-muted hover:text-foreground hover:underline"
+                className="text-sm font-medium text-foreground hover:underline"
               >
                 {name}
               </Link>
               <span
-                className={`text-sm ${status === "failed" ? "text-negative" : "text-muted"}`}
+                className={`mt-1 block text-sm ${
+                  status === "failed" ? "text-negative" : "text-muted"
+                }`}
               >
-                : {suffix || "Refreshing…"}
+                {suffix || "Refreshing…"}
               </span>
             </li>
           );
         })}
       </ul>
-    </div>
+    </section>
   );
 }

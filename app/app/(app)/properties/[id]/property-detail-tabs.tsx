@@ -182,6 +182,7 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
         )}
         {activeTab === "projections" && (
           <ProjectionsTabContent
+            propertyId={props.propertyId}
             monthlyRent={props.totalRent}
             monthlyExpenses={props.property.currentMonthlyExpenses}
             estimatedValue={props.property.currentEstimatedValue}

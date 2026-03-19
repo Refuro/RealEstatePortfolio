@@ -212,6 +212,179 @@ Design principle:
 
 ---
 
+## Phase 1 Implementation Plan (Detailed)
+
+Goal: improve activation and feature discoverability without introducing UX inconsistency, security regressions, or unnecessary scope creep.
+
+Scope includes all Phase 1 items:
+1. Global discoverability for Modeling and Mortgage
+2. Onboarding checklist + welcome modal
+3. Cross-links from Dashboard/Properties to advanced tools
+
+### Design and Process Guardrails
+
+These are required across all Phase 1 work:
+- Keep existing visual system and tokens (card styles, spacing scale, typography, button hierarchy).
+- Reuse existing app shell/navigation patterns before introducing new component variants.
+- Maintain current route protection and user scoping patterns (no cross-user data exposure).
+- Preserve current plan gating behavior and upgrade UX tone (contextual, not aggressive).
+- Preserve mobile usability and keyboard accessibility for all new UI.
+- Prefer additive changes and backward compatibility (existing property tabs continue to work).
+- Ship behind small, reviewable PRs with clear acceptance checks.
+
+### Workstream A - Global Discoverability (Modeling and Mortgage)
+
+#### Deliverables
+- Add first-class routes:
+  - `/modeling`
+  - `/mortgage` (or `/mortgage-center`, choose one naming convention and use consistently)
+- Add top-level sidebar nav entries for these routes.
+- Add route-level empty states and contextual selectors:
+  - property selector on Modeling
+  - property selector + mortgage selector on Mortgage
+- Support deep-link preselection via query params:
+  - `/modeling?propertyId=<id>`
+  - `/mortgage?propertyId=<id>&mortgageId=<id>`
+- Keep existing property detail tabs (`Projections`, `Mortgage`) as valid entry points.
+
+#### UX behavior requirements
+- 0 properties: explain value briefly and CTA to add first property.
+- 1 property: auto-select property; keep selector minimized or hidden.
+- 2+ properties: show selector prominently near page header.
+- Property has no mortgage: clear state + CTA to add mortgage.
+- Invalid/missing query IDs: fail gracefully to default selection (no crash/no blank page).
+
+#### Security and integrity requirements
+- All data queries remain scoped to authenticated user ID.
+- Query params are selection hints only; never trusted as authorization.
+- No sensitive values persisted in client storage beyond existing safe UI preferences.
+
+#### Explicit acceptance criteria
+- [x] Sidebar shows `Modeling` and `Mortgage` for authenticated app users.
+- [x] `/modeling` loads and supports property selection with valid default behavior.
+- [x] `/mortgage` loads and supports property+mortgage selection with valid default behavior.
+- [x] Deep links from property context open global pages with preselected context when valid.
+- [x] Invalid `propertyId`/`mortgageId` query values never expose unauthorized data and fallback safely.
+- [x] Existing property-detail tabs still function and are not removed in Phase 1.
+- [x] Mobile, tablet, and desktop layouts remain usable with no horizontal overflow regressions (desktop validated; mobile/tablet require manual QA pass below).
+
+---
+
+### Workstream B - Onboarding Activation (Modal-first, no checklist)
+
+#### Deliverables
+- First-session welcome modal for new users.
+- Primary CTA in modal routes directly to `Add property`.
+- First-property completion returns user to dashboard (`time-to-first-value` flow).
+- Lightweight dashboard success state after first-property redirect.
+- Optional "Explore next" guidance is allowed, but must be non-blocking and non-persistent.
+
+#### UX behavior requirements
+- Modal appears only when meaningful (new/incomplete onboarding), not on every session.
+- Users can skip onboarding and continue product use immediately.
+- Clicking "Start setup" should immediately begin setup (navigate to add-property flow).
+- Onboarding should not push page layout down with persistent setup UI.
+- Optional tools (Modeling, Mortgage, Analyze) should be suggestions only, not required completion gates.
+- Keep copy concise and practical; avoid marketing-heavy language inside app.
+
+#### Data and security requirements
+- Onboarding state persistence should be per-user and resilient across sessions.
+- If stored server-side, use authenticated route handlers and user-scoped reads/writes.
+- Do not store PII beyond existing account/user identifiers needed for state linkage.
+- Store only minimal state needed for modal behavior and first-property activation cues.
+
+#### Explicit acceptance criteria
+- [ ] Eligible users see a one-time welcome modal with clear skip/start options.
+- [ ] Clicking `Start setup` routes directly to `/properties/new`.
+- [ ] Users who click `Not now` do not see persistent checklist UI.
+- [ ] After first property creation, user is redirected to dashboard.
+- [ ] Dashboard shows a lightweight success confirmation after first property creation.
+- [ ] Onboarding can be fully completed without running modeling, adding mortgage, or analyzing a deal.
+- [ ] Optional guidance (if shown) is clearly labeled as optional and never blocks completion.
+
+---
+
+### Workstream C - Cross-links from Summary Pages to Advanced Tools
+
+#### Deliverables
+- Add explicit cards/CTAs on Dashboard to:
+  - Run scenario modeling
+  - Open mortgage payoff simulator
+- Add contextual CTAs on Properties cards/list and property detail surfaces:
+  - Open in Modeling
+  - Open in Mortgage Center
+- Ensure links pass property context through query params where appropriate.
+
+#### UX behavior requirements
+- CTA labels should be action-oriented and consistent across pages.
+- Do not overload pages with too many equal-priority CTAs.
+- Preserve existing primary actions (e.g., Add property) as primary where expected.
+
+#### Explicit acceptance criteria
+- [x] Dashboard includes visible access paths to Modeling and Mortgage tools.
+- [x] Properties page includes at least one contextual path into each advanced tool.
+- [x] Property detail includes clear "open in global tool" affordances.
+- [x] All new links route correctly with valid context fallback behavior.
+- [x] CTA hierarchy remains clear (no conflicts with primary existing actions).
+
+---
+
+### Delivery Sequence (Recommended)
+
+Sprint 1:
+1. Workstream A foundations (new routes + nav + selection model + deep-link parsing)
+2. Workstream C initial dashboard/properties cross-links (using new routes)
+
+Sprint 2:
+1. Workstream B onboarding (modal-first + first-property dashboard return)
+2. Workstream C refinement (copy polish + context placements)
+3. End-to-end polish and edge-case hardening
+
+---
+
+### Validation and QA Checklist (Phase 1 Exit Gate)
+
+- Navigation
+  - [x] New nav entries visible and active-state behavior is correct.
+  - [x] No regressions in existing app nav items.
+
+- Access control and safety
+  - [x] User cannot access another user's property/mortgage context via query param tampering.
+  - [x] Unauthorized users are still redirected/protected as before.
+
+- UX consistency
+  - [x] New pages use existing design tokens/components and feel native to app.
+  - [x] New copy is consistent with existing tone (clear, practical, concise).
+
+- Responsiveness and accessibility
+  - [ ] Works on mobile/desktop with no major layout breaks. (manual QA required)
+  - [ ] Interactive elements are keyboard reachable with visible focus states. (manual QA required)
+  - [ ] Modals and coach marks are screen-reader friendly (labels/roles). (manual QA required)
+
+- Activation outcomes
+  - [ ] New users can discover and reach advanced tools within first session. (manual QA required)
+  - [ ] New users can complete onboarding without running optional advanced workflows. (manual QA required)
+
+- Operational confidence
+  - [x] Error handling states are present for empty, missing, or invalid selection contexts.
+  - [x] Existing analytics/billing surfaces are unaffected by Phase 1 changes.
+
+Status note:
+- Automated validation (`npm run check`) passes after Phase 1 changes.
+- Remaining unchecked items are intentionally marked for manual product QA.
+- Onboarding proposal updated to modal-first flow; checklist-based assumptions are deprecated.
+
+---
+
+### Out of Scope for Phase 1
+
+- Full wizard redesign (Phase 2).
+- Deal compare redesign (Phase 2).
+- Major visual redesign or token changes (Phase 3+).
+- New external integrations or pricing model changes.
+
+---
+
 ## Launch Readiness Assessment
 
 From a feature and layout perspective (not code/testing):
@@ -237,8 +410,39 @@ To move to ~8.5-9.0 launch readiness:
 - Yes, do it. This is the most important.
 
 2) Better onboarding via modals/tour:
-- Yes, do it next. Prefer checklist + contextual tips over a long forced tour.
+- Yes, do it next. Prefer a modal-first activation flow and optional suggestions over persistent checklists.
 
 3) Modernize add property/add mortgage wizard:
 - Yes, do it, but after discoverability and onboarding unless you need visual polish first for demos.
+
+---
+
+## Approved Onboarding Modal Direction (2026-03-18)
+
+This visual direction is approved and should be treated as the baseline for onboarding style quality.
+
+- Style:
+  - Elevated, premium modal card with soft backdrop blur and subtle gradient/glow accents.
+  - Strong typography hierarchy: compact eyebrow label, bold activation headline, concise supporting copy.
+  - Clean spacing and visual rhythm; no crowded checklist layout.
+
+- Content:
+  - Activation-first message focused on immediate value after first property is added.
+  - Benefit points presented as informational items (not actions), e.g.:
+    - Track cash flow
+    - See equity growth
+    - Model upside
+  - Confidence microcopy such as setup-time expectation.
+
+- Actions:
+  - Primary CTA is visually dominant: `Add first property`.
+  - Secondary CTA is quiet but clear: `Maybe later`.
+  - Keep behavior unchanged from current implementation:
+    - Primary -> `/properties/new`
+    - Secondary -> dismiss modal persistently
+
+- Guardrails:
+  - Modal should feel integrated with app design tokens (no one-off visual language).
+  - Avoid interactive styling on informational elements to reduce ambiguity.
+  - Keep onboarding non-blocking and avoid reintroducing persistent checklist UX.
 

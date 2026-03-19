@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { getPiForAmortization } from "@/lib/amortization";
 import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
@@ -18,6 +19,8 @@ import {
 import type { MortgageForTabs } from "./property-detail-tabs";
 
 type ProjectionsTabContentProps = {
+  propertyId?: string;
+  workspaceVariant?: "default" | "modeling";
   monthlyRent: number;
   monthlyExpenses: number;
   estimatedValue: number;
@@ -183,6 +186,8 @@ function projectLoanSeriesByMonth(
 }
 
 export function ProjectionsTabContent({
+  propertyId,
+  workspaceVariant = "default",
   monthlyRent,
   monthlyExpenses,
   estimatedValue,
@@ -205,6 +210,7 @@ export function ProjectionsTabContent({
   const [sellingCostPct, setSellingCostPct] = useState(6);
   const [reinvestCashFlow, setReinvestCashFlow] = useState(false);
   const [reinvestPct, setReinvestPct] = useState(50);
+  const isModelingWorkspace = workspaceVariant === "modeling";
   const projectionHorizonMonths = holdYears * 12;
 
   const projectedLoanSeries = useMemo(
@@ -393,10 +399,122 @@ export function ProjectionsTabContent({
     setReinvestPct(50);
   }
 
-  return (
-    <div className="space-y-6">
-      <div className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-3">
+  const summaryCards = (
+    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Projected equity (year {holdYears})</p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {finalRow ? formatCurrency(finalRow.equity) : "—"}
+        </p>
+        {equityDeltaPct != null && (
+          <p className={`mt-1 text-xs ${equityDeltaPct >= 0 ? "text-positive" : "text-negative"}`}>
+            {equityDeltaPct >= 0 ? "+" : ""}
+            {equityDeltaPct.toFixed(1)}% vs base
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Projected loan balance (year {holdYears})</p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {finalRow ? formatCurrency(finalRow.loanBalance) : "—"}
+        </p>
+      </div>
+
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">Annual cash flow (year {holdYears})</p>
+        <p
+          className={`mt-1 text-sm font-medium ${
+            (finalRow?.annualCashFlow ?? 0) >= 0 ? "text-positive" : "text-negative"
+          }`}
+        >
+          {finalRow ? formatCurrency(finalRow.annualCashFlow) : "—"}
+        </p>
+        {annualCashFlowDeltaPct != null && (
+          <p
+            className={`mt-1 text-xs ${
+              annualCashFlowDeltaPct >= 0 ? "text-positive" : "text-negative"
+            }`}
+          >
+            {annualCashFlowDeltaPct >= 0 ? "+" : ""}
+            {annualCashFlowDeltaPct.toFixed(1)}% vs base
+          </p>
+        )}
+      </div>
+
+      <div className="rounded-md border border-border bg-card p-3">
+        <p className="text-xs text-muted">
+          {includeSaleAnalysis
+            ? "Net sale proceeds + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")
+            : "Equity + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")}
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">
+          {formatCurrency(includeSaleAnalysis ? saleAdjustedNetPosition : netPosition)}
+        </p>
+        {netPositionDeltaPct != null && (
+          <p className={`mt-1 text-xs ${netPositionDeltaPct >= 0 ? "text-positive" : "text-negative"}`}>
+            {netPositionDeltaPct >= 0 ? "+" : ""}
+            {netPositionDeltaPct.toFixed(1)}% vs base
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  const advancedBreakdownContent = (
+    <div className="space-y-3">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="rounded-md border border-border bg-subtle/30 p-3">
+          <p className="text-xs text-muted">Reinvested balance (year {holdYears})</p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {formatCurrency(reinvestCashFlow ? (finalRow?.reinvestmentBalance ?? 0) : 0)}
+          </p>
+        </div>
+        <div className="rounded-md border border-border bg-subtle/30 p-3">
+          <p className="text-xs text-muted">Distributable cumulative cash flow</p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {formatCurrency(finalRow?.cumulativeCashFlow ?? 0)}
+          </p>
+        </div>
+        <div className="rounded-md border border-border bg-subtle/30 p-3">
+          <p className="text-xs text-muted">Reinvest compound growth</p>
+          <p className="mt-1 text-sm font-medium text-foreground">
+            {reinvestCashFlow
+              ? `Compounding at value growth (${valueGrowth.toFixed(1)}%/yr)`
+              : "Compounding off"}
+          </p>
+        </div>
+      </div>
+
+      {includeSaleAnalysis && (
+        <div className="grid gap-3 sm:grid-cols-3">
+          <div className="rounded-md border border-border bg-subtle/30 p-3">
+            <p className="text-xs text-muted">Projected sale price (year {holdYears})</p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {formatCurrency(grossSaleValue)}
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-subtle/30 p-3">
+            <p className="text-xs text-muted">Estimated selling costs</p>
+            <p className="mt-1 text-sm font-medium text-negative">
+              {formatCurrency(sellingCosts)}
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-subtle/30 p-3">
+            <p className="text-xs text-muted">Net proceeds after debt + costs</p>
+            <p className="mt-1 text-sm font-medium text-foreground">
+              {formatCurrency(netSaleProceeds)}
+            </p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+
+  const controlsContent = (
+    <>
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-2">
+        <div>
           <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
             Simulation controls
           </h3>
@@ -405,322 +523,241 @@ export function ProjectionsTabContent({
             12 months at each point. Debt service follows projected payoff timing.
           </p>
         </div>
-
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="text-xs font-medium text-muted">Preset:</span>
-          {Object.entries(PRESETS).map(([id, preset]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => applyPreset(id as Exclude<PresetId, "custom">)}
-              className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
-                activePreset === id
-                  ? "border-accent bg-accent/10 text-foreground"
-                  : "border-border bg-background text-muted hover:text-foreground"
-              }`}
-            >
-              {preset.label}
-            </button>
-          ))}
-          {activePreset === "custom" && (
-            <span className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-muted">
-              Custom
-            </span>
-          )}
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-          <label className="block text-xs font-medium text-muted">
-            Hold period (years)
-            <input
-              type="number"
-              min={1}
-              max={30}
-              value={holdYears}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setHoldYears(Math.min(30, Math.max(1, Number(e.target.value) || 1)));
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-
-          <label className="block text-xs font-medium text-muted">
-            Rent growth (% / year)
-            <input
-              type="number"
-              min={-5}
-              max={15}
-              step={0.5}
-              value={rentGrowth}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setRentGrowth(Number(e.target.value) || 0);
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-
-          <label className="block text-xs font-medium text-muted">
-            Expense growth (% / year)
-            <input
-              type="number"
-              min={-5}
-              max={15}
-              step={0.5}
-              value={expenseGrowth}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setExpenseGrowth(Number(e.target.value) || 0);
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-
-          <label className="block text-xs font-medium text-muted">
-            Value growth (% / year)
-            <input
-              type="number"
-              min={-5}
-              max={15}
-              step={0.5}
-              value={valueGrowth}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setValueGrowth(Number(e.target.value) || 0);
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-
-          <label className="block text-xs font-medium text-muted">
-            Extra principal ($ / month)
-            <input
-              type="number"
-              min={0}
-              max={5000}
-              step={25}
-              value={extraMonthlyPrincipal}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setExtraMonthlyPrincipal(Math.max(0, Number(e.target.value) || 0));
-              }}
-              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground"
-            />
-          </label>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-          <label className="text-xs font-medium text-muted">
-            Vacancy assumption ({projectionVacancy.toFixed(1)}%)
-            <input
-              type="range"
-              min={0}
-              max={20}
-              step={0.5}
-              value={projectionVacancy}
-              onChange={(e) => {
-                setActivePreset("custom");
-                setProjectionVacancy(Number(e.target.value));
-              }}
-              className="mt-1 block w-64 max-w-full accent-accent"
-            />
-          </label>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="text-sm font-medium text-muted hover:text-foreground"
+        {propertyId && (
+          <Link
+            href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
+            className="text-sm font-medium text-accent hover:underline"
           >
-            Reset
-          </button>
-        </div>
-
-        <div className="mt-3 flex flex-wrap items-center gap-4 rounded-md border border-border bg-subtle/30 p-3">
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-muted">
-            <input
-              type="checkbox"
-              checked={reinvestCashFlow}
-              onChange={(e) => setReinvestCashFlow(e.target.checked)}
-              className="h-4 w-4 accent-accent"
-            />
-            Reinvest cash flow
-          </label>
-          {reinvestCashFlow && (
-            <label className="text-xs font-medium text-muted">
-              Reinvest (%)
-              <input
-                type="number"
-                min={0}
-                max={100}
-                step={5}
-                value={reinvestPct}
-                onChange={(e) =>
-                  setReinvestPct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))
-                }
-                className="ml-2 w-16 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
-              />
-            </label>
-          )}
-          {reinvestCashFlow && (
-            <span className="text-xs text-muted">Applies only to positive annual cash flow.</span>
-          )}
-
-          <label className="inline-flex items-center gap-2 text-xs font-medium text-muted">
-            <input
-              type="checkbox"
-              checked={includeSaleAnalysis}
-              onChange={(e) => setIncludeSaleAnalysis(e.target.checked)}
-              className="h-4 w-4 accent-accent"
-            />
-            Include sale analysis at hold year
-          </label>
-          {includeSaleAnalysis && (
-            <label className="text-xs font-medium text-muted">
-              Selling costs (%)
-              <input
-                type="number"
-                min={0}
-                max={12}
-                step={0.5}
-                value={sellingCostPct}
-                onChange={(e) => setSellingCostPct(Math.max(0, Number(e.target.value) || 0))}
-                className="ml-2 w-20 rounded-md border border-border bg-background px-2 py-1 text-xs text-foreground"
-              />
-            </label>
-          )}
-        </div>
-
-        {reinvestCashFlow && holdYearCashFlow <= 0 && (
-          <p className="mt-2 text-xs text-muted">
-            No positive annual cash flow at year {holdYears}; reinvestment contribution is currently 0.
-          </p>
+            Open in Modeling workspace
+          </Link>
         )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Projected equity (year {holdYears})</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {finalRow ? formatCurrency(finalRow.equity) : "—"}
-          </p>
-          {equityDeltaPct != null && (
-            <p className={`mt-1 text-xs ${equityDeltaPct >= 0 ? "text-positive" : "text-negative"}`}>
-              {equityDeltaPct >= 0 ? "+" : ""}
-              {equityDeltaPct.toFixed(1)}% vs base
-            </p>
-          )}
-        </div>
-
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Projected loan balance (year {holdYears})</p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {finalRow ? formatCurrency(finalRow.loanBalance) : "—"}
-          </p>
-        </div>
-
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">Annual cash flow (year {holdYears})</p>
-          <p
-            className={`mt-1 text-sm font-medium ${
-              (finalRow?.annualCashFlow ?? 0) >= 0 ? "text-positive" : "text-negative"
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium text-muted">Preset:</span>
+        {Object.entries(PRESETS).map(([id, preset]) => (
+          <button
+            key={id}
+            type="button"
+            onClick={() => applyPreset(id as Exclude<PresetId, "custom">)}
+            className={`rounded-md border px-2.5 py-1 text-xs font-medium transition ${
+              activePreset === id
+                ? "border-accent bg-accent/10 text-foreground"
+                : "border-border bg-background text-muted hover:text-foreground"
             }`}
           >
-            {finalRow ? formatCurrency(finalRow.annualCashFlow) : "—"}
-          </p>
-          {annualCashFlowDeltaPct != null && (
-            <p
-              className={`mt-1 text-xs ${
-                annualCashFlowDeltaPct >= 0 ? "text-positive" : "text-negative"
-              }`}
-            >
-              {annualCashFlowDeltaPct >= 0 ? "+" : ""}
-              {annualCashFlowDeltaPct.toFixed(1)}% vs base
-            </p>
-          )}
-        </div>
-
-        <div className="rounded-md border border-border bg-card p-3">
-          <p className="text-xs text-muted">
-            {includeSaleAnalysis
-              ? "Net sale proceeds + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")
-              : "Equity + cash flow" + (reinvestCashFlow ? " + reinvested balance" : "")}
-          </p>
-          <p className="mt-1 text-sm font-medium text-foreground">
-            {formatCurrency(includeSaleAnalysis ? saleAdjustedNetPosition : netPosition)}
-          </p>
-          {netPositionDeltaPct != null && (
-            <p className={`mt-1 text-xs ${netPositionDeltaPct >= 0 ? "text-positive" : "text-negative"}`}>
-              {netPositionDeltaPct >= 0 ? "+" : ""}
-              {netPositionDeltaPct.toFixed(1)}% vs base
-            </p>
-          )}
-        </div>
+            {preset.label}
+          </button>
+        ))}
+        {activePreset === "custom" && (
+          <span className="rounded-md border border-border bg-background px-2.5 py-1 text-xs text-muted">
+            Custom
+          </span>
+        )}
       </div>
 
-      {(reinvestCashFlow || includeSaleAnalysis) && (
-        <details className="rounded-md border border-border bg-card p-3">
-          <summary className="cursor-pointer text-xs font-medium text-muted">
-            Advanced breakdown
-          </summary>
-          <div className="mt-3 space-y-3">
-            {reinvestCashFlow && (
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Reinvested balance (year {holdYears})</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {formatCurrency(finalRow?.reinvestmentBalance ?? 0)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Distributable cumulative cash flow</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {formatCurrency(finalRow?.cumulativeCashFlow ?? 0)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Reinvestment assumption</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {reinvestPct}% reinvested, compounding at value growth ({valueGrowth.toFixed(1)}%/yr)
-                  </p>
-                </div>
-              </div>
-            )}
+      <div className="space-y-4">
+        <div className="rounded-lg border border-border/70 bg-background/55 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+              Horizon and risk
+            </p>
+            <button
+              type="button"
+              onClick={handleReset}
+              className="text-xs font-medium text-muted hover:text-foreground"
+            >
+              Reset
+            </button>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-medium text-muted">
+              Hold period (years)
+              <input
+                type="number"
+                min={1}
+                max={30}
+                value={holdYears}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setHoldYears(Math.min(30, Math.max(1, Number(e.target.value) || 1)));
+                }}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted">
+              Vacancy ({projectionVacancy.toFixed(1)}%)
+              <input
+                type="range"
+                min={0}
+                max={20}
+                step={0.5}
+                value={projectionVacancy}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setProjectionVacancy(Number(e.target.value));
+                }}
+                className="mt-2.5 block w-full accent-accent"
+              />
+            </label>
+          </div>
+        </div>
 
-            {includeSaleAnalysis && (
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Projected sale price (year {holdYears})</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {formatCurrency(grossSaleValue)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Estimated selling costs</p>
-                  <p className="mt-1 text-sm font-medium text-negative">
-                    {formatCurrency(sellingCosts)}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border bg-subtle/30 p-3">
-                  <p className="text-xs text-muted">Net proceeds after debt + costs</p>
-                  <p className="mt-1 text-sm font-medium text-foreground">
-                    {formatCurrency(netSaleProceeds)}
-                  </p>
-                </div>
+        <div className="rounded-lg border border-border/70 bg-background/55 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Growth assumptions
+          </p>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <label className="block text-xs font-medium text-muted">
+              Rent growth (%/yr)
+              <input
+                type="number"
+                min={-5}
+                max={15}
+                step={0.5}
+                value={rentGrowth}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setRentGrowth(Number(e.target.value) || 0);
+                }}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted">
+              Expense growth (%/yr)
+              <input
+                type="number"
+                min={-5}
+                max={15}
+                step={0.5}
+                value={expenseGrowth}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setExpenseGrowth(Number(e.target.value) || 0);
+                }}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+              />
+            </label>
+            <label className="block text-xs font-medium text-muted">
+              Value growth (%/yr)
+              <input
+                type="number"
+                min={-5}
+                max={15}
+                step={0.5}
+                value={valueGrowth}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setValueGrowth(Number(e.target.value) || 0);
+                }}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+              />
+            </label>
+          </div>
+        </div>
+
+        <div className="rounded-lg border border-border/70 bg-background/55 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Debt strategy
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="block text-xs font-medium text-muted">
+              Extra principal ($ / month)
+              <input
+                type="number"
+                min={0}
+                max={5000}
+                step={25}
+                value={extraMonthlyPrincipal}
+                onChange={(e) => {
+                  setActivePreset("custom");
+                  setExtraMonthlyPrincipal(Math.max(0, Number(e.target.value) || 0));
+                }}
+                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
+              />
+            </label>
+            <div className="min-h-[72px]">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                <label className="inline-flex items-center gap-2 text-xs font-medium text-muted">
+                  <input
+                    type="checkbox"
+                    checked={reinvestCashFlow}
+                    onChange={(e) => setReinvestCashFlow(e.target.checked)}
+                    className="h-4 w-4 accent-accent"
+                  />
+                  Reinvest cash flow
+                </label>
+                <label
+                  className={`inline-flex items-center gap-2 text-xs font-medium text-muted transition-opacity ${
+                    reinvestCashFlow ? "opacity-100" : "invisible opacity-0"
+                  }`}
+                >
+                  Reinvest (%)
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    step={5}
+                    value={reinvestPct}
+                    disabled={!reinvestCashFlow}
+                    onChange={(e) =>
+                      setReinvestPct(Math.min(100, Math.max(0, Number(e.target.value) || 0)))
+                    }
+                    className="w-24 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground disabled:cursor-not-allowed disabled:opacity-60"
+                  />
+                </label>
               </div>
+            </div>
+          </div>
+          <p className={`mt-2 text-xs text-muted ${reinvestCashFlow ? "opacity-100" : "opacity-0"}`}>
+            Applies only to positive annual cash flow.
+          </p>
+        </div>
+
+        <div className="rounded-lg border border-border/70 bg-background/55 p-4">
+          <p className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            Exit assumptions
+          </p>
+          <div className="space-y-3">
+            <label className="inline-flex items-center gap-2 text-xs font-medium text-muted">
+              <input
+                type="checkbox"
+                checked={includeSaleAnalysis}
+                onChange={(e) => setIncludeSaleAnalysis(e.target.checked)}
+                className="h-4 w-4 accent-accent"
+              />
+              Include sale analysis at hold year
+            </label>
+            {includeSaleAnalysis && (
+              <label className="block text-xs font-medium text-muted">
+                Selling costs (%)
+                <input
+                  type="number"
+                  min={0}
+                  max={12}
+                  step={0.5}
+                  value={sellingCostPct}
+                  onChange={(e) => setSellingCostPct(Math.max(0, Number(e.target.value) || 0))}
+                  className="mt-1.5 block w-24 rounded-md border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+                />
+              </label>
             )}
           </div>
-        </details>
-      )}
+        </div>
+      </div>
+    </>
+  );
 
-      <div className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-1 text-sm font-semibold text-muted">
-          Value vs. loan balance projection (equity is the gap)
-        </h3>
-        <p className="mb-3 text-xs text-muted">
-          Property value grows by your value-growth input. Loan balance declines using current mortgage
-          terms plus optional extra principal. Equity is value minus balance.
-        </p>
-        <div className="h-[240px] sm:h-[300px] lg:h-[340px]">
+  const projectionChart = (
+    <>
+      <h3 className="mb-1 text-sm font-semibold text-muted">
+        Value vs. loan balance projection (equity is the gap)
+      </h3>
+      <p className="mb-3 text-xs text-muted">
+        Property value grows by your value-growth input. Loan balance declines using current mortgage
+        terms plus optional extra principal. Equity is value minus balance.
+      </p>
+      <div className={isModelingWorkspace ? "h-[300px] xl:flex-1 xl:min-h-[340px]" : "h-[240px] sm:h-[300px] lg:h-[340px]"}>
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={projectionRows} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -774,15 +811,76 @@ export function ProjectionsTabContent({
             />
           </AreaChart>
         </ResponsiveContainer>
+      </div>
+    </>
+  );
+
+  const baselineNotes = (
+    <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
+      Baseline inputs: rent {formatCurrency(monthlyRent)}/mo, expenses {formatCurrency(monthlyExpenses)}
+      /mo, debt service {formatCurrency(totalMonthlyPayment)}/mo, ownership {ownershipPercent.toFixed(1)}%, cash invested{" "}
+      {cashInvested != null ? formatCurrency(cashInvested) : "—"}. Baseline for % deltas uses the
+      Base preset with no extra principal and no reinvestment, using the same ownership mode.
+    </div>
+  );
+
+  if (isModelingWorkspace) {
+    return (
+      <div className="space-y-4">
+        {reinvestCashFlow && holdYearCashFlow <= 0 && (
+          <p className="text-xs text-muted">
+            No positive annual cash flow at year {holdYears}; reinvestment contribution is currently 0.
+          </p>
+        )}
+        {summaryCards}
+
+        <div className="xl:grid xl:grid-cols-12 xl:items-stretch xl:gap-4">
+          <div className="xl:col-span-5">
+            <div className="h-full rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+              {controlsContent}
+            </div>
+          </div>
+
+          <div className="mt-4 xl:col-span-7 xl:mt-0">
+            <div className="flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm">
+              {(reinvestCashFlow || includeSaleAnalysis) && (
+                <div className="mb-3 rounded-md border border-border bg-subtle/30 p-3">
+                  <p className="text-xs font-medium text-muted">Advanced breakdown</p>
+                  <div className="mt-3">{advancedBreakdownContent}</div>
+                </div>
+              )}
+              {projectionChart}
+            </div>
+          </div>
+        </div>
+
+        {baselineNotes}
+
+        <div className="rounded-xl border border-border/60 bg-card/90 p-3 text-xs text-muted shadow-sm">
+          <p className="font-semibold uppercase tracking-wide text-muted">Modeling tips</p>
+          <p className="mt-1">
+            Adjust one assumption family at a time, then compare the KPI deltas before stacking
+            additional changes.
+          </p>
         </div>
       </div>
+    );
+  }
 
-      <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
-        Baseline inputs: rent {formatCurrency(monthlyRent)}/mo, expenses {formatCurrency(monthlyExpenses)}
-        /mo, debt service {formatCurrency(totalMonthlyPayment)}/mo, ownership {ownershipPercent.toFixed(1)}%, cash invested{" "}
-        {cashInvested != null ? formatCurrency(cashInvested) : "—"}. Baseline for % deltas uses the
-        Base preset with no extra principal and no reinvestment, using the same ownership mode.
-      </div>
+  return (
+    <div className="space-y-6">
+      <div className="rounded-lg border border-border bg-card p-4">{controlsContent}</div>
+      {summaryCards}
+      {(reinvestCashFlow || includeSaleAnalysis) && (
+        <details className="rounded-md border border-border bg-card p-3">
+          <summary className="cursor-pointer text-xs font-medium text-muted">
+            Advanced breakdown
+          </summary>
+          <div className="mt-3">{advancedBreakdownContent}</div>
+        </details>
+      )}
+      <div className="rounded-lg border border-border bg-card p-4">{projectionChart}</div>
+      {baselineNotes}
     </div>
   );
 }
