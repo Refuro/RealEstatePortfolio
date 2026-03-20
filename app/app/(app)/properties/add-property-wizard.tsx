@@ -15,6 +15,8 @@ import {
   type MortgageFormData,
 } from "./mortgage-form-fields";
 import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 export type WizardData = {
   nickname: string;
@@ -1293,6 +1295,11 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
         return;
       }
       draft?.clearDraft();
+      if (typeof resData.id === "string") {
+        captureClientEvent(AnalyticsEvents.PROPERTY_CREATED, {
+          property_id: resData.id,
+        });
+      }
       if (resData.createdFirstProperty) {
         router.push("/dashboard?onboarding=first-property");
       } else {

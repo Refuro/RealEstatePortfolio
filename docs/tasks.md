@@ -259,14 +259,13 @@ Tasks are grouped into batches. **Batch 1** is first.
 
 ---
 
-## Batch 8: Business & quality — **DEFERRED**
+## Batch 8: Business & quality — **active (pre-launch)**
 
-*Deferred by product decision (2026-03-19): prioritize **add-property / edit-property experience overhaul** first. Batch 8 items remain valid; promote when ready.*
+*Add-property experience overhaul (Epics A–G) is complete. Remaining Batch 8 work: instrumentation, changelog, uptime.*
 
-*Purpose: Analytics, tests, launch plan, and changelog.*
+*Purpose: Product analytics (PostHog), public changelog, external uptime monitoring.*
 
-- [ ] **Analytics tracking** — Set up analytics (PostHog, Mixpanel, or similar) for funnel metrics.
-  - *Acceptance:* Sign-up, property add, deal add, checkout events tracked; dashboard or export for funnel view.
+**Builder handoff (PM → implementer):** [`launch/batch-8-builder-handoff.md`](launch/batch-8-builder-handoff.md) — execution order, review gate, pointers to acceptance criteria below.
 
 - [x] **Initial test coverage** — Vitest + Phase 1 unit tests; full strategy in [`proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md).
   - *Acceptance:* Core math and metrics have unit tests; `npm run test` passes; `npm run test:coverage` available.
@@ -275,12 +274,46 @@ Tasks are grouped into batches. **Batch 1** is first.
   - *Acceptance:* Doc exists with audience, messaging, and phased timeline.
   - *Deliverable:* [`docs/launch/launch-plan.md`](launch/launch-plan.md) *(Batch 8; Epic G in add-property overhaul is QA-only — see doc §1).*
 
-- [ ] **Public changelog** — Add a public changelog page.
-  - *Acceptance:* Changelog page lists releases/updates; linked from footer or about; format consistent.
+### 8.1 PostHog + product events (instrumentation)
+
+- [x] **PostHog Cloud + SDK** — Integrate **PostHog** for product analytics (not a custom admin funnel).
+  - *Acceptance:*
+    - [x] `posthog-js` (and/or `posthog-node` where server-side capture is needed) added in `app/`; init runs only when `NEXT_PUBLIC_POSTHOG_KEY` is set (no errors in dev without keys).
+    - [x] `app/.env.example` documents `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST` (default `https://us.i.posthog.com` or EU host if using EU project), with link to PostHog project settings.
+    - [ ] Vercel production env has PostHog keys; **production** loads the snippet and events appear in PostHog (verify in PostHog “Live events”). *— PM: set keys in Vercel and verify.*
+    - [x] **Identify:** After Clerk session is available, call `posthog.identify` with stable `userId` (Clerk user id) so funnels are per-user, not anonymous noise only.
+    - [x] **Core funnel events** (names can be snake_case; keep consistent everywhere):
+      - `user_signed_up` — first-time account creation (Clerk sign-up success path or one server event; avoid duplicate spam per user).
+      - `property_created` — property successfully created (client after success or server after DB write; one event per create).
+      - `deal_created` — deal successfully created.
+      - `checkout_started` — user lands on Stripe Checkout or `create-checkout-session` succeeds (choose one canonical moment; document in code comment).
+    - [x] Optional but recommended: `plan_upgraded` or `subscription_activated` when webhook confirms paid tier (server-side capture preferred for truth).
+    - [x] **Privacy / compliance:** Document in [`docs/launch/launch-plan.md`](launch/launch-plan.md) or a short [`docs/launch/analytics.md`](launch/analytics.md): what PostHog collects, that keys are opt-in via env, and link to privacy policy; add cookie/consent note if required for your jurisdictions.
+    - [x] At least one **PostHog insight** or saved funnel in the PostHog UI documented in `docs/launch/analytics.md` (e.g. sign-up → property_created within 7 days) so PM can reproduce the view.
+
+### 8.2 Public changelog
+
+- [x] **Public `/changelog` page** — Ship a changelog for users and SEO.
+  - *Acceptance:*
+    - [x] Route **`/changelog`** exists under `app/app/changelog/` (or equivalent); uses `Metadata` (title, description, canonical via `NEXT_PUBLIC_APP_URL`).
+    - [x] **SEO (changelog-specific):** `title` and `description` target intent like “product updates” / “what’s new” for Veld Portfolio (not generic “Changelog” only); **`openGraph`** (and **Twitter** if consistent with `app/layout.tsx` patterns) includes title, description, and canonical URL for `/changelog`; optional **`keywords`** or richer first-paragraph copy if aligned with [`docs/launch/investor-style-one-pager.md`](launch/investor-style-one-pager.md) positioning (real estate portfolio software). H1 on page matches positioning.
+    - [x] Lists **release entries** (date + title + short bullet list of user-visible changes); initial entry can be “Initial public changelog” + pointer to product areas.
+    - [x] **Footer** (and optionally landing nav) includes a link to `/changelog` (“Changelog” or “What’s new”).
+    - [x] **Robots:** page is allowed in `app/robots.ts` if you want it indexed; **sitemap:** add `/changelog` to `app/sitemap.ts` with appropriate `changeFrequency` / `priority`.
+    - [x] Process note in [`docs/launch/launch-plan.md`](launch/launch-plan.md) or `docs/launch/analytics.md`: how to add a new entry each release (edit file vs component data structure).
+
+### 8.3 External uptime monitor
+
+- [x] **Uptime monitoring for production `/api/health`** — Use an **external** service (UptimeRobot, Better Stack, Pingdom, etc.); do not build this into the app.
+  - *Acceptance:*
+    - [x] Monitor **GET** `https://veldportfolio.com/api/health` in **production**; expect **HTTP 200** and JSON indicating DB ok (match current [`api/health`](../app/app/api/health/route.ts) contract). *— UptimeRobot.*
+    - [x] **Alert channel** — email to support inbox (see runbook).
+    - [x] Documented in [`docs/runbooks/incident-response.md`](runbooks/incident-response.md) § *External uptime monitor*: provider, URL, alerts, [public status page](https://stats.uptimerobot.com/Z6ScA8Ip37).
+    - [x] Public status page: [stats.uptimerobot.com/Z6ScA8Ip37](https://stats.uptimerobot.com/Z6ScA8Ip37).
 
 ---
 
-## Active: Add-property experience overhaul (priority before Batch 8)
+## Active: Add-property experience overhaul *(complete — regression only)*
 
 *Full analysis, problems, principles, and **epics with acceptance criteria**: `docs/proposals/add-property-experience-overhaul.md`.*
 

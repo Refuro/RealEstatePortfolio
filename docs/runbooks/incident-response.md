@@ -46,6 +46,21 @@ vercel --prod
 - **Expected:** `200` with `{ status: "ok", database: "connected" }`
 - **Failure:** `503` when DB is unreachable. Use for uptime monitoring (e.g. UptimeRobot, Better Uptime).
 
+### External uptime monitor (production)
+
+**Provider:** [UptimeRobot](https://uptimerobot.com)
+
+| Item | Value |
+|------|--------|
+| **Monitored URL** | `GET https://veldportfolio.com/api/health` |
+| **Expected** | HTTP **200**, JSON `{ "status": "ok", "database": "connected" }` (see [`app/api/health`](../../app/app/api/health/route.ts)) |
+| **Alerts** | Email to the **support** inbox (same address as `SUPPORT_EMAIL` / Contact page) |
+| **Public status page** | [stats.uptimerobot.com/Z6ScA8Ip37](https://stats.uptimerobot.com/Z6ScA8Ip37) — share with users who want a live “is the app up?” page |
+
+**UptimeRobot dashboard:** edit monitors and alert contacts at [uptimerobot.com](https://uptimerobot.com) (account login).
+
+If you change production domain or DNS, update the monitor URL in UptimeRobot to match.
+
 ---
 
 ## 3. Recovery steps

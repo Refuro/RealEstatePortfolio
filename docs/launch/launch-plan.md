@@ -107,7 +107,8 @@ Prioritize **high intent, low support burden** first.
 - [ ] `/api/health` green in prod; incident runbook reviewed.  
 - [ ] Support path tested (email or contact).  
 - [ ] Pricing page matches `lib/pricing-display.ts` / Stripe products.  
-- [ ] Analytics events defined: sign_up, property_created, deal_created, checkout_started (when implemented).  
+- [x] Analytics events defined (PostHog): see [`docs/launch/analytics.md`](analytics.md) — `user_signed_up`, `property_created`, `deal_created`, `checkout_started`, `subscription_activated`.  
+- [x] External uptime monitor configured — UptimeRobot → `GET https://veldportfolio.com/api/health`; alerts to support email; [public status](https://stats.uptimerobot.com/Z6ScA8Ip37). Details: [`docs/runbooks/incident-response.md`](../runbooks/incident-response.md) § *External uptime monitor*.  
 - [ ] One “golden path” demo: sign up → add property → see dashboard → open deal analyzer (for video/screenshots).
 
 ---
