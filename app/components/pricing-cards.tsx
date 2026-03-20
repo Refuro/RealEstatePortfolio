@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useState } from "react";
 import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
 type BillingCycle = "monthly" | "yearly";
@@ -117,8 +119,13 @@ export function PricingCards({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Checkout failed");
-      if (data.url) window.location.href = data.url;
-      else throw new Error("No checkout URL returned");
+      if (data.url) {
+        captureClientEvent(AnalyticsEvents.CHECKOUT_STARTED, {
+          plan,
+          billing_cycle: billingCycle,
+        });
+        window.location.href = data.url;
+      } else throw new Error("No checkout URL returned");
     } catch (e) {
       const raw = e instanceof Error ? e.message : "Something went wrong";
       setError(getCheckoutErrorMessage(raw));

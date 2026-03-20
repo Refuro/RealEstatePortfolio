@@ -43,6 +43,13 @@ export function LandingNav({ userId }: LandingNavProps) {
       >
         Terms
       </Link>
+      <Link
+        href="/changelog"
+        className="text-muted hover:text-foreground"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Changelog
+      </Link>
       {!userId && (
         <>
           <Link

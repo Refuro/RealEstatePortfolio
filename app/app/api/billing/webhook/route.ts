@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import Stripe from "stripe";
 import { getStripe, getWebhookSecret, planTierFromPriceId } from "@/lib/stripe-config";
 import { prisma } from "@/lib/db";
+import { AnalyticsEvents } from "@/lib/analytics-events";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 /**
  * Stripe webhook handler. Verifies signature with STRIPE_WEBHOOK_SECRET
@@ -51,6 +53,17 @@ export async function POST(request: NextRequest) {
             ? await stripe.subscriptions.retrieve(session.subscription)
             : session.subscription;
         await syncSubscriptionToDb(subscription);
+        const appUserId = session.metadata?.appUserId;
+        if (typeof appUserId === "string" && appUserId.length > 0) {
+          await captureServerEvent(
+            appUserId,
+            AnalyticsEvents.SUBSCRIPTION_ACTIVATED,
+            {
+              plan: session.metadata?.plan ?? undefined,
+              billing_cycle: session.metadata?.billing_cycle ?? undefined,
+            }
+          );
+        }
       }
       break;
     }

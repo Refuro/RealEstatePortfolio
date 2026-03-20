@@ -25,6 +25,8 @@
 ## Launch & growth
 
 - [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
+- [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes
+- [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
 
 ## QA & regression
 

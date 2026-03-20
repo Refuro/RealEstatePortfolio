@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
+import { PostHogAnalyticsProvider } from "@/components/analytics/posthog-provider";
+import { PostHogIdentify } from "@/components/analytics/posthog-identify";
+import { PostHogPageView } from "@/components/analytics/posthog-page-view";
+import { PostHogSignupOnce } from "@/components/analytics/posthog-signup-once";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
 import "./globals.css";
 
@@ -108,12 +112,25 @@ export default function RootLayout({
         <head>
           <link rel="preconnect" href="https://api.rentcast.io" />
           <link rel="dns-prefetch" href="https://js.stripe.com" />
+          {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
+            <link
+              rel="preconnect"
+              href={
+                process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com"
+              }
+            />
+          ) : null}
           <JsonLdScript />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <ThemeProvider>{children}</ThemeProvider>
+          <PostHogAnalyticsProvider>
+            <PostHogIdentify />
+            <PostHogSignupOnce />
+            <PostHogPageView />
+            <ThemeProvider>{children}</ThemeProvider>
+          </PostHogAnalyticsProvider>
         </body>
       </html>
     </ClerkProvider>

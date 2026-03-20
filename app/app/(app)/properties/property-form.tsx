@@ -8,6 +8,8 @@ import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
 import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
 import { PROPERTY_EDIT_SECTION_NAV } from "@/lib/property-form-section-nav";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 function formatZodApiDetails(details: unknown): string | null {
   if (!details || typeof details !== "object") return null;
@@ -339,6 +341,11 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         setError(planMsg ?? detailMsg ?? data.error ?? "Something went wrong");
         setSubmitting(false);
         return;
+      }
+      if (!isEdit && typeof data.id === "string") {
+        captureClientEvent(AnalyticsEvents.PROPERTY_CREATED, {
+          property_id: data.id,
+        });
       }
       router.push(`/properties/${isEdit ? property.id : data.id}`);
       router.refresh();

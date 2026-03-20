@@ -8,6 +8,8 @@ import { formatCurrency } from "@/lib/format-currency";
 import { US_STATES } from "@/lib/us-states";
 import { computePropertyMetrics, getAnnualDebtService } from "@/lib/metrics/property-metrics";
 import { PropertyMetricsSection } from "../properties/property-metrics-section";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 const inputClass =
   "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
@@ -188,7 +190,11 @@ export function DealAnalyzerForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await res.json()) as { error?: string; code?: string };
+      const data = (await res.json()) as {
+        error?: string;
+        code?: string;
+        id?: string;
+      };
       if (!res.ok) {
         setSaveError(
           data.code === "PLAN_LIMIT_REACHED"
@@ -197,6 +203,9 @@ export function DealAnalyzerForm({
         );
         setSaveStatus("error");
         return;
+      }
+      if (method === "POST" && typeof data.id === "string") {
+        captureClientEvent(AnalyticsEvents.DEAL_CREATED, { deal_id: data.id });
       }
       setSaveStatus("saved");
     } catch {

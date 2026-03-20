@@ -21,6 +21,9 @@ export function Footer({ supportEmail }: FooterProps) {
         <Link href="/terms" className="hover:text-foreground">
           Terms of Service
         </Link>
+        <Link href="/changelog" className="hover:text-foreground">
+          Changelog
+        </Link>
       </div>
     </footer>
   );
