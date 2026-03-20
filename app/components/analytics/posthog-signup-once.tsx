@@ -29,6 +29,15 @@ export function PostHogSignupOnce(): null {
       return;
     }
 
+    // Clerk types allow `createdAt` to be null in some edge cases
+    if (user.createdAt == null) {
+      try {
+        window.localStorage.setItem(storageKey, "1");
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     const created = new Date(user.createdAt).getTime();
     if (Number.isNaN(created)) return;
     if (Date.now() - created > SIGNUP_WINDOW_MS) {
