@@ -38,7 +38,7 @@ export default async function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2025
+          Last updated: March 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">
@@ -70,13 +70,37 @@ export default async function PrivacyPage() {
               <li>
                 <strong>Neon</strong> — Database. We store your portfolio data (properties, mortgages, deals) in a PostgreSQL database hosted by Neon. Data is encrypted in transit and at rest.
               </li>
+              <li>
+                <strong>Google</strong> — When enabled, we load Google&apos;s tag (gtag.js) for Google Ads measurement and conversion reporting. Google may use cookies or similar storage; see{" "}
+                <a
+                  href="https://policies.google.com/privacy"
+                  className="text-primary underline underline-offset-2 hover:text-foreground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google&apos;s Privacy Policy
+                </a>
+                {" "}and{" "}
+                <a
+                  href="https://policies.google.com/technologies/ads"
+                  className="text-primary underline underline-offset-2 hover:text-foreground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  how Google uses cookies in advertising
+                </a>
+                .
+              </li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold">Cookies</h2>
             <p>
-              We use cookies for authentication. Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in across requests. These cookies are essential for the service to function and cannot be disabled. They do not store personally identifiable information by default. We do not use cookies for advertising or cross-site tracking.
+              We use cookies for authentication. Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in across requests. These cookies are essential for the service to function and cannot be disabled. They do not store personally identifiable information by default.
+            </p>
+            <p className="mt-4">
+              When we enable Google Ads measurement, Google&apos;s tag may set or read cookies (or use similar technologies) to measure ad effectiveness and conversions. That processing is subject to Google&apos;s policies linked above. We do not use those cookies to sell your data.
             </p>
           </section>
 
