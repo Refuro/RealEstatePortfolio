@@ -25,6 +25,11 @@
 ## Launch & growth
 
 - [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
+- [Channel posting playbook](launch/channel-posting-playbook.md) — rule-safe templates, moderation scripts, UTM naming
+- [Paid ads test plan](launch/paid-ads-test-plan.md) — 14-day paid experiment, budget tiers, decision gates
+- [Paid ads campaign build sheet](launch/paid-ads-campaign-build-sheet.md) — campaign structure, copy seeds, keyword starters
+- [Paid ads monitoring runbook](launch/paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations
+- [Paid ads readout template](launch/paid-ads-test-readout-template.md) — results + week-3 decision template
 - [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes
 - [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
 

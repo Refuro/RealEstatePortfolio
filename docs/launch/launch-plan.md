@@ -1,8 +1,8 @@
 # Veld Portfolio — Launch plan
 
 **Status:** Living document — update as messaging and channels prove out.  
-**Last reviewed:** 2026-03-19  
-**Related:** Fulfills **Batch 8** item *Launch plan* in `docs/tasks.md`. *(Epic G in the add-property overhaul is QA & cleanup — complete; launch planning is tracked under Batch 8.)*
+**Last reviewed:** 2026-03-28  
+**Related:** Fulfills **Batch 8** item *Launch plan* in `docs/tasks.md`.
 
 ---
 
@@ -10,7 +10,7 @@
 
 **Veld Portfolio** is a web app for **rental real estate investors** who want portfolio-level analytics without maintaining spreadsheets: equity, cash flow, NOI, rent/value **benchmarks (RentCast)**, **deal analysis**, **mortgage modeling** (amortization, extra payments), **CSV import**, and **Stripe**-backed plans (Free / Investor / Pro).
 
-**Launch goal:** Move from “product-complete for core flows” to **repeatable acquisition** in defined communities, with consistent messaging and a phased rollout that matches current ops capacity (support, monitoring, content).
+**Launch goal:** Move from "product-complete for core flows" to repeatable acquisition in defined communities, with consistent messaging and a phased rollout that matches current ops capacity.
 
 ---
 
@@ -22,121 +22,238 @@
 
 | Area | Notes |
 |------|--------|
-| **Positioning** | Clear niche: *portfolio analytics for investors* — not generic PM software. Landing hero + metadata align. |
-| **Onboarding path** | Auth (Clerk), post-auth redirect to dashboard, Getting started / Add property, What’s next card, Analyze a deal CTA — activation-oriented. |
-| **Core loop** | Add property → dashboard metrics → property Overview/Details → modeling & mortgage workspaces; deals for pre-purchase analysis. |
-| **Trust & robustness** | Rate limits on sensitive APIs, CSP report-only, Sentry in error boundary, `/api/health`, incident runbook, structured billing logs. |
-| **Data integrity** | Centralized metrics in `lib/metrics/`, ownership/analytics policies documented, import/export with NOI/cash flow columns, Zod validation. |
-| **UX maturity** | Add-property overhaul (Epics A–G) complete: unified add/edit/detail IA, regression matrix in `qa/`. |
-| **Growth assets** | Landing + pricing include product screenshots; Plans & billing naming consistent. |
+| **Positioning** | Clear niche: portfolio analytics for investors, not generic property management software. |
+| **Onboarding path** | Auth (Clerk), post-auth redirect to dashboard, Getting started / Add property, Analyze a deal CTA. |
+| **Core loop** | Add property -> dashboard metrics -> property details/modeling/mortgage workspace. |
+| **Trust & robustness** | Rate limits on sensitive APIs, CSP report-only, Sentry in error boundary, `/api/health`, incident runbook, billing logs. |
+| **Data integrity** | Centralized metrics in `lib/metrics/`, documented ownership + analytics policies, Zod validation. |
+| **UX maturity** | Add-property overhaul complete with QA regression matrix. |
+| **Growth assets** | Landing + pricing screenshots and clear plan ladder. |
 
-### 2.2 Gaps before “big bang” marketing
+### 2.2 Remaining risks before broad marketing
 
-| Gap | Impact | Mitigation |
-|-----|--------|------------|
-| **No product analytics funnel** (Batch 8) | Cannot measure sign-up → property → deal → paid | Prioritize PostHog/Mixpanel or defer broad paid ads until instrumented. |
-| **Limited automated test coverage** (Batch 8) | Regression risk on `lib/metrics`, amortization | Add Vitest/Jest smoke tests for core math before heavy traffic. |
-| **No public changelog** (Batch 8) | Harder to nurture returning users / SEO | Ship simple `/changelog` + footer link. |
-| **RentCast dependency** | Estimates/benchmarks need API + user quotas | Communicate “estimates”; monitor errors and hourly limits per plan. |
+| Item | Status | Notes |
+|------|--------|--------|
+| **Product analytics funnel** | ✅ Shipped | PostHog when `NEXT_PUBLIC_POSTHOG_KEY` is set — see [`docs/launch/analytics.md`](analytics.md). |
+| **Automated tests (core math + APIs)** | ✅ Shipped | Vitest coverage exists for metrics, amortization, validations, selected route handlers. |
+| **Public changelog** | ✅ Shipped | `/changelog` + `lib/changelog-data.ts`. |
+| **RentCast dependency** | Ongoing ops | Keep messaging as "estimates," monitor quotas/errors per plan. |
+
+**Paid ads:** keep off until PostHog funnel data is flowing and baseline conversion is established.
 
 ### 2.3 Technical snapshot (for launch comms / due diligence)
 
 - **Stack:** Next.js 16, React 19, Prisma/PostgreSQL, Clerk, Stripe, Sentry, RentCast.  
-- **Hosting:** Document production URL (`NEXT_PUBLIC_APP_URL`, e.g. veldportfolio.com) and Vercel env checklist (Clerk, Stripe, DB, Sentry DSN).  
-- **Support:** `SUPPORT_EMAIL` on landing/footer; contact form where applicable.
+- **Hosting:** Production URL + Vercel env checklist (Clerk, Stripe, DB, Sentry DSN, PostHog).  
+- **Support:** `SUPPORT_EMAIL` on public surfaces.
 
 ---
 
 ## 3. Target audiences & communities
 
-Prioritize **high intent, low support burden** first.
+Prioritize high intent and low support burden first.
 
 | Priority | Audience | Why | Where to reach |
 |----------|----------|-----|----------------|
-| **P1** | Small landlords (1–5 doors) outgrowing spreadsheets | Core ICP; Free/Investor tiers fit | Reddit (r/realestateinvesting, r/landlord), Facebook landlord groups, local REIA meetups (talk or sponsor) |
-| **P2** | “Analyzers” — people underwriting before buy | Deal workspace is a differentiator | BiggerPockets forums, YouTube RE channels (comment/tool mentions), Twitter/X RE threads |
-| **P3** | Part-time investors with W-2 jobs | Need async, simple UX | Indie Hackers, product-led communities, newsletter swaps |
-| **P4** | Coaches / educators | Referral potential | Affiliate or “tool stack” partnerships (later; validate product first) |
+| **P1** | Small landlords (1-5 doors) outgrowing spreadsheets | Core ICP; Free/Investor tiers fit | Reddit, local REIA groups, landlord communities |
+| **P2** | "Analyzers" underwriting before buy | Deal workspace is differentiated | BiggerPockets forums, YouTube RE discussions, X threads |
+| **P3** | Part-time investors with W-2 jobs | Need async and simple UI | Indie Hackers (feedback), product-led communities |
+| **P4** | Coaches / educators | Referral potential | Partnerships after initial proof |
 
-**Defer for launch v1:** Enterprise PMs, institutional funds (different workflow and expectations).
+**Defer for v1:** enterprise PMs, institutional buyers.
 
 ---
 
 ## 4. Messaging
 
-### 4.1 Core promise (one line)
+### 4.1 Core promise
 
-**“Track your rental portfolio in one place — equity, cash flow, and benchmarks without spreadsheets.”**
+**"Track your rental portfolio in one place — equity, cash flow, and benchmarks without spreadsheets."**
 
-### 4.2 Pillars (aligned with `app/page.tsx` and product)
+### 4.2 Pillars
 
-1. **Replace spreadsheets** — Single source of truth for properties and deals.  
-2. **Know where you stand** — Rent & value estimates (RentCast), rent vs market on dashboard/list.  
-3. **Decide faster** — Deal analyzer with investment metrics.  
-4. **Model the future** — Scenarios, mortgage payoff / amortization views.
+1. **Replace spreadsheets** — single source of truth for properties and deals.  
+2. **Know where you stand** — rent/value estimates and portfolio metrics.  
+3. **Decide faster** — dedicated deal analyzer for underwriting.  
+4. **Model the future** — scenarios + amortization/payoff visibility.
 
-### 4.3 Proof points (use in ads, posts, demos)
+### 4.3 Proof points
 
-- No credit card for Free (1 property).  
-- CSV import for migrating from spreadsheets.  
+- No credit card for Free tier (1 property).  
+- CSV import for migration from spreadsheets.  
 - Screenshots on landing: dashboard, mortgage simulator, deal analyzer.  
-- Plans: Free / Investor (5 properties) / Pro (20 properties) — simple ladder.
+- Plans: Free / Investor / Pro.
 
 ### 4.4 Words to avoid / clarify
 
-- Don’t imply **bank sync** or **guaranteed** appraisals — say “estimates” and “benchmarks.”  
-- Don’t promise **tax or legal advice** — analytics only.
+- Do not imply bank sync or guaranteed appraisals. Use "estimates" and "benchmarks."  
+- Do not imply tax/legal advice.
 
 ---
 
 ## 5. Phased timeline
 
-| Phase | Timeframe (suggested) | Goals | Activities |
-|-------|----------------------|-------|--------------|
-| **0 — Instrument** | 1–2 weeks | Measure funnel | Ship analytics (Batch 8) + minimal changelog page; verify Sentry/production health. |
-| **1 — Soft launch** | 2–4 weeks | Learn + testimonials | Friends/network, 1–2 communities, collect feedback; fix top friction; gather 2–3 quotes or Looms. |
-| **2 — Community launch** | Ongoing | Repeatable posts | 2–3 Reddit/forum posts per week (helpful, not spammy), answer “spreadsheet” and “how do I track equity” threads with tool mention when relevant. |
-| **3 — Content & partnerships** | Month 2+ | SEO + trust | Short posts: “How I track LTV across properties,” changelog cadence, optional guest post or podcast. |
-| **4 — Paid (optional)** | After funnel data | Scale what works | Small Google/Meta tests only once conversion events exist; cap spend. |
+| Phase | Timeframe | Goals | Activities |
+|-------|-----------|-------|------------|
+| **0 — Instrument** | Done in product | Measure funnel | PostHog + `/changelog` shipped; keep production key enabled; verify Sentry/health. |
+| **1 — Soft launch** | 2-4 weeks | Learn and gather testimonials | Network outreach + 1-2 communities, feedback loops, fix top friction. |
+| **2 — Community launch** | Ongoing | Repeatable distribution | Helpful participation first, selective product mentions where allowed. |
+| **3 — Content & partnerships** | Month 2+ | SEO + trust | Educational posts, changelog cadence, partner experiments. |
+| **4 — Paid (optional)** | After baseline funnel | Scale | Small paid tests only after conversion data is stable. |
 
 ---
 
-## 6. Launch checklist (operational)
+## 6. Distribution game plan (rule-safe)
 
-- [ ] Production env vars verified (Clerk URLs, Stripe webhooks, DB, Sentry, RentCast).  
+This section is the operating system for launch posting. Use it before every post.
+
+### 6.1 Channel constraints (what is allowed)
+
+- **Indie Hackers**
+  - Best use: founder narrative + specific feedback requests.
+  - Norms: discussion-first titles, concise posts, useful insight for other founders.
+  - Do not spam repeated launch posts; follow up with progress updates and lessons.
+
+- **Reddit (global norms / Reddiquette)**
+  - Treat self-promo as limited activity (rough 9:1 value-to-promo ratio).
+  - Participate as a human in threads before dropping links.
+  - Avoid vote-baiting, copy-paste blasts, and link-only posts.
+
+- **r/realestateinvesting**
+  - High enforcement: no self-promotion/apps in normal threads.
+  - Use the monthly self-promo thread for explicit app promotion.
+  - Respect minimum account-age/karma requirements before attempting posts.
+
+- **r/Landlord**
+  - Check current sidebar rules before each post (rules can change).
+  - Default safe behavior: comment-first, value-first, no direct promo unless rules explicitly allow it.
+
+- **BiggerPockets forums**
+  - No advertising/solicitation in normal forum discussions.
+  - Promotion belongs only in approved promotional areas (e.g., classifieds) and only if compliant.
+
+### 6.2 Account strategy (new account vs existing)
+
+- Use a real founder account with authentic history whenever possible.
+- Do not create a brand-new account only to post product links.
+- If account is new, warm it up first:
+  1. 5-10 meaningful comments in relevant threads over several days.
+  2. 1-2 non-promotional posts/questions.
+  3. Then attempt one constrained promo action where rules allow it.
+- Use one identity per platform; do not run multiple sock-puppet accounts.
+
+### 6.3 Posting sequence
+
+1. **Research rules and recent mod behavior** for each target community before posting.
+2. **Contribute first** (answer questions, share useful numbers/process).
+3. **Soft mention** only when directly relevant to the thread.
+4. **Explicit promo post** only in channels/threads that allow it.
+5. **Follow-up comments** in first 60 minutes after posting.
+6. **Capture outcomes** (views, comments quality, signups, property_created rate).
+
+### 6.4 Tone guardrails (avoid backlash)
+
+- Lead with your problem story, not "I built an app, go buy."
+- Be transparent: state that you are the founder.
+- Ask for specific feedback ("What is confusing/missing?"), not generic praise.
+- Keep claims grounded and concrete; avoid hype words ("revolutionary," "best ever").
+- Do not mass cross-post identical copy. Adapt each post to the community context.
+- Never argue with mods. If moderated, acknowledge and adjust.
+
+### 6.5 14-day execution cadence
+
+- **Day 1**
+  - Review rules for each channel and save links/screenshots.
+  - Prepare two post versions: short and long.
+  - Prepare one screenshot set (dashboard, deal analyzer, mortgage/payoff).
+
+- **Days 2-3**
+  - 5-8 valuable comments across target communities.
+  - No direct link drops unless explicitly requested in-thread.
+
+- **Day 4**
+  - Post/update on Indie Hackers with founder story + clear feedback ask.
+  - Reply to every comment the same day.
+
+- **Days 5-7**
+  - Reddit/BiggerPockets comment-first participation.
+  - If monthly self-promo thread is open in `r/realestateinvesting`, post there only.
+
+- **Days 8-10**
+  - Publish one educational post (spreadsheet workflow, underwriting checklist, or lessons learned).
+  - Mention Veld only where context supports it.
+
+- **Days 11-14**
+  - Review PostHog funnel (`user_signed_up` -> `property_created`; `checkout_started` -> `subscription_activated`).
+  - Keep top-performing channel/copy, pause weak channels.
+  - Ship one product or onboarding fix from feedback.
+
+### 6.6 Go / no-go checklist before each post
+
+- [ ] Channel rules reviewed in the last 24 hours.
+- [ ] Post provides standalone value without requiring click-through.
+- [ ] Founder affiliation disclosed clearly.
+- [ ] Link use complies with channel rules.
+- [ ] CTA is feedback-oriented, not "buy now."
+- [ ] Response plan ready for comments and moderation.
+
+---
+
+## 7. Channel posting assets
+
+Use [`docs/launch/channel-posting-playbook.md`](channel-posting-playbook.md) for templates, safe phrasing, moderation-response scripts, and UTM conventions.
+
+---
+
+## 8. Paid ads execution assets
+
+- [`docs/launch/paid-ads-test-plan.md`](paid-ads-test-plan.md) — first 14-day paid test strategy, budget tiers, channel mix.
+- [`docs/launch/paid-ads-campaign-build-sheet.md`](paid-ads-campaign-build-sheet.md) — campaign naming, keyword starters, negative lists, copy seeds.
+- [`docs/launch/paid-ads-monitoring-runbook.md`](paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations.
+- [`docs/launch/paid-ads-test-readout-template.md`](paid-ads-test-readout-template.md) — end-of-test readout and week-3 decision.
+
+---
+
+## 9. Launch checklist (operational)
+
+- [ ] Production env vars verified (Clerk URLs, Stripe webhooks, DB, Sentry, RentCast, PostHog).  
 - [ ] `/api/health` green in prod; incident runbook reviewed.  
-- [ ] Support path tested (email or contact).  
-- [ ] Pricing page matches `lib/pricing-display.ts` / Stripe products.  
-- [x] Analytics events defined (PostHog): see [`docs/launch/analytics.md`](analytics.md) — `user_signed_up`, `property_created`, `deal_created`, `checkout_started`, `subscription_activated`.  
-- [x] External uptime monitor configured — UptimeRobot → `GET https://veldportfolio.com/api/health`; alerts to support email; [public status](https://stats.uptimerobot.com/Z6ScA8Ip37). Details: [`docs/runbooks/incident-response.md`](../runbooks/incident-response.md) § *External uptime monitor*.  
-- [ ] One “golden path” demo: sign up → add property → see dashboard → open deal analyzer (for video/screenshots).
+- [ ] Support path tested (support email/contact flow).  
+- [ ] Pricing page copy aligned with Stripe products and display pricing.  
+- [x] Analytics events defined in [`docs/launch/analytics.md`](analytics.md).  
+- [x] External uptime monitor configured (`/api/health`).  
+- [ ] Golden path demo recorded (signup -> add property -> dashboard -> deal analyzer).
 
 ---
 
-## 7. Success metrics (initial)
+## 10. Success metrics
 
-| Metric | Target (adjust after baseline) |
-|--------|--------------------------------|
-| Activation | % of signups adding ≥1 property in 7 days |
-| Engagement | Weekly returning users with ≥1 property |
-| Monetization | Free → paid conversion; churn on Investor/Pro |
+| Metric | Target |
+|--------|--------|
+| Activation | % of signups adding >=1 property in 7 days |
+| Engagement | Weekly returning users with >=1 property |
+| Monetization | Free -> paid conversion; churn on Investor/Pro |
+| Channel quality | Comment quality, moderation incidents, signup-to-property conversion by source |
 | Quality | Sentry error rate; support tickets per 100 users |
 
 ---
 
-## 8. Risks & dependencies
+## 11. Risks & dependencies
 
-- **API costs / limits:** RentCast hourly limits per tier — monitor usage and messaging if users hit limits.  
-- **Stripe/Clerk outages:** Rare but visible — status page links in runbook.  
-- **OneDrive / Windows dev paths:** Team-only; no impact on users.  
-- **Batch 8 backlog:** Analytics + tests + changelog reduce launch risk; this plan does not require them to *start* soft launch, but they should precede **paid** scale.
+- **API costs / limits:** RentCast hourly limits per tier.  
+- **Stripe/Clerk outages:** rare but user-visible.  
+- **Channel moderation risk:** violations can trigger bans; always run the go/no-go checklist.  
+- **Instrumentation drift:** if event names change, update `docs/launch/analytics.md` and dashboards immediately.
 
 ---
 
-## 9. Document control
+## 12. Document control
 
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-03-19 | Initial plan from app review + Batch 8 scope |
+| 1.1 | 2026-03-27 | Batch 8 gaps marked shipped (PostHog, Vitest, changelog) |
+| 1.2 | 2026-03-28 | Added rule-safe distribution game plan, account strategy, posting sequence, tone guardrails, and 14-day channel execution plan |
+| 1.3 | 2026-03-28 | Added paid ads execution assets (test plan, campaign build sheet, monitoring runbook, readout template) |
 
-When the PM updates `docs/tasks.md`, keep this file in sync if audiences or phases change.
+When launch assumptions change, update this file and `docs/launch/channel-posting-playbook.md` together.

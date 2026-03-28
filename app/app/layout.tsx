@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PostHogAnalyticsProvider } from "@/components/analytics/posthog-provider";
@@ -101,6 +102,27 @@ function JsonLdScript() {
   );
 }
 
+function GoogleAdsGtag() {
+  const id = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
+  if (!id) return null;
+  return (
+    <>
+      <Script
+        src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`}
+        strategy="afterInteractive"
+      />
+      <Script id="google-ads-gtag-init" strategy="afterInteractive">
+        {`
+window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', ${JSON.stringify(id)});
+`}
+      </Script>
+    </>
+  );
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -120,11 +142,15 @@ export default function RootLayout({
               }
             />
           ) : null}
+          {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ? (
+            <link rel="preconnect" href="https://www.googletagmanager.com" />
+          ) : null}
           <JsonLdScript />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
+          <GoogleAdsGtag />
           <PostHogAnalyticsProvider>
             <PostHogIdentify />
             <PostHogSignupOnce />

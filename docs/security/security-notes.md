@@ -21,6 +21,8 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 
 - *Add any new security-related decisions or findings here (e.g. new APIs, auth changes, rate limiting, headers).*
 
+- **Google Ads (gtag)** — When `NEXT_PUBLIC_GOOGLE_ADS_ID` is set, the root layout loads `gtag.js` from Google for ads measurement (client-side third-party script). ID is public; no secret. See privacy policy for disclosure.
+
 - Audit lane reference: `docs/process/security-audit-process.md` and `docs/audits/security/`.
 
 ---

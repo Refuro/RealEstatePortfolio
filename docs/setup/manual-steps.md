@@ -22,6 +22,7 @@ Use this as a planning guide. Pricing changes; check each provider’s site for 
 ## Hosting & deployment
 
 - [ ] **Vercel:** Create account (if needed), create project, connect this repo. Set **Root Directory** to `app` if repo root is the parent folder. Add env vars from `app/.env.example` (and any added later).
+- [ ] **Google Ads (optional):** To load the Google tag for conversion measurement in Google Ads, set `NEXT_PUBLIC_GOOGLE_ADS_ID` to your tag ID (format `AW-...`, from Google Ads → Data manager / Google tag). Add it in Vercel production (and Preview if you want it there). Leave unset locally if you do not want the tag during development.
 - [ ] **PostgreSQL:** Create a database (Neon, Supabase, or Railway). Copy the connection string and set `DATABASE_URL` in local `app/.env` (and in Vercel for production).
 - [ ] **First-time DB setup (local):** From `app/` run `npm run db:migrate` to create tables. Optionally `npm run db:seed` for dev data. For production, run `npx prisma migrate deploy` once (e.g. from Vercel build or a one-off script).
 
