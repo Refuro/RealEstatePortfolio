@@ -76,6 +76,8 @@ export const goldenPortfolioTwo: PortfolioPropertyInput[] = [
 export const goldenPortfolioTwoExpectedProportional = {
   totalMarketValue: 650_000,
   totalNoi: 17_400,
+  /** 950×12 + 1350×12 — vacancy-adjusted annual rent (same R as in NOI). */
+  totalAnnualRent: 11_400 + 16_200,
   totalDebt: 420_000,
   totalAnnualDebtService: 31_200,
   propertyCount: 2,

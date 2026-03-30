@@ -1,10 +1,12 @@
 # Batch 8 — Builder handoff (PM → builder)
 
+> **COMPLETE (historical — 2026-03-20).** Batch 8 is **done** — full acceptance criteria are in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (*Batch 8: Business & quality*). Production verification is recorded in [`launch-plan.md`](launch-plan.md) §6. Use this file only for **how we executed** the initiative, not as open work.
+
 **PM:** Product owner / chat PM  
 **Builder:** Cursor builder agent or implementer  
-**Source of truth:** [`docs/tasks.md`](../tasks.md) → **Batch 8: Business & quality — active (pre-launch)**
+**Source of truth (current):** [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** → **Batch 8: Business & quality — complete**
 
-**Status (code + docs):** PostHog SDK, events, `/changelog`, `analytics.md`, runbook uptime section, and `proxy`/`sitemap` updates are **implemented**. Remaining **manual**: add `NEXT_PUBLIC_POSTHOG_*` to Vercel and verify Live events; create external uptime monitor + alerts.
+**Final status:** PostHog (prod keys + Live events), public `/changelog`, external uptime monitor + runbook, and launch checklist items are **verified in production**.
 
 ---
 
@@ -32,18 +34,18 @@ Ship three launch-readiness items with acceptance criteria:
 
 ## Builder instructions
 
-1. Open [`docs/tasks.md`](../tasks.md) and find **§8.1**, **§8.2**, **§8.3**.  
-2. Implement each unchecked bullet; check boxes in `tasks.md` when done (or leave for PM review).  
+1. *(Historical.)* Acceptance criteria were under **§8.1–8.4** in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** — all complete.  
+2. New builder work is tracked in [`docs/tasks.md`](../tasks.md) **Current product backlog** only.  
 3. Run from `app/`: `npm run lint` and `npm run test`.  
 4. Report back: PR summary, env vars added, any follow-ups for PM (e.g. PostHog project invite).
 
 ---
 
-## PM review gate (before merge)
+## PM review gate (completed 2026-03-20)
 
-- [ ] **8.1:** Live events visible in PostHog for a test user; `identify` works; funnel doc in `docs/launch/analytics.md` (create if implementing 8.1).  
-- [ ] **8.2:** `/changelog` renders, footer link works, sitemap/robots updated, SEO metadata passes spot check.  
-- [ ] **8.3:** Screenshot or note of uptime monitor config + updated runbook/launch checklist.
+- [x] **8.1:** Live events visible in PostHog for a test user; `identify` works; funnel doc in `docs/launch/analytics.md` (create if implementing 8.1).  
+- [x] **8.2:** `/changelog` renders, footer link works, sitemap/robots updated, SEO metadata passes spot check.  
+- [x] **8.3:** Screenshot or note of uptime monitor config + updated runbook/launch checklist.
 
 ---
 

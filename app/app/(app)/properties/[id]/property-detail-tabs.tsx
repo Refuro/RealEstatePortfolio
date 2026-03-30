@@ -2,7 +2,7 @@
 
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { isBenchmarkFresh } from "@/lib/benchmark-utils";
+import { getBenchmarkEligibility, shouldOfferBenchmarkRefresh } from "@/lib/benchmark-utils";
 import { DetailsTabContent } from "./details-tab-content";
 import { OverviewTabContent } from "./overview-tab-content";
 import type { PropertyDetailTabsProps } from "./property-detail-types";
@@ -50,10 +50,13 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
   const [activeTab, setTab] = useTabState(props.propertyId);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const showRefreshBenchmark =
-    props.property.marketRent == null ||
-    props.property.marketRent <= 0 ||
-    !isBenchmarkFresh(props.property.marketRentAsOf);
+  const benchmarkEligibility = getBenchmarkEligibility({
+    isRented: props.property.isRented,
+    userRent: props.totalRent,
+    marketRent: props.property.marketRent,
+    marketRentAsOf: props.property.marketRentAsOf,
+  });
+  const showRefreshBenchmark = shouldOfferBenchmarkRefresh(benchmarkEligibility);
 
   return (
     <div ref={scrollRef}>

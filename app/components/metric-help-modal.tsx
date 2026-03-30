@@ -37,7 +37,7 @@ const METRIC_DEFINITIONS = [
   {
     term: "NOI (Net Operating Income)",
     definition:
-      "Gross annual rent minus annual expenses. This is income before mortgage payments. For partial ownership, it reflects your share of NOI.",
+      "Annual rent minus annual expenses, before mortgage payments. Rent uses your vacancy-adjusted effective rent (same basis as Annual rent). For partial ownership, it reflects your share of NOI.",
   },
   {
     term: "Cash-on-cash return",
@@ -47,7 +47,7 @@ const METRIC_DEFINITIONS = [
   {
     term: "Annual rent",
     definition:
-      "Total gross rent collected per year across your portfolio. This is income before expenses and mortgage payments.",
+      "Total annual rent after your vacancy assumption (same effective rent basis as NOI), before expenses and mortgage. Summed across properties with ownership scaling where applicable.",
   },
   {
     term: "DSCR",

@@ -6,6 +6,7 @@ import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
+import { getPlanIntentForAnalytics, setPlanIntent } from "@/lib/plan-intent";
 
 type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
 type BillingCycle = "monthly" | "yearly";
@@ -120,9 +121,12 @@ export function PricingCards({
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Checkout failed");
       if (data.url) {
+        const pi = getPlanIntentForAnalytics();
         captureClientEvent(AnalyticsEvents.CHECKOUT_STARTED, {
           plan,
           billing_cycle: billingCycle,
+          plan_intent: pi.plan_intent,
+          plan_intent_source: pi.plan_intent_source,
         });
         window.location.href = data.url;
       } else throw new Error("No checkout URL returned");
@@ -294,16 +298,27 @@ export function PricingCards({
               )}
               {plan.tier === "free" && showSignUp && (
                 <Link
-                  href="/sign-up"
+                  href="/sign-up?intent=free"
                   className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                  onClick={() => setPlanIntent("free", "pricing_card")}
                 >
                   Choose Free
                 </Link>
               )}
               {canUpgrade && showSignUp && (
                 <Link
-                  href="/sign-up"
+                  href={
+                    plan.tier === "investor"
+                      ? "/sign-up?intent=investor"
+                      : "/sign-up?intent=pro"
+                  }
                   className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                  onClick={() =>
+                    setPlanIntent(
+                      plan.tier === "investor" ? "investor" : "pro",
+                      "pricing_card"
+                    )
+                  }
                 >
                   {plan.tier === "investor" ? "Choose Investor" : "Choose Pro"}
                 </Link>

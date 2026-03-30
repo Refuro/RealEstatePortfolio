@@ -11,6 +11,14 @@ Use this while campaigns are live. This document is about decision quality and p
 - Optimize to `property_created`, not CTR alone.
 - Log every budget shift and why it was made.
 
+### Interpretation note (current phase)
+
+If CTR is strong but signup is weak, treat it as an **intent-to-landing mismatch** until proven otherwise. Prioritize:
+
+1. tighter keyword intent grouping,
+2. landing-page fit (`/investment-property-calculator` for calculator terms),
+3. conversion tracking integrity (`user_signed_up`, `property_created`, UTM visibility).
+
 ---
 
 ## 2) Daily check routine (15-25 minutes)
@@ -78,6 +86,29 @@ Fix-first criteria:
 Decision:
 - **Scale winner** by 25-40% week-over-week, keep one control creative.
 - **Pause and fix** onboarding if activation is the bottleneck.
+
+---
+
+## 5.1 Controlled Search-only round (7-10 day variant)
+
+Use this when relaunching after major landing/intent fixes:
+
+- Variant routing:
+  - Variant A (control): `/investment-property-calculator` (`landing_variant=calc_control_v1`)
+  - Variant B (paid-focused): `/lp/investment-property-calculator` (`landing_variant=calc_paid_v1`)
+- Keep ad-group intent splits stable while comparing variants.
+- **Day 4:** pause ad groups with meaningful spend and zero signups.
+- **Day 7:** reallocate 20-30% budget to best signup efficiency groups.
+- **Day 10:** make explicit go/no-go:
+  - **Go** if signup rate and activation quality improved vs baseline.
+  - **No-Go** if CTR remains strong but signup/activation remains weak.
+
+Minimum readout breakdown for Day 10:
+- by ad group intent cluster (Calculator vs Tracker vs Brand/High-intent)
+- by landing variant (`calc_control_v1` vs `calc_paid_v1`)
+- by path quality (`user_signed_up` and 7-day `property_created`)
+
+Avoid major landing architecture changes during the 7-10 day observation window.
 
 ---
 

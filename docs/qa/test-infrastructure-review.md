@@ -193,7 +193,7 @@ Mocks:
 
 ## 8. Recommended coverage — next steps (prioritized)
 
-**Execution:** Actionable tasks for **Phase 1 (P0)** and **Phase 2 (P1)** live in [`docs/tasks.md`](../tasks.md) under **Active tasks → Test infrastructure follow-up**. Complete Phase 1 before Phase 2. Later items (P2/P3 below) remain backlog until promoted to `tasks.md`.
+**Execution:** Phase **1 (P0)** and **2 (P1)** tasks were tracked in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (*Completed: test infrastructure & hooks*) — all checked. Complete Phase 1 before Phase 2 was the original order. Later items (P2/P3 below) remain backlog until promoted to `tasks.md`.
 
 ### P0 — Trust and CI hardening *(Phase 1 in tasks.md)*
 

@@ -54,6 +54,7 @@ const propertySchemaBase = z.object({
   purchasePrice: decimalString,
   purchaseDate: dateString,
   currentEstimatedValue: decimalString,
+  isRented: z.coerce.boolean().default(true),
   currentMonthlyRent: decimalString.optional(),
   unitRents: unitRentsSchema,
   bedrooms: z.coerce.number().int().min(1).max(10).optional().nullable(),
@@ -131,9 +132,16 @@ function parseRent(data: {
 }
 
 const rentRefineCreate = (
-  data: { propertyType?: string; units?: number; currentMonthlyRent?: string; unitRents?: number[] | null },
+  data: {
+    propertyType?: string;
+    units?: number;
+    isRented?: boolean;
+    currentMonthlyRent?: string;
+    unitRents?: number[] | null;
+  },
   ctx: z.RefinementCtx
 ) => {
+  if (data.isRented === false) return;
   const units = data.units ?? 1;
   const { hasUnitRents, hasCurrentRent, unitRents } = parseRent(data);
   if (!hasUnitRents && !hasCurrentRent) {
@@ -162,9 +170,16 @@ const rentRefineCreate = (
 };
 
 const rentRefineUpdate = (
-  data: { propertyType?: string; units?: number; currentMonthlyRent?: string; unitRents?: number[] | null },
+  data: {
+    propertyType?: string;
+    units?: number;
+    isRented?: boolean;
+    currentMonthlyRent?: string;
+    unitRents?: number[] | null;
+  },
   ctx: z.RefinementCtx
 ) => {
+  if (data.isRented === false) return;
   const units = data.units ?? 1;
   const { hasUnitRents, hasCurrentRent, unitRents } = parseRent(data);
   if (!hasUnitRents && !hasCurrentRent) return;

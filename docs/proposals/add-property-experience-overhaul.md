@@ -1,7 +1,7 @@
 # Add-property experience — analysis & overhaul direction
 
-**Status:** Analysis + implementation backlog (2026-03-19). **Epics A–G (add-property overhaul)** implemented; ongoing regression: [`../qa/property-flow-regression-matrix.md`](../qa/property-flow-regression-matrix.md).  
-**Priority:** Before audit synthesis Batch 8 (Business & quality).  
+**Status:** **Complete (reference / history)** — Epics A–G shipped (2026-03). Ongoing regression: [`../qa/property-flow-regression-matrix.md`](../qa/property-flow-regression-matrix.md).  
+**Priority:** Complete — retain for IA decisions, file map, and epic table; not open build work.  
 **Intent:** Complete overhaul of the **add-property** flow, the **Edit property** page, and **property detail (Overview + Details tabs)**—previously overlapping “formy” patterns; Details is read-only + `/edit`, Overview is metrics + wayfinding (Epic F). Preferred over incremental retooling. This is the main gate to portfolio value; abandonment at add means users never see modeling, mortgage, benchmarks, etc.; poor edit/detail UX erodes trust after they’ve invested.
 
 ---
@@ -19,7 +19,7 @@
 
 **Steps (fixed order):**
 
-1. Address & basics (nickname, address, property type, units, ownership %, bedrooms/bathrooms; **planned: optional sqft** for RentCast accuracy)
+1. Address & basics (nickname, address, property type, units, ownership %, bedrooms/bathrooms; **optional sqft** for RentCast accuracy)
 2. Purchase (price, date, value, cash invested)
 3. Income & expenses (rent, unit rents for multi-unit, expenses, vacancy; RentCast estimate hooks — **thread optional `squareFootage`** when stored or entered)
 4. Mortgage (optional path: `addMortgage` tri-state; full `MortgageFormFields` when yes)
@@ -120,7 +120,7 @@ Overview and Details share **card styling** and **health chips** so the property
 3. **Retire duplicate forms** — Route `/edit` and detail inline flows through the same building blocks as create (POST vs PATCH; partial PATCH for sections if needed).
 4. **Mortgage** — Thin wizard entry; heavy editing stays on existing mortgage workspace/detail (already strong).
 5. **QA** — Matrix: new user, deal import, multi-unit, with/without mortgage, mobile, draft resume, nav-away cancel.
-6. **Metrics** — After Batch 8 unblocks, funnel events on step completion (ties to deferred analytics work).
+6. **Metrics** — Core product funnel events are live (PostHog); **optional** future work: step-level completion events inside the wizard (not required for launch).
 
 ---
 
@@ -134,7 +134,7 @@ Overview and Details share **card styling** and **health chips** so the property
 - `app/(app)/draft-context.tsx` — adapt to new step/section model if structure changes.
 - `app/(app)/mortgage-form-fields.tsx`, `lib/validations/property.ts`, `lib/validations/mortgage.ts` — reuse contracts.
 - `lib/integrations/rentcast.ts`, `app/api/estimates/rent/route.ts` / `.../value/route.ts` — extend with **`squareFootage`** when property or query supplies sqft.
-- `prisma/schema.prisma` — optional `squareFeet` (or chosen name) on `Property` + migration.
+- `prisma/schema.prisma` — `squareFeet` on `Property` (shipped).
 
 ---
 
@@ -146,7 +146,7 @@ The older line *“Add-property wizard overhaul (quick add / skip)”* in `docs/
 
 ## 8. Implementation epics, tasks & acceptance criteria
 
-*Use this as the working backlog. Check items off in `docs/tasks.md` (section **Active: Add-property experience overhaul**) as they complete.*
+*Epics were checked off in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (**Active: Add-property experience overhaul**). Use this section as the acceptance-criteria reference.*
 
 ### Epic A — Information architecture & design freeze
 
@@ -220,7 +220,7 @@ The older line *“Add-property wizard overhaul (quick add / skip)”* in `docs/
 
 ## 10. Tracking
 
-- **Master checklist:** `docs/tasks.md` → **Active: Add-property experience overhaul**.
-- **This doc:** update status line when design is frozen and when epics complete.
+- **Master checklist (archived):** [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** → **Active: Add-property experience overhaul** *(complete — regression only)*.
+- **This doc:** historical reference; update only if you change add/edit/detail behavior materially.
 
-*Implement before returning to audit Batch 8 unless priorities change.*
+*Batch 8 (analytics, changelog, uptime) and production launch verification: see [`docs/tasks-archived.md`](../tasks-archived.md) (same section, Batch 8) and [`docs/launch/launch-plan.md`](../launch/launch-plan.md) §6.*

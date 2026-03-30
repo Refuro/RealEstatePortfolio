@@ -8,6 +8,29 @@ This is the execution companion for the launch plan. It is designed to get signa
 
 Find which channel + message angle drives the lowest cost for meaningful activation, not just clicks.
 
+### Immediate execution update (Round 2 after early Google signal)
+
+Given early results (high CTR, weak signup conversion), run a **Search-only correction round** before re-enabling Meta:
+
+- Campaign A: **Calculator intent** (`investment property calculator`, related)
+- Campaign B: **Software/tracker intent** (`portfolio tracker`, `deal analyzer`, `rental analytics`)
+- Campaign C: **Brand + exact high-intent**
+
+Initial budget split for this round:
+- 50% software/tracker intent
+- 35% calculator intent
+- 15% brand/high-intent exact
+
+Rules:
+- Start mostly phrase/exact match.
+- Add negatives aggressively for low-buying-intent traffic (`free template`, courses/jobs, unrelated wholesaling terms) when no signup signal appears after meaningful spend.
+- Add observed drift negatives from early run unless proven valuable: `biggerpockets`, `dealcheck`, `investor weekly`, `realty income stock`, generic `stock analysis`.
+- Route ad traffic by intent:
+  - calculator terms -> `/investment-property-calculator`
+  - tracker/software terms -> `/` or `/pricing`
+  - deal analyzer terms -> analyzer-focused route/section
+- Keep this round live for at least 7 days unless tracking breaks.
+
 Primary KPI:
 - **Cost per activated user** (`property_created` within 7 days of first visit).
 

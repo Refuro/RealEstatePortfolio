@@ -35,7 +35,7 @@ vercel --prod
 | Source | What to check |
 |--------|---------------|
 | **Vercel** | Project → Logs (runtime logs, build logs). Filter by time range. |
-| **Sentry** | [sentry.io](https://sentry.io) → your project. Errors, performance, releases. |
+| **Sentry** | [sentry.io](https://sentry.io) → your project. Errors, performance, releases, and CSP rollout monitoring (`signal=csp`). |
 | **Database** | Neon (or your provider) dashboard. Connection count, query performance, storage. |
 | **Stripe** | Dashboard → Developers → Logs. Webhook delivery, API errors. |
 | **Clerk** | Dashboard. Auth errors, user sessions. |
@@ -89,6 +89,13 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 2. Check recent deployments: did the error rate spike after a deploy? Consider rollback.
 3. For new errors: triage, fix, deploy. Use Sentry stack traces to locate the issue.
 
+### CSP rollout violations
+
+1. In Sentry, filter for tag `signal=csp` or search event messages like `CSP violation: script-src`.
+2. Triage by fingerprint/grouping: directive + blocked resource origin + document path.
+3. Ignore browser-extension noise if it appears; focus on first-party pages or required third-party services.
+4. If a production release creates new legitimate CSP violations on critical flows, keep or revert to report-only mode until the policy is updated.
+
 ---
 
 ## 4. Post-incident
@@ -96,6 +103,25 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 - Document what happened and what fixed it.
 - Add to this runbook if a new failure mode was discovered.
 - Consider adding alerts (e.g. Sentry alerts, Vercel deployment notifications).
+
+---
+
+## 5. Support SLA and inbox verification
+
+**SLA (launch):** Aim for **first response within 24 business hours** (Monday–Friday, US business days, excluding holidays) for messages sent via the **contact form** or **support email** (`SUPPORT_EMAIL`). Documented for users on the production **/contact** page and in [`docs/launch/launch-plan.md`](../launch/launch-plan.md) §6.1.
+
+**Owner:** Designate who monitors `SUPPORT_EMAIL` (founder/ops). UptimeRobot alerts also go to this inbox when configured.
+
+### Verification checklist (run after deploy or email change)
+
+| Step | Action | Pass / note |
+|------|--------|-------------|
+| 1 | Send a test message from `/contact` in production (or staging with same email provider). | Message submits without error. |
+| 2 | Confirm the message arrives at the **inbox** configured for `SUPPORT_EMAIL` (or your contact API route). | Inbox receives body + reply address. |
+| 3 | Confirm the **owner** knows to check this inbox and the **24 business hour** target. | Owner acknowledged. |
+| 4 | Optional: reply from the inbox to confirm outbound mail works. | Reply sent OK. |
+
+If the contact form uses a third-party or server route, verify the route’s env vars (e.g. `RESEND_API_KEY`, SMTP) in Vercel match production.
 
 ---
 

@@ -9,7 +9,7 @@ export function QuickActions({
   showRefreshBenchmark,
 }: {
   propertyId: string;
-  /** Show Refresh benchmark only when marketRent is null or stale (per isBenchmarkFresh). */
+  /** Show Refresh benchmark when benchmark data is missing or stale (`shouldOfferBenchmarkRefresh` in benchmark-utils). */
   showRefreshBenchmark: boolean;
 }) {
   const router = useRouter();

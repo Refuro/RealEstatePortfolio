@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Resend } from "resend";
-import { getAppUser } from "@/lib/auth";
+import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { contactFormSchema } from "@/lib/validations/contact";
 
@@ -15,7 +15,7 @@ function getIdentifier(userId: string | null, req: NextRequest): string {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   const identifier = getIdentifier(user?.id ?? null, req);
 
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);

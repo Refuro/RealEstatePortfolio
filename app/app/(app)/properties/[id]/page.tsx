@@ -104,6 +104,7 @@ export default async function PropertyDetailPage({
     purchaseDate: property.purchaseDate,
     currentEstimatedValue: Number(property.currentEstimatedValue),
     currentMonthlyExpenses: Number(property.currentMonthlyExpenses),
+    isRented: property.isRented,
     unitRents,
     ownershipPercent: property.ownershipPercent,
     vacancyPercent: property.vacancyPercent,

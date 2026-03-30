@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockActiveUser } from "@/lib/test/api-route-mocks";
+import { Prisma } from "@prisma/client";
 
 const { prismaMock } = vi.hoisted(() => {
   const prismaMock = {
@@ -48,6 +49,7 @@ const baseProperty = {
   purchaseDate: new Date("2020-06-01"),
   currentEstimatedValue: 250000,
   currentMonthlyRent: 2000,
+  isRented: true,
   unitRents: [2000],
   bedrooms: null,
   bathrooms: null,
@@ -59,6 +61,7 @@ const baseProperty = {
   notes: null,
   marketRent: null,
   marketRentAsOf: null,
+  notes: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   mortgages: [] as unknown[],
@@ -157,6 +160,45 @@ describe("PATCH /api/properties/[id]", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.nickname).toBe("HQ");
+  });
+
+  it("splits currentMonthlyRent using effective property type (not stale single_family)", async () => {
+    prismaMock.property.findFirst.mockResolvedValue({
+      ...baseProperty,
+      propertyType: "multi_family",
+      units: 2,
+    } as never);
+    prismaMock.property.update.mockResolvedValue({
+      ...baseProperty,
+      propertyType: "multi_family",
+      units: 2,
+      currentMonthlyRent: 4000,
+      unitRents: [2000, 2000],
+    } as never);
+    const { PATCH } = await import("./route");
+    const res = await PATCH(
+      patchRequest({ propertyType: "multi_family", units: 2, currentMonthlyRent: "4000" }),
+      paramsFor("prop-1")
+    );
+    expect(res.status).toBe(200);
+    const updateArg = prismaMock.property.update.mock.calls[0]?.[0] as { data?: Record<string, unknown> };
+    expect(updateArg?.data?.unitRents).toEqual([2000, 2000]);
+  });
+
+  it("clears rent fields when isRented is set false", async () => {
+    prismaMock.property.update.mockResolvedValue({
+      ...baseProperty,
+      isRented: false,
+      currentMonthlyRent: 0,
+      unitRents: null,
+    } as never);
+    const { PATCH } = await import("./route");
+    const res = await PATCH(patchRequest({ isRented: false }), paramsFor("prop-1"));
+    expect(res.status).toBe(200);
+    const updateArg = prismaMock.property.update.mock.calls[0]?.[0] as { data?: Record<string, unknown> };
+    expect(updateArg?.data?.isRented).toBe(false);
+    expect(updateArg?.data?.currentMonthlyRent).toBe(0);
+    expect(updateArg?.data?.unitRents).toBe(Prisma.DbNull);
   });
 });
 

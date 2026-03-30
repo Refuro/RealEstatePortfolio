@@ -53,7 +53,8 @@ describe("computePortfolioMetrics", () => {
       "proportional"
     );
     expect(m.totalMarketValue).toBeCloseTo(150_000, 5);
-    expect(m.totalMonthlyRent).toBeCloseTo(500, 5);
+    // 1000 × (1 − 5%) × 50% = 475 effective monthly (matches NOI rent basis)
+    expect(m.totalMonthlyRent).toBeCloseTo(475, 5);
   });
 
   it("uses full mortgage balance for totalDebt in full_liability mode regardless of ownership", () => {

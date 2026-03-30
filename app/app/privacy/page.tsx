@@ -71,7 +71,10 @@ export default async function PrivacyPage() {
                 <strong>Neon</strong> — Database. We store your portfolio data (properties, mortgages, deals) in a PostgreSQL database hosted by Neon. Data is encrypted in transit and at rest.
               </li>
               <li>
-                <strong>Google</strong> — When enabled, we load Google&apos;s tag (gtag.js) for Google Ads measurement and conversion reporting. Google may use cookies or similar storage; see{" "}
+                <strong>PostHog</strong> — Optional product analytics (e.g. page views, signup events). We initialize PostHog only after you accept optional analytics via the in-app cookie banner; until then, no PostHog scripts load and no analytics events are sent.
+              </li>
+              <li>
+                <strong>Google</strong> — When Google Ads is configured and you accept optional analytics/ads cookies, we load Google&apos;s tag (gtag.js) for measurement and conversion reporting. If you reject optional cookies, we do not load this tag. Google may use cookies or similar storage when the tag runs; see{" "}
                 <a
                   href="https://policies.google.com/privacy"
                   className="text-primary underline underline-offset-2 hover:text-foreground"
@@ -97,10 +100,10 @@ export default async function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">Cookies</h2>
             <p>
-              We use cookies for authentication. Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in across requests. These cookies are essential for the service to function and cannot be disabled. They do not store personally identifiable information by default.
+              <strong>Essential.</strong> Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in. These are required for the service and are not used for advertising analytics.
             </p>
             <p className="mt-4">
-              When we enable Google Ads measurement, Google&apos;s tag may set or read cookies (or use similar technologies) to measure ad effectiveness and conversions. That processing is subject to Google&apos;s policies linked above. We do not use those cookies to sell your data.
+              <strong>Optional (analytics and ads measurement).</strong> We may set a first-party cookie recording your choice (accept or reject optional tracking). If you accept, we load PostHog and, when configured, Google Ads measurement scripts as described above. If you reject, those scripts do not load. You can change your choice anytime via the cookie banner (footer or Settings).
             </p>
           </section>
 

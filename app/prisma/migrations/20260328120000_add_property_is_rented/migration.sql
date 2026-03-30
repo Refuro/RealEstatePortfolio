@@ -1,0 +1,2 @@
+ALTER TABLE "Property"
+ADD COLUMN "isRented" BOOLEAN NOT NULL DEFAULT true;

@@ -1,5 +1,24 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { fileURLToPath } from "url";
 import { withSentryConfig } from "@sentry/nextjs";
+
+const baseUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") ?? "";
+const reportUri = baseUrl ? `${baseUrl}/api/csp-report` : "";
+
+const cspDirectives =
+  "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
+
+const cspValue = reportUri ? `${cspDirectives}; report-uri ${reportUri}` : cspDirectives;
+
+const enforceCsp = process.env.CSP_ENFORCEMENT === "true";
+
+const cspHeaders = enforceCsp
+  ? [{ key: "Content-Security-Policy", value: cspValue }]
+  : [{ key: "Content-Security-Policy-Report-Only", value: cspValue }];
+
+/** Next.js app directory (…/RealEstatePortfolio/app). Fixes Turbopack resolving deps from the parent Husky root when multiple lockfiles exist. */
+const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -9,15 +28,13 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=()",
   },
-  // CSP report-only: logs violations without blocking; use report-uri or report-to when ready
-  {
-    key: "Content-Security-Policy-Report-Only",
-    value:
-      "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
-  },
+  ...cspHeaders,
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: appDir,
+  },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },

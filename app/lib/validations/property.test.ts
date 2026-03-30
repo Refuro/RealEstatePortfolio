@@ -29,6 +29,16 @@ describe("createPropertySchema", () => {
     }
   });
 
+  it("allows non-rented create payload without rent inputs", () => {
+    const { currentMonthlyRent, ...rest } = validCreateBase;
+    void currentMonthlyRent;
+    const r = createPropertySchema.safeParse({
+      ...rest,
+      isRented: false,
+    });
+    expect(r.success).toBe(true);
+  });
+
   it("rejects single-family with units !== 1", () => {
     const r = createPropertySchema.safeParse({
       ...validCreateBase,

@@ -2,7 +2,7 @@
 
 Long-lived checklists that outlive individual epics or batches.
 
-**Process:** Test/CI follow-up Phases 1–2 are **done** (see [`docs/tasks.md`](../tasks.md) *Test infrastructure follow-up*). Ongoing context: [Test infrastructure review](test-infrastructure-review.md).
+**Process:** Test/CI follow-up Phases 1–2 are **done** (see [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)**). Ongoing context: [Test infrastructure review](test-infrastructure-review.md).
 
 | Doc | Use |
 |-----|-----|

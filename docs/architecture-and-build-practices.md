@@ -3,7 +3,7 @@
 **Purpose:** Ensure future features align with design, security, and continuity. Prevent spaghetti code as the codebase evolves.
 
 **Status:** Active — builder and PM must follow these practices.
-**Last reviewed:** 2026-03-19 (property detail / add-edit surfaces documented)
+**Last reviewed:** 2026-03-28 (Phase 9D observability, public images, export rate limits)
 **Review cadence:** Quarterly or after major architecture changes
 
 **Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
@@ -49,7 +49,7 @@ app/
 **IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see `epic-a-discovery.md` A3). Do not reintroduce triple inline PATCH without an explicit product decision.
 
 ### Established Patterns
-- **Auth:** Every API route and protected page calls `getAppUser()` first; return 401 if null
+- **Auth:** Protected API routes use `getActiveAppUser()` (or `getAppUser()` only where soft-deleted users must act, e.g. restore); return 401 if null when appropriate. See `docs/security/security-notes.md`.
 - **Data access:** All queries scoped by `userId: user.id` — no IDOR
 - **Validation:** Zod schemas in `lib/validations/`; validate before DB writes
 - **Metrics:** Pure functions in `lib/metrics/`; no DB access
@@ -75,6 +75,7 @@ UI (pages, components)
 - **Metrics:** `lib/metrics/portfolio-metrics.ts` and `lib/metrics/property-metrics.ts` — all calculations here. Dashboard, property detail, export, etc. use these. Do not duplicate formulas.
 - **Ownership semantics policy:** `docs/policies/ownership-metrics.md` — canonical formulas and copy expectations for `proportional` vs `full_liability`.
 - **Analytics math policy:** `docs/policies/analytics-math-policy.md` — canonical contracts for time windows, debt-service source, and UI/API/export reconciliation.
+- **Portfolio CSV (import/export):** `docs/reference/portfolio-csv-export.md` — column semantics, multi-mortgage labeling, canonical property types.
 - **Plans/limits:** `lib/plans.ts` — property limits, tier names.
 - **Pricing display:** `lib/pricing-display.ts` — display prices for UI.
 
@@ -85,7 +86,7 @@ UI (pages, components)
 - **Forms** — Reuse MortgageFormFields, property form patterns. Consistent inputClass, labelClass.
 
 ### 2.4 API Conventions
-- **Auth:** `const user = await getAppUser(); if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });`
+- **Auth:** `const user = await getActiveAppUser(); if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });` for routes that must block soft-deleted accounts. Exceptions are documented in `docs/security/security-notes.md`.
 - **Validation:** Parse body with Zod; return 400 on invalid.
 - **Errors:** `{ error: string }` in JSON body; appropriate status code.
 - **Deleted users:** Check `user.deletedAt` for account operations; reject or redirect as needed.
@@ -101,7 +102,7 @@ Keep initial JS small, defer heavy libraries, and cache static content. Follow t
 
 **Layout and rendering:**
 - Do **not** add `export const dynamic = "force-dynamic"` to the root layout unless Clerk or another requirement explicitly needs it. Prefer scoping `force-dynamic` to specific layouts or pages that need request-time data.
-- Public pages (`/`, `/privacy`, `/terms`, `/pricing`, `/contact`) should be static or cached where possible.
+- **Public marketing / legal pages** (`/`, `/pricing`, `/privacy`, `/terms`, `/contact`, `/changelog`) call server-side `auth()` or `getAppUser()` so nav and CTAs differ for signed-in vs guest users. That makes them **dynamically rendered per request**; we do **not** set `export const revalidate` on these routes because session-dependent HTML is not snapshot-stable. Adding ISR would require moving session checks into a client boundary (future optimization). SEO still uses static `metadata` exports.
 
 **Images:**
 - Use `next/image` for all `<img>` tags. Never use raw `<img>` for user-facing images.
@@ -121,13 +122,20 @@ Keep initial JS small, defer heavy libraries, and cache static content. Follow t
 - [ ] New large package? Add to `optimizePackageImports` if applicable.
 - [ ] New static content page? Consider `revalidate`.
 
+### 2.6 Observability (Sentry and logging)
+
+- **Sentry:** `@sentry/nextjs` is configured for client and server. Use `Sentry.captureException` for unexpected failures in API routes and critical server paths. Use `Sentry.captureMessage` (typically `level: "warning"`) for operational signals that are not thrown errors (e.g. Stripe webhook cannot resolve an app user from subscription metadata).
+- **Stripe billing:** When subscription sync cannot map Stripe → app user (webhook), emit a **warning** to Sentry with `subscriptionId`, `customerId`, and whether `metadata.appUserId` was present. When `/api/billing/sync` fails talking to Stripe, capture the exception with `userId` and `stripeCustomerId` in `extra`.
+- **Structured logs:** Prefer `console.error` with a single JSON line for ops dashboards where Sentry is not appropriate; include `action`, ids, and timestamps. Do not log secrets or full payment payloads.
+- **Client global errors:** `app/global-error.tsx` reports to Sentry when `NEXT_PUBLIC_SENTRY_DSN` is set and shows an accessible, on-brand fallback (heading, short explanation, try again + home).
+
 ---
 
 ## 3. Security Checklist (New Features)
 
 Before shipping any new feature, verify:
 
-- [ ] **Auth:** All new API routes call `getAppUser()` and return 401 if null
+- [ ] **Auth:** New protected API routes use `getActiveAppUser()` (or a documented exception in `docs/security/security-notes.md`) and return 401 if null
 - [ ] **Authorization:** All data access scoped by `userId` (or property belongs to user)
 - [ ] **Input validation:** Request bodies validated with Zod; no raw `body` use
 - [ ] **Secrets:** No API keys or secrets in client code; use env vars server-side

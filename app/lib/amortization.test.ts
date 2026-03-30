@@ -4,6 +4,8 @@ import {
   getBalanceSource,
   getEffectiveBalance,
   getExtraPaymentForYearsEarlier,
+  getMonthsToPayoffWithExtraStrict,
+  getMonthsToPayoffWithExtraWithTolerance,
   getPayoffProjection,
   getPaymentStartLagMonths,
   getPayoffYearsWithExtra,
@@ -248,8 +250,8 @@ describe("getPayoffProjection / tolerance helpers", () => {
   });
 });
 
-/** Used by `payoff-card.tsx` / `mortgage-tab-content.tsx` — edge cases + deferred deep cases in docs/qa/test-infrastructure-review.md §4.2 */
-describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra", () => {
+/** Canonical (strict) vs tolerance-aware UI — see docs/policies/analytics-math-policy.md §3.7 */
+describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra (strict canonical)", () => {
   beforeEach(() => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date("2030-06-15T12:00:00.000Z"));
@@ -292,6 +294,44 @@ describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra", () => {
       expect(Number.isInteger(years)).toBe(true);
       expect(years).toBeGreaterThanOrEqual(0);
     }
+  });
+});
+
+describe("hybrid payoff contract: strict core vs tolerance UI", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2030-06-15T12:00:00.000Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it("getPayoffProjection never exposes toleranceApplied (strict contract)", () => {
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 50_000,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date(2020, 0, 1),
+      monthlyPayment: 600,
+      balanceAsOfDate: new Date(2030, 4, 1),
+    };
+    const p = getPayoffProjection(m);
+    expect("toleranceApplied" in p).toBe(false);
+  });
+
+  it("getMonthsToPayoffWithExtraStrict is null while WithTolerance returns cap when small residual at cap is within tolerance", () => {
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 8000,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date(2020, 0, 1),
+      monthlyPayment: 500,
+      balanceAsOfDate: new Date(2030, 4, 1),
+    };
+    expect(getMonthsToPayoffWithExtraStrict(m, 0, 15)).toBeNull();
+    expect(getMonthsToPayoffWithExtraWithTolerance(m, 0, 15)).toBe(15);
   });
 });
 

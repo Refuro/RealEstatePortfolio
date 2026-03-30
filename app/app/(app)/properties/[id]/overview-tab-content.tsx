@@ -65,6 +65,9 @@ export function OverviewTabContent({
       <PropertyHealthStrip
         property={{
           updatedAt: property.updatedAt,
+          isRented: property.isRented,
+          currentMonthlyRent: totalRent,
+          unitRents: property.unitRents,
           marketRent: property.marketRent,
           marketRentAsOf: property.marketRentAsOf,
         }}
@@ -110,6 +113,9 @@ export function OverviewTabContent({
             </p>
             <p className="text-sm font-medium text-foreground">
               {ownershipLabel} ownership · {vacancyLabel} vacancy
+            </p>
+            <p className="text-sm font-medium text-foreground">
+              {property.isRented ? "Currently rented" : "Not currently rented"}
             </p>
           </div>
           <div className="rounded-md bg-subtle/30 px-3 py-2">

@@ -1,6 +1,6 @@
 # Archived docs — reference only
 
-These documents are archived because the work is complete or superseded. Kept for historical reference.
+These documents are archived because the work is complete or superseded. Kept for historical reference. **Content may not match the current product** — use [`../tasks.md`](../tasks.md), [`../reference/roadmap.md`](../reference/roadmap.md), and the app for what shipped.
 
 ## Proposals (implemented)
 

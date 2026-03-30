@@ -20,30 +20,26 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 | CSV import | Done |
 | Deal analyzer / scratchpad | Done |
 | Benchmarking (rent vs market) | Done |
+| Add-property experience overhaul (Epics A–G) | Done — see `docs/tasks.md` |
 | Admin membership override | Done |
 | Error tracking (Sentry) | Done |
+| Mortgage balance advancement (Phase 1 — effective balance, balance as of) | Done |
 
-### Mortgage balance advancement (Phase 1 — amortization projection + manual override)
+### Mortgage balance advancement (Phase 1 — amortization projection + manual override) — **Shipped**
 
-**Priority:** High — metrics drift without balance advancement.
+**Canonical status:** Listed as **Done** in `docs/tasks.md` (roadmap priority table: mortgage balance advancement — balance advancement, escrow, amortization fix, loan type import, chart tooltip).
 
-**Scope:** Keep app focused on portfolio analytics (not property management). Mortgage balance drives equity, LTV, and debt metrics. Without advancement, these metrics drift over time as principal is paid down. Competitors either connect to banks (Plaid) or rely on manual updates. We implement a hybrid: amortization projection as default, with optional manual override when user has a statement.
+**What shipped:**
 
-**Approach:** Use existing amortization logic to project remaining balance from original loan, rate, term, start date. When user provides an actual balance + date, use that when recent; otherwise use projected. No bank connection in Phase 1.
+- **Schema:** `Mortgage.balanceAsOfDate` (`DateTime?` @db.Date) in Prisma.
+- **Lib:** `getProjectedBalanceAsOf`, `getEffectiveBalance`, `getBalanceSource` in `app/lib/amortization.ts` (stored balance when `balanceAsOfDate` is within six months of today; otherwise projected balance as of today).
+- **Metrics & APIs:** Portfolio/property metrics, dashboard, properties list, property detail, export/import, and mortgage APIs use effective balance for equity/LTV/debt where applicable.
+- **UI:** Mortgage forms include balance-as-of; property/mortgage surfaces show stored vs projected context; amortization/payoff flows use effective balance; chart schedule remains tied to original loan terms.
 
-**Acceptance criteria:**
+**Remaining / deferred (not Phase 1 blockers):**
 
-- [ ] **Schema:** Add optional `balanceAsOfDate DateTime? @db.Date` to Mortgage model. Migration.
-- [ ] **Lib:** Add `getProjectedBalanceAsOf(input: AmortizationInput, asOfDate: Date): number` in `lib/amortization.ts`. Returns balance at given date from schedule; returns 0 if asOfDate is before startDate.
-- [ ] **Lib:** Add `getEffectiveBalance(mortgage)` in `lib/metrics/` or `lib/amortization.ts`: if `balanceAsOfDate` exists and is within 6 months of today, return `currentBalance`; else return projected balance as of today.
-- [ ] **Metrics:** Update `lib/metrics/property-metrics.ts`, `portfolio-metrics.ts`, and all consumers (API routes, dashboard, properties list, property detail) to use `getEffectiveBalance` instead of raw `currentBalance` when computing totalMortgageBalance for equity/LTV/debt.
-- [ ] **Mortgage form:** Add optional "Balance as of" date picker. When user updates current balance, encourage setting this date (or auto-set to today).
-- [ ] **Mortgage display:** Show which source is used: "Balance: $X (as of [date])" when using stored; "Estimated balance: $X (from amortization — update from your statement for accuracy)" when using projected. Add subtle nudge to update when projected and balanceAsOfDate is missing or >6 months old.
-- [ ] **Import/export:** Include `balanceAsOfDate` in export; support optional column in import. Existing mortgages: balanceAsOfDate null → use projected.
-- [ ] **Amortization chart:** Continue using original loan for schedule (unchanged). Chart shows projected path; effective balance for metrics may differ if user overrode.
-- [ ] Run `npm run check` when done.
-
-**Out of scope (Phase 1):** Plaid/bank connection, transaction sync, automatic balance refresh. See `docs/plaid-considerations.md`.
+- **Bank-led automation:** Plaid or similar — explicitly **out of scope** for Phase 1; see `docs/plaid-considerations.md`.
+- **Roadmap follow-ups** elsewhere in this doc (e.g. benchmarking v2, property detail overhaul) are separate initiatives.
 
 ---
 
@@ -58,6 +54,22 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 ### Benchmarking — ✓ Done
 
 **Scope:** "Your rent is X% above/below market" (RentCast). Surfacing on properties list, dashboard, inline refresh. See `docs/archive/proposals/benchmarking-surfacing-proposal.md`.
+
+---
+
+### Benchmarking v2: rental-status-aware comparison
+
+**Priority:** 9
+
+**Scope:** Refine benchmark semantics so rent-vs-market comparisons only show when the property is actively rented and rent is present. Avoid treating missing/non-rental states as meaningful benchmark percentages.
+
+**Acceptance criteria:**
+
+- [x] Add explicit rental-status input (initially boolean) to property create/edit flows and APIs.
+- [x] Define one shared benchmark-eligibility contract used by dashboard, properties list, and property detail surfaces (`app/lib/benchmark-utils.ts`: `getBenchmarkEligibility`, `isBenchmarkComparable`, `shouldOfferBenchmarkRefresh`).
+- [x] When property is not rented or effective rent is 0, hide percent comparison and show non-comparison status copy.
+- [x] Treat `marketRent <= 0` consistently as benchmark missing across all surfaces (never "at market" from invalid market data).
+- [x] Add/adjust tests for `not_rented`, rent missing/zero, benchmark stale, benchmark missing, and fresh benchmark states (`benchmark-utils.test.ts`).
 
 ---
 
@@ -196,7 +208,8 @@ Defer until validated or user base justifies:
 - **Advanced analytics** — Defer until core analytics proven.
 - **Mobile app** — Defer until web usage justifies.
 - **OAuth login, two-factor authentication** — Auth enhancements (mvp-spec).
-- **Add-property experience overhaul (active priority)** — Full redesign of add-property (wizard), **Edit property** page, and **Details tab inline editing** (same data, three patterns today). Prefer complete overhaul over retooling. Backlog: `docs/proposals/add-property-experience-overhaul.md`. **Audit Batch 8 deferred** until this ships or is reprioritized (2026-03-19).
+
+**Shipped (reference):** Add-property / edit / property detail (Overview + Details) overhaul — Epics A–G complete; design and history in `docs/proposals/add-property-experience-overhaul.md`. **Business & quality (Batch 8)** — PostHog, changelog, uptime — also complete; see `docs/tasks-archived.md` § **Tasks.md archive (2026-03-20)** and `docs/launch/launch-plan.md` §6. **Ongoing audits** follow cadence in `docs/audits/README.md` (not gated on the above).
 
 ---
 
