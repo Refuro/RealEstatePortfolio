@@ -1,0 +1,20 @@
+---
+description: Legal/compliance audit command — audit app-facing compliance risks to docs/audits/legal-compliance
+alwaysApply: false
+---
+
+# Legal & Compliance Audit Command
+
+When the user says **"run legal audit"**, **"run compliance audit"**, **"legal/compliance audit"**, or **"run legal compliance audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/legal-compliance-audit-process.md`.
+2. Require output report at `docs/audits/legal-compliance/YYYY-MM-DD-legal-compliance-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings, report location, and repeat that this lane is not a substitute for legal counsel.
+
+## References
+
+- Process: `docs/process/legal-compliance-audit-process.md`
+- Reports: `docs/audits/legal-compliance/`

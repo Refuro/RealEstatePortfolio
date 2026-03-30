@@ -48,10 +48,26 @@
 - DSCR denominator source must be explicit and consistent with selected mode and debt-service basis.
 - Comparable DSCR values across surfaces must be derived from the same denominator contract.
 
-### 3.4 Sale/position outcomes
+### 3.4 Annual rent vs NOI (same rent basis)
+
+- **Effective rent** *R* is contract rent after the property’s vacancy assumption (see `docs/policies/ownership-metrics.md`).
+- **NOI (annual)** = *R* × 12 × ownership scale − annual expenses (per property, then summed for portfolio).
+- **Portfolio “Annual rent”** (dashboard, API summary, exports that use portfolio metrics) must be the sum of vacancy-adjusted annual rent — i.e. the same *R* × 12 × scale as in the NOI rent leg — **not** raw pre-vacancy contract rent × 12. That keeps “Annual rent” and NOI reconcilable without silent basis switching.
+
+### 3.5 Sale/position outcomes
 
 - Exit-based outcomes must label exact hold-year context and included components (sale proceeds, cumulative cash flow, reinvested balance).
 - Delta metrics must state baseline and assumption set.
+
+### 3.6 Benchmark freshness (rent vs market)
+
+- A benchmark is **fresh** when `marketRentAsOf` is strictly **less than 60 full days** before “now” (comparison uses millisecond difference `< 60 × 24 × 60 × 60 × 1000`). The instant a snapshot reaches **exactly** 60 calendar days of age, it is treated as **stale** (not fresh).
+
+### 3.7 Mortgage payoff — strict core vs tolerance-aware UI
+
+- **Strict amortization (canonical):** `getPayoffProjection`, `getMonthsToPayoffWithExtraStrict`, `getExtraPaymentForYearsEarlier`, and `getPayoffYearsWithExtra` use only full balance-to-zero payoff within the remaining term (no “small residual at term end” shortcut). **API responses** (`payoffProjection` on mortgage routes) and **exports** must use this strict contract only.
+- **Tolerance-aware (UI-only):** `getToleranceAwarePayoffProjection`, `getMonthsToPayoffWithExtraWithTolerance`, `getExtraPaymentForYearsEarlierWithTolerance`, and `getPayoffYearsWithExtraWithTolerance` may treat a small remaining balance near the contractual term end as effectively paid, using `PayoffToleranceOptions` in `app/lib/amortization.ts`. Any surface using these must include **disclosure** (inline note and/or tooltip) that accelerated-payoff shortcuts use an end-of-term tolerance, while headline/API/export payoff math remains strict.
+- **No silent mixing:** Do not pass tolerance-adjusted payoff dates into portfolio CSV or public JSON without labeling; UI copy must not imply API data includes tolerance unless explicitly stated.
 
 ---
 

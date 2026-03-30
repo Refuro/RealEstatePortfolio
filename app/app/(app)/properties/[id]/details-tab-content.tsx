@@ -36,6 +36,7 @@ export function DetailsTabContent({
     purchaseDate: Date | string;
     currentEstimatedValue: number;
     currentMonthlyExpenses: number;
+    isRented: boolean;
     unitRents: number[] | null;
     ownershipPercent: number | null;
     vacancyPercent: number | null;
@@ -88,6 +89,9 @@ export function DetailsTabContent({
       <PropertyHealthStrip
         property={{
           updatedAt: property.updatedAt,
+          isRented: property.isRented,
+          currentMonthlyRent: totalRent,
+          unitRents: property.unitRents,
           marketRent: property.marketRent,
           marketRentAsOf: property.marketRentAsOf,
         }}
@@ -157,6 +161,12 @@ export function DetailsTabContent({
                 ) : (
                   formatCurrency(totalRent)
                 )}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-sm font-medium text-muted">Rental status</dt>
+              <dd className="text-sm font-medium text-foreground">
+                {property.isRented ? "Currently rented" : "Not currently rented"}
               </dd>
             </div>
             <div>

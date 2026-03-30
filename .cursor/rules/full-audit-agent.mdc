@@ -9,7 +9,7 @@ When the user says **"run full audit"** or **"run all audits"** or **"full audit
 
 ## What to do
 
-1. Run all 10 audit lanes (Code, Math, Feature/UX, Security, Performance-Cost, Reliability-Ops, Data-Integrity, Business-Valuation, Growth-Funnel, Agent-Governance) following their respective process docs.
+1. Run all 12 audit lanes (Code, Math, Feature/UX, Security, Performance-Cost, Reliability-Ops, Data-Integrity, Business-Valuation, Growth-Funnel, Documentation, Legal-Compliance, Agent-Governance) following their respective process docs.
 2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-<lane>-audit.md` (use today's date).
 3. After all reports are written, run the **synthesis pass** per `docs/process/full-audit-synthesis.md`.
 4. Write synthesis output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.

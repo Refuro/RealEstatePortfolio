@@ -7,6 +7,7 @@ import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
 import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
+import { RentCastQuotaHint } from "@/components/rentcast-quota-hint";
 import { PROPERTY_EDIT_SECTION_NAV } from "@/lib/property-form-section-nav";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
@@ -35,6 +36,7 @@ type PropertyFormData = {
   purchasePrice: string;
   purchaseDate: string;
   currentEstimatedValue: string;
+  isRented: boolean;
   currentMonthlyRent: string;
   unitRents?: string[];
   currentMonthlyExpenses: string;
@@ -60,6 +62,7 @@ const defaultValues: PropertyFormData = {
   purchasePrice: "",
   purchaseDate: "",
   currentEstimatedValue: "",
+  isRented: true,
   currentMonthlyRent: "",
   currentMonthlyExpenses: "",
   cashInvested: "",
@@ -78,6 +81,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [submitting, setSubmitting] = useState(false);
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
+  const [rentCastQuotaTick, setRentCastQuotaTick] = useState(0);
   const [valueEstimateLoading, setValueEstimateLoading] = useState(false);
   const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
   const [lastValueEstimate, setLastValueEstimate] = useState<string>("");
@@ -99,6 +103,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [currentEstimatedValue, setCurrentEstimatedValue] = useState(property?.currentEstimatedValue ?? "");
   const [cashInvested, setCashInvested] = useState(property?.cashInvested ?? "");
   const [currentMonthlyRent, setCurrentMonthlyRent] = useState(property?.currentMonthlyRent ?? "");
+  const [isRented, setIsRented] = useState(property?.isRented ?? true);
   const hasExistingUnitRents = Array.isArray(property?.unitRents) && (property.unitRents as string[]).length > 0;
   const [unitRents, setUnitRents] = useState<string[]>(() => {
     const ur = property?.unitRents;
@@ -155,6 +160,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         purchasePrice: property.purchasePrice,
         purchaseDate: property.purchaseDate,
         currentEstimatedValue: property.currentEstimatedValue,
+        isRented: property.isRented ?? true,
         currentMonthlyRent: property.currentMonthlyRent,
         currentMonthlyExpenses: property.currentMonthlyExpenses,
         cashInvested: property.cashInvested ?? "",
@@ -194,6 +200,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         const val = String(Math.round(json.value));
         setCurrentEstimatedValue(val);
         setLastValueEstimate(val);
+        setRentCastQuotaTick((t) => t + 1);
       } else {
         setValueEstimateError(json.error ?? "Estimate unavailable for this address");
       }
@@ -237,6 +244,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
+        setRentCastQuotaTick((t) => t + 1);
         const val = String(Math.round(json.rent));
         setLastRentEstimate(val);
         if (isMulti && hasExistingUnitRents) {
@@ -268,11 +276,13 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         ? 1
         : Number(formData.get("units")) || unitCount;
     const unitRentsArr =
-      isMulti && unitRentsDisplay.some((s) => (Number(s) || 0) > 0)
+      isRented && isMulti && unitRentsDisplay.some((s) => (Number(s) || 0) > 0)
         ? unitRentsDisplay.slice(0, u).map((s) => Number(s) || 0)
         : null;
     const totalRent =
-      unitRentsArr != null
+      !isRented
+        ? 0
+        : unitRentsArr != null
         ? unitRentsArr.reduce((a, b) => a + b, 0)
         : Number(currentMonthlyRent) || 0;
 
@@ -289,6 +299,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       purchasePrice,
       purchaseDate: formData.get("purchaseDate") as string,
       currentEstimatedValue,
+      isRented,
       currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses,
       vacancyPercent: Math.min(100, Math.max(0, Number(vacancyPercent) || 5)),
@@ -333,6 +344,11 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         id?: string;
       };
       if (!res.ok) {
+        if (!isEdit && data.code === "PLAN_LIMIT_REACHED") {
+          captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
+            resource: "property",
+          });
+        }
         const planMsg =
           data.code === "PLAN_LIMIT_REACHED"
             ? "Property limit reached. Upgrade your plan or remove a property to add more."
@@ -382,7 +398,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       {isEdit && (
         <nav
           aria-label="Edit property sections"
-          className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/85"
+          className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
         >
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
           <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
@@ -676,6 +692,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             What you paid, current value, cash invested, and ownership—aligned with the add-property flow.
           </p>
           <div className="mt-4 space-y-4">
+            <RentCastQuotaHint refreshKey={rentCastQuotaTick} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <label htmlFor="purchasePrice" className={labelClass}>
@@ -778,14 +795,47 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           </h2>
           <p className="mt-1 text-sm text-muted">Rent, operating expenses, and vacancy assumption.</p>
           <div className="mt-4 space-y-4">
+            <RentCastQuotaHint refreshKey={rentCastQuotaTick} />
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="sm:col-span-2 rounded-md border border-border bg-subtle/20 p-3">
+            <p className="text-sm font-medium text-foreground">Is this property currently rented?</p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => setIsRented(true)}
+                className={`rounded-md border px-3 py-1.5 text-sm ${
+                  isRented
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-background text-foreground hover:bg-subtle"
+                }`}
+              >
+                Yes, rented
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsRented(false)}
+                className={`rounded-md border px-3 py-1.5 text-sm ${
+                  !isRented
+                    ? "border-accent bg-accent text-accent-foreground"
+                    : "border-border bg-background text-foreground hover:bg-subtle"
+                }`}
+              >
+                No, not rented
+              </button>
+            </div>
+            {!isRented && (
+              <p className="mt-2 text-xs text-muted">
+                Not currently rented - income is saved as $0 until this is marked rented.
+              </p>
+            )}
+          </div>
           {isMulti && hasExistingUnitRents ? (
             <div className="space-y-2">
               <div className="flex flex-wrap items-end gap-2">
                 {unitRentsDisplay.map((_, i) => (
                   <div key={i} className="min-w-[100px] flex-1">
                     <label htmlFor={`unitRent-${i}`} className={labelClass}>
-                      Unit {i + 1} rent *
+                      Unit {i + 1} rent {isRented ? "*" : ""}
                     </label>
                     <CurrencyInput
                       id={`unitRent-${i}`}
@@ -795,26 +845,28 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                         next[i] = v;
                         setUnitRents(next);
                       }}
-                      required
+                      required={isRented}
                       className={inputClass}
                     />
                   </div>
                 ))}
-                <button
-                  type="button"
-                  onClick={handleEstimateRent}
-                  disabled={estimateLoading || rentMatchesLastEstimate}
-                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-                >
-                  {estimateLoading ? "Estimating…" : "Estimate rent"}
-                </button>
+                {isRented && (
+                  <button
+                    type="button"
+                    onClick={handleEstimateRent}
+                    disabled={estimateLoading || rentMatchesLastEstimate}
+                    className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                  >
+                    {estimateLoading ? "Estimating…" : "Estimate rent"}
+                  </button>
+                )}
               </div>
               <p className="text-sm text-muted">
-                Total: $
-                {unitRentsDisplay
-                  .reduce((s, r) => s + (Number(r) || 0), 0)
-                  .toLocaleString()}
-                /mo
+                {isRented
+                  ? `Total: $${unitRentsDisplay
+                      .reduce((s, r) => s + (Number(r) || 0), 0)
+                      .toLocaleString()}/mo`
+                  : "Monthly rent will be saved as $0 while not rented."}
               </p>
               {estimateError && (
                 <p className={`text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
@@ -823,7 +875,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           ) : isMulti ? (
             <div>
               <label htmlFor="currentMonthlyRent" className={labelClass}>
-                Total monthly rent *
+                Total monthly rent {isRented ? "*" : ""}
               </label>
               <div className="flex gap-2">
                 <div className="min-w-0 flex-1">
@@ -831,21 +883,25 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                     id="currentMonthlyRent"
                     value={currentMonthlyRent}
                     onChange={setCurrentMonthlyRent}
-                    required
+                    required={isRented}
                     className={inputClass}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleEstimateRent}
-                  disabled={estimateLoading || rentMatchesLastEstimate}
-                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-                >
-                  {estimateLoading ? "Estimating…" : "Estimate rent"}
-                </button>
+                {isRented && (
+                  <button
+                    type="button"
+                    onClick={handleEstimateRent}
+                    disabled={estimateLoading || rentMatchesLastEstimate}
+                    className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                  >
+                    {estimateLoading ? "Estimating…" : "Estimate rent"}
+                  </button>
+                )}
               </div>
               <p className="mt-0.5 text-xs text-muted">
-                Will be split evenly across {unitCount} units on save
+                {isRented
+                  ? `Will be split evenly across ${unitCount} units on save`
+                  : "Monthly rent will be saved as $0 while not rented."}
               </p>
               {estimateError && (
                 <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
@@ -854,7 +910,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           ) : (
             <div>
               <label htmlFor="currentMonthlyRent" className={labelClass}>
-                Monthly rent *
+                Monthly rent {isRented ? "*" : ""}
               </label>
               <div className="flex gap-2">
                 <div className="min-w-0 flex-1">
@@ -862,19 +918,26 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                     id="currentMonthlyRent"
                     value={currentMonthlyRent}
                     onChange={setCurrentMonthlyRent}
-                    required
+                    required={isRented}
                     className={inputClass}
                   />
                 </div>
-                <button
-                  type="button"
-                  onClick={handleEstimateRent}
-                  disabled={estimateLoading || rentMatchesLastEstimate}
-                  className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-                >
-                  {estimateLoading ? "Estimating…" : "Estimate rent"}
-                </button>
+                {isRented && (
+                  <button
+                    type="button"
+                    onClick={handleEstimateRent}
+                    disabled={estimateLoading || rentMatchesLastEstimate}
+                    className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+                  >
+                    {estimateLoading ? "Estimating…" : "Estimate rent"}
+                  </button>
+                )}
               </div>
+              {!isRented && (
+                <p className="mt-0.5 text-xs text-muted">
+                  Monthly rent will be saved as $0 while not rented.
+                </p>
+              )}
               {estimateError && (
                 <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
               )}

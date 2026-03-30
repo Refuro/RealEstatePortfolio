@@ -44,7 +44,9 @@ export type DashboardChartData = {
 export type BenchmarkAtGlance = {
   /** When fresh: display label (e.g. "Rent 1.6% below market") */
   benchmarkLabel?: string;
-  /** When stale/missing: property ID for inline refresh button */
+  /** When not_rented / rent_missing: static copy (no refresh action) */
+  benchmarkMessage?: string;
+  /** When stale/missing benchmark data: property ID for inline refresh button */
   propertyId?: string;
 };
 
@@ -270,6 +272,8 @@ export function DashboardCharts({
                 <p className="mt-0.5 text-lg font-semibold text-foreground">
                   {benchmark.benchmarkLabel}
                 </p>
+              ) : benchmark?.benchmarkMessage ? (
+                <p className="mt-0.5 text-sm text-muted">{benchmark.benchmarkMessage}</p>
               ) : benchmark?.propertyId ? (
                 <p className="mt-0.5">
                   <BenchmarkRefreshButton

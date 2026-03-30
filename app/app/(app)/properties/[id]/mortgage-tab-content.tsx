@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { formatCurrency } from "@/lib/format-currency";
 import {
-  getExtraPaymentForYearsEarlier,
+  getExtraPaymentForYearsEarlierWithTolerance,
   getPiForAmortization,
   getToleranceAdjustedPayoffDate,
   getToleranceAwarePayoffProjection,
@@ -78,14 +78,14 @@ function getRemainingTermMonths(m: MortgageRecordLike): number {
   const monthsSinceStart = Math.max(
     0,
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
-      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth()),
   );
   return Math.max(0, m.termYears * 12 - monthsSinceStart);
 }
 
 function simulateMortgage(
   mortgage: MortgageRecordLike,
-  extraMonthlyPayment: number
+  extraMonthlyPayment: number,
 ): SimulationResult {
   const monthlyRate = mortgage.interestRate / 12;
   const basePi = getPiForAmortization(mortgage);
@@ -106,7 +106,11 @@ function simulateMortgage(
   ];
 
   for (let month = 1; month <= remainingTermMonths && balance > 0; month++) {
-    const date = new Date(firstPointDate.getFullYear(), firstPointDate.getMonth() + month, 1);
+    const date = new Date(
+      firstPointDate.getFullYear(),
+      firstPointDate.getMonth() + month,
+      1,
+    );
     const interest = balance * monthlyRate;
     const rawPrincipal = payment - interest;
     let principal = rawPrincipal;
@@ -144,11 +148,12 @@ function simulateMortgage(
 
 function resolveSimulationPayoffDate(
   simulation: SimulationResult | null,
-  mortgage: MortgageRecordLike | null
+  mortgage: MortgageRecordLike | null,
 ): Date | null {
   if (!simulation || !mortgage) return null;
   if (simulation.payoffDate) return simulation.payoffDate;
-  const balanceReduction = simulation.startingBalance - simulation.endingBalance;
+  const balanceReduction =
+    simulation.startingBalance - simulation.endingBalance;
   if (balanceReduction <= 0 || simulation.monthsWithPositivePrincipal === 0) {
     return null;
   }
@@ -157,7 +162,6 @@ function resolveSimulationPayoffDate(
   }
   return getToleranceAdjustedPayoffDate(mortgage);
 }
-
 
 function yearsBetween(start: Date, end: Date): number {
   const months =
@@ -185,11 +189,12 @@ export function MortgageTabContent({
     initialSelectedMortgageId &&
     mortgageData.some((mortgage) => mortgage.id === initialSelectedMortgageId)
       ? initialSelectedMortgageId
-      : mortgageData[0]?.id ?? "";
-  const [selectedMortgageId, setSelectedMortgageId] = useState<string>(
-    initialMortgageId
-  );
-  const [selectedYearsEarlier, setSelectedYearsEarlier] = useState<number | null>(null);
+      : (mortgageData[0]?.id ?? "");
+  const [selectedMortgageId, setSelectedMortgageId] =
+    useState<string>(initialMortgageId);
+  const [selectedYearsEarlier, setSelectedYearsEarlier] = useState<
+    number | null
+  >(null);
   const [extraInput, setExtraInput] = useState("0");
   const isMortgageWorkspace = workspaceVariant === "workspace";
 
@@ -198,7 +203,7 @@ export function MortgageTabContent({
       mortgageData.find((m) => m.id === selectedMortgageId) ??
       mortgageData[0] ??
       null,
-    [mortgageData, selectedMortgageId]
+    [mortgageData, selectedMortgageId],
   );
 
   useEffect(() => {
@@ -207,13 +212,12 @@ export function MortgageTabContent({
 
   const normalizedMortgage = useMemo(
     () => (selectedMortgage ? toMortgageRecordLike(selectedMortgage) : null),
-    [selectedMortgage]
+    [selectedMortgage],
   );
 
   const baseSimulation = useMemo(
-    () =>
-      normalizedMortgage ? simulateMortgage(normalizedMortgage, 0) : null,
-    [normalizedMortgage]
+    () => (normalizedMortgage ? simulateMortgage(normalizedMortgage, 0) : null),
+    [normalizedMortgage],
   );
 
   const extraPayment = useMemo(() => {
@@ -226,17 +230,20 @@ export function MortgageTabContent({
       normalizedMortgage
         ? simulateMortgage(normalizedMortgage, extraPayment)
         : null,
-    [normalizedMortgage, extraPayment]
+    [normalizedMortgage, extraPayment],
   );
 
   const baselineProjection = useMemo(
-    () => (normalizedMortgage ? getToleranceAwarePayoffProjection(normalizedMortgage) : null),
-    [normalizedMortgage]
+    () =>
+      normalizedMortgage
+        ? getToleranceAwarePayoffProjection(normalizedMortgage)
+        : null,
+    [normalizedMortgage],
   );
   const baselinePayoffDate = baselineProjection?.payoffDate ?? null;
   const scenarioPayoffDate = useMemo(
     () => resolveSimulationPayoffDate(scenarioSimulation, normalizedMortgage),
-    [scenarioSimulation, normalizedMortgage]
+    [scenarioSimulation, normalizedMortgage],
   );
   const baselineYearsRemaining = useMemo(() => {
     if (!baselinePayoffDate) return null;
@@ -247,21 +254,26 @@ export function MortgageTabContent({
     () =>
       [5, 10, 15].map((years) => {
         const isAvailable = Boolean(
-          normalizedMortgage && baselineYearsRemaining && years < baselineYearsRemaining
+          normalizedMortgage &&
+          baselineYearsRemaining &&
+          years < baselineYearsRemaining,
         );
         return {
           years,
           extra:
             isAvailable && normalizedMortgage
-              ? getExtraPaymentForYearsEarlier(normalizedMortgage, years)
+              ? getExtraPaymentForYearsEarlierWithTolerance(
+                  normalizedMortgage,
+                  years,
+                )
               : null,
         };
       }),
-    [normalizedMortgage, baselineYearsRemaining]
+    [normalizedMortgage, baselineYearsRemaining],
   );
   const hasAnyPayoffTarget = useMemo(
     () => payoffTargetOptions.some((option) => option.extra != null),
-    [payoffTargetOptions]
+    [payoffTargetOptions],
   );
   const payoffDeltaYears = useMemo(() => {
     if (!baselinePayoffDate || !scenarioPayoffDate) return null;
@@ -269,7 +281,8 @@ export function MortgageTabContent({
   }, [baselinePayoffDate, scenarioPayoffDate]);
   const interestSaved = useMemo(() => {
     if (!baseSimulation || !scenarioSimulation) return null;
-    const saved = baseSimulation.interestPaidTotal - scenarioSimulation.interestPaidTotal;
+    const saved =
+      baseSimulation.interestPaidTotal - scenarioSimulation.interestPaidTotal;
     return saved > 0 ? saved : 0;
   }, [baseSimulation, scenarioSimulation]);
   const scenarioPayoffLabel = scenarioPayoffDate
@@ -290,11 +303,15 @@ export function MortgageTabContent({
     normalizedMortgage != null
       ? `${formatCurrency(getPiForAmortization(normalizedMortgage))}/mo`
       : "—";
-  const showEstimateHelper = baselinePayoffDate == null || scenarioPayoffDate == null;
+  const showEstimateHelper =
+    baselinePayoffDate == null || scenarioPayoffDate == null;
 
   const chartData = useMemo<SimulationPoint[]>(() => {
     if (!baseSimulation || !scenarioSimulation) return [];
-    const maxLen = Math.max(baseSimulation.points.length, scenarioSimulation.points.length);
+    const maxLen = Math.max(
+      baseSimulation.points.length,
+      scenarioSimulation.points.length,
+    );
     const data: SimulationPoint[] = [];
     for (let i = 0; i < maxLen; i++) {
       const basePoint = baseSimulation.points[i] ?? null;
@@ -303,8 +320,14 @@ export function MortgageTabContent({
       if (!date) continue;
       data.push({
         idx: i,
-        dateLabel: date.toLocaleDateString("en-US", { month: "short", year: "2-digit" }),
-        dateLong: date.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+        dateLabel: date.toLocaleDateString("en-US", {
+          month: "short",
+          year: "2-digit",
+        }),
+        dateLong: date.toLocaleDateString("en-US", {
+          month: "long",
+          year: "numeric",
+        }),
         baselineBalance: basePoint?.balance ?? null,
         scenarioBalance: scenarioPoint?.balance ?? null,
       });
@@ -319,7 +342,8 @@ export function MortgageTabContent({
           Mortgage simulator
         </h2>
         <p className="mt-3 text-sm text-muted">
-          Add a mortgage to unlock payoff simulation and amortization projections.
+          Add a mortgage to unlock payoff simulation and amortization
+          projections.
         </p>
         <Link
           href={`/properties/${propertyId}?tab=details#mortgages`}
@@ -383,7 +407,8 @@ export function MortgageTabContent({
         </div>
       </div>
       <p className="mb-3 text-xs text-muted">
-        Apply extra principal monthly to compare payoff speed and interest savings.
+        Apply extra principal monthly to compare payoff speed and interest
+        savings.
       </p>
 
       <div className="space-y-3">
@@ -407,7 +432,9 @@ export function MortgageTabContent({
                   {mortgageData.map((m, idx) => (
                     <option key={m.id} value={m.id}>
                       Mortgage {idx + 1} -{" "}
-                      {formatCurrency(m.effectiveBalance ?? Number(m.currentBalance))}
+                      {formatCurrency(
+                        m.effectiveBalance ?? Number(m.currentBalance),
+                      )}
                     </option>
                   ))}
                 </select>
@@ -419,7 +446,7 @@ export function MortgageTabContent({
                   {selectedMortgage
                     ? `${formatCurrency(
                         selectedMortgage.effectiveBalance ??
-                          Number(selectedMortgage.currentBalance)
+                          Number(selectedMortgage.currentBalance),
                       )} at ${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
                     : "—"}
                 </p>
@@ -457,6 +484,15 @@ export function MortgageTabContent({
           <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
             Pay off earlier
           </p>
+          {baselineProjection?.toleranceApplied && (
+            <p
+              className="mb-2 text-[11px] text-muted"
+              title="Strict amortization drives API and export. This workspace uses a small residual tolerance near term end so targets stay available—same basis as the baseline payoff line."
+            >
+              Targets use end-of-term tolerance (readable payoff date); exports
+              stay strict.
+            </p>
+          )}
           {hasAnyPayoffTarget ? (
             <div className="flex flex-wrap gap-2">
               {payoffTargetOptions.map(({ years, extra }) => {
@@ -469,9 +505,12 @@ export function MortgageTabContent({
                     disabled={isDisabled}
                     onClick={() => {
                       if (!extra) return;
-                      setSelectedYearsEarlier((prev) => (prev === years ? null : years));
+                      setSelectedYearsEarlier((prev) =>
+                        prev === years ? null : years,
+                      );
                       setExtraInput((prev) => {
-                        const next = selectedYearsEarlier === years ? "0" : String(extra);
+                        const next =
+                          selectedYearsEarlier === years ? "0" : String(extra);
                         return next === prev ? prev : next;
                       });
                     }}
@@ -481,7 +520,9 @@ export function MortgageTabContent({
                         : "border-border bg-background text-muted hover:bg-subtle/60 hover:text-foreground"
                     } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
                   >
-                    <span className="font-semibold text-foreground">{years}y</span>{" "}
+                    <span className="font-semibold text-foreground">
+                      {years}y
+                    </span>{" "}
                     <span>{extra ? `${formatCurrency(extra)}/mo` : "N/A"}</span>
                   </button>
                 );
@@ -502,13 +543,17 @@ export function MortgageTabContent({
               </p>
               <div className="grid gap-2 sm:grid-cols-2">
                 <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
-                  <p className="text-[11px] text-muted">Payoff with current extra</p>
+                  <p className="text-[11px] text-muted">
+                    Payoff with current extra
+                  </p>
                   <p className="mt-1 text-sm font-semibold text-foreground">
                     {scenarioPayoffLabel}
                   </p>
                 </div>
                 <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
-                  <p className="text-[11px] text-muted">Interest saved (est.)</p>
+                  <p className="text-[11px] text-muted">
+                    Interest saved (est.)
+                  </p>
                   <p className="mt-1 text-sm font-semibold text-positive">
                     {interestSavedLabel}
                   </p>
@@ -519,13 +564,22 @@ export function MortgageTabContent({
             <div className="rounded-md border border-border/65 bg-subtle/20 p-2.5">
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
-                  Rate: <span className="font-medium text-foreground">{rateLabel}</span>
+                  Rate:{" "}
+                  <span className="font-medium text-foreground">
+                    {rateLabel}
+                  </span>
                 </span>
                 <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
-                  Term: <span className="font-medium text-foreground">{termLabel}</span>
+                  Term:{" "}
+                  <span className="font-medium text-foreground">
+                    {termLabel}
+                  </span>
                 </span>
                 <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
-                  Base P&I: <span className="font-medium text-foreground">{basePiLabel}</span>
+                  Base P&I:{" "}
+                  <span className="font-medium text-foreground">
+                    {basePiLabel}
+                  </span>
                 </span>
               </div>
             </div>
@@ -586,13 +640,15 @@ export function MortgageTabContent({
         Balance projection (baseline vs extra principal)
       </h3>
       <p className="mb-3 text-xs text-muted">
-        Baseline follows current payment terms. &quot;With extra payment&quot; adds your extra
-        principal each month to accelerate payoff.
+        Baseline follows current payment terms. &quot;With extra payment&quot;
+        adds your extra principal each month to accelerate payoff.
       </p>
       {chartData.length === 0 ? (
         <div
           className={`flex items-center justify-center text-sm text-muted ${
-            isMortgageWorkspace ? "h-[260px] xl:flex-1 xl:min-h-[320px]" : "h-[220px] sm:h-[280px] lg:h-[320px]"
+            isMortgageWorkspace
+              ? "h-[260px] xl:flex-1 xl:min-h-[320px]"
+              : "h-[220px] sm:h-[280px] lg:h-[320px]"
           }`}
         >
           Add mortgage details to see payoff simulation.
@@ -606,17 +662,29 @@ export function MortgageTabContent({
           }
         >
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={chartData} margin={{ top: 8, right: 8, left: 8, bottom: 8 }}>
+            <LineChart
+              data={chartData}
+              margin={{ top: 8, right: 8, left: 8, bottom: 8 }}
+            >
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
-              <XAxis dataKey="dateLabel" tick={{ fontSize: 10 }} interval="preserveStartEnd" />
-              <YAxis tick={{ fontSize: 11 }} tickFormatter={(v) => `$${Math.round(v / 1000)}k`} />
+              <XAxis
+                dataKey="dateLabel"
+                tick={{ fontSize: 10 }}
+                interval="preserveStartEnd"
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickFormatter={(v) => `$${Math.round(v / 1000)}k`}
+              />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const row = payload[0]?.payload as SimulationPoint;
                   return (
                     <div className="rounded border border-border bg-card px-3 py-2 text-sm shadow-sm">
-                      <p className="font-medium text-foreground">{row.dateLong}</p>
+                      <p className="font-medium text-foreground">
+                        {row.dateLong}
+                      </p>
                       <p className="text-muted">
                         Baseline:{" "}
                         {row.baselineBalance != null
@@ -669,8 +737,11 @@ export function MortgageTabContent({
   const baselineNote = (
     <div className="rounded-md border border-border bg-subtle/30 p-3 text-xs text-muted">
       Baseline assumes no extra principal payments. Monthly payment{" "}
-      {normalizedMortgage ? formatCurrency(getPiForAmortization(normalizedMortgage)) : "—"}
-      /mo. &quot;With extra payment&quot; adds {formatCurrency(extraPayment)}/mo in extra principal.
+      {normalizedMortgage
+        ? formatCurrency(getPiForAmortization(normalizedMortgage))
+        : "—"}
+      /mo. &quot;With extra payment&quot; adds {formatCurrency(extraPayment)}/mo
+      in extra principal.
     </div>
   );
 
@@ -681,13 +752,17 @@ export function MortgageTabContent({
       </summary>
       <div className="mt-2 space-y-1 text-xs text-muted">
         <p>
-          Common causes: first payment starts a month later than loan start, recent escrow changes,
-          or stale balance/payment fields.
+          Common causes: first payment starts a month later than loan start,
+          recent escrow changes, or stale balance/payment fields.
         </p>
-        <p>Verify: current balance, balance as-of date, monthly payment, escrow included + amount, and start/effective dates.</p>
         <p>
-          Small residual balances close to term-end are auto-treated as payoff estimates, so
-          &quot;Not amortizing&quot; appears only when principal is not meaningfully reducing.
+          Verify: current balance, balance as-of date, monthly payment, escrow
+          included + amount, and start/effective dates.
+        </p>
+        <p>
+          Small residual balances close to term-end are auto-treated as payoff
+          estimates, so &quot;Not amortizing&quot; appears only when principal
+          is not meaningfully reducing.
         </p>
         <p>
           <Link
@@ -699,15 +774,17 @@ export function MortgageTabContent({
             className="font-medium text-accent hover:underline"
           >
             Review mortgage details
-          </Link>
-          {" "}and rerun the simulation.
+          </Link>{" "}
+          and rerun the simulation.
         </p>
       </div>
     </details>
   ) : null;
 
   const disclaimer = (
-    <p className="text-xs text-muted">Estimates for informational purposes only. Not financial advice.</p>
+    <p className="text-xs text-muted">
+      Estimates for informational purposes only. Not financial advice.
+    </p>
   );
 
   if (isMortgageWorkspace) {

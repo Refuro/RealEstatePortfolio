@@ -36,8 +36,9 @@ export default async function TermsPage() {
           Terms of Service
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2025
+          Last updated: March 2026
         </p>
+        {/* TODO(legal): When operating entity is finalized (LLC vs sole proprietor), align the contracting party name and contact block with docs/business-launch-checklist.md before substantive edits to “we” / operator identity. */}
 
         <div className="mt-8 space-y-6 text-base text-foreground">
           <section>

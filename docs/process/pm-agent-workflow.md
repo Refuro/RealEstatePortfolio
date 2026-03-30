@@ -29,7 +29,7 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 
 - When the builder finishes a phase, the **subagentStop** hook can send a follow-up so the PM is prompted to review.
 - I (the PM) follow **`docs/process/pm-review-checklist.md`** every time: build, lint (errors must be cleaned up before approval; ignore Prisma schema URL), tests, scope, **design compliance** (for UI phases; see checklist), docs/handoff, then approve or request changes.
-- **Tests & CI:** What the suite proves (and what it does not) is summarized in [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md). Planned hardening and follow-up work lives in [`docs/tasks.md`](../tasks.md) under **Active tasks → Test infrastructure follow-up** (Phase 1 & 2).
+- **Tests & CI:** What the suite proves (and what it does not) is summarized in [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md). Phase 1 & 2 hardening is **complete** — see [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)**; new test work is added when the PM promotes it.
 - For major risk-bearing changes, run or verify required focused audits per `docs/audits/README.md` before final approval.
 - **Builder handoff:** The builder adds new env vars to `app/.env.example` and manual steps to `docs/setup/manual-steps.md` when done. The PM checks this during review.
 - **Resume:** Resume the builder with one message: e.g. "Approved. Proceed to Phase N — [scope]." or "Fix X and Y, then proceed to Phase N as above."
@@ -40,7 +40,7 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 - Policy summary:
   - **Allow:** read-only, `npm install`, `npx prisma migrate dev`, `npm run build`, `npm run dev`, `npm run check`, lint/test, local dev.
   - **Deny:** `rm -rf`, `git push --force`, production DB or prod secrets, irreversible destructive commands.
-  - **Ask (user approves in UI):** first-time `git push`, deploy-like commands. The hook returns `{"ask": true, "reason": "..."}` so you approve in Cursor.
+  - **Ask (user approves in UI):** first-time `git push`, deploy-like commands (`vercel deploy`, `vercel --prod`), and network-heavy or external API calls that could have side effects (per `docs/policies/shell-risk-policy.md`). The hook returns `{"ask": true, "reason": "..."}` so you approve in Cursor.
 
 ---
 

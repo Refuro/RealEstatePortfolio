@@ -1,0 +1,20 @@
+---
+description: Documentation audit command — audit repo docs and report to docs/audits/documentation
+alwaysApply: false
+---
+
+# Documentation Audit Command
+
+When the user says **"run documentation audit"**, **"documentation audit"**, or **"run doc audit"**:
+
+## What to do
+
+1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/documentation-audit-process.md`.
+2. Require output report at `docs/audits/documentation/YYYY-MM-DD-documentation-audit.md`.
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/documentation-audit-process.md`
+- Reports: `docs/audits/documentation/`

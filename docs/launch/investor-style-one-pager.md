@@ -1,7 +1,7 @@
 # Veld Portfolio — Investor-Style One-Pager
 
 **Date:** 2026-03-20  
-**Status:** Pre-launch; product-complete for core investor workflows, not yet market-validated.
+**Status:** Pre-launch assessment snapshot — product-complete for core investor workflows; **production** app, analytics, and ops checklist verified per [`../launch/launch-plan.md`](../launch/launch-plan.md) §6–7. Market traction and positioning evolve with **soft launch / growth** (same doc §5).
 
 ---
 

@@ -63,6 +63,8 @@ Group consolidated tasks by domain:
 - **Governance** — Rules, hooks, docs, stale references
 - **Math** — Projections, metrics, export columns
 - **Business** — Analytics, tests, changelog, launch
+- **Documentation** — Stale docs, archive candidates, broken references, folder hygiene
+- **Legal / Compliance** — Privacy, terms, consent, billing/marketing disclosure issues
 
 ---
 
@@ -84,6 +86,8 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 - Data Integrity & Reconciliation
 - Business & Valuation
 - Growth Funnel & Activation
+- Documentation
+- Legal & Compliance
 - AI Agent Governance
 
 (Include only lanes that were run and had reports.)
@@ -119,6 +123,12 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 ### Business
 ...
 
+### Documentation
+...
+
+### Legal / Compliance
+...
+
 ## PM review
 
 Review the consolidated list above. Promote approved items to [docs/tasks.md](../../tasks.md). The builder implements approved items.
@@ -141,7 +151,7 @@ Review the consolidated list above. Promote approved items to [docs/tasks.md](..
 
 When the agent runs a full audit:
 
-1. Run all 10 lane processes (or 9 if Code is skipped when unchanged).
+1. Run all 12 lane processes (or 11 if Code is skipped when unchanged).
 2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`.
 3. Run this synthesis process.
 4. Write output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.

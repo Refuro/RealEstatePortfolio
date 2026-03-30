@@ -1,11 +1,20 @@
 "use client";
 
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
-import { isBenchmarkFresh } from "@/lib/benchmark-utils";
+import { getBenchmarkEligibility } from "@/lib/benchmark-utils";
+import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getPiForAmortization } from "@/lib/amortization";
 import type { MortgageForTabs } from "./property-detail-types";
 
-function Chip({ label, tone = "neutral" }: { label: string; tone?: "neutral" | "warn" | "good" }) {
+function Chip({
+  label,
+  tone = "neutral",
+  title,
+}: {
+  label: string;
+  tone?: "neutral" | "warn" | "good";
+  title?: string;
+}) {
   const toneClass =
     tone === "good"
       ? "border-positive/30 text-positive"
@@ -13,7 +22,10 @@ function Chip({ label, tone = "neutral" }: { label: string; tone?: "neutral" | "
         ? "border-negative/30 text-negative"
         : "border-border text-muted";
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-xs font-medium ${toneClass}`}>
+    <span
+      title={title}
+      className={`rounded-full border px-2 py-0.5 text-xs font-medium ${toneClass}`}
+    >
       {label}
     </span>
   );
@@ -32,15 +44,24 @@ export function PropertyHealthStrip({
 }: {
   property: {
     updatedAt: Date | string;
+    isRented: boolean;
+    currentMonthlyRent: number;
+    unitRents?: unknown;
     marketRent: number | null;
     marketRentAsOf: Date | string | null;
   };
   mortgageData: MortgageWithBalance[];
 }) {
   const staleProperty = isDataStale(new Date(property.updatedAt));
-  const benchmarkMissing = property.marketRent == null || property.marketRent <= 0;
-  const benchmarkStale =
-    !benchmarkMissing && !isBenchmarkFresh(property.marketRentAsOf ?? null);
+  const benchmarkState = getBenchmarkEligibility({
+    isRented: property.isRented,
+    userRent: getPropertyTotalRent({
+      currentMonthlyRent: property.currentMonthlyRent,
+      unitRents: property.unitRents,
+    }),
+    marketRent: property.marketRent,
+    marketRentAsOf: property.marketRentAsOf ?? null,
+  });
   const missingLenderCount = mortgageData.filter((m) => !m.lenderName).length;
   const potentialNegAmCount = mortgageData.filter((m) => {
     const balance = m.effectiveBalance ?? Number(m.currentBalance);
@@ -68,12 +89,24 @@ export function PropertyHealthStrip({
         ) : (
           <Chip label="Property data fresh" tone="good" />
         )}
-        {benchmarkMissing ? (
+        {benchmarkState === "not_rented" ? (
+          <Chip label="Benchmark hidden (not rented)" />
+        ) : benchmarkState === "rent_missing" ? (
+          <Chip label="Rent missing for benchmark" tone="warn" />
+        ) : benchmarkState === "benchmark_missing" ? (
           <Chip label="Benchmark missing" tone="warn" />
-        ) : benchmarkStale ? (
-          <Chip label="Benchmark stale" tone="warn" />
+        ) : benchmarkState === "benchmark_stale" ? (
+          <Chip
+            label="Benchmark stale"
+            tone="warn"
+            title="Market snapshot is stale when its as-of date is 60 or more full days before now (fresh only if strictly under 60×24h)."
+          />
         ) : (
-          <Chip label="Benchmark fresh" tone="good" />
+          <Chip
+            label="Benchmark fresh"
+            tone="good"
+            title="Market snapshot as-of is strictly less than 60 full days before now."
+          />
         )}
         {missingLenderCount > 0 && (
           <Chip

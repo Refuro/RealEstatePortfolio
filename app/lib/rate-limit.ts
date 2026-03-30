@@ -1,11 +1,12 @@
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 
-/** Per-action limits (requests per hour). Documented in docs/audits/security. */
+/** Per-action limits (requests per hour). Documented in docs/security/security-notes.md and audits. */
 export const RATE_LIMITS: Record<string, number> = {
   "properties:create": 20,
   "deals:create": 20,
   "import:portfolio": 5,
+  "export:portfolio": 15,
   "account:delete": 5,
   "account:delete-permanent": 3,
   "billing:create-checkout": 10,

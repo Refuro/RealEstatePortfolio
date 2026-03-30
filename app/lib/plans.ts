@@ -15,7 +15,14 @@ export const PLAN_DEAL_LIMITS = {
   pro: 50,
 } as const;
 
-/** RentCast API calls per hour by plan. Free: 5, Investor: 10, Pro: 20. */
+/**
+ * Per-hour cap on successful RentCast upstream calls, by subscription tier.
+ * Free: 5, Investor: 10, Pro: 20.
+ *
+ * **Shared pool:** `RentCastApiCall` rows do not distinguish endpoint type. Rent estimate,
+ * value estimate, and benchmark refresh all count toward the same hourly limit for the user.
+ * See `docs/reference/rentcast-quota.md`.
+ */
 export const RENTCAST_HOURLY_LIMITS = {
   free: 5,
   investor: 10,
@@ -36,6 +43,7 @@ export function getEffectiveTier(user: {
   return (user.subscriptionTier ?? "free").toLowerCase();
 }
 
+/** Max `RentCastApiCall` rows in the rolling hour (all RentCast-backed routes share one counter). */
 export function getRentCastHourlyLimit(tier: string): number {
   const key = tier.toLowerCase() as PlanTier;
   return RENTCAST_HOURLY_LIMITS[key] ?? RENTCAST_HOURLY_LIMITS.free;

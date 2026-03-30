@@ -148,7 +148,11 @@ export async function POST(req: NextRequest) {
           purchaseDate: r.purchaseDate,
           currentEstimatedValue: r.currentEstimatedValue,
           currentMonthlyRent: r.currentMonthlyRent,
-          unitRents: r.unitRents && r.unitRents.length > 0 ? r.unitRents : null,
+          isRented: r.isRented,
+          unitRents:
+            r.isRented && r.unitRents && r.unitRents.length > 0
+              ? r.unitRents
+              : null,
           currentMonthlyExpenses: r.currentMonthlyExpenses,
           vacancyPercent: r.vacancyPercent,
           cashInvested: r.cashInvested,

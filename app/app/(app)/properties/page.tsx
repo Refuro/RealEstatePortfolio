@@ -9,7 +9,8 @@ import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import {
-  isBenchmarkFresh,
+  BENCHMARK_UX_MESSAGES,
+  getBenchmarkEligibility,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
@@ -22,19 +23,36 @@ import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 function BenchmarkLine({
   propertyId,
   userRent,
+  isRented,
   marketRent,
   marketRentAsOf,
 }: {
   propertyId: string;
   userRent: number;
+  isRented: boolean;
   marketRent: number | null;
   marketRentAsOf: Date | null;
 }) {
-  if (marketRent == null || marketRent <= 0) {
+  const eligibility = getBenchmarkEligibility({
+    isRented,
+    userRent,
+    marketRent,
+    marketRentAsOf,
+  });
+  if (eligibility === "not_rented") {
+    return (
+      <p className="text-sm text-muted">{BENCHMARK_UX_MESSAGES.notRented}</p>
+    );
+  }
+  if (eligibility === "rent_missing") {
+    return (
+      <p className="text-sm text-muted">{BENCHMARK_UX_MESSAGES.rentMissing}</p>
+    );
+  }
+  if (eligibility === "benchmark_missing") {
     return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
   }
-  const fresh = isBenchmarkFresh(marketRentAsOf);
-  if (fresh) {
+  if (eligibility === "eligible_fresh" && marketRent != null) {
     return <p className="text-sm text-muted">{getBenchmarkLabel(userRent, marketRent)}</p>;
   }
   return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
@@ -182,8 +200,15 @@ export default async function PropertiesPage({
       },
       displayMode
     );
+    const benchmarkEligibility = getBenchmarkEligibility({
+      isRented: p.isRented,
+      userRent: getPropertyTotalRent(p),
+      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+      marketRentAsOf: p.marketRentAsOf,
+    });
     const benchmarkStale =
-      p.marketRent == null || Number(p.marketRent) <= 0 || !isBenchmarkFresh(p.marketRentAsOf);
+      benchmarkEligibility === "benchmark_missing" ||
+      benchmarkEligibility === "benchmark_stale";
     const noMortgage = p.mortgages.length === 0;
     const negativeCashFlow = metrics.monthlyCashFlow < 0;
     const needsAttention = noMortgage || benchmarkStale || negativeCashFlow;
@@ -410,6 +435,7 @@ export default async function PropertiesPage({
                     <BenchmarkLine
                       propertyId={p.id}
                       userRent={card.userRent}
+                      isRented={p.isRented}
                       marketRent={p.marketRent != null ? Number(p.marketRent) : null}
                       marketRentAsOf={p.marketRentAsOf}
                     />
@@ -505,6 +531,7 @@ export default async function PropertiesPage({
                         <BenchmarkLine
                           propertyId={p.id}
                           userRent={card.userRent}
+                          isRented={p.isRented}
                           marketRent={p.marketRent != null ? Number(p.marketRent) : null}
                           marketRentAsOf={p.marketRentAsOf}
                         />

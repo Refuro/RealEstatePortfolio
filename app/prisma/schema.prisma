@@ -77,6 +77,7 @@ model Property {
   purchaseDate           DateTime @db.Date
   currentEstimatedValue  Decimal  @db.Decimal(14, 2)
   currentMonthlyRent     Decimal  @db.Decimal(12, 2)
+  isRented               Boolean  @default(true)
   unitRents              Json?    // array of numbers, one per unit. Single-family: [total]. Multi-family: [1500, 1900]. Total = sum.
   bedrooms               Int?
   bathrooms              Decimal? @db.Decimal(4, 2)
@@ -116,6 +117,7 @@ model Mortgage {
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
 }
 
+/// One row per successful RentCast API response. Hourly quota is a shared pool (rent + value + benchmark); see docs/reference/rentcast-quota.md.
 model RentCastApiCall {
   id         String   @id @default(cuid())
   userId     String
@@ -123,6 +125,8 @@ model RentCastApiCall {
   createdAt  DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }
 
 model ContactFormSubmission {

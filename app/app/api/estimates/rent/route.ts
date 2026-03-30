@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
 import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { US_STATES } from "@/lib/us-states";
+import { rentCastErrorResponse } from "@/lib/rentcast-route-errors";
 
 const rentEstimateQuerySchema = z.object({
   addressLine1: z.string().min(1, "Address is required").max(300),
@@ -45,13 +46,14 @@ export async function GET(req: NextRequest) {
   const tier = getEffectiveTier(user);
   const hourlyLimit = getRentCastHourlyLimit(tier);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  // Shared hourly pool with value estimate + benchmark refresh (see docs/reference/rentcast-quota.md).
   const recentCallCount = await prisma.rentCastApiCall.count({
     where: { userId: user.id, createdAt: { gte: oneHourAgo } },
   });
   if (recentCallCount >= hourlyLimit) {
-    return NextResponse.json(
-      { error: "You've used your estimate limit for this hour. Try again later." },
-      { status: 429 }
+    return rentCastErrorResponse(
+      "You've used your estimate limit for this hour. Try again later.",
+      429
     );
   }
 
@@ -78,10 +80,7 @@ export async function GET(req: NextRequest) {
 
   const apiKey = process.env.RENTCAST_API_KEY;
   if (!apiKey?.trim()) {
-    return NextResponse.json(
-      { error: "Rent estimate service is not configured" },
-      { status: 503 }
-    );
+    return rentCastErrorResponse("Rent estimate service is not configured", 503);
   }
 
   try {
@@ -117,10 +116,8 @@ export async function GET(req: NextRequest) {
       marketRentAsOf: marketRentAsOfStr,
     });
   } catch (err) {
-    await prisma.rentCastApiCall.create({
-      data: { userId: user.id },
-    }).catch(() => {});
+    // Hourly quota counts only successful provider calls (recorded above).
     const message = err instanceof Error ? err.message : "Estimate unavailable";
-    return NextResponse.json({ error: message }, { status: 200 });
+    return rentCastErrorResponse(message, 502);
   }
 }

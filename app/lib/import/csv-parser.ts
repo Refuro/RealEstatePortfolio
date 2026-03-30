@@ -1,4 +1,5 @@
 import { US_STATES } from "@/lib/us-states";
+import { resolveImportRentForCreate } from "@/lib/import/rent-resolve";
 
 export const PROPERTY_TYPE_MAP: Record<string, string> = {
   "single family": "single_family",
@@ -8,10 +9,53 @@ export const PROPERTY_TYPE_MAP: Record<string, string> = {
   "multi-family": "multi_family",
   multi_family: "multi_family",
   condo: "condo",
+  "multi-unit": "multi_family",
   townhouse: "townhouse",
   manufactured: "manufactured",
   apartment: "apartment",
+  apt: "apartment",
 };
+
+const CANONICAL_TYPES = new Set([
+  "single_family",
+  "condo",
+  "townhouse",
+  "manufactured",
+  "multi_family",
+  "apartment",
+]);
+
+/** Normalizes CSV "property type" cell to Prisma enum string (round-trip with export). */
+export function normalizePropertyTypeFromCsv(raw: string): string {
+  const t = raw.trim();
+  if (!t) return "single_family";
+  const lower = t.toLowerCase().replace(/\s+/g, " ");
+  const underscored = lower.replace(/ /g, "_");
+  if (CANONICAL_TYPES.has(underscored)) return underscored;
+  return PROPERTY_TYPE_MAP[lower] ?? "single_family";
+}
+
+function parseIsRentedCell(raw: string): boolean {
+  const s = raw.trim().toLowerCase();
+  if (!s) return true;
+  if (["yes", "y", "true", "1", "rented"].includes(s)) return true;
+  if (["no", "n", "false", "0", "vacant", "not rented", "not_rented"].includes(s)) {
+    return false;
+  }
+  return true;
+}
+
+/** Parses "1,200|1,300" or "1200, 1300" into numbers; length must match `units` to be valid. */
+export function parseUnitRentsCell(raw: string, units: number): number[] | null {
+  const s = raw.trim();
+  if (!s) return null;
+  const parts = s.includes("|") ? s.split("|") : s.split(",");
+  const nums = parts
+    .map((p) => parseNum(p.trim()))
+    .filter((n): n is number => n != null && n >= 0);
+  if (nums.length !== units) return null;
+  return nums;
+}
 
 export function parseDate(val: string): Date | null {
   const s = String(val ?? "").trim();
@@ -108,6 +152,7 @@ export type ImportRow = {
   escrowAmount: number | null;
   lenderName: string | null;
   loanType: string | null;
+  isRented: boolean;
 };
 
 export function parseRow(
@@ -169,24 +214,28 @@ export function parseRow(
   if (currentEstimatedValue == null || currentEstimatedValue < 0)
     return { error: `Row ${rowNum}: Valid current value required.` };
 
-  const rent = parseNum(getCol(row, "rent", "currentMonthlyRent"));
-  if (rent == null || rent < 0)
-    return { error: `Row ${rowNum}: Valid rent required.` };
+  const isRentedRaw = getCol(row, "is rented", "isRented");
+  const isRented = parseIsRentedCell(isRentedRaw);
 
+  const ptRaw = getCol(row, "property type", "propertyType");
+  const propertyType = normalizePropertyTypeFromCsv(ptRaw);
+
+  const unitsRaw = parseNum(getCol(row, "units"));
+  const units =
+    unitsRaw != null && unitsRaw >= 1 ? Math.min(999, Math.round(unitsRaw)) : 1;
+
+  const unitRentsRaw = getCol(row, "unit rents", "unitRents");
+  const unitRentsParsed = parseUnitRentsCell(unitRentsRaw, units);
+
+  const rent = parseNum(getCol(row, "rent", "currentMonthlyRent"));
+  if (isRented && (rent == null || rent < 0) && !unitRentsParsed) {
+    return { error: `Row ${rowNum}: Valid rent or unit rents required when is rented.` };
+  }
   const expenses = parseNum(
     getCol(row, "expenses", "currentMonthlyExpenses")
   );
   if (expenses == null || expenses < 0)
     return { error: `Row ${rowNum}: Valid expenses required.` };
-
-  const ptRaw = getCol(row, "property type", "propertyType");
-  const propertyType = ptRaw
-    ? (PROPERTY_TYPE_MAP[ptRaw.toLowerCase()] ?? "single_family")
-    : "single_family";
-
-  const unitsRaw = parseNum(getCol(row, "units"));
-  const units =
-    unitsRaw != null && unitsRaw >= 1 ? Math.min(999, Math.round(unitsRaw)) : 1;
 
   const SINGLE_UNIT_TYPES = [
     "single_family",
@@ -230,7 +279,7 @@ export function parseRow(
     )
   );
   const balanceAsOfRaw = parseDate(
-    getCol(row, "balance as of", "balanceAsOfDate")
+    getCol(row, "balance as of", "balance as of (first lien)", "balanceAsOfDate")
   );
   const balanceAsOfDate = balanceAsOfRaw ?? null;
   const originalLoanAmountRaw = parseNum(
@@ -240,34 +289,40 @@ export function parseRow(
     originalLoanAmountRaw != null && originalLoanAmountRaw >= 0
       ? originalLoanAmountRaw
       : null;
-  const mortgageRateRaw = parseNum(getCol(row, "mortgage rate", "mortgageRate"));
+  const mortgageRateRaw = parseNum(
+    getCol(row, "mortgage rate", "mortgage rate (first lien)", "mortgageRate")
+  );
   const mortgageRate =
     mortgageRateRaw != null && mortgageRateRaw >= 0 ? mortgageRateRaw / 100 : null;
-  const mortgageTerm = parseNum(getCol(row, "mortgage term", "mortgageTerm"));
+  const mortgageTerm = parseNum(
+    getCol(row, "mortgage term", "mortgage term (first lien)", "mortgageTerm")
+  );
   const monthlyPayment = parseNum(
-    getCol(row, "monthly payment", "monthlyPayment")
+    getCol(row, "monthly payment", "monthly payment (all liens sum)", "monthlyPayment")
   );
   const escrowAmountRaw = parseNum(
     getCol(row, "escrow amount", "escrowAmount")
   );
   const escrowAmount =
     escrowAmountRaw != null && escrowAmountRaw >= 0 ? escrowAmountRaw : null;
-  const lenderName = getCol(row, "lender") || null;
+  const lenderName = getCol(row, "lender", "lender (first lien)") || null;
   const loanTypeRaw = getCol(row, "loan type", "loanType");
   const loanType = loanTypeRaw ? loanTypeRaw.trim() : null;
 
   const nickname = getCol(row, "nickname") || null;
 
-  const unitRentsRaw = getCol(row, "unit rents", "unitRents");
-  let unitRents: number[] | null = null;
-  if (unitRentsRaw) {
-    const parsed = unitRentsRaw
-      .split(",")
-      .map((s) => parseNum(s.trim()))
-      .filter((n): n is number => n != null && n >= 0);
-    if (parsed.length === units && parsed.every((n) => n > 0)) {
-      unitRents = parsed;
-    }
+  const resolved = resolveImportRentForCreate({
+    isRented,
+    propertyType,
+    units,
+    rentFromColumn: rent != null && rent >= 0 ? rent : null,
+    unitRentsFromColumn: unitRentsParsed,
+  });
+
+  if (isRented && resolved.currentMonthlyRent <= 0) {
+    return {
+      error: `Row ${rowNum}: When is rented, provide a positive rent total or valid per-unit rents.`,
+    };
   }
 
   return {
@@ -283,8 +338,8 @@ export function parseRow(
       purchasePrice,
       purchaseDate,
       currentEstimatedValue,
-      currentMonthlyRent: rent,
-      unitRents,
+      currentMonthlyRent: resolved.currentMonthlyRent,
+      unitRents: resolved.unitRents,
       currentMonthlyExpenses: expenses,
       vacancyPercent,
       cashInvested,
@@ -301,6 +356,7 @@ export function parseRow(
       escrowAmount,
       lenderName,
       loanType,
+      isRented,
     },
   };
 }

@@ -1,7 +1,15 @@
 "use client";
 
+import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
+import {
+  hasFiredOnboardingStep,
+  markFiredOnboardingStep,
+} from "@/lib/analytics-dedup";
+import { getPlanIntentForAnalytics } from "@/lib/plan-intent";
 
 type OnboardingProgress = {
   welcomeSeenAt: string | null;
@@ -26,10 +34,23 @@ export function OnboardingPanel({
   initialProgress: OnboardingProgress;
 }) {
   const router = useRouter();
+  const { user, isLoaded } = useUser();
   const [progress, setProgress] = useState(initialProgress);
   const [busy, setBusy] = useState(false);
 
   const showWelcomeModal = !progress.welcomeSeenAt && !progress.dismissedAt;
+
+  useEffect(() => {
+    if (!isLoaded || !user?.id || !showWelcomeModal) return;
+    if (hasFiredOnboardingStep(user.id, "welcome_modal_viewed")) return;
+    markFiredOnboardingStep(user.id, "welcome_modal_viewed");
+    const pi = getPlanIntentForAnalytics();
+    captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+      step: "welcome_modal_viewed",
+      plan_intent: pi.plan_intent,
+      plan_intent_source: pi.plan_intent_source,
+    });
+  }, [isLoaded, user?.id, showWelcomeModal]);
 
   async function handleWelcome(startNow: boolean) {
     if (busy) return;
@@ -40,10 +61,28 @@ export function OnboardingPanel({
         const dismissed = await patchOnboarding("dismiss_modal");
         if (dismissed) {
           setProgress(dismissed);
+          if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_maybe_later")) {
+            markFiredOnboardingStep(user.id, "welcome_maybe_later");
+            const pi = getPlanIntentForAnalytics();
+            captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+              step: "welcome_maybe_later",
+              plan_intent: pi.plan_intent,
+              plan_intent_source: pi.plan_intent_source,
+            });
+          }
         }
         router.refresh();
       } else {
         setProgress(next);
+        if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_add_first_property")) {
+          markFiredOnboardingStep(user.id, "welcome_add_first_property");
+          const pi = getPlanIntentForAnalytics();
+          captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+            step: "welcome_add_first_property",
+            plan_intent: pi.plan_intent,
+            plan_intent_source: pi.plan_intent_source,
+          });
+        }
         router.push("/properties/new");
       }
     }

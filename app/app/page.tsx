@@ -1,8 +1,13 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
+import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { PublicCalculator } from "@/components/marketing/public-calculator";
 import {
   LayoutGrid,
   TrendingUp,
@@ -29,12 +34,12 @@ export const metadata: Metadata = {
 const VALUE_PROPS = [
   {
     title: "Replace spreadsheets",
-    description: "One place for your portfolio data",
+    description: "Equity, debt, and cash flow across every property — always current",
     icon: LayoutGrid,
   },
   {
     title: "Rent & value estimates",
-    description: "Market-based rent and value estimates (RentCast)",
+    description: "See what your property could rent for today, pulled from live market data",
     icon: TrendingUp,
   },
   {
@@ -73,7 +78,10 @@ export default async function HomePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
-      <LandingNav userId={userId} />
+      <Suspense fallback={null}>
+        <PlanIntentUrlSync />
+      </Suspense>
+      <LandingNav userId={userId} landingVariant="home_default_v2" />
 
       <main className="flex flex-1 flex-col">
         {/* Hero */}
@@ -82,10 +90,11 @@ export default async function HomePage({
             Veld Portfolio
           </p>
           <h1 className="max-w-2xl text-center text-3xl font-semibold text-foreground sm:text-4xl md:text-5xl">
-            Track your rental portfolio in one place
+            Replace spreadsheet sprawl with one clear view of your rental portfolio
           </h1>
           <p className="max-w-lg text-center text-base text-muted sm:text-lg">
-            See equity, cash flow, and key metrics at a glance.
+            Equity, cash flow, deal analysis, and rent estimates — all in one workspace built for
+            small investors.
           </p>
           {deletedParam === "1" && (
             <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-center text-sm text-foreground">
@@ -109,79 +118,91 @@ export default async function HomePage({
                 </Link>
                 <Link
                   href="/pricing"
-                  className="w-full rounded-lg border border-border px-6 py-3 text-center text-sm font-medium hover:bg-subtle sm:w-auto"
+                  className="w-full text-center text-sm font-medium text-muted hover:text-foreground hover:underline sm:w-auto"
                 >
-                  View pricing
+                  View pricing plans
                 </Link>
               </>
             ) : (
               <>
-                <Link
-                  href="/sign-up"
+                <FunnelCtaLink
+                  href="/sign-up?intent=free"
+                  placement="landing_hero"
+                  ctaId="get_started_free"
+                  planIntent="free"
+                  landingVariant="home_default_v2"
                   className="w-full rounded-lg bg-accent px-6 py-3 text-center text-sm font-medium text-accent-foreground hover:bg-accent-hover sm:w-auto"
                 >
                   Get started free
-                </Link>
-                <Link
+                </FunnelCtaLink>
+                <FunnelCtaLink
                   href="/pricing"
-                  className="w-full rounded-lg border border-border px-6 py-3 text-center text-sm font-medium hover:bg-subtle sm:w-auto"
+                  placement="landing_hero"
+                  ctaId="view_pricing"
+                  landingVariant="home_default_v2"
+                  className="w-full text-center text-sm font-medium text-muted hover:text-foreground hover:underline sm:w-auto"
                 >
-                  View pricing
-                </Link>
+                  See pricing
+                </FunnelCtaLink>
               </>
             )}
           </div>
           {!userId && (
-            <p className="text-sm text-muted">
-              No credit card required for Free.
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-2 text-xs text-muted">
+              <span className="rounded-full border border-border/70 px-3 py-1">
+                No card required for Free
+              </span>
+              <span className="rounded-full border border-border/70 px-3 py-1">
+                Start in about 60 seconds
+              </span>
+              <span className="rounded-full border border-border/70 px-3 py-1">Cancel anytime</span>
+            </div>
           )}
         </section>
 
-        {/* Product screenshots */}
+        {/* Calculator preview */}
         <section className="border-t border-border bg-card/30 px-4 py-10 sm:py-14">
           <div className="mx-auto max-w-5xl">
-            <h2 className="mb-8 text-center text-sm font-semibold uppercase tracking-wide text-muted">
-              See it in action
+            <h2 className="text-center text-sm font-semibold uppercase tracking-wide text-muted">
+              Try the free calculator
             </h2>
-            <div className="grid gap-6 md:grid-cols-2">
-              <div className="md:col-span-2">
-                <img
-                  src="/ScreenDashboard.png"
-                  alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                />
-              </div>
-              <div>
-                <img
-                  src="/ScreenMortgage.png"
-                  alt="Mortgage workspace with payoff simulation, extra payment controls, and balance projection chart"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                />
-                <p className="mt-2 text-center text-sm text-muted">
-                  Mortgage payoff simulator
-                </p>
-              </div>
-              <div>
-                <img
-                  src="/ScreenDeal.png"
-                  alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                />
-                <p className="mt-2 text-center text-sm text-muted">
-                  Deal analyzer
-                </p>
-              </div>
+            <p className="mt-2 text-center text-sm text-muted">
+              Estimate cash flow, cap rate, DSCR, and cash-on-cash return before you commit to
+              anything.
+            </p>
+            <div className="mt-6">
+              <PublicCalculator compact />
             </div>
+            <div className="mt-4 text-center">
+              <FunnelCtaLink
+                href="/investment-property-calculator"
+                placement="landing_how_it_works"
+                ctaId="open_public_calculator"
+                landingVariant="home_default_v2"
+                className="inline-flex rounded-lg border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-subtle"
+              >
+                Open full calculator
+              </FunnelCtaLink>
+            </div>
+          </div>
+        </section>
+
+        {/* Product screenshot */}
+        <section className="border-t border-border bg-card/30 px-4 py-10 sm:py-14">
+          <div className="mx-auto max-w-5xl">
+            <Image
+              src="/ScreenDashboard.png"
+              alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+              className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
+              loading="lazy"
+              width={1280}
+              height={800}
+              sizes="(max-width: 1280px) 100vw, 1280px"
+            />
+            <p className="mt-3 text-center text-sm text-muted">
+              One dashboard for equity, cash flow, rent estimates, and portfolio performance across
+              all your properties.
+            </p>
           </div>
         </section>
 
