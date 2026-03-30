@@ -36,7 +36,7 @@ export default async function TermsPage() {
           Terms of Service
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2025
+          Last updated: March 20, 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">

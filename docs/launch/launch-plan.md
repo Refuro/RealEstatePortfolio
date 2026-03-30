@@ -1,8 +1,8 @@
 # Veld Portfolio — Launch plan
 
 **Status:** Living document — update as messaging and channels prove out.  
-**Last reviewed:** 2026-03-19  
-**Related:** Fulfills **Batch 8** item *Launch plan* in `docs/tasks.md`. *(Epic G in the add-property overhaul is QA & cleanup — complete; launch planning is tracked under Batch 8.)*
+**Last reviewed:** 2026-03-20  
+**Related:** Batch 8 *Launch plan* deliverable (complete) — see [`../tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (*Batch 8*). *(Epic G in the add-property overhaul is QA & cleanup — complete.)*
 
 ---
 
@@ -34,16 +34,16 @@
 
 | Gap | Impact | Mitigation |
 |-----|--------|------------|
-| **No product analytics funnel** (Batch 8) | Cannot measure sign-up → property → deal → paid | Prioritize PostHog/Mixpanel or defer broad paid ads until instrumented. |
-| **Limited automated test coverage** (Batch 8) | Regression risk on `lib/metrics`, amortization | Add Vitest/Jest smoke tests for core math before heavy traffic. |
-| **No public changelog** (Batch 8) | Harder to nurture returning users / SEO | Ship simple `/changelog` + footer link. |
+| ~~**No product analytics funnel**~~ | *(Addressed: PostHog in production; see [`analytics.md`](analytics.md).)* | Use funnel insights before scaling paid ads. |
+| ~~**Limited core test coverage**~~ | *(Addressed: Vitest baseline + CI; expand per roadmap.)* | Keep tests green on metrics/amortization changes. |
+| ~~**No public changelog**~~ | *(Addressed: `/changelog` + process doc.)* | Keep [`changelog-process.md`](changelog-process.md) on releases. |
 | **RentCast dependency** | Estimates/benchmarks need API + user quotas | Communicate “estimates”; monitor errors and hourly limits per plan. |
 
 ### 2.3 Technical snapshot (for launch comms / due diligence)
 
 - **Stack:** Next.js 16, React 19, Prisma/PostgreSQL, Clerk, Stripe, Sentry, RentCast.  
 - **Hosting:** Document production URL (`NEXT_PUBLIC_APP_URL`, e.g. veldportfolio.com) and Vercel env checklist (Clerk, Stripe, DB, Sentry DSN).  
-- **Support:** `SUPPORT_EMAIL` on landing/footer; contact form where applicable.
+- **Support:** `SUPPORT_EMAIL` on landing/footer; `/contact` with **24 business hour** first-response target (see §6.1).
 
 ---
 
@@ -99,17 +99,61 @@ Prioritize **high intent, low support burden** first.
 | **3 — Content & partnerships** | Month 2+ | SEO + trust | Short posts: “How I track LTV across properties,” changelog cadence, optional guest post or podcast. |
 | **4 — Paid (optional)** | After funnel data | Scale what works | Small Google/Meta tests only once conversion events exist; cap spend. |
 
+*Phase 0 (instrumentation, changelog, uptime, core tests) is **shipped**; current focus for new work is phases **1–4** above and roadmap items promoted in `docs/tasks.md`.*
+
+### 5.1 Immediate execution plan (today -> next week)
+
+Use this when launch energy is high and time is constrained.
+
+| Window | Primary objective | Concrete actions | Exit criteria |
+|-------|--------------------|------------------|---------------|
+| **Today (testing session)** | De-risk launch blockers | Run golden-path smoke: sign up -> add first property -> dashboard metrics -> deal save -> plans/checkout start. Submit test contact form. Confirm PostHog events appear for `user_signed_up`, `property_created`, `deal_created`, `checkout_started`. | No blocking defects in core flow; support form delivers; analytics events visible. |
+| **This weekend / early week** | Improve trust surfaces before traffic | Update legal page freshness dates and privacy wording for PostHog analytics usage. Define support SLA (target: first response within 24 business hours) and owner workflow. | Legal/privacy copy deployed; SLA documented; support owner confirmed. |
+| **Next week (organic + paid test start)** | Acquire first qualified users | Post 2-3 high-value threads/comments in Reddit/forums; include screenshot + practical workflow tip, then soft CTA. Launch small Google Search test only (lean budget, high-intent keywords). | First paid + organic traffic cohort arrives; activation baseline established. |
+
+### 5.2 30/60/90 launch and marketing plan (lean budget)
+
+| Period | Focus | Channel plan | Budget guardrail | KPI gate to proceed |
+|--------|-------|--------------|------------------|---------------------|
+| **Days 0-30** | Activation + message fit | Founder-led community posts, direct user feedback, one short Loom demo, basic testimonials. | **$0-$300 total** (organic first, optional tiny ad test). | Baseline funnel measured: `user_signed_up` -> `property_created` (7 days). |
+| **Days 31-60** | Repeatable acquisition | Continue Reddit/forums cadence; refine landing/pricing copy from objections; run narrow Google Search ad groups. | **$300-$600/month max** until conversion stabilizes. | Early monetization signal: `checkout_started` -> `subscription_activated` trend is stable or improving. |
+| **Days 61-90** | Scale only what works | Double down on top 1-2 channels; publish lightweight educational content; optional micro-partnership tests. | Increase spend only with clear CAC confidence. | Activation and paid conversion are repeatable for at least 2-3 consecutive weeks. |
+
+**Posting cadence (minimum):**
+
+- 2-3 community contributions per week (help-first, non-spam).
+- 1 product artifact per week (mini case, screenshot walkthrough, or changelog highlight).
+- 1 weekly KPI review (activation, paid conversion, support load).
+
+**Google Ads starter constraints (to avoid wasted spend):**
+
+- Start with Search only (no broad display/video at first).
+- Keep daily cap small (`$10-$20/day`) and run for 10-14 days before major changes.
+- Pause keywords that do not produce downstream activation (`property_created`), not just clicks.
+
 ---
 
 ## 6. Launch checklist (operational)
 
-- [ ] Production env vars verified (Clerk URLs, Stripe webhooks, DB, Sentry, RentCast).  
-- [ ] `/api/health` green in prod; incident runbook reviewed.  
-- [ ] Support path tested (email or contact).  
-- [ ] Pricing page matches `lib/pricing-display.ts` / Stripe products.  
+- [x] Production env vars verified (Clerk URLs, Stripe webhooks, DB, Sentry, RentCast).  
+- [x] `/api/health` green in prod; incident runbook reviewed.  
+- [x] Support path tested (email or contact).  
+- [x] Pricing page matches `lib/pricing-display.ts` / Stripe products.  
 - [x] Analytics events defined (PostHog): see [`docs/launch/analytics.md`](analytics.md) — `user_signed_up`, `property_created`, `deal_created`, `checkout_started`, `subscription_activated`.  
 - [x] External uptime monitor configured — UptimeRobot → `GET https://veldportfolio.com/api/health`; alerts to support email; [public status](https://stats.uptimerobot.com/Z6ScA8Ip37). Details: [`docs/runbooks/incident-response.md`](../runbooks/incident-response.md) § *External uptime monitor*.  
-- [ ] One “golden path” demo: sign up → add property → see dashboard → open deal analyzer (for video/screenshots).
+- [x] One “golden path” demo: sign up → add property → see dashboard → open deal analyzer (for video/screenshots).
+
+*Production verification completed 2026-03-20 (PM).*
+
+### 6.1 Support SLA (launch)
+
+**First response target:** **24 business hours** (Monday–Friday, US business days, excluding common holidays) from when we receive a message via the **contact form** (`/contact`) or **support email** (`SUPPORT_EMAIL`, also shown in the footer).
+
+**Scope:** Product and account support (access, billing questions, bugs). **Not** tax, legal, or investment advice—the app provides analytics and **estimates/benchmarks** only; see Terms and Privacy.
+
+**Operational note:** This is a **goal**, not a contractual warranty. Actual response times may vary during incidents or high volume.
+
+**Inbox verification:** Follow the checklist in [`docs/runbooks/incident-response.md`](../runbooks/incident-response.md) § *Support SLA and inbox verification* after deploy or when changing `SUPPORT_EMAIL`.
 
 ---
 
@@ -129,7 +173,7 @@ Prioritize **high intent, low support burden** first.
 - **API costs / limits:** RentCast hourly limits per tier — monitor usage and messaging if users hit limits.  
 - **Stripe/Clerk outages:** Rare but visible — status page links in runbook.  
 - **OneDrive / Windows dev paths:** Team-only; no impact on users.  
-- **Batch 8 backlog:** Analytics + tests + changelog reduce launch risk; this plan does not require them to *start* soft launch, but they should precede **paid** scale.
+- **Batch 8 (complete):** PostHog, changelog, test baseline, and uptime are in place; monitor and extend tests as domains grow.
 
 ---
 
@@ -138,5 +182,9 @@ Prioritize **high intent, low support burden** first.
 | Version | Date | Changes |
 |---------|------|---------|
 | 1.0 | 2026-03-19 | Initial plan from app review + Batch 8 scope |
+| 1.1 | 2026-03-20 | §6 launch checklist verified in production; §2.2 gaps updated for shipped Batch 8 items |
+| 1.2 | 2026-03-20 | §5 note: Phase 0 complete; primary ongoing work is growth phases 1–4 |
+| 1.3 | 2026-03-20 | Added §5.1 immediate execution timeline and §5.2 lean 30/60/90 plan with budget and KPI gates |
+| 1.4 | 2026-03-20 | §6.1 Support SLA; aligns with `/contact`, privacy (PostHog), and runbook verification |
 
 When the PM updates `docs/tasks.md`, keep this file in sync if audiences or phases change.

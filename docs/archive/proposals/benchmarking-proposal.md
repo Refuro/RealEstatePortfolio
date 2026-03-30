@@ -1,7 +1,7 @@
 # Benchmarking Proposal: Rent vs Market
 
-**ARCHIVED:** Implemented.  
-**Status:** Proposal (not yet implemented)  
+**ARCHIVED:** Implemented — superseded by live product; see [`../../reference/roadmap.md`](../../reference/roadmap.md) (benchmarking done).  
+**Status:** Historical proposal (do not use for current behavior).  
 **Last updated:** March 2025
 
 ---

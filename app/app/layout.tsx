@@ -3,6 +3,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PostHogAnalyticsProvider } from "@/components/analytics/posthog-provider";
 import { PostHogIdentify } from "@/components/analytics/posthog-identify";
+import { PostHogPersonProperties } from "@/components/analytics/posthog-person-properties";
 import { PostHogPageView } from "@/components/analytics/posthog-page-view";
 import { PostHogSignupOnce } from "@/components/analytics/posthog-signup-once";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
@@ -127,6 +128,7 @@ export default function RootLayout({
         >
           <PostHogAnalyticsProvider>
             <PostHogIdentify />
+            <PostHogPersonProperties />
             <PostHogSignupOnce />
             <PostHogPageView />
             <ThemeProvider>{children}</ThemeProvider>

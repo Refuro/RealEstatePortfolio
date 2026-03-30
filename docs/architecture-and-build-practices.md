@@ -3,7 +3,7 @@
 **Purpose:** Ensure future features align with design, security, and continuity. Prevent spaghetti code as the codebase evolves.
 
 **Status:** Active — builder and PM must follow these practices.
-**Last reviewed:** 2026-03-19 (property detail / add-edit surfaces documented)
+**Last reviewed:** 2026-03-20 (property detail / add-edit overhaul complete; doc aligned with shipped IA)
 **Review cadence:** Quarterly or after major architecture changes
 
 **Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
@@ -241,7 +241,7 @@ When adding tasks to `docs/tasks.md`:
 - **Property flow regression:** [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md)
 - **Testing plan (Vitest phases):** [`proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md)
 - **Test infrastructure review (CI, correctness, next steps):** [`qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
-- **Test follow-up tasks (Phase 1 & 2):** [`tasks.md`](tasks.md) — *Active tasks → Test infrastructure follow-up*
+- **Test follow-up tasks (Phase 1 & 2):** [`tasks-archived.md`](tasks-archived.md) § **Tasks.md archive (2026-03-20)** — *Completed: test infrastructure & hooks*
 - **Design:** `docs/policies/design-spec.md`
 - **Security:** `docs/security/security-notes.md`
 - **Manual steps:** `docs/setup/manual-steps.md`

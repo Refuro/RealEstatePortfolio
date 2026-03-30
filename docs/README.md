@@ -2,8 +2,8 @@
 
 ## Quick links
 
-- [Tasks](tasks.md) — Current builder work
-- [Roadmap](reference/roadmap.md) — Backlog
+- [Tasks](tasks.md) — Builder queue (PM adds items) + roadmap table; **checked-off history** is in [tasks-archived.md](tasks-archived.md)
+- [Roadmap](reference/roadmap.md) — Backlog; promote items to `tasks.md` when ready to build
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
 - [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add / edit / detail tabs (when those areas change)
@@ -24,9 +24,10 @@
 
 ## Launch & growth
 
-- [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
+- [Launch plan](launch/launch-plan.md) — audiences, messaging; **§5–7** = post-ship playbook (soft launch → community → content → optional paid), success metrics, operational checklist
 - [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes
-- [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
+- [Changelog process](launch/changelog-process.md) — same-day entries, dates, security rules for `/changelog`
+- **Historical (complete):** [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — how instrumentation + changelog + uptime were executed (Batch 8 detail: [`tasks-archived.md`](tasks-archived.md) § **Tasks.md archive (2026-03-20)**)
 
 ## QA & regression
 
@@ -81,9 +82,9 @@
 - [AI development process](ai-development-process-extraction.md)
 - [Visual assets guide](visual-assets-guide.md)
 - [Plaid considerations](plaid-considerations.md)
-- [Business launch checklist](business-launch-checklist.md)
+- [Business launch checklist](business-launch-checklist.md) — **legal/ops** (ND sole prop vs LLC); not the same as product launch ops in [launch/launch-plan.md](launch/launch-plan.md) §6
 - [Owner notes](owner_notes/notes.md)
 
 ## Archive
 
-Implemented proposals and deprecated docs: [archive/](archive/)
+Implemented proposals and deprecated docs: [archive/](archive/). Entries may not reflect the current product; prefer `tasks.md`, `reference/roadmap.md`, and live code for “what shipped.”

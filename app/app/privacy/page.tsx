@@ -38,7 +38,7 @@ export default async function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2025
+          Last updated: March 20, 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">
@@ -70,13 +70,28 @@ export default async function PrivacyPage() {
               <li>
                 <strong>Neon</strong> — Database. We store your portfolio data (properties, mortgages, deals) in a PostgreSQL database hosted by Neon. Data is encrypted in transit and at rest.
               </li>
+              <li>
+                <strong>PostHog</strong> — Product analytics (when enabled in production). We use PostHog to understand how the app is used—e.g. sign-ups, when properties or deals are created, checkout starts, and subscription events—so we can improve the product and measure basic funnels. PostHog may receive your Clerk user ID and email after you sign in (for consistent analytics per account), page views, and coarse device/location metadata as described in{" "}
+                <a
+                  href="https://posthog.com/privacy"
+                  className="font-medium text-accent underline hover:no-underline"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  PostHog&apos;s privacy policy
+                </a>
+                . PostHog is not used for advertising or cross-site tracking. If analytics is disabled (no project key in our deployment), PostHog is not loaded. Technical event names and data categories align with our internal product analytics notes (same categories as described for end users: usage and product improvement only; not tax, legal, or investment advice).
+              </li>
+              <li>
+                <strong>Sentry</strong> — Error monitoring. If enabled, Sentry may receive error reports and limited context when something fails in the app, to help us fix bugs. It does not receive your full portfolio export by default.
+              </li>
             </ul>
           </section>
 
           <section>
             <h2 className="text-lg font-semibold">Cookies</h2>
             <p>
-              We use cookies for authentication. Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in across requests. These cookies are essential for the service to function and cannot be disabled. They do not store personally identifiable information by default. We do not use cookies for advertising or cross-site tracking.
+              We use cookies for authentication. Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in across requests. These cookies are essential for the service to function and cannot be disabled. They do not store personally identifiable information by default. When product analytics (PostHog) is enabled, PostHog may use cookies or local storage as described in their policy for session persistence related to analytics; we do not use cookies for advertising or cross-site marketing.
             </p>
           </section>
 

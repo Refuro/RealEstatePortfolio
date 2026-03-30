@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
+import path from "path";
+import { fileURLToPath } from "url";
 import { withSentryConfig } from "@sentry/nextjs";
+
+/** Next.js app directory (…/RealEstatePortfolio/app). Fixes Turbopack resolving deps from the parent Husky root when multiple lockfiles exist. */
+const appDir = path.dirname(fileURLToPath(import.meta.url));
 
 const securityHeaders = [
   { key: "X-Frame-Options", value: "DENY" },
@@ -18,6 +23,9 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  turbopack: {
+    root: appDir,
+  },
   experimental: {
     optimizePackageImports: ["lucide-react", "recharts"],
   },

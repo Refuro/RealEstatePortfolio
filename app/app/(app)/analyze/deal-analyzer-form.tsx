@@ -196,6 +196,11 @@ export function DealAnalyzerForm({
         id?: string;
       };
       if (!res.ok) {
+        if (!dealId && data.code === "PLAN_LIMIT_REACHED") {
+          captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
+            resource: "deal",
+          });
+        }
         setSaveError(
           data.code === "PLAN_LIMIT_REACHED"
             ? "Deal limit reached. Upgrade your plan or remove a deal to save more."

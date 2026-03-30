@@ -1286,6 +1286,11 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
 
       const resData = await res.json().catch(() => ({}));
       if (!res.ok) {
+        if (resData.code === "PLAN_LIMIT_REACHED") {
+          captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
+            resource: "property",
+          });
+        }
         setError(
           resData.code === "PLAN_LIMIT_REACHED"
             ? "Property limit reached. Upgrade your plan or remove a property to add more."

@@ -47,20 +47,15 @@ Legend:
 | notes | ✓ | ✓ | ✓ | Step 5 (review textarea) | ✓ | Notes (section) | |
 | marketRent | ✓ | ✓ | ✓ | Step 3 (estimate action) | ✓ | — | Often set via RentCast in wizard/form |
 | marketRentAsOf | ✓ | ✓ | ✓ | Step 3 (estimate action) | ✓ | — | |
-| squareFeet | — *(planned)* | — *(planned)* | — *(planned)* | — *(planned)* | — *(planned)* | — *(planned)* | **Not implemented today.** Optional **profile** field used to improve RentCast AVM accuracy when calling rent (and optionally value) estimates. Product label e.g. “Sq. ft.”; API/storage name TBD (`squareFeet` vs `sqft`)—keep consistent with Zod + Prisma. |
+| squareFeet | ✓ | ✓ | ✓ | Step 1 | ✓ | Facts | **Shipped (Epic B).** Optional `squareFeet` on `Property`; RentCast rent/value calls pass **`squareFootage`** when set. Label “Sq. ft.” in UI. |
 
 ### Estimate fidelity — RentCast (square footage)
 
 RentCast’s long-term rent AVM accepts a **`squareFootage`** query parameter (alongside `propertyType`, `bedrooms`, `bathrooms`, `units`, etc.). **Manual testing shows materially better rent estimates when sqft is provided** vs address + beds/baths alone.
 
-**Current codebase:** `lib/integrations/rentcast.ts` → `fetchRentEstimate` does **not** yet pass `squareFootage`. `GET /api/estimates/rent` query schema has no sqft field. `Property` in Prisma has **no** sqft column—so nothing persisted to re-use on re-estimate or edit.
+**Current codebase (post–Epic B):** Optional **`squareFeet`** on `Property` (Prisma + Zod + property APIs). Wizard, `/edit`, and Details show sqft where applicable; `lib/integrations/rentcast.ts` threads **`squareFootage`** into rent (and value) estimates when the property or request supplies it.
 
-**Planned direction (Epic B / early C):**
-
-1. Add optional **`squareFeet`** (integer, reasonable min/max, e.g. 100–50_000) to Prisma `Property`, Zod create/update, and `POST`/`PATCH` property APIs.
-2. Surface the input in **shared “Property profile”** UI (wizard + `/edit`; Details read-only or inline Facts per A3).
-3. Thread **`squareFootage`** from stored value (and/or query param on estimate routes) into `fetchRentEstimate`; evaluate **`fetchValueEstimate`** for the same if RentCast value AVM supports it.
-4. When address changes, treat estimate the same as today (clear stale “last estimate” flags); optionally prompt “Add sqft for better accuracy” if empty.
+**Historical note:** This subsection described the pre-ship gap; kept for discovery audit trail.
 
 ### Mortgage (separate model)
 

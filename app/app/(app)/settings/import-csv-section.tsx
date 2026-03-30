@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react";
 import Link from "next/link";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 type ImportResult = {
   imported: number;
@@ -83,6 +85,16 @@ export function ImportCsvSection() {
       if (!res.ok) {
         const errors =
           json.errors?.length ? json.errors : [{ row: 0, message: json.error ?? "Import failed" }];
+        if (json.code === "PLAN_LIMIT_REACHED") {
+          captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
+            resource: "import",
+          });
+        }
+        captureClientEvent(AnalyticsEvents.IMPORT_FAILED, {
+          stage: "upload",
+          reason: errors[0]?.message ?? json.error ?? "unknown",
+          code: json.code,
+        });
         setResult({
           imported: 0,
           errors,
@@ -97,10 +109,19 @@ export function ImportCsvSection() {
           validationErrors: json.validationErrors ?? [],
         });
       } else {
-        setResult({ imported: json.imported, errors: json.errors ?? [] });
+        const errs = json.errors ?? [];
+        captureClientEvent(AnalyticsEvents.IMPORT_COMPLETED, {
+          imported: json.imported,
+          error_count: errs.length,
+        });
+        setResult({ imported: json.imported, errors: errs });
         setPendingFile(null);
       }
     } catch {
+      captureClientEvent(AnalyticsEvents.IMPORT_FAILED, {
+        stage: "upload",
+        reason: "network",
+      });
       setResult({
         imported: 0,
         errors: [{ row: 0, message: "Import failed" }],
@@ -127,17 +148,30 @@ export function ImportCsvSection() {
       });
       const json = (await res.json()) as ImportResult & { error?: string };
       if (!res.ok) {
+        captureClientEvent(AnalyticsEvents.IMPORT_FAILED, {
+          stage: "selection",
+          reason: json.error ?? "unknown",
+        });
         setResult({
           imported: 0,
           errors: [{ row: 0, message: json.error ?? "Import failed" }],
         });
       } else {
-        setResult({ imported: json.imported, errors: json.errors ?? [] });
+        const errs = json.errors ?? [];
+        captureClientEvent(AnalyticsEvents.IMPORT_COMPLETED, {
+          imported: json.imported,
+          error_count: errs.length,
+        });
+        setResult({ imported: json.imported, errors: errs });
       }
       setRequiresSelection(null);
       setSelectedIndices(new Set());
       setPendingFile(null);
     } catch {
+      captureClientEvent(AnalyticsEvents.IMPORT_FAILED, {
+        stage: "selection",
+        reason: "network",
+      });
       setResult({
         imported: 0,
         errors: [{ row: 0, message: "Import failed" }],

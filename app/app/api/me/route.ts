@@ -13,6 +13,10 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const [propertyCount, dealCount] = await Promise.all([
+    prisma.property.count({ where: { userId: user.id } }),
+    prisma.savedDeal.count({ where: { userId: user.id } }),
+  ]);
   return NextResponse.json({
     id: user.id,
     email: user.email,
@@ -20,6 +24,8 @@ export async function GET() {
     lastName: user.lastName,
     subscriptionTier: getEffectiveTier(user),
     ownershipDisplayMode: user.ownershipDisplayMode ?? "proportional",
+    propertyCount,
+    dealCount,
   });
 }
 
