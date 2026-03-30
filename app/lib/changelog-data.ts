@@ -1,6 +1,8 @@
 /**
- * Public changelog entries. Add a new object at the **top** for each release.
- * Shown on `/changelog`.
+ * Public changelog entries. Shown on `/changelog`.
+ *
+ * Process: `docs/launch/changelog-process.md` — new **release day** = new object at the
+ * **top**; **multiple deploys the same day** = add bullets to that day’s entry (no duplicate dates).
  */
 export type ChangelogEntry = {
   /** ISO date (YYYY-MM-DD) */
@@ -24,8 +26,9 @@ export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
     title: "Product updates & launch readiness",
     items: [
       "Public changelog (this page) for release notes and SEO.",
-      "PostHog product analytics (optional via env) for funnel insights.",
-      "Docs: uptime monitoring checklist for production health checks.",
+      "PostHog product analytics for funnel insights.",
+      "Richer analytics: subscription lifecycle and plan-limit signals, CSV import outcomes, person properties for plan tier and portfolio counts.",
+      "Docs: uptime monitoring for production health; public status: https://stats.uptimerobot.com/Z6ScA8Ip37.",
     ],
   },
   {

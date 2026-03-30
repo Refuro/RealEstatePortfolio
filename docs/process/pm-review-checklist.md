@@ -2,8 +2,10 @@
 
 Use this checklist every time you review builder work (builder finished or user asked to check). Complete all items before approving.
 
-**Last reviewed:** 2026-03-19
+**Last reviewed:** 2026-03-20
 **Review cadence:** Monthly
+
+*Post–Batch 8 / production verification: ongoing builder work is driven by new items in [`docs/tasks.md`](../tasks.md) (promoted from roadmap) or growth milestones in [`docs/launch/launch-plan.md`](../launch/launch-plan.md).*
 
 ---
 
@@ -11,7 +13,7 @@ Use this checklist every time you review builder work (builder finished or user 
 
 - [ ] **Build & lint:** From `app/` run `npm run check`. Both build and lint must pass. Lint errors must be cleaned up before approval. If either fails, resume the builder with the failure output and request fixes; do not approve. (Ignore Prisma `schema.prisma` datasource URL warning — required for Prisma 6.)
 - [ ] **Unit tests:** From `app/` run `npm run test` (Vitest). Failures → request fixes, then re-review. If the task changed `lib/metrics/`, `lib/amortization.ts`, or `lib/validations/property.ts`, tests must pass or be updated per [`docs/proposals/testing-implementation-plan.md`](../proposals/testing-implementation-plan.md).
-- [ ] **Test / CI scope (when applicable):** If the task changes `.github/workflows`, Vitest config, or global test strategy, verify alignment with [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md) and update that doc’s change log (§10). If completing items under [`docs/tasks.md`](../tasks.md) *Test infrastructure follow-up*, check off those bullets there.
+- [ ] **Test / CI scope (when applicable):** If the task changes `.github/workflows`, Vitest config, or global test strategy, verify alignment with [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md) and update that doc’s change log (§10). If adding **new** test-infra follow-up work, add it to [`docs/tasks.md`](../tasks.md) and archive when done.
 - [ ] **Scope:** Compare builder output and code changes to `docs/tasks.md` and the assigned task. All task items must be done; no significant out-of-scope work.
 - [ ] **Acceptance criteria (if applicable):** For tasks with explicit acceptance criteria (e.g. in `docs/tasks.md`), verify each criterion is met. Do not approve until all are satisfied.
 - [ ] **Design compliance:** If the work includes UI, verify it aligns with `docs/policies/design-spec.md`. Check: semantic tokens (not raw zinc/slate), typography scale, spacing, component patterns, no forbidden elements (heavy shadows, decorative gradients). Request changes if the design direction is violated.

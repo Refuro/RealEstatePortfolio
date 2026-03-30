@@ -6,6 +6,7 @@ import { PostHogProvider as PHProvider } from "posthog-js/react";
 import { useCookieConsent } from "@/components/consent/cookie-consent-provider";
 import { PostHogIdentify } from "./posthog-identify";
 import { PostHogPageView } from "./posthog-page-view";
+import { PostHogPersonProperties } from "./posthog-person-properties";
 import { PostHogPlanIntent } from "./posthog-plan-intent";
 import { PostHogSignupOnce } from "./posthog-signup-once";
 
@@ -46,6 +47,7 @@ export function PostHogGate({ children }: { children: React.ReactNode }) {
   return (
     <PHProvider client={posthog}>
       <PostHogIdentify />
+      <PostHogPersonProperties />
       <PostHogPlanIntent />
       <PostHogSignupOnce />
       <PostHogPageView />

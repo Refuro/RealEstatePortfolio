@@ -11,10 +11,10 @@ O4:On the mortgage page, it says my mortgage is not amortizing, in real life, my
 NEW NOTES UNREAD:
 
 O5: keep running into this issue when I sign in or testing sign ups where it gets through the clerk thing (usually am using sign up with google) and it shoots me back to the public facing thing and I have to click go to dashboard which is annoying, I want it to bring me directly to dashboard.
-→ *Tracked in tasks.md Batch 1: Fix post-auth redirect to dashboard (O5)*
+→ *Completed — see `docs/tasks-archived.md` § Tasks.md archive (2026-03-20), Batch 1 (O5).*
 
 O6: On Analyze Deal, In Investment Metrics, Monthly Cash Flow, Annual Cash Flow, next to Equity and NOI get wrapped to 3 lines, that looks unprofessional. We should probably fix that. Also under Ownership %, its clamped to the width of the above column, it's probably fine to let it span the whole width of the card
-→ *Tracked in tasks.md Batch 6: Fix Analyze Deal Investment Metrics layout (O6)*
+→ *Completed — see `docs/tasks-archived.md` § Tasks.md archive (2026-03-20), Batch 6 (O6).*
 
 O7: When you click rent sensitivity or expense sensitivity in analyze deal, the color of the stress mode popup is really badly contrasted and hard to read
 

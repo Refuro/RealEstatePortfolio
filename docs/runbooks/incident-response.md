@@ -106,4 +106,23 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 
 ---
 
+## 5. Support SLA and inbox verification
+
+**SLA (launch):** Aim for **first response within 24 business hours** (Monday–Friday, US business days, excluding holidays) for messages sent via the **contact form** or **support email** (`SUPPORT_EMAIL`). Documented for users on the production **/contact** page and in [`docs/launch/launch-plan.md`](../launch/launch-plan.md) §6.1.
+
+**Owner:** Designate who monitors `SUPPORT_EMAIL` (founder/ops). UptimeRobot alerts also go to this inbox when configured.
+
+### Verification checklist (run after deploy or email change)
+
+| Step | Action | Pass / note |
+|------|--------|-------------|
+| 1 | Send a test message from `/contact` in production (or staging with same email provider). | Message submits without error. |
+| 2 | Confirm the message arrives at the **inbox** configured for `SUPPORT_EMAIL` (or your contact API route). | Inbox receives body + reply address. |
+| 3 | Confirm the **owner** knows to check this inbox and the **24 business hour** target. | Owner acknowledged. |
+| 4 | Optional: reply from the inbox to confirm outbound mail works. | Reply sent OK. |
+
+If the contact form uses a third-party or server route, verify the route’s env vars (e.g. `RESEND_API_KEY`, SMTP) in Vercel match production.
+
+---
+
 *Reference: [docs/architecture-and-build-practices.md](../architecture-and-build-practices.md), [docs/setup/manual-steps.md](../setup/manual-steps.md).*

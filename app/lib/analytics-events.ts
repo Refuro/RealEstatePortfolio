@@ -10,4 +10,9 @@ export const AnalyticsEvents = {
   ONBOARDING_STEP_COMPLETED: "onboarding_step_completed",
   ADD_PROPERTY_MILESTONE_REACHED: "add_property_milestone_reached",
   PLAN_INTENT_APPLIED: "plan_intent_applied",
+  SUBSCRIPTION_UPDATED: "subscription_updated",
+  SUBSCRIPTION_CANCELED: "subscription_canceled",
+  PLAN_LIMIT_HIT: "plan_limit_hit",
+  IMPORT_COMPLETED: "import_completed",
+  IMPORT_FAILED: "import_failed",
 } as const;

@@ -20,6 +20,7 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 | CSV import | Done |
 | Deal analyzer / scratchpad | Done |
 | Benchmarking (rent vs market) | Done |
+| Add-property experience overhaul (Epics A–G) | Done — see `docs/tasks.md` |
 | Admin membership override | Done |
 | Error tracking (Sentry) | Done |
 | Mortgage balance advancement (Phase 1 — effective balance, balance as of) | Done |
@@ -207,7 +208,8 @@ Defer until validated or user base justifies:
 - **Advanced analytics** — Defer until core analytics proven.
 - **Mobile app** — Defer until web usage justifies.
 - **OAuth login, two-factor authentication** — Auth enhancements (mvp-spec).
-- **Add-property experience overhaul (active priority)** — Full redesign of add-property (wizard), **Edit property** page, and **Details tab inline editing** (same data, three patterns today). Prefer complete overhaul over retooling. Backlog: `docs/proposals/add-property-experience-overhaul.md`. **Audit Batch 8 deferred** until this ships or is reprioritized (2026-03-19).
+
+**Shipped (reference):** Add-property / edit / property detail (Overview + Details) overhaul — Epics A–G complete; design and history in `docs/proposals/add-property-experience-overhaul.md`. **Business & quality (Batch 8)** — PostHog, changelog, uptime — also complete; see `docs/tasks-archived.md` § **Tasks.md archive (2026-03-20)** and `docs/launch/launch-plan.md` §6. **Ongoing audits** follow cadence in `docs/audits/README.md` (not gated on the above).
 
 ---
 

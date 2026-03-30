@@ -36,7 +36,10 @@ export default async function ContactPage() {
           </Link>
           <h1 className="text-2xl font-semibold text-foreground">Contact us</h1>
           <p className="mt-2 text-base text-muted">
-            Have a question or feedback? Send us a message below.
+            Have a question or feedback? Send us a message below. We aim to reply within{" "}
+            <strong className="text-foreground">24 business hours</strong> (Monday–Friday, US
+            business days, excluding holidays). We provide product and account support only—
+            not tax, legal, or investment advice.
           </p>
 
           <div className="mt-8">

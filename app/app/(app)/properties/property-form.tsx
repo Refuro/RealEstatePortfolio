@@ -344,6 +344,11 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         id?: string;
       };
       if (!res.ok) {
+        if (!isEdit && data.code === "PLAN_LIMIT_REACHED") {
+          captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
+            resource: "property",
+          });
+        }
         const planMsg =
           data.code === "PLAN_LIMIT_REACHED"
             ? "Property limit reached. Upgrade your plan or remove a property to add more."

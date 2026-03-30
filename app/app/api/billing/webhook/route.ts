@@ -34,15 +34,42 @@ export async function POST(request: NextRequest) {
   }
 
   switch (event.type) {
-    case "customer.subscription.created":
-    case "customer.subscription.updated": {
+    case "customer.subscription.created": {
       const sub = event.data.object as Stripe.Subscription;
       await syncSubscriptionToDb(sub);
       break;
     }
+    case "customer.subscription.updated": {
+      const sub = event.data.object as Stripe.Subscription;
+      await syncSubscriptionToDb(sub);
+      const appUserId =
+        (sub.metadata?.appUserId as string) ||
+        (await findUserIdByStripeCustomer(sub.customer as string));
+      if (appUserId) {
+        const firstItem = sub.items?.data?.[0];
+        const priceId =
+          typeof firstItem?.price === "string" ? firstItem.price : firstItem?.price?.id;
+        const planTier = priceId ? planTierFromPriceId(priceId) : null;
+        await captureServerEvent(appUserId, AnalyticsEvents.SUBSCRIPTION_UPDATED, {
+          status: sub.status,
+          plan_tier: planTier ?? undefined,
+          cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        });
+      }
+      break;
+    }
     case "customer.subscription.deleted": {
       const sub = event.data.object as Stripe.Subscription;
+      const row = await prisma.subscription.findFirst({
+        where: { stripeSubscriptionId: sub.id },
+        select: { userId: true },
+      });
       await setSubscriptionCanceled(sub.id);
+      if (row?.userId) {
+        await captureServerEvent(row.userId, AnalyticsEvents.SUBSCRIPTION_CANCELED, {
+          stripe_subscription_id: sub.id,
+        });
+      }
       break;
     }
     case "checkout.session.completed": {
