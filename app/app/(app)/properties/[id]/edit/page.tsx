@@ -53,6 +53,7 @@ export default async function EditPropertyPage({
           purchasePrice: property.purchasePrice.toString(),
           purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
           currentEstimatedValue: property.currentEstimatedValue.toString(),
+          isRented: property.isRented,
           currentMonthlyRent: property.currentMonthlyRent.toString(),
           unitRents: Array.isArray(property.unitRents)
             ? (property.unitRents as number[]).map((n) => String(n))

@@ -32,5 +32,6 @@ describe("metrics golden fixtures (ownership-metrics policy)", () => {
     expect(p.weightedCapRate).toBeCloseTo(e.weightedCapRate, 5);
     expect(p.portfolioLtv).toBeCloseTo(e.portfolioLtv, 5);
     expect(p.dscr).toBeCloseTo(e.dscr, 5);
+    expect(p.totalAnnualRent).toBeCloseTo(e.totalAnnualRent, 5);
   });
 });

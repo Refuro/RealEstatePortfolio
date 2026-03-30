@@ -4,6 +4,8 @@ import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
 import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { getPropertyTotalRent } from "@/lib/property-utils";
+import { rentCastErrorResponse } from "@/lib/rentcast-route-errors";
+import { getBenchmarkPct } from "@/lib/benchmark-utils";
 
 export async function POST(
   _request: NextRequest,
@@ -26,22 +28,20 @@ export async function POST(
   const tier = getEffectiveTier(user);
   const hourlyLimit = getRentCastHourlyLimit(tier);
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  // Shared hourly pool with rent/value estimate routes (see docs/reference/rentcast-quota.md).
   const recentCallCount = await prisma.rentCastApiCall.count({
     where: { userId: user.id, createdAt: { gte: oneHourAgo } },
   });
   if (recentCallCount >= hourlyLimit) {
-    return NextResponse.json(
-      { error: "You've used your estimate limit for this hour. Try again later." },
-      { status: 429 }
+    return rentCastErrorResponse(
+      "You've used your estimate limit for this hour. Try again later.",
+      429
     );
   }
 
   const apiKey = process.env.RENTCAST_API_KEY;
   if (!apiKey?.trim()) {
-    return NextResponse.json(
-      { error: "Rent estimate service is not configured" },
-      { status: 503 }
-    );
+    return rentCastErrorResponse("Rent estimate service is not configured", 503);
   }
 
   try {
@@ -72,8 +72,7 @@ export async function POST(
 
     const totalRent = getPropertyTotalRent(property);
     const marketRent = result.rent;
-    const pctAboveBelow =
-      marketRent > 0 ? ((totalRent - marketRent) / marketRent) * 100 : 0;
+    const pctAboveBelow = getBenchmarkPct(totalRent, marketRent);
 
     return NextResponse.json({
       marketRent,
@@ -81,10 +80,8 @@ export async function POST(
       pctAboveBelow,
     });
   } catch (err) {
-    await prisma.rentCastApiCall.create({
-      data: { userId: user.id, propertyId },
-    }).catch(() => {});
+    // Quota: only successful upstream calls record RentCastApiCall (see try block).
     const message = err instanceof Error ? err.message : "Benchmark unavailable";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return rentCastErrorResponse(message, 502);
   }
 }

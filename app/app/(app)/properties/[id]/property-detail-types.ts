@@ -38,6 +38,7 @@ export type PropertyDetailTabsProps = {
     purchaseDate: Date | string;
     currentEstimatedValue: number;
     currentMonthlyExpenses: number;
+    isRented: boolean;
     unitRents: number[] | null;
     ownershipPercent: number | null;
     vacancyPercent: number | null;

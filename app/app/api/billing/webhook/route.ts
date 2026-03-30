@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import Stripe from "stripe";
 import { getStripe, getWebhookSecret, planTierFromPriceId } from "@/lib/stripe-config";
 import { prisma } from "@/lib/db";
@@ -92,6 +93,20 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
     (await findUserIdByStripeCustomer(sub.customer as string));
 
   if (!appUserId) {
+    const customerId =
+      typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+    Sentry.captureMessage(
+      "Stripe webhook: could not resolve app user for subscription sync",
+      {
+        level: "warning",
+        tags: { area: "billing", stripe_webhook: "subscription_sync" },
+        extra: {
+          subscriptionId: sub.id,
+          customerId,
+          hasMetadataAppUserId: Boolean(sub.metadata?.appUserId),
+        },
+      }
+    );
     console.warn("Webhook: could not resolve app user for subscription", sub.id);
     return;
   }

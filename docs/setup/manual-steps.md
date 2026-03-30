@@ -52,8 +52,8 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 ## Billing (Stripe)
 
 - [ ] **Stripe account:** Create at [stripe.com](https://stripe.com). Use test mode for development.
-- [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro"). For each product, create a monthly recurring price and an annual recurring price. Copy all four price IDs (`price_...`).
-- [ ] **Env vars (from `app/.env.example`):** Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_INVESTOR_MONTHLY`, `STRIPE_PRICE_ID_INVESTOR_YEARLY`, `STRIPE_PRICE_ID_PRO_MONTHLY`, `STRIPE_PRICE_ID_PRO_YEARLY`.
+- [ ] **Products and prices:** In Stripe Dashboard → Products, create two products (e.g. "Investor", "Pro"). For each product, create a monthly recurring price and an annual recurring price. Copy all four price IDs (`price_...`). **Internal reference:** tier ↔ price ID ↔ display env mapping is in [`docs/internal/billing-matrix.md`](../internal/billing-matrix.md).
+- [ ] **Env vars (from `app/.env.example`):** Set `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_PRICE_ID_INVESTOR_MONTHLY`, `STRIPE_PRICE_ID_INVESTOR_YEARLY`, `STRIPE_PRICE_ID_PRO_MONTHLY`, `STRIPE_PRICE_ID_PRO_YEARLY`. **Vercel:** `STRIPE_WEBHOOK_SECRET` must be set for production and preview — the app fails fast at startup/build on Vercel if it is missing (see `assertStripeWebhookSecretForVercelDeploy` in `app/lib/env.ts`).
 - [ ] **Webhook:** In Stripe Dashboard → Developers → Webhooks, add endpoint URL: `https://<your-app>/api/billing/webhook`. Select events: `customer.subscription.created`, `customer.subscription.updated`, `customer.subscription.deleted`, `checkout.session.completed`. Copy the signing secret and set as `STRIPE_WEBHOOK_SECRET`. Webhook signatures are verified in code (see [security-notes.md](../security/security-notes.md)).
 - [ ] **Stripe production:** For production, use live keys and add production webhook URL in Vercel env.
 
@@ -61,7 +61,9 @@ Seed users use placeholder Clerk IDs (`seed_solo_starter`, etc.). To sign in as 
 
 ## Security (manual)
 
-- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` to your production URL (e.g. `https://veldportfolio.com`) for canonical URLs, sitemap, and redirects. Set Clerk/Stripe redirect URLs to match. Never commit production keys or DB URL.
+- [ ] **Production:** Use HTTPS only. Set `NEXT_PUBLIC_APP_URL` to your production URL (e.g. `https://veldportfolio.com`) for canonical URLs, sitemap, redirects, and **CSP `report-uri`**. Never commit production keys or DB URL.
+- [ ] **CSP (optional rollout):** By default the app sends `Content-Security-Policy-Report-Only` with `report-uri` pointing at `/api/csp-report`. After reviewing violations in logs, set `CSP_ENFORCEMENT=true` in Vercel to enforce the policy. See `docs/policies/csp-rollout.md`.
+- [ ] **Cookie consent:** Optional analytics (PostHog) and Google Ads tags load only after the user accepts via the in-app banner; no dashboard configuration required beyond existing `NEXT_PUBLIC_POSTHOG_KEY` / `NEXT_PUBLIC_GOOGLE_ADS_ID` envs.
 - [ ] **Stripe:** When adding webhooks, verify signature with `STRIPE_WEBHOOK_SECRET` in the webhook handler; reject requests with invalid or missing signature.
 - [ ] **Clerk:** In production, use production Clerk instance and keys; update redirect URLs for production domain.
 

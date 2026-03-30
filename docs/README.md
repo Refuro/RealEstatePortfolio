@@ -42,6 +42,7 @@
 
 ## Process
 
+- [AI process workflow setup](setup/ai-process-workflow-setup.md)
 - [PM agent workflow](process/pm-agent-workflow.md)
 - [PM review checklist](process/pm-review-checklist.md)
 - [Code audit process](process/code-audit-process.md)
@@ -88,6 +89,11 @@
 - [Plaid considerations](plaid-considerations.md)
 - [Business launch checklist](business-launch-checklist.md)
 - [Owner notes](owner_notes/notes.md)
+
+## Internal (owner / operator)
+
+- [Project grounding](internal/project-grounding.md)
+- [Demo preparation guide](internal/demo-preparation-guide.md)
 
 ## Archive
 

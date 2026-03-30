@@ -21,6 +21,7 @@ export type PropertyMetricsInput = {
 };
 
 export type PropertyMetrics = {
+  /** Annual rent after vacancy: effective monthly rent × 12 × ownership scale (not raw contract rent). */
   grossAnnualRent: number;
   annualExpenses: number;
   noi: number;

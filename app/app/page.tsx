@@ -1,8 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
+import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import {
   LayoutGrid,
   TrendingUp,
@@ -73,6 +77,9 @@ export default async function HomePage({
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Suspense fallback={null}>
+        <PlanIntentUrlSync />
+      </Suspense>
       <LandingNav userId={userId} />
 
       <main className="flex flex-1 flex-col">
@@ -116,18 +123,23 @@ export default async function HomePage({
               </>
             ) : (
               <>
-                <Link
-                  href="/sign-up"
+                <FunnelCtaLink
+                  href="/sign-up?intent=free"
+                  placement="landing_hero"
+                  ctaId="get_started_free"
+                  planIntent="free"
                   className="w-full rounded-lg bg-accent px-6 py-3 text-center text-sm font-medium text-accent-foreground hover:bg-accent-hover sm:w-auto"
                 >
                   Get started free
-                </Link>
-                <Link
+                </FunnelCtaLink>
+                <FunnelCtaLink
                   href="/pricing"
+                  placement="landing_hero"
+                  ctaId="view_pricing"
                   className="w-full rounded-lg border border-border px-6 py-3 text-center text-sm font-medium hover:bg-subtle sm:w-auto"
                 >
                   View pricing
-                </Link>
+                </FunnelCtaLink>
               </>
             )}
           </div>
@@ -146,36 +158,39 @@ export default async function HomePage({
             </h2>
             <div className="grid gap-6 md:grid-cols-2">
               <div className="md:col-span-2">
-                <img
+                <Image
                   src="/ScreenDashboard.png"
                   alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 1280px) 100vw, 1280px"
                 />
               </div>
               <div>
-                <img
+                <Image
                   src="/ScreenMortgage.png"
                   alt="Mortgage workspace with payoff simulation, extra payment controls, and balance projection chart"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 768px) 100vw, 640px"
                 />
                 <p className="mt-2 text-center text-sm text-muted">
                   Mortgage payoff simulator
                 </p>
               </div>
               <div>
-                <img
+                <Image
                   src="/ScreenDeal.png"
                   alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 768px) 100vw, 640px"
                 />
                 <p className="mt-2 text-center text-sm text-muted">
                   Deal analyzer

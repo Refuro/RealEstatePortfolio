@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CookiePreferencesButton } from "@/components/consent/cookie-preferences-button";
 
 type FooterProps = {
   supportEmail?: string | null;
@@ -24,6 +25,7 @@ export function Footer({ supportEmail }: FooterProps) {
         <Link href="/changelog" className="hover:text-foreground">
           Changelog
         </Link>
+        <CookiePreferencesButton />
       </div>
     </footer>
   );

@@ -1,11 +1,17 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { prisma } from "@/lib/db";
 import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { parseUnitRentsFromDb } from "@/lib/validations/property";
 
 function escapeCsvCell(value: string | number | null | undefined): string {
   if (value === null || value === undefined) return "";
@@ -16,10 +22,27 @@ function escapeCsvCell(value: string | number | null | undefined): string {
   return s;
 }
 
-export async function GET() {
+/**
+ * Portfolio CSV contract (multi-mortgage):
+ * - Rate / term / lender / escrow / balance-as-of columns describe the **first lien only** (by `createdAt`).
+ * - `monthly payment (all liens sum)` is the sum of all liens’ scheduled payments.
+ * - `mortgage balance (effective)` and `mortgage balance (stored sum)` are portfolio totals across liens.
+ * - `mortgage stored balances (pipe)` lists each lien’s stored balance in the same order as liens (by `createdAt`).
+ * See `docs/reference/portfolio-csv-export.md`.
+ */
+export async function GET(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "export:portfolio");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const allProperties = await prisma.property.findMany({
@@ -39,19 +62,23 @@ export async function GET() {
     "purchase date",
     "value",
     "rent",
+    "is rented",
+    "unit rents",
     "expenses",
     "vacancy %",
     "cash invested",
     "ownership %",
     "display mode",
+    "mortgage lien count",
+    "mortgage stored balances (pipe)",
     "mortgage balance (effective)",
-    "mortgage balance (stored)",
-    "balance as of",
-    "mortgage rate",
-    "mortgage term",
-    "monthly payment",
-    "escrow amount",
-    "lender",
+    "mortgage balance (stored sum)",
+    "balance as of (first lien)",
+    "mortgage rate (first lien)",
+    "mortgage term (first lien)",
+    "monthly payment (all liens sum)",
+    "escrow amount (first lien)",
+    "lender (first lien)",
     "NOI",
     "annual cash flow",
     "equity",
@@ -61,9 +88,19 @@ export async function GET() {
   ];
 
   const rows: string[][] = [];
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
+    | "proportional"
+    | "full_liability";
 
   for (const p of properties) {
+    const orderedMortgages = [...p.mortgages].sort(
+      (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
+    );
+    const lienCount = orderedMortgages.length;
+    const storedBalancesPipe = orderedMortgages
+      .map((m) => Number(m.currentBalance))
+      .join("|");
+
     const totalMortgageBalance = p.mortgages.reduce(
       (sum, m) => sum + getEffectiveBalance(m),
       0
@@ -73,11 +110,12 @@ export async function GET() {
       0
     );
 
-    const firstMortgage = p.mortgages[0];
     const mortgageBalanceStored = p.mortgages.reduce(
       (sum, m) => sum + Number(m.currentBalance),
       0
     );
+
+    const firstMortgage = orderedMortgages[0];
     const balanceAsOf = firstMortgage?.balanceAsOfDate
       ? (firstMortgage.balanceAsOfDate instanceof Date
           ? firstMortgage.balanceAsOfDate
@@ -89,7 +127,7 @@ export async function GET() {
         ? Number(firstMortgage.interestRate) * 100
         : null;
     const mortgageTerm = firstMortgage?.termYears ?? null;
-    const monthlyPayment = totalMonthlyPayment || (firstMortgage ? Number(firstMortgage.monthlyPayment) : null);
+    const monthlyPaymentAll = totalMonthlyPayment;
     const escrowAmount =
       firstMortgage?.escrowAmount != null ? Number(firstMortgage.escrowAmount) : null;
     const lender = firstMortgage?.lenderName ?? null;
@@ -112,34 +150,39 @@ export async function GET() {
       .filter(Boolean)
       .join(", ");
 
-    const propertyType =
-      p.propertyType === "multi_family" ? "Multi family" : "Single family";
-
     const purchaseDate =
       p.purchaseDate instanceof Date
         ? p.purchaseDate.toISOString().slice(0, 10)
         : String(p.purchaseDate).slice(0, 10);
 
+    const unitRentsArr = parseUnitRentsFromDb(p.unitRents);
+    const unitRentsCell =
+      unitRentsArr && unitRentsArr.length > 0 ? unitRentsArr.join("|") : "";
+
     rows.push([
       escapeCsvCell(address),
       escapeCsvCell(p.nickname ?? ""),
-      escapeCsvCell(propertyType),
+      escapeCsvCell(p.propertyType),
       escapeCsvCell(p.units),
       escapeCsvCell(Number(p.purchasePrice)),
       escapeCsvCell(purchaseDate),
       escapeCsvCell(Number(p.currentEstimatedValue)),
       escapeCsvCell(getPropertyTotalRent(p)),
+      escapeCsvCell(p.isRented ? "yes" : "no"),
+      escapeCsvCell(unitRentsCell),
       escapeCsvCell(Number(p.currentMonthlyExpenses)),
       escapeCsvCell(p.vacancyPercent ?? 5),
       escapeCsvCell(p.cashInvested != null ? Number(p.cashInvested) : ""),
       escapeCsvCell(p.ownershipPercent ?? 100),
       escapeCsvCell(displayMode),
+      escapeCsvCell(lienCount),
+      escapeCsvCell(storedBalancesPipe),
       escapeCsvCell(totalMortgageBalance || ""),
       escapeCsvCell(mortgageBalanceStored || ""),
       escapeCsvCell(balanceAsOf),
       escapeCsvCell(mortgageRate ?? ""),
       escapeCsvCell(mortgageTerm ?? ""),
-      escapeCsvCell(monthlyPayment ?? ""),
+      escapeCsvCell(monthlyPaymentAll ?? ""),
       escapeCsvCell(escrowAmount ?? ""),
       escapeCsvCell(lender ?? ""),
       escapeCsvCell(metrics.noi),
@@ -157,6 +200,8 @@ export async function GET() {
 
   const csv =
     headers.join(",") + "\n" + rows.map((r) => r.join(",")).join("\n");
+
+  await recordRateLimit(identifier, "export:portfolio");
 
   return new NextResponse(csv, {
     status: 200,

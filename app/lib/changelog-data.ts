@@ -11,6 +11,15 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-03-28",
+    title: "Vacant-rent workflow and benchmark clarity",
+    items: [
+      "New rented/not-rented toggle in add/edit property flows with clearer vacant-state messaging.",
+      "When marked not rented, rent is treated as $0 and benchmark comparisons are hidden to avoid misleading rent-vs-market labels.",
+      "Rent UX polish: required markers and estimate actions now match rented state, and review explicitly shows vacant rent semantics.",
+    ],
+  },
+  {
     date: "2026-03-20",
     title: "Product updates & launch readiness",
     items: [

@@ -40,7 +40,7 @@ So: **phase-level** PM is you (this agent) in this chat; **command-level** PM is
 - Policy summary:
   - **Allow:** read-only, `npm install`, `npx prisma migrate dev`, `npm run build`, `npm run dev`, `npm run check`, lint/test, local dev.
   - **Deny:** `rm -rf`, `git push --force`, production DB or prod secrets, irreversible destructive commands.
-  - **Ask (user approves in UI):** first-time `git push`, deploy-like commands. The hook returns `{"ask": true, "reason": "..."}` so you approve in Cursor.
+  - **Ask (user approves in UI):** first-time `git push`, deploy-like commands (`vercel deploy`, `vercel --prod`), and network-heavy or external API calls that could have side effects (per `docs/policies/shell-risk-policy.md`). The hook returns `{"ask": true, "reason": "..."}` so you approve in Cursor.
 
 ---
 

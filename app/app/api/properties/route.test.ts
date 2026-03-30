@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockActiveUser, mockFreeTierUser } from "@/lib/test/api-route-mocks";
+import { Prisma } from "@prisma/client";
 
 const { prismaMock } = vi.hoisted(() => {
   const prismaMock = {
@@ -9,6 +10,7 @@ const { prismaMock } = vi.hoisted(() => {
       count: vi.fn(),
       create: vi.fn(),
       findFirst: vi.fn(),
+      findUnique: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
     },
@@ -153,6 +155,7 @@ describe("POST /api/properties", () => {
       purchaseDate: new Date("2020-06-01"),
       currentEstimatedValue: 250000,
       currentMonthlyRent: 2000,
+      isRented: true,
       unitRents: [2000],
       bedrooms: null,
       bathrooms: null,
@@ -168,6 +171,10 @@ describe("POST /api/properties", () => {
       updatedAt: new Date(),
     };
     prismaMock.property.create.mockResolvedValue(created as never);
+    prismaMock.property.findUnique.mockResolvedValue({
+      ...created,
+      mortgages: [],
+    } as never);
 
     const { POST } = await import("./route");
     const res = await POST(postRequest(validCreateBody));
@@ -175,7 +182,60 @@ describe("POST /api/properties", () => {
     const json = await res.json();
     expect(json.id).toBe("prop-new-1");
     expect(json.createdFirstProperty).toBe(true);
+    expect(json.unitRents).toEqual([2000]);
     expect(prismaMock.property.create).toHaveBeenCalled();
+  });
+
+  it("creates a non-rented property with zero rent", async () => {
+    const created = {
+      id: "prop-new-2",
+      userId: mockActiveUser.id,
+      nickname: null,
+      addressLine1: "123 Main St",
+      addressLine2: null,
+      city: "Austin",
+      state: "TX",
+      zipCode: "78701",
+      propertyType: "single_family",
+      units: 1,
+      ownershipPercent: 100,
+      purchasePrice: 200000,
+      purchaseDate: new Date("2020-06-01"),
+      currentEstimatedValue: 250000,
+      currentMonthlyRent: 0,
+      isRented: false,
+      unitRents: null,
+      bedrooms: null,
+      bathrooms: null,
+      unitMix: null,
+      squareFeet: null,
+      currentMonthlyExpenses: 500,
+      vacancyPercent: 5,
+      cashInvested: null,
+      notes: null,
+      marketRent: null,
+      marketRentAsOf: null,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    prismaMock.property.create.mockResolvedValue(created as never);
+    prismaMock.property.findUnique.mockResolvedValue({
+      ...created,
+      mortgages: [],
+    } as never);
+
+    const { POST } = await import("./route");
+    const res = await POST(
+      postRequest({
+        ...validCreateBody,
+        isRented: false,
+      })
+    );
+    expect(res.status).toBe(200);
+    const createArg = prismaMock.property.create.mock.calls[0]?.[0] as { data?: Record<string, unknown> };
+    expect(createArg?.data?.isRented).toBe(false);
+    expect(createArg?.data?.currentMonthlyRent).toBe(0);
+    expect(createArg?.data?.unitRents).toBe(Prisma.DbNull);
   });
 
   it("returns 403 PLAN_LIMIT_REACHED when free tier already has one property", async () => {

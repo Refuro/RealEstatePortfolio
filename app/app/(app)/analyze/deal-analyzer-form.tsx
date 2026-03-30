@@ -560,7 +560,7 @@ export function DealAnalyzerForm({
                       onClick={() => setRentStressPercent(preset)}
                       className={`rounded-md border px-2.5 py-1 text-xs transition ${
                         active
-                          ? "border-accent bg-accent/10 text-foreground"
+                          ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
                       }`}
                     >
@@ -584,7 +584,7 @@ export function DealAnalyzerForm({
                       onClick={() => setExpenseStressPercent(preset)}
                       className={`rounded-md border px-2.5 py-1 text-xs transition ${
                         active
-                          ? "border-accent bg-accent/10 text-foreground"
+                          ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
                       }`}
                     >
@@ -646,7 +646,7 @@ export function DealAnalyzerForm({
               </span>
             </span>
             {stressActive && (
-              <span className="rounded-md border border-accent/40 bg-accent/10 px-2 py-1 text-accent-foreground">
+              <span className="rounded-md border border-accent/40 bg-subtle px-2 py-1 text-foreground">
                 Stress mode: rent {rentStressPercent > 0 ? "+" : ""}
                 {rentStressPercent}%, expenses{" "}
                 {expenseStressPercent > 0 ? "+" : ""}

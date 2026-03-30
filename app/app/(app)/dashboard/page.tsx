@@ -8,7 +8,8 @@ import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
-  isBenchmarkFresh,
+  BENCHMARK_UX_MESSAGES,
+  getBenchmarkEligibility,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
 import {
@@ -321,6 +322,7 @@ export default async function DashboardPage({
             marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
             currentMonthlyRent: Number(p.currentMonthlyRent),
             unitRents: p.unitRents,
+            isRented: p.isRented,
           }))}
         />
       )}
@@ -346,18 +348,29 @@ export default async function DashboardPage({
             ? (() => {
                 const p = properties[0];
                 const userRent = getPropertyTotalRent(p);
-                const marketRent =
-                  p.marketRent != null ? Number(p.marketRent) : 0;
-                const fresh =
-                  marketRent > 0 && isBenchmarkFresh(p.marketRentAsOf);
-                if (fresh) {
+                const marketRentNullable =
+                  p.marketRent != null ? Number(p.marketRent) : null;
+                const eligibility = getBenchmarkEligibility({
+                  isRented: p.isRented,
+                  userRent,
+                  marketRent: marketRentNullable,
+                  marketRentAsOf: p.marketRentAsOf,
+                });
+                if (eligibility === "eligible_fresh") {
                   return {
-                    benchmarkLabel: getBenchmarkLabel(userRent, marketRent),
+                    benchmarkLabel: getBenchmarkLabel(
+                      userRent,
+                      marketRentNullable ?? 0
+                    ),
                   };
                 }
-                return {
-                  propertyId: p.id,
-                };
+                if (eligibility === "not_rented") {
+                  return { benchmarkMessage: BENCHMARK_UX_MESSAGES.notRented };
+                }
+                if (eligibility === "rent_missing") {
+                  return { benchmarkMessage: BENCHMARK_UX_MESSAGES.rentMissing };
+                }
+                return { propertyId: p.id };
               })()
             : undefined
         }

@@ -10,6 +10,7 @@ import { DownloadCsvButton } from "./download-csv-button";
 import { ImportCsvSection } from "./import-csv-section";
 import { OwnershipDisplayToggle } from "./ownership-display-toggle";
 import { ThemeToggle } from "./theme-toggle";
+import { CookiePreferencesSection } from "./cookie-preferences-section";
 
 export default async function SettingsPage() {
   const user = await getAppUser();
@@ -34,6 +35,11 @@ export default async function SettingsPage() {
       <p className="mt-2 text-base text-muted">
         Account and billing settings.
       </p>
+
+      <section className="mt-8">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Privacy</h2>
+        <CookiePreferencesSection />
+      </section>
 
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Appearance</h2>

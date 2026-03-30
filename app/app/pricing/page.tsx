@@ -1,6 +1,9 @@
 import Link from "next/link";
+import Image from "next/image";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getAppUser } from "@/lib/auth";
+import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { getEffectiveTier } from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
@@ -27,6 +30,9 @@ export default async function PricingPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
+      <Suspense fallback={null}>
+        <PlanIntentUrlSync />
+      </Suspense>
       <LandingNav userId={user?.id ?? null} />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
@@ -56,6 +62,9 @@ export default async function PricingPage() {
             className="mt-10"
             showSignUp={!user}
           />
+          <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-muted">
+            Third-party rent and value estimates share one hourly pool per account by plan: Free 5, Investor 10, Pro 20 successful requests.
+          </p>
 
           {!user && (
             <section className="mt-12">
@@ -63,29 +72,32 @@ export default async function PricingPage() {
                 See what you get
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <img
+                <Image
                   src="/ScreenDashboard.png"
                   alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg md:col-span-2"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg md:col-span-2"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 1280px) 100vw, 1280px"
                 />
-                <img
+                <Image
                   src="/ScreenMortgage.png"
                   alt="Mortgage workspace with payoff simulation and balance projection chart"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 768px) 100vw, 640px"
                 />
-                <img
+                <Image
                   src="/ScreenDeal.png"
                   alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
-                  className="w-full rounded-xl border border-border/70 shadow-lg"
+                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
                   loading="lazy"
                   width={1280}
                   height={800}
+                  sizes="(max-width: 768px) 100vw, 640px"
                 />
               </div>
             </section>

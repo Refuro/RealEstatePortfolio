@@ -12,7 +12,11 @@ When the user says **"run agent governance audit"**, **"agent governance audit"*
 1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/agent-governance-audit-process.md`.
 2. Require output report at `docs/audits/agent-governance/YYYY-MM-DD-agent-governance-audit.md`.
 3. Audit only. Do not make code changes.
-4. After completion, summarize top findings and report location.
+4. Require the audit to explicitly check:
+   - hook-vs-doc and rule-vs-doc drift
+   - where recurring guidance should live (hook vs rule vs process doc vs setup doc)
+   - workflow consistency between hooks, rules, audit docs, and day-to-day PM/builder usage
+5. After completion, summarize top findings and report location.
 
 ## References
 

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   getCol,
+  normalizePropertyTypeFromCsv,
   parseAddressFromCombined,
   parseDate,
   parseNum,
   parseRow,
   PROPERTY_TYPE_MAP,
 } from "./csv-parser";
+import { resolveImportRentForCreate } from "./rent-resolve";
 
 describe("parseDate / parseNum / getCol", () => {
   it("parses ISO and US dates", () => {
@@ -51,6 +53,13 @@ describe("PROPERTY_TYPE_MAP", () => {
   });
 });
 
+describe("normalizePropertyTypeFromCsv", () => {
+  it("passes through canonical enum strings", () => {
+    expect(normalizePropertyTypeFromCsv("apartment")).toBe("apartment");
+    expect(normalizePropertyTypeFromCsv("single_family")).toBe("single_family");
+  });
+});
+
 describe("parseRow", () => {
   const minimalRow: Record<string, string> = {
     address: "100 Oak Ln",
@@ -90,5 +99,35 @@ describe("parseRow", () => {
       4
     );
     expect("error" in r).toBe(true);
+  });
+
+  it("parses is rented no and zero rent", () => {
+    const r = parseRow(
+      {
+        ...minimalRow,
+        rent: "0",
+        "is rented": "no",
+      },
+      4
+    );
+    expect("error" in r).toBe(false);
+    if ("data" in r) {
+      expect(r.data.isRented).toBe(false);
+      expect(r.data.currentMonthlyRent).toBe(0);
+    }
+  });
+});
+
+describe("resolveImportRentForCreate (re-exported behavior)", () => {
+  it("prefers unit rents over rent when both present", () => {
+    const out = resolveImportRentForCreate({
+      isRented: true,
+      propertyType: "single_family",
+      units: 1,
+      rentFromColumn: 5000,
+      unitRentsFromColumn: [1200],
+    });
+    expect(out.currentMonthlyRent).toBe(1200);
+    expect(out.unitRents).toEqual([1200]);
   });
 });

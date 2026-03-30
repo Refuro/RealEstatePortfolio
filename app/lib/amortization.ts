@@ -344,10 +344,53 @@ export function getToleranceAwarePayoffProjection(
 
 /**
  * Run month-by-month payoff simulation with base P&I + extra payment.
- * Returns number of months to payoff, or null if doesn't pay off within maxMonths.
- * Uses same iteration logic as getPayoffProjection.
+ * **Strict:** payoff only when balance reaches zero in the iteration; no end-of-term residual tolerance.
+ * Use for API-facing and canonical extra-payment math.
  */
-function getMonthsToPayoffWithExtra(
+export function getMonthsToPayoffWithExtraStrict(
+  mortgage: MortgageRecord,
+  extraPayment: number,
+  maxMonths: number
+): number | null {
+  const balance = getEffectiveBalance(mortgage);
+  const basePi = getPiForAmortization(mortgage);
+  const payment = basePi + extraPayment;
+  const monthlyRate = Number(mortgage.interestRate) / 12;
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  if (balance <= 0 || payment <= 0) return null;
+
+  const monthsSinceStartDate = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const totalTermMonths = termYears * 12;
+  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+  const cap = Math.min(maxMonths, remainingTermMonths);
+
+  let runningBalance = balance;
+  for (let i = 0; i < cap && runningBalance > 0; i++) {
+    const interest = runningBalance * monthlyRate;
+    let principal = payment - interest;
+    if (principal >= runningBalance) principal = runningBalance;
+    runningBalance = Math.max(0, runningBalance - principal);
+    if (runningBalance <= 0) return i + 1;
+  }
+  return null;
+}
+
+/**
+ * Same iteration as {@link getMonthsToPayoffWithExtraStrict}, but if a small balance remains
+ * at the iteration cap and it is within {@link isWithinTermEndTolerance}, returns `cap` as payoff horizon.
+ * **UI / exploratory only** — not for canonical API or export contracts.
+ */
+export function getMonthsToPayoffWithExtraWithTolerance(
   mortgage: MortgageRecord,
   extraPayment: number,
   maxMonths: number,
@@ -391,14 +434,14 @@ function getMonthsToPayoffWithExtra(
 
 /**
  * Get extra monthly payment needed to pay off yearsEarlier years sooner.
- * Returns extra amount (rounded to nearest dollar) or null if invalid.
- * Invalid when: payment doesn't amortize, yearsEarlier >= current payoff years, or other edge case.
+ * **Canonical / strict contract:** uses {@link getPayoffProjection} and {@link getMonthsToPayoffWithExtraStrict} only.
+ * For UI that should align with tolerance-aware payoff dates, use {@link getExtraPaymentForYearsEarlierWithTolerance}.
  */
 export function getExtraPaymentForYearsEarlier(
   mortgage: MortgageRecord,
   yearsEarlier: number
 ): number | null {
-  const projection = getToleranceAwarePayoffProjection(mortgage);
+  const projection = getPayoffProjection(mortgage);
   if (projection.payoffDate == null) return null;
 
   const today = new Date();
@@ -418,7 +461,7 @@ export function getExtraPaymentForYearsEarlier(
 
   while (low < high) {
     const mid = Math.floor((low + high) / 2);
-    const months = getMonthsToPayoffWithExtra(mortgage, mid, targetMonths + 1);
+    const months = getMonthsToPayoffWithExtraStrict(mortgage, mid, targetMonths + 1);
     if (months != null && months <= targetMonths) {
       high = mid;
     } else {
@@ -426,23 +469,78 @@ export function getExtraPaymentForYearsEarlier(
     }
   }
 
-  const monthsAtLow = getMonthsToPayoffWithExtra(mortgage, low, targetMonths + 1);
+  const monthsAtLow = getMonthsToPayoffWithExtraStrict(mortgage, low, targetMonths + 1);
   if (monthsAtLow == null || monthsAtLow > targetMonths) return null;
 
   return Math.round(low);
 }
 
 /**
- * Get years to payoff when adding extra monthly payment.
- * Returns years (rounded to nearest whole) or null if invalid.
+ * Same as {@link getExtraPaymentForYearsEarlier} but uses {@link getToleranceAwarePayoffProjection}
+ * and {@link getMonthsToPayoffWithExtraWithTolerance}. **UI-only** — disclose tolerance in copy.
+ */
+export function getExtraPaymentForYearsEarlierWithTolerance(
+  mortgage: MortgageRecord,
+  yearsEarlier: number,
+  options?: PayoffToleranceOptions
+): number | null {
+  const projection = getToleranceAwarePayoffProjection(mortgage, options);
+  if (projection.payoffDate == null) return null;
+
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const payoffDate = new Date(projection.payoffDate);
+
+  const currentPayoffMonths =
+    (payoffDate.getFullYear() - startOfCurrentMonth.getFullYear()) * 12 +
+    (payoffDate.getMonth() - startOfCurrentMonth.getMonth());
+
+  const targetMonths = currentPayoffMonths - yearsEarlier * 12;
+  if (targetMonths <= 0) return null;
+
+  const balance = getEffectiveBalance(mortgage);
+  let low = 0;
+  let high = Math.ceil(balance);
+
+  while (low < high) {
+    const mid = Math.floor((low + high) / 2);
+    const months = getMonthsToPayoffWithExtraWithTolerance(
+      mortgage,
+      mid,
+      targetMonths + 1,
+      options
+    );
+    if (months != null && months <= targetMonths) {
+      high = mid;
+    } else {
+      low = mid + 1;
+    }
+  }
+
+  const monthsAtLow = getMonthsToPayoffWithExtraWithTolerance(
+    mortgage,
+    low,
+    targetMonths + 1,
+    options
+  );
+  if (monthsAtLow == null || monthsAtLow > targetMonths) return null;
+
+  return Math.round(low);
+}
+
+/**
+ * Years to payoff when adding extra monthly payment.
+ * **Canonical / strict:** requires a strict amortizing payoff from {@link getPayoffProjection}; uses
+ * {@link getMonthsToPayoffWithExtraStrict}. For UI-friendly tolerance near term end, use
+ * {@link getPayoffYearsWithExtraWithTolerance}.
  */
 export function getPayoffYearsWithExtra(
   mortgage: MortgageRecord,
   extraPayment: number
 ): number | null {
   if (extraPayment < 0) return null;
-  const projection = getToleranceAwarePayoffProjection(mortgage);
-  if (projection.payoffDate == null) return null; // base doesn't amortize
+  const projection = getPayoffProjection(mortgage);
+  if (projection.payoffDate == null) return null;
 
   const termYears = mortgage.termYears;
   const startDate = new Date(mortgage.startDate);
@@ -456,7 +554,46 @@ export function getPayoffYearsWithExtra(
   );
   const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
 
-  const months = getMonthsToPayoffWithExtra(mortgage, extraPayment, remainingTermMonths);
+  const months = getMonthsToPayoffWithExtraStrict(
+    mortgage,
+    extraPayment,
+    remainingTermMonths
+  );
+  if (months == null) return null;
+  return Math.round(months / 12);
+}
+
+/**
+ * Same as {@link getPayoffYearsWithExtra} but uses tolerance-aware base payoff and
+ * {@link getMonthsToPayoffWithExtraWithTolerance}. **UI-only** — disclose tolerance in copy.
+ */
+export function getPayoffYearsWithExtraWithTolerance(
+  mortgage: MortgageRecord,
+  extraPayment: number,
+  options?: PayoffToleranceOptions
+): number | null {
+  if (extraPayment < 0) return null;
+  const projection = getToleranceAwarePayoffProjection(mortgage, options);
+  if (projection.payoffDate == null) return null;
+
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthsSinceStart = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+
+  const months = getMonthsToPayoffWithExtraWithTolerance(
+    mortgage,
+    extraPayment,
+    remainingTermMonths,
+    options
+  );
   if (months == null) return null;
   return Math.round(months / 12);
 }

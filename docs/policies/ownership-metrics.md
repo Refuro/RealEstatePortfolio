@@ -41,7 +41,7 @@ Display modes:
 | Annual cash flow | `monthlyCashFlow * 12` | `monthlyCashFlow * 12` |
 | NOI (annual) | `(R - E) * 12 * s` | `(R - E) * 12 * s` |
 | Equity | `(V - D) * s` | `(V - D) * s` |
-| Annual rent | `R * 12 * s` | `R * 12 * s` |
+| Annual rent (display) | `R * 12 * s` (same *R* as NOI) | `R * 12 * s` (same *R* as NOI) |
 | Cash invested | `cashInvested * s` | `cashInvested * s` |
 
 Ratios:

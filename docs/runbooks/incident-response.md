@@ -35,7 +35,7 @@ vercel --prod
 | Source | What to check |
 |--------|---------------|
 | **Vercel** | Project → Logs (runtime logs, build logs). Filter by time range. |
-| **Sentry** | [sentry.io](https://sentry.io) → your project. Errors, performance, releases. |
+| **Sentry** | [sentry.io](https://sentry.io) → your project. Errors, performance, releases, and CSP rollout monitoring (`signal=csp`). |
 | **Database** | Neon (or your provider) dashboard. Connection count, query performance, storage. |
 | **Stripe** | Dashboard → Developers → Logs. Webhook delivery, API errors. |
 | **Clerk** | Dashboard. Auth errors, user sessions. |
@@ -88,6 +88,13 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 1. Identify top errors in Sentry (grouped by type).
 2. Check recent deployments: did the error rate spike after a deploy? Consider rollback.
 3. For new errors: triage, fix, deploy. Use Sentry stack traces to locate the issue.
+
+### CSP rollout violations
+
+1. In Sentry, filter for tag `signal=csp` or search event messages like `CSP violation: script-src`.
+2. Triage by fingerprint/grouping: directive + blocked resource origin + document path.
+3. Ignore browser-extension noise if it appears; focus on first-party pages or required third-party services.
+4. If a production release creates new legitimate CSP violations on critical flows, keep or revert to report-only mode until the policy is updated.
 
 ---
 

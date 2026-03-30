@@ -19,11 +19,13 @@ export type PortfolioMetrics = {
   totalMarketValue: number;
   totalDebt: number;
   totalEquity: number;
+  /** Sum of vacancy-adjusted effective monthly rent (ownership-scaled); matches NOI rent basis. */
   totalMonthlyRent: number;
   totalMonthlyExpenses: number;
   totalMonthlyCashFlow: number;
   totalNoi: number;
   totalCashInvested: number;
+  /** Sum of vacancy-adjusted annual rent (same basis as NOI before expenses). */
   totalAnnualRent: number;
   totalAnnualDebtService: number;
   dscr: number | null;
@@ -68,16 +70,19 @@ export function computePortfolioMetrics(
   let totalNoi = 0;
   let totalCashInvested = 0;
   let totalAnnualDebtService = 0;
+  let totalAnnualRent = 0;
 
   for (const p of properties) {
     const metrics = computePropertyMetrics(p, displayMode);
     const scale = (p.ownershipPercent ?? 100) / 100;
 
     totalMarketValue += p.estimatedValue * scale;
-    totalMonthlyRent += p.monthlyRent * scale;
+    // Vacancy-adjusted monthly rent (ownership-scaled); same effective R as NOI / cap rate.
+    totalMonthlyRent += metrics.grossAnnualRent / 12;
     totalMonthlyExpenses += p.monthlyExpenses * scale;
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
     totalNoi += metrics.noi;
+    totalAnnualRent += metrics.grossAnnualRent;
     totalEquity += metrics.equity;
     totalAnnualDebtService += getAnnualDebtService(
       p.totalMonthlyPayment,
@@ -96,7 +101,6 @@ export function computePortfolioMetrics(
     }
   }
 
-  const totalAnnualRent = totalMonthlyRent * 12;
   const dscr =
     totalAnnualDebtService > 0 ? totalNoi / totalAnnualDebtService : null;
 

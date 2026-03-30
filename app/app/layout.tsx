@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import Script from "next/script";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
-import { PostHogAnalyticsProvider } from "@/components/analytics/posthog-provider";
-import { PostHogIdentify } from "@/components/analytics/posthog-identify";
-import { PostHogPageView } from "@/components/analytics/posthog-page-view";
-import { PostHogSignupOnce } from "@/components/analytics/posthog-signup-once";
+import { PostHogGate } from "@/components/analytics/posthog-provider";
+import { CookieConsentProvider } from "@/components/consent/cookie-consent-provider";
+import { CookieConsentBanner } from "@/components/consent/cookie-consent-banner";
+import { GoogleAdsGtagClient } from "@/components/analytics/google-ads-gtag";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
 import "./globals.css";
 
@@ -29,10 +28,15 @@ export const metadata: Metadata = {
   },
   description:
     "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
-  // favicon.png exists in public/; favicon-512.png does not
   icons: {
-    icon: "/favicon.png",
+    icon: [
+      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
   },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
     description:
@@ -102,27 +106,6 @@ function JsonLdScript() {
   );
 }
 
-function GoogleAdsGtag() {
-  const id = process.env.NEXT_PUBLIC_GOOGLE_ADS_ID;
-  if (!id) return null;
-  return (
-    <>
-      <Script
-        src={`https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(id)}`}
-        strategy="afterInteractive"
-      />
-      <Script id="google-ads-gtag-init" strategy="afterInteractive">
-        {`
-window.dataLayer = window.dataLayer || [];
-function gtag(){dataLayer.push(arguments);}
-gtag('js', new Date());
-gtag('config', ${JSON.stringify(id)});
-`}
-      </Script>
-    </>
-  );
-}
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -132,6 +115,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="en">
         <head>
+          <meta name="apple-mobile-web-app-title" content="Veld" />
           <link rel="preconnect" href="https://api.rentcast.io" />
           <link rel="dns-prefetch" href="https://js.stripe.com" />
           {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
@@ -142,21 +126,18 @@ export default function RootLayout({
               }
             />
           ) : null}
-          {process.env.NEXT_PUBLIC_GOOGLE_ADS_ID ? (
-            <link rel="preconnect" href="https://www.googletagmanager.com" />
-          ) : null}
           <JsonLdScript />
         </head>
         <body
           className={`${geistSans.variable} ${geistMono.variable} antialiased`}
         >
-          <GoogleAdsGtag />
-          <PostHogAnalyticsProvider>
-            <PostHogIdentify />
-            <PostHogSignupOnce />
-            <PostHogPageView />
-            <ThemeProvider>{children}</ThemeProvider>
-          </PostHogAnalyticsProvider>
+          <CookieConsentProvider>
+            <PostHogGate>
+              <ThemeProvider>{children}</ThemeProvider>
+            </PostHogGate>
+            <GoogleAdsGtagClient />
+            <CookieConsentBanner />
+          </CookieConsentProvider>
         </body>
       </html>
     </ClerkProvider>

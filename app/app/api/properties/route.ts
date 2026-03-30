@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { Prisma } from "@prisma/client";
 import {
   checkRateLimit,
   getRateLimitIdentifier,
   recordRateLimit,
 } from "@/lib/rate-limit";
-import {
-  createPropertySchema,
-  parseUnitRentsFromDb,
-} from "@/lib/validations/property";
+import { createPropertySchema } from "@/lib/validations/property";
+import { serializePropertyForApi } from "@/lib/serialize/property-api";
 import { createMortgageSchema } from "@/lib/validations/mortgage";
 import { canAddProperty, getEffectiveTier } from "@/lib/plans";
 
@@ -26,34 +25,8 @@ export async function GET() {
   });
 
   type PropertyWithMortgages = (typeof properties)[number];
-  type MortgageItem = PropertyWithMortgages["mortgages"][number];
   return NextResponse.json(
-    properties.map((p: PropertyWithMortgages) => ({
-      ...p,
-      purchasePrice: p.purchasePrice.toString(),
-      purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
-      currentEstimatedValue: p.currentEstimatedValue.toString(),
-      currentMonthlyRent: p.currentMonthlyRent.toString(),
-      unitRents: parseUnitRentsFromDb(p.unitRents),
-      bedrooms: p.bedrooms,
-      bathrooms: p.bathrooms?.toString() ?? null,
-      unitMix: p.unitMix,
-      squareFeet: p.squareFeet,
-      currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
-      cashInvested: p.cashInvested?.toString() ?? null,
-      marketRent: (p as { marketRent?: { toString(): string } | null }).marketRent?.toString() ?? null,
-      marketRentAsOf: (p as { marketRentAsOf?: Date | null }).marketRentAsOf?.toISOString().slice(0, 10) ?? null,
-      ownershipPercent: p.ownershipPercent ?? 100,
-      mortgages: p.mortgages.map((m: MortgageItem) => ({
-        ...m,
-        originalLoanAmount: m.originalLoanAmount.toString(),
-        currentBalance: m.currentBalance.toString(),
-        interestRate: m.interestRate.toString(),
-        monthlyPayment: m.monthlyPayment.toString(),
-        startDate: m.startDate.toISOString().slice(0, 10),
-        paymentEffectiveDate: m.paymentEffectiveDate?.toISOString().slice(0, 10) ?? null,
-      })),
-    }))
+    properties.map((p: PropertyWithMortgages) => serializePropertyForApi(p))
   );
 }
 
@@ -145,13 +118,17 @@ export async function POST(request: NextRequest) {
     );
   }
 
+  const isRented = data.isRented ?? true;
   const unitRents = data.unitRents;
-  const totalRent: number =
+  const parsedRent: number =
     Array.isArray(unitRents) && unitRents.length > 0
       ? unitRents.reduce((a: number, b: number) => a + b, 0)
       : Number(data.currentMonthlyRent) || 0;
+  const totalRent = isRented ? parsedRent : 0;
   let unitRentsJson: number[] | null;
-  if (Array.isArray(unitRents) && unitRents.length > 0) {
+  if (!isRented) {
+    unitRentsJson = null;
+  } else if (Array.isArray(unitRents) && unitRents.length > 0) {
     unitRentsJson = unitRents;
   } else if (["single_family", "condo", "townhouse", "manufactured"].includes(data.propertyType)) {
     unitRentsJson = [Number(totalRent)];
@@ -177,7 +154,8 @@ export async function POST(request: NextRequest) {
       purchaseDate: data.purchaseDate,
       currentEstimatedValue: data.currentEstimatedValue,
       currentMonthlyRent: totalRent,
-      unitRents: unitRentsJson,
+      isRented,
+      unitRents: unitRentsJson ?? Prisma.DbNull,
       bedrooms: data.bedrooms ?? null,
       bathrooms: data.bathrooms ?? null,
       unitMix: data.unitMix ?? null,
@@ -202,19 +180,16 @@ export async function POST(request: NextRequest) {
 
   await recordRateLimit(identifier, "properties:create");
 
+  const full = await prisma.property.findUnique({
+    where: { id: property.id },
+    include: { mortgages: true },
+  });
+  if (!full) {
+    return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
+  }
+
   return NextResponse.json({
-    ...property,
+    ...serializePropertyForApi(full),
     createdFirstProperty,
-    purchasePrice: property.purchasePrice.toString(),
-    purchaseDate: property.purchaseDate.toISOString().slice(0, 10),
-    currentEstimatedValue: property.currentEstimatedValue.toString(),
-    currentMonthlyRent: property.currentMonthlyRent.toString(),
-    unitRents: property.unitRents as number[] | null,
-    bedrooms: property.bedrooms,
-    bathrooms: property.bathrooms?.toString() ?? null,
-    unitMix: property.unitMix,
-    squareFeet: property.squareFeet,
-    currentMonthlyExpenses: property.currentMonthlyExpenses.toString(),
-    cashInvested: property.cashInvested?.toString() ?? null,
   });
 }

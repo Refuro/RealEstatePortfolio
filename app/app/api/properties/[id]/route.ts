@@ -1,83 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import {
-  updatePropertySchema,
-  parseUnitRentsFromDb,
-} from "@/lib/validations/property";
+import { Prisma } from "@prisma/client";
+import { updatePropertySchema } from "@/lib/validations/property";
+import { serializePropertyForApi } from "@/lib/serialize/property-api";
 
 async function getPropertyForUser(propertyId: string, userId: string) {
   return prisma.property.findFirst({
     where: { id: propertyId, userId },
     include: { mortgages: true },
   });
-}
-
-function serializeProperty(p: {
-  id: string;
-  userId: string;
-  nickname: string | null;
-  addressLine1: string;
-  addressLine2: string | null;
-  city: string;
-  state: string;
-  zipCode: string;
-  propertyType: string;
-  units: number;
-  ownershipPercent?: number;
-  purchasePrice: { toString(): string };
-  purchaseDate: Date;
-  currentEstimatedValue: { toString(): string };
-  currentMonthlyRent: { toString(): string };
-  unitRents?: unknown;
-  bedrooms?: number | null;
-  bathrooms?: { toString(): string } | null;
-  unitMix?: string | null;
-  squareFeet?: number | null;
-  currentMonthlyExpenses: { toString(): string };
-  cashInvested: { toString(): string } | null;
-  notes: string | null;
-  marketRent?: { toString(): string } | null;
-  marketRentAsOf?: Date | null;
-  createdAt: Date;
-  updatedAt: Date;
-  mortgages: Array<{
-    id: string;
-    originalLoanAmount: { toString(): string };
-    currentBalance: { toString(): string };
-    interestRate: { toString(): string };
-    monthlyPayment: { toString(): string };
-    startDate: Date;
-    paymentEffectiveDate: Date | null;
-    [key: string]: unknown;
-  }>;
-}) {
-  return {
-    ...p,
-    purchasePrice: p.purchasePrice.toString(),
-    purchaseDate: p.purchaseDate.toISOString().slice(0, 10),
-    currentEstimatedValue: p.currentEstimatedValue.toString(),
-    currentMonthlyRent: p.currentMonthlyRent.toString(),
-    unitRents: parseUnitRentsFromDb(p.unitRents),
-    bedrooms: p.bedrooms ?? null,
-    bathrooms: p.bathrooms?.toString() ?? null,
-    unitMix: p.unitMix ?? null,
-    squareFeet: p.squareFeet ?? null,
-    currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
-    cashInvested: p.cashInvested?.toString() ?? null,
-    marketRent: p.marketRent?.toString() ?? null,
-    marketRentAsOf: p.marketRentAsOf?.toISOString().slice(0, 10) ?? null,
-    ownershipPercent: p.ownershipPercent ?? 100,
-    mortgages: p.mortgages.map((m) => ({
-      ...m,
-      originalLoanAmount: m.originalLoanAmount.toString(),
-      currentBalance: m.currentBalance.toString(),
-      interestRate: m.interestRate.toString(),
-      monthlyPayment: m.monthlyPayment.toString(),
-      startDate: m.startDate.toISOString().slice(0, 10),
-      paymentEffectiveDate: m.paymentEffectiveDate?.toISOString().slice(0, 10) ?? null,
-    })),
-  };
 }
 
 export async function GET(
@@ -95,7 +27,7 @@ export async function GET(
     return NextResponse.json({ error: "Property not found" }, { status: 404 });
   }
 
-  return NextResponse.json(serializeProperty(property));
+  return NextResponse.json(serializePropertyForApi(property));
 }
 
 export async function PATCH(
@@ -155,6 +87,7 @@ export async function PATCH(
   if (data.purchaseDate !== undefined) updatePayload.purchaseDate = data.purchaseDate;
   if (data.currentEstimatedValue !== undefined) updatePayload.currentEstimatedValue = data.currentEstimatedValue;
   if (data.currentMonthlyRent !== undefined) updatePayload.currentMonthlyRent = data.currentMonthlyRent;
+  if (data.isRented !== undefined) updatePayload.isRented = data.isRented;
   if (data.unitRents !== undefined) {
     const arr = data.unitRents;
     if (Array.isArray(arr) && arr.length > 0) {
@@ -176,12 +109,17 @@ export async function PATCH(
   if (data.currentMonthlyRent !== undefined && !(data.unitRents !== undefined && Array.isArray(data.unitRents) && data.unitRents.length > 0)) {
     const total = Number(data.currentMonthlyRent) || 0;
     const units = Number(updatePayload.units ?? existing.units) || 1;
-    if (["single_family", "condo", "townhouse", "manufactured"].includes(existing.propertyType)) {
+    if (["single_family", "condo", "townhouse", "manufactured"].includes(effectiveType)) {
       updatePayload.unitRents = [total];
     } else {
       const perUnit = Math.round((total / units) * 100) / 100;
       updatePayload.unitRents = Array(units).fill(perUnit);
     }
+  }
+  const effectiveIsRented = (updatePayload.isRented ?? existing.isRented) as boolean;
+  if (!effectiveIsRented) {
+    updatePayload.currentMonthlyRent = 0;
+    updatePayload.unitRents = Prisma.DbNull;
   }
 
   const property = await prisma.property.update({
@@ -190,7 +128,7 @@ export async function PATCH(
     include: { mortgages: true },
   });
 
-  return NextResponse.json(serializeProperty(property));
+  return NextResponse.json(serializePropertyForApi(property));
 }
 
 export async function DELETE(

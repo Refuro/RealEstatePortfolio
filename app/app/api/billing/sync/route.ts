@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveTier } from "@/lib/plans";
@@ -73,6 +74,13 @@ export async function GET() {
         timestamp: new Date().toISOString(),
       })
     );
+    Sentry.captureException(err instanceof Error ? err : new Error(message), {
+      tags: { area: "billing", route: "billing_sync" },
+      extra: {
+        userId: user.id,
+        stripeCustomerId: user.stripeCustomerId ?? null,
+      },
+    });
     return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
   }
 }

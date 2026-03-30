@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 
 type LandingNavProps = {
   userId: string | null;
@@ -59,13 +60,16 @@ export function LandingNav({ userId }: LandingNavProps) {
           >
             Sign in
           </Link>
-          <Link
-            href="/sign-up"
+          <FunnelCtaLink
+            href="/sign-up?intent=free"
+            placement="landing_nav"
+            ctaId="sign_up"
+            planIntent="free"
             className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-accent-foreground hover:bg-accent-hover md:inline-block md:w-auto md:py-2"
             onClick={() => setMobileMenuOpen(false)}
           >
             Sign up
-          </Link>
+          </FunnelCtaLink>
         </>
       )}
     </>

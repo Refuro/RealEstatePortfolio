@@ -15,8 +15,14 @@ import {
   type MortgageFormData,
 } from "./mortgage-form-fields";
 import { PropertySquareFeetField } from "@/components/property/property-square-feet-field";
+import { RentCastQuotaHint } from "@/components/rentcast-quota-hint";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
+import {
+  addPropertyMilestoneKey,
+  hasFiredSession,
+  markFiredSession,
+} from "@/lib/analytics-dedup";
 
 export type WizardData = {
   nickname: string;
@@ -32,6 +38,7 @@ export type WizardData = {
   purchaseDate: string;
   currentEstimatedValue: string;
   cashInvested: string;
+  isRented: boolean;
   currentMonthlyRent: string;
   unitRents: string[];
   currentMonthlyExpenses: string;
@@ -68,6 +75,7 @@ const defaultWizardData: WizardData = {
   purchaseDate: "",
   currentEstimatedValue: "",
   cashInvested: "",
+  isRented: true,
   currentMonthlyRent: "",
   unitRents: [],
   currentMonthlyExpenses: "",
@@ -92,6 +100,13 @@ const ADD_SECTION_NAV = [
   { id: "section-mortgage", label: "Mortgage" },
   { id: "section-review", label: "Review" },
 ] as const;
+
+/** DOM `id` → analytics `milestone` for `add_property_milestone_reached`. */
+const ADD_PROPERTY_SECTION_MILESTONES: { domId: string; milestone: string }[] =
+  ADD_SECTION_NAV.map((s) => ({
+    domId: s.id,
+    milestone: s.id.replace(/^section-/, "section_").replace(/-/g, "_"),
+  }));
 
 const inputClass =
   "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
@@ -543,6 +558,7 @@ function StepIncomeExpenses({
 }) {
   const [estimateLoading, setEstimateLoading] = useState(false);
   const [estimateError, setEstimateError] = useState<string | null>(null);
+  const [rentCastQuotaTick, setRentCastQuotaTick] = useState(0);
 
   const isMulti =
     (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
@@ -601,6 +617,7 @@ function StepIncomeExpenses({
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; marketRent?: number; marketRentAsOf?: string; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
+        setRentCastQuotaTick((t) => t + 1);
         const today = new Date().toISOString().slice(0, 10);
         const marketRent = String(Math.round(json.rent));
         const marketRentAsOf = json.marketRentAsOf ?? today;
@@ -624,34 +641,71 @@ function StepIncomeExpenses({
 
   return (
     <div className="space-y-4">
+      <RentCastQuotaHint refreshKey={rentCastQuotaTick} />
+      <div className="rounded-md border border-border bg-subtle/20 p-3">
+        <p className="text-sm font-medium text-foreground">Is this property currently rented?</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => update("isRented", true)}
+            className={`rounded-md border px-3 py-1.5 text-sm ${
+              data.isRented
+                ? "border-accent bg-accent text-accent-foreground"
+                : "border-border bg-background text-foreground hover:bg-subtle"
+            }`}
+          >
+            Yes, rented
+          </button>
+          <button
+            type="button"
+            onClick={() => update("isRented", false)}
+            className={`rounded-md border px-3 py-1.5 text-sm ${
+              !data.isRented
+                ? "border-accent bg-accent text-accent-foreground"
+                : "border-border bg-background text-foreground hover:bg-subtle"
+            }`}
+          >
+            No, not rented
+          </button>
+        </div>
+        {!data.isRented && (
+          <p className="mt-2 text-xs text-muted">
+            Not currently rented - income is saved as $0 until this is marked rented.
+          </p>
+        )}
+      </div>
       {isMulti ? (
         <div className="space-y-3">
           <div className="flex flex-wrap items-end gap-2">
             {unitRents.map((_, i) => (
               <div key={i} className="min-w-[120px] flex-1">
                 <label htmlFor={`unitRent-${i}`} className={labelClass}>
-                  Unit {i + 1} rent *
+                  Unit {i + 1} rent {data.isRented ? "*" : ""}
                 </label>
                 <CurrencyInput
                   id={`unitRent-${i}`}
                   value={unitRents[i] ?? ""}
                   onChange={(v) => setUnitRent(i, v)}
-                  required
+                  required={data.isRented}
                   className={inputClass}
                 />
               </div>
             ))}
-            <button
-              type="button"
-              onClick={handleEstimateRent}
-              disabled={estimateLoading || rentMatchesLastEstimate}
-              className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-            >
-              {estimateLoading ? "Estimating…" : "Estimate rent"}
-            </button>
+            {data.isRented && (
+              <button
+                type="button"
+                onClick={handleEstimateRent}
+                disabled={estimateLoading || rentMatchesLastEstimate}
+                className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+              >
+                {estimateLoading ? "Estimating…" : "Estimate rent"}
+              </button>
+            )}
           </div>
           <p className="text-sm text-muted">
-            Total: ${totalRent.toLocaleString()}/mo
+            {data.isRented
+              ? `Total: $${totalRent.toLocaleString()}/mo`
+              : "Monthly rent will be saved as $0 while not rented."}
           </p>
           {estimateError && (
             <p className={`text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
@@ -665,7 +719,7 @@ function StepIncomeExpenses({
       ) : (
         <div>
           <label htmlFor="currentMonthlyRent" className={labelClass}>
-            Monthly rent *
+            Monthly rent {data.isRented ? "*" : ""}
           </label>
           <div className="flex gap-2">
             <div className="min-w-0 flex-1">
@@ -673,19 +727,26 @@ function StepIncomeExpenses({
                 id="currentMonthlyRent"
                 value={data.currentMonthlyRent}
                 onChange={(v) => update("currentMonthlyRent", v)}
-                required
+                required={data.isRented}
                 className={inputClass}
               />
             </div>
-            <button
-              type="button"
-              onClick={handleEstimateRent}
-              disabled={estimateLoading || rentMatchesLastEstimate}
-              className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
-            >
-              {estimateLoading ? "Estimating…" : "Estimate rent"}
-            </button>
+            {data.isRented && (
+              <button
+                type="button"
+                onClick={handleEstimateRent}
+                disabled={estimateLoading || rentMatchesLastEstimate}
+                className="shrink-0 self-end rounded-md border border-border bg-transparent px-3 py-2 text-sm font-medium hover:bg-subtle disabled:opacity-50"
+              >
+                {estimateLoading ? "Estimating…" : "Estimate rent"}
+              </button>
+            )}
           </div>
+          {!data.isRented && (
+            <p className="mt-0.5 text-xs text-muted">
+              Monthly rent will be saved as $0 while not rented.
+            </p>
+          )}
           {estimateError && (
             <p className={`mt-0.5 text-sm ${estimateError?.includes("estimate limit") ? "text-negative" : "text-muted"}`}>{estimateError}</p>
           )}
@@ -914,9 +975,17 @@ function StepReview({ data }: { data: WizardData }) {
         </div>
         <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
           <div>
+            <dt className="text-muted">Rental status</dt>
+            <dd className="font-medium text-foreground">
+              {data.isRented ? "Rented" : "Not rented"}
+            </dd>
+          </div>
+          <div>
             <dt className="text-muted">Monthly rent</dt>
             <dd className="font-medium text-foreground">
-              {data.unitRents.length > 1
+              {!data.isRented
+                ? "$0 (vacant)"
+                : data.unitRents.length > 1
                 ? (() => {
                     const rents = data.unitRents.slice(0, Number(data.units) || 1);
                     const total = rents.reduce((s, r) => s + (Number(r) || 0), 0);
@@ -1021,6 +1090,7 @@ function validateStep3(data: WizardData): Record<string, string> {
   if (Number.isNaN(exp) || exp < 0) err.currentMonthlyExpenses = "Enter valid monthly expenses";
   const vac = Number(data.vacancyPercent);
   if (!Number.isNaN(vac) && (vac < 0 || vac > 100)) err.vacancyPercent = "Vacancy must be 0–100";
+  if (!data.isRented) return err;
   const isMultiUnit =
     (data.propertyType === "multi_family" || data.propertyType === "apartment") &&
     (Number(data.units) || 1) > 1;
@@ -1209,6 +1279,40 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     }
   }, [draft?.startFreshKey, draft]);
 
+  useEffect(() => {
+    const key = addPropertyMilestoneKey("wizard_opened");
+    if (hasFiredSession(key)) return;
+    markFiredSession(key);
+    captureClientEvent(AnalyticsEvents.ADD_PROPERTY_MILESTONE_REACHED, {
+      milestone: "wizard_opened",
+    });
+  }, []);
+
+  useEffect(() => {
+    const observers: IntersectionObserver[] = [];
+    for (const { domId, milestone } of ADD_PROPERTY_SECTION_MILESTONES) {
+      const el = document.getElementById(domId);
+      if (!el) continue;
+      const key = addPropertyMilestoneKey(milestone);
+      const obs = new IntersectionObserver(
+        (entries) => {
+          for (const entry of entries) {
+            if (!entry.isIntersecting) continue;
+            if (hasFiredSession(key)) continue;
+            markFiredSession(key);
+            captureClientEvent(AnalyticsEvents.ADD_PROPERTY_MILESTONE_REACHED, {
+              milestone,
+            });
+          }
+        },
+        { root: null, threshold: 0.12 }
+      );
+      obs.observe(el);
+      observers.push(obs);
+    }
+    return () => observers.forEach((o) => o.disconnect());
+  }, []);
+
   async function handleSubmit() {
     const { errors: allErrors, firstSectionId } = runAllValidations(data);
     setErrors(allErrors);
@@ -1227,13 +1331,15 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
       (Number(data.units) || 1) > 1;
     const units = isMultiUnit ? Number(data.units) : 1;
     const unitRentsArr =
-      isMultiUnit && data.unitRents.length > 0
+      data.isRented && isMultiUnit && data.unitRents.length > 0
         ? data.unitRents
             .slice(0, units)
             .map((s) => Number(s) || 0)
         : null;
     const totalRent =
-      unitRentsArr != null
+      !data.isRented
+        ? 0
+        : unitRentsArr != null
         ? unitRentsArr.reduce((a, b) => a + b, 0)
         : Number(data.currentMonthlyRent) || 0;
 
@@ -1251,6 +1357,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
       purchasePrice: data.purchasePrice,
       purchaseDate: data.purchaseDate,
       currentEstimatedValue: data.currentEstimatedValue,
+      isRented: data.isRented,
       currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses: data.currentMonthlyExpenses,
       vacancyPercent: vacancy,
@@ -1325,7 +1432,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     <form onSubmit={handleFormSubmit} className="rounded-lg border border-border bg-card p-6">
       <nav
         aria-label="Add property sections"
-        className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-[backdrop-filter]:bg-card/85"
+        className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
       >
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
         <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
