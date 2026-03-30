@@ -114,6 +114,7 @@ Emitted from Stripe webhook path after subscription sync. Metadata includes `pla
 | `placement` | string | e.g. `landing_hero`, `landing_nav` |
 | `cta_id` | string | Stable id, e.g. `get_started_free`, `view_pricing` |
 | `href` | string | Link destination |
+| `landing_variant` | string | Optional variant label, e.g. `calc_control_v1`, `calc_paid_v1`, `home_default_v2` |
 
 **Sample:**
 
@@ -121,7 +122,8 @@ Emitted from Stripe webhook path after subscription sync. Metadata includes `pla
 {
   "placement": "landing_hero",
   "cta_id": "get_started_free",
-  "href": "/sign-up?intent=free"
+  "href": "/sign-up?intent=free",
+  "landing_variant": "home_default_v2"
 }
 ```
 
@@ -199,6 +201,15 @@ Emitted from Stripe webhook path after subscription sync. Metadata includes `pla
 - Analytics is **optional** via env. Describe PostHog in your **Privacy Policy** if you enable it in production (third-party processor, approximate location, product analytics).
 - Respect **cookie banner** requirements for your jurisdictions (PostHog may use cookies/localStorage).
 
+## Google Ads conversion mapping (optional)
+
+When Google Ads tag is enabled and optional analytics consent is accepted:
+
+- `user_signed_up` can trigger Google conversion via `NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL`.
+- `property_created` can trigger Google conversion via `NEXT_PUBLIC_GOOGLE_ADS_PROPERTY_CREATED_CONVERSION_LABEL`.
+
+UTM params (`utm_source`, `utm_medium`, `utm_campaign`, `utm_content`) are persisted from landing URLs and attached to signup analytics payloads to verify paid attribution quality.
+
 ---
 
 ## Saved insight (PM)
@@ -224,6 +235,9 @@ Use after deploy to staging or production with PostHog key enabled and analytics
 - [ ] **Add property:** Open wizard → `wizard_opened`; scroll sections → each `section_*` milestone once per session.
 - [ ] **Signup window:** `user_signed_up` only for accounts created within 7 days and only once per user.
 - [ ] **Docs:** This file matches implemented property names and dedup behavior.
+
+For paid relaunch QA, use:
+- [`pre-live-telemetry-qa-2026-03-30.md`](pre-live-telemetry-qa-2026-03-30.md)
 
 ---
 

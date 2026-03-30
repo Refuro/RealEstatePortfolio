@@ -11,6 +11,8 @@ const isPublicRoute = createRouteMatcher([
   "/privacy",
   "/terms",
   "/pricing",
+  "/investment-property-calculator",
+  "/lp/investment-property-calculator",
   "/changelog",
   "/contact",
   "/api/billing/webhook",

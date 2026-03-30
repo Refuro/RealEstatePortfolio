@@ -21,6 +21,8 @@ type FunnelCtaLinkProps = {
   ctaId: string;
   /** When set, persists plan intent (landing CTA path). */
   planIntent?: PlanIntentValue;
+  /** Optional landing/page variant label for paid tests. */
+  landingVariant?: string;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
@@ -31,6 +33,7 @@ export function FunnelCtaLink({
   placement,
   ctaId,
   planIntent,
+  landingVariant,
   onClick,
   href,
   children,
@@ -48,6 +51,7 @@ export function FunnelCtaLink({
             placement,
             cta_id: ctaId,
             href: typeof href === "string" ? href : "",
+            ...(landingVariant ? { landing_variant: landingVariant } : {}),
           });
         }
         if (planIntent) {

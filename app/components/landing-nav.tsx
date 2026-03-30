@@ -7,9 +7,10 @@ import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 
 type LandingNavProps = {
   userId: string | null;
+  landingVariant?: string;
 };
 
-export function LandingNav({ userId }: LandingNavProps) {
+export function LandingNav({ userId, landingVariant }: LandingNavProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navLinks = (
@@ -23,6 +24,13 @@ export function LandingNav({ userId }: LandingNavProps) {
           Dashboard
         </Link>
       )}
+      <Link
+        href="/investment-property-calculator"
+        className="text-muted hover:text-foreground"
+        onClick={() => setMobileMenuOpen(false)}
+      >
+        Calculator
+      </Link>
       <Link
         href="/pricing"
         className="text-muted hover:text-foreground"
@@ -65,6 +73,7 @@ export function LandingNav({ userId }: LandingNavProps) {
             placement="landing_nav"
             ctaId="sign_up"
             planIntent="free"
+            landingVariant={landingVariant}
             className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-accent-foreground hover:bg-accent-hover md:inline-block md:w-auto md:py-2"
             onClick={() => setMobileMenuOpen(false)}
           >
