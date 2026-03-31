@@ -20,7 +20,7 @@ Partial renames create stale command wiring and stale onboarding guidance.
 
 1. Open `docs/audits/README.md` — it lists all lanes with process docs and report folders.
 2. For each lane in the table:
-   - Confirm the process doc exists at `docs/process/<lane>-*.md`.
+   - Confirm the process doc exists at `docs/process/<lane>-*.md` (Mobile experience: `docs/process/mobile-experience-audit-process.md`; criteria also in `docs/qa/mobile-experience-audit.md`).
    - Confirm the rule file exists at `.cursor/rules/<lane>-audit-agent.mdc`.
    - Open the rule file and verify it references the correct process doc path and output path (e.g. `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`).
 3. Check any full-audit docs that enumerate lanes (`docs/process/full-audit-synthesis.md`, `.cursor/rules/full-audit-agent.mdc`) and confirm their lane count/names still match.

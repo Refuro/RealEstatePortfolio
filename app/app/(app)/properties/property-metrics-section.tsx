@@ -28,7 +28,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
           <div>
             <dt className="text-sm font-medium text-muted">Monthly cash flow</dt>
             <dd
-              className={`text-base font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+              className={`text-base font-medium ${metrics.monthlyCashFlow > 0 ? "text-positive" : metrics.monthlyCashFlow < 0 ? "text-negative" : "text-muted"}`}
             >
               {formatCurrency(metrics.monthlyCashFlow)}
             </dd>
@@ -38,7 +38,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
           <div>
             <dt className="text-sm font-medium text-muted">Annual cash flow</dt>
             <dd
-              className={`text-base font-medium ${metrics.annualCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+              className={`text-base font-medium ${metrics.annualCashFlow > 0 ? "text-positive" : metrics.annualCashFlow < 0 ? "text-negative" : "text-muted"}`}
             >
               {formatCurrency(metrics.annualCashFlow)}
             </dd>
@@ -81,7 +81,7 @@ export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
             <dt className="text-sm font-medium text-muted">DSCR</dt>
             <dd
               className={`text-base font-medium ${
-                metrics.dscr >= 1 ? "text-positive" : "text-negative"
+                metrics.dscr >= 1.2 ? "text-positive" : metrics.dscr >= 1 ? "text-warning" : "text-negative"
               }`}
             >
               {metrics.dscr.toFixed(2)}

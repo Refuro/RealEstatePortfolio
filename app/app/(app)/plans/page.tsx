@@ -46,7 +46,7 @@ export default async function PlansPage() {
               <p className="text-xs font-semibold uppercase tracking-wide text-muted">
                 Plan context
               </p>
-              <div className="mt-2 flex flex-wrap gap-2 text-sm">
+              <div className="mt-2 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
                 <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
                   Plan: <span className="font-medium capitalize text-foreground">{effectiveTier}</span>
                 </span>
@@ -64,24 +64,24 @@ export default async function PlansPage() {
                 </span>
                 {subscription?.status && (
                   <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
-                    Billing status:{" "}
+                    Billing:{" "}
                     <span className="font-medium capitalize text-foreground">
                       {subscription.status.replaceAll("_", " ")}
                     </span>
                   </span>
                 )}
                 {periodEndLabel && (
-                  <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
-                    Current period ends:{" "}
+                  <span className="col-span-2 rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted sm:col-span-1">
+                    Renews:{" "}
                     <span className="font-medium text-foreground">{periodEndLabel}</span>
                   </span>
                 )}
               </div>
             </div>
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
               <Link
                 href="/settings"
-                className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+                className="rounded-md border border-border bg-transparent px-3 py-1.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
               >
                 Open settings
               </Link>

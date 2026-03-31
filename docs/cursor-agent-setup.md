@@ -27,6 +27,7 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | **`.cursor/rules/code-audit-agent.mdc`** | Code audit command. When the user says "run code audit" or "code audit", the agent launches a subagent that follows `docs/process/code-audit-process.md` and writes a report to `docs/audits/code/`. |
 | **`.cursor/rules/math-audit-agent.mdc`** | Math & Logic audit command. When the user says "run math audit" or "math audit", the agent launches a subagent that follows `docs/process/math-logic-audit.md` and writes a report to `docs/audits/math/`. |
 | **`.cursor/rules/feature-audit-agent.mdc`** | Feature/UX audit command. Trigger phrases: "run feature audit", "run ux audit". Writes to `docs/audits/feature/`. |
+| **`.cursor/rules/mobile-experience-audit-agent.mdc`** | Mobile experience audit (narrow viewport, shells, touch). Trigger phrases: "run mobile audit", "mobile experience audit". Follows `docs/process/mobile-experience-audit-process.md` and `docs/qa/mobile-experience-audit.md`. Writes `YYYY-MM-DD-mobile-experience-audit.md` to `docs/audits/feature/`. |
 | **`.cursor/rules/security-audit-agent.mdc`** | Security audit command. Trigger phrases: "run security audit". Writes to `docs/audits/security/`. |
 | **`.cursor/rules/performance-cost-audit-agent.mdc`** | Performance/cost audit command. Trigger phrases: "run performance audit". Writes to `docs/audits/performance-cost/`. |
 | **`.cursor/rules/reliability-ops-audit-agent.mdc`** | Reliability/ops audit command. Trigger phrases: "run reliability audit". Writes to `docs/audits/reliability-ops/`. |
@@ -34,7 +35,9 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | **`.cursor/rules/business-valuation-audit-agent.mdc`** | Business/valuation audit command. Trigger phrases: "run business audit", "run valuation audit". Writes to `docs/audits/business/`. |
 | **`.cursor/rules/growth-funnel-audit-agent.mdc`** | Growth-funnel audit command. Trigger phrases: "run growth audit". Writes to `docs/audits/growth-funnel/`. |
 | **`.cursor/rules/agent-governance-audit-agent.mdc`** | AI-agent governance audit command. Trigger phrases: "run agent governance audit". Writes to `docs/audits/agent-governance/`. |
-| **`.cursor/rules/full-audit-agent.mdc`** | Full audit command. Trigger phrases: "run full audit", "run all audits". Runs all lanes, then synthesis pass per `docs/process/full-audit-synthesis.md`. Outputs `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. |
+| **`.cursor/rules/documentation-audit-agent.mdc`** | Documentation audit command. Trigger phrases: "run documentation audit", "run doc audit". Writes to `docs/audits/documentation/`. |
+| **`.cursor/rules/legal-compliance-audit-agent.mdc`** | Legal & compliance audit command. Trigger phrases: "run legal audit", "run compliance audit". Writes to `docs/audits/legal-compliance/`. |
+| **`.cursor/rules/full-audit-agent.mdc`** | Full audit command. Trigger phrases: "run full audit", "run all audits". Runs **13** lanes (including Mobile experience), then synthesis pass per `docs/process/full-audit-synthesis.md`. Outputs `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
 | **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
 | **`.cursor/hooks/on-subagent-stop.ps1`** | PowerShell variant for Windows when Git Bash/WSL is not available. Edit `hooks.json` to use this path instead of the `.sh` script if needed. |
@@ -57,6 +60,7 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/process/math-logic-audit.md` | Process the math audit agent follows when the user runs a math & logic audit. |
 | `docs/audits/math/` | Folder for math & logic audit reports. User reviews reports and creates tasks from findings as needed. |
 | `docs/process/feature-ux-audit-process.md` | Process for feature/UX/IA audits. |
+| `docs/process/mobile-experience-audit-process.md` | Process for mobile experience audits; criteria in `docs/qa/mobile-experience-audit.md`. Reports live in `docs/audits/feature/`. |
 | `docs/process/security-audit-process.md` | Process for security/privacy audits. |
 | `docs/process/performance-cost-audit-process.md` | Process for performance/cost audits. |
 | `docs/process/reliability-ops-audit-process.md` | Process for reliability/operations audits. |
@@ -64,6 +68,8 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/process/business-valuation-audit-process.md` | Process for business/valuation audits. |
 | `docs/process/growth-funnel-audit-process.md` | Process for growth/activation audits. |
 | `docs/process/agent-governance-audit-process.md` | Process for AI-agent governance audits. |
+| `docs/process/documentation-audit-process.md` | Process for documentation hygiene audits. |
+| `docs/process/legal-compliance-audit-process.md` | Process for legal/compliance reviews (not a substitute for counsel). |
 | `docs/process/full-audit-synthesis.md` | Synthesis pass when running all audits; produces deduplicated task list. |
 | `docs/process/command-integrity-check.md` | Recurring check that audit rules reference correct process docs. |
 | `docs/audits/synthesis/` | Folder for full audit synthesis reports (`YYYY-MM-DD-audit-synthesis.md`). |
@@ -85,6 +91,7 @@ Do this in the project root (same level as `app/` and `docs/`).
   - `.cursor/rules/code-audit-agent.mdc`
   - `.cursor/rules/math-audit-agent.mdc`
   - `.cursor/rules/feature-audit-agent.mdc`
+  - `.cursor/rules/mobile-experience-audit-agent.mdc`
   - `.cursor/rules/security-audit-agent.mdc`
   - `.cursor/rules/performance-cost-audit-agent.mdc`
   - `.cursor/rules/reliability-ops-audit-agent.mdc`
@@ -92,6 +99,8 @@ Do this in the project root (same level as `app/` and `docs/`).
   - `.cursor/rules/business-valuation-audit-agent.mdc`
   - `.cursor/rules/growth-funnel-audit-agent.mdc`
   - `.cursor/rules/agent-governance-audit-agent.mdc`
+  - `.cursor/rules/documentation-audit-agent.mdc`
+  - `.cursor/rules/legal-compliance-audit-agent.mdc`
   - `.cursor/rules/full-audit-agent.mdc`
   - `.cursor/hooks.json`
   - `.cursor/hooks/on-subagent-stop.sh`
@@ -133,6 +142,6 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 
 **Other focused audits:** You can also run feature/UX, security, performance-cost, reliability-ops, data-integrity, business-valuation, growth-funnel, and agent-governance audits with the matching "run <lane> audit" phrase shown in `docs/audits/README.md`.
 
-**Full audit:** Say "run full audit" or "run all audits" to run all 10 lanes and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
+**Full audit:** Say "run full audit" or "run all audits" to run all **12** audit lanes and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
 
 No API keys, no Cursor account config, and no duplicate files—just the repo and an executable hook script.

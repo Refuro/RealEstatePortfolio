@@ -39,7 +39,16 @@
 | **Public changelog** | ✅ Shipped | `/changelog` + `lib/changelog-data.ts`. |
 | **RentCast dependency** | Ongoing ops | Keep messaging as "estimates," monitor quotas/errors per plan. |
 
-**Paid ads:** keep off until PostHog funnel data is flowing and baseline conversion is established.
+**Paid ads:** PostHog and core funnel events are live (`docs/launch/analytics.md`). **As of 2026-03-30:** paid acquisition may run alongside documented runbooks and readouts (`docs/launch/paid-ads-*`); keep spend and creative changes aligned with telemetry QA. *(Earlier “keep ads off until baseline” guidance applied before telemetry was shipped; see `docs/tasks.md` Batch 14 if you need to tighten this language further.)*
+
+**Operational links (paid acquisition + telemetry):**
+
+| Doc | Use |
+|-----|-----|
+| [`pre-live-telemetry-qa-2026-03-30.md`](pre-live-telemetry-qa-2026-03-30.md) | Env checklist + browser QA before scaling paid spend |
+| [`paid-ads-monitoring-runbook.md`](paid-ads-monitoring-runbook.md) | Day-4 / day-7 / day-14 kill / iterate / scale |
+| [`paid-ads-campaign-build-sheet.md`](paid-ads-campaign-build-sheet.md) | Campaign structure, copy seeds, keywords |
+| [`paid-ads-readout-2026-03-30-round2-variant.md`](paid-ads-readout-2026-03-30-round2-variant.md) | Example readout (replace with latest readout as you add runs) |
 
 ### 2.3 Technical snapshot (for launch comms / due diligence)
 

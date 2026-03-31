@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { Resend } from "resend";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -94,6 +95,10 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("Resend error:", error);
+    Sentry.captureException(
+      error instanceof Error ? error : new Error(String(error)),
+      { tags: { area: "contact", resend: "send" } }
+    );
     return NextResponse.json(
       { error: "Failed to send message. Please try again later." },
       { status: 500 }

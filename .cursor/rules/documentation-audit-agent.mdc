@@ -10,7 +10,7 @@ When the user says **"run documentation audit"**, **"documentation audit"**, or 
 ## What to do
 
 1. Launch one subagent (generalPurpose) and instruct it to follow `docs/process/documentation-audit-process.md`.
-2. Require output report at `docs/audits/documentation/YYYY-MM-DD-documentation-audit.md`.
+2. Require output report at `docs/audits/documentation/YYYY-MM-DD-documentation-audit.md` (or `YYYY-MM-DD-documentation-audit-N.md` if multiple runs on the same day).
 3. Audit only. Do not make code changes.
 4. After completion, summarize top findings and report location.
 

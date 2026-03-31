@@ -16,6 +16,8 @@ Set in **Vercel** (production) and optionally in `app/.env` locally.
 
 If `NEXT_PUBLIC_POSTHOG_KEY` is **unset**, the app does not load PostHog (no console errors).
 
+**Dashboards / saved insights:** See [`docs/launch/posthog-views-setup.md`](posthog-views-setup.md).
+
 ### Cookie consent
 
 PostHog is initialized only when **optional analytics** is accepted in the cookie consent UI (`PostHogGate` in `app/components/analytics/posthog-provider.tsx`). If the user declines, `posthog` is not initialized and client captures are effectively no-ops.
@@ -43,7 +45,7 @@ PostHog is initialized only when **optional analytics** is accepted in the cooki
 
 | Mechanism | Scope | Window / key |
 |-----------|--------|----------------|
-| `user_signed_up` | Per Clerk user | **Once ever** per user via `localStorage` key `veld_ph_signup_{userId}`; only eligible if `createdAt` within **7 days** of capture (`posthog-signup-once.tsx`). |
+| `user_signed_up` | Per Clerk user | **Once ever** per user via `localStorage` key `veld_ph_signup_sent_{userId}` (`STORAGE_PREFIX` + Clerk id in `posthog-signup-once.tsx`); only eligible if `createdAt` within **7 days** of capture. |
 | `plan_intent_applied` | Per Clerk user | **Once ever** per user via `localStorage` `veld_plan_intent_applied_{userId}`; skipped when source is `unknown`. |
 | `funnel_cta_clicked` | Per browser tab session | **Once per** `(placement, cta_id)` via `sessionStorage` key `veld_dedup_sess_funnel_cta_{placement}_{cta_id}`. |
 | `onboarding_step_completed` | Per Clerk user × step | **Once per** `(userId, step)` via `localStorage` `veld_dedup_onb_{userId}_{step}`. |

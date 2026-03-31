@@ -39,3 +39,6 @@ Use before or immediately after promoting a build to production (Stripe live mod
 - `docs/setup/manual-steps.md` — Stripe setup steps
 - `docs/reference/rentcast-quota.md` — Hourly pool semantics
 - `app/.env.example` — Commented variable names
+- `docs/internal/stripe-webhook-posthog-idempotency.md` — Webhook replay vs PostHog
+- `docs/internal/effective-tier-analytics.md` — Override vs Stripe tier
+- `docs/internal/api-list-contract.md` — Full `GET` lists vs plan UI caps

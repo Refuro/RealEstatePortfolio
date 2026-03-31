@@ -214,7 +214,7 @@ Start free. No credit card required. Results in seconds.
 
 Final URL:
 ```
-https://veldportfolio.com/investment-property-calculator?utm_source=google&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=calc_control_v1
+https://veldportfolio.com/investment-property-calculator?utm_source=google&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=calcu_control_v1
 ```
 
 **Save → + New ad group for Ad Group D.**
@@ -259,7 +259,7 @@ No credit card required. Start analyzing deals today.
 
 Final URL:
 ```
-https://veldportfolio.com/investment-property-calculator?utm_source=google&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=calc_control_v1
+https://veldportfolio.com/investment-property-calculator?utm_source=google&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=calcu_control_v1
 ```
 
 **Campaign 2 is done. Now create Campaign 3.**

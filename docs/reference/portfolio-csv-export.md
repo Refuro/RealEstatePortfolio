@@ -28,3 +28,5 @@ Rate/term/lender on additional liens are **not** duplicated as extra columns; us
 ## Import compatibility
 
 `POST /api/import/portfolio` accepts both legacy column names (e.g. `mortgage rate`) and the new explicit names (e.g. `mortgage rate (first lien)`).
+
+**Multi-lien round-trip:** Re-importing a CSV that was exported from a property with **multiple mortgages** may not recreate every lien in a single import pass, because the importer typically creates **at most one** mortgage row from the CSV. Use in-app property detail to add additional liens, or treat multi-lien export as **lossy** on re-import until product supports multi-mortgage import.

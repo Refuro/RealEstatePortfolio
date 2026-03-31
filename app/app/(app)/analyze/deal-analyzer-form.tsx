@@ -1,18 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CurrencyInput } from "@/components/currency-input";
 import { formatCurrency } from "@/lib/format-currency";
+import { useIsMobile } from "@/lib/use-is-mobile";
 import { US_STATES } from "@/lib/us-states";
 import { computePropertyMetrics, getAnnualDebtService } from "@/lib/metrics/property-metrics";
+import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { PropertyMetricsSection } from "../properties/property-metrics-section";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
+  "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
 const labelClass = "block text-sm font-medium text-muted";
 
 interface DealAnalyzerFormProps {
@@ -28,6 +32,7 @@ export function DealAnalyzerForm({
   dealCount = 0,
   dealLimit = 5,
 }: DealAnalyzerFormProps) {
+  const isMobile = useIsMobile();
   const router = useRouter();
   const [addressLine1, setAddressLine1] = useState("");
   const [addressLine2, setAddressLine2] = useState("");
@@ -48,6 +53,76 @@ export function DealAnalyzerForm({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [loadingDeal, setLoadingDeal] = useState(!!dealId);
+
+  const formSnapshot = useMemo(
+    () =>
+      JSON.stringify({
+        addressLine1,
+        addressLine2,
+        city,
+        state,
+        zipCode,
+        purchasePrice,
+        currentValue,
+        monthlyRent,
+        monthlyExpenses,
+        mortgageBalance,
+        monthlyPayment,
+        ownershipPercent,
+        vacancyPercent,
+        cashInvested,
+        rentStressPercent,
+        expenseStressPercent,
+      }),
+    [
+      addressLine1,
+      addressLine2,
+      city,
+      state,
+      zipCode,
+      purchasePrice,
+      currentValue,
+      monthlyRent,
+      monthlyExpenses,
+      mortgageBalance,
+      monthlyPayment,
+      ownershipPercent,
+      vacancyPercent,
+      cashInvested,
+      rentStressPercent,
+      expenseStressPercent,
+    ]
+  );
+
+  const [baselineSnapshot, setBaselineSnapshot] = useState<string | null>(null);
+  const formSnapshotRef = useRef(formSnapshot);
+  useEffect(() => {
+    formSnapshotRef.current = formSnapshot;
+  }, [formSnapshot]);
+
+  const isDirty =
+    baselineSnapshot !== null && formSnapshot !== baselineSnapshot;
+
+  useEffect(() => {
+    if (loadingDeal) return;
+    // Defer out of effect body (avoids react-hooks/set-state-in-effect cascade warning).
+    queueMicrotask(() => {
+      setBaselineSnapshot((prev) => {
+        if (prev !== null) return prev;
+        return formSnapshotRef.current;
+      });
+    });
+  }, [loadingDeal, dealId]);
+
+  useEffect(() => {
+    if (!isDirty) return;
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
 
   useEffect(() => {
     if (!dealId) return;
@@ -129,16 +204,26 @@ export function DealAnalyzerForm({
   );
   const annualDebtService = getAnnualDebtService(monthlyPaymentNum, ownershipNum, "proportional");
   const dscr = annualDebtService > 0 ? metrics.noi / annualDebtService : null;
-  const cashFlowSignal =
-    metrics.monthlyCashFlow >= 0 ? "Healthy cash flow" : "Negative cash flow";
-  const cashFlowTone =
-    metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative";
-  const dscrSignal =
-    dscr == null ? "No debt payment" : dscr >= 1 ? "DSCR above 1.0" : "DSCR below 1.0";
-  const dscrTone =
-    dscr == null ? "text-muted" : dscr >= 1 ? "text-positive" : "text-negative";
   const needsInputGuidance =
     currentValueNum <= 0 || (monthlyRentNum <= 0 && monthlyExpensesNum <= 0);
+  const cashFlowSignal = needsInputGuidance
+    ? "Enter rent to analyze"
+    : metrics.monthlyCashFlow > 0
+      ? "Healthy cash flow"
+      : metrics.monthlyCashFlow < 0
+        ? "Negative cash flow"
+        : "Breaking even";
+  const cashFlowTone = needsInputGuidance
+    ? "text-muted"
+    : metrics.monthlyCashFlow > 0
+      ? "text-positive"
+      : metrics.monthlyCashFlow < 0
+        ? "text-negative"
+        : "text-muted";
+  const dscrSignal =
+    dscr == null ? "No debt payment" : dscr >= 1.2 ? "DSCR above 1.2" : dscr >= 1 ? "DSCR near breakeven" : "DSCR below 1.0";
+  const dscrTone =
+    dscr == null ? "text-muted" : dscr >= 1.2 ? "text-positive" : dscr >= 1 ? "text-warning" : "text-negative";
 
   function handleNewDeal() {
     setAddressLine1("");
@@ -213,10 +298,505 @@ export function DealAnalyzerForm({
         captureClientEvent(AnalyticsEvents.DEAL_CREATED, { deal_id: data.id });
       }
       setSaveStatus("saved");
+      queueMicrotask(() => {
+        setBaselineSnapshot(formSnapshotRef.current);
+      });
     } catch {
       setSaveError("Failed to save deal");
       setSaveStatus("error");
     }
+  }
+
+  const mobileInputsSurface = (
+    <section className="space-y-3.5">
+      <MobileSectionCard className="space-y-3.5">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          {loadingDeal ? "Loading deal…" : "Deal assumptions"}
+        </h2>
+
+        <MobileSectionCard tone="subtle" className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Basics
+          </p>
+          <div>
+            <label htmlFor="addressLine1-mobile" className={labelClass}>
+              Address line 1
+            </label>
+            <input
+              id="addressLine1-mobile"
+              type="text"
+              autoComplete="street-address"
+              value={addressLine1}
+              onChange={(e) => setAddressLine1(e.target.value)}
+              placeholder="123 Main St"
+              className={inputClass}
+            />
+          </div>
+          <MobileCollapsible label="Add unit / apt (optional)" defaultOpen={!!addressLine2}>
+            <div className="pt-3">
+              <label htmlFor="addressLine2-mobile" className={labelClass}>
+                Address line 2
+              </label>
+              <input
+                id="addressLine2-mobile"
+                type="text"
+                autoComplete="address-line2"
+                value={addressLine2}
+                onChange={(e) => setAddressLine2(e.target.value)}
+                placeholder="Apt 4"
+                className={inputClass}
+              />
+            </div>
+          </MobileCollapsible>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="col-span-2">
+              <label htmlFor="city-mobile" className={labelClass}>
+                City
+              </label>
+              <input
+                id="city-mobile"
+                type="text"
+                autoComplete="address-level2"
+                value={city}
+                onChange={(e) => setCity(e.target.value)}
+                placeholder="Dallas"
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="state-mobile" className={labelClass}>
+                State
+              </label>
+              <select
+                id="state-mobile"
+                value={state}
+                onChange={(e) => setState(e.target.value)}
+                className={inputClass}
+              >
+                <option value="">—</option>
+                {US_STATES.map((abbr) => (
+                  <option key={abbr} value={abbr}>
+                    {abbr}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label htmlFor="zipCode-mobile" className={labelClass}>
+                ZIP
+              </label>
+              <input
+                id="zipCode-mobile"
+                type="text"
+                inputMode="numeric"
+                autoComplete="postal-code"
+                value={zipCode}
+                onChange={(e) => setZipCode(e.target.value)}
+                placeholder="75201"
+                className={inputClass}
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="purchasePrice-mobile" className={labelClass}>
+                Purchase price
+              </label>
+              <CurrencyInput
+                id="purchasePrice-mobile"
+                value={purchasePrice}
+                onChange={(v) => {
+                  setPurchasePrice(v);
+                  if (!currentValue) setCurrentValue(v);
+                }}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="currentValue-mobile" className={labelClass}>
+                Current value
+              </label>
+              <CurrencyInput
+                id="currentValue-mobile"
+                value={currentValue}
+                onChange={setCurrentValue}
+                placeholder={purchasePrice || "Same as price"}
+                className={inputClass}
+              />
+              <p className="mt-0.5 text-xs text-muted">Defaults to purchase price</p>
+            </div>
+          </div>
+        </MobileSectionCard>
+
+        <MobileSectionCard tone="subtle" className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Income and expenses
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label htmlFor="monthlyRent-mobile" className={labelClass}>
+                Monthly rent
+              </label>
+              <CurrencyInput
+                id="monthlyRent-mobile"
+                value={monthlyRent}
+                onChange={setMonthlyRent}
+                className={inputClass}
+              />
+            </div>
+            <div>
+              <label htmlFor="monthlyExpenses-mobile" className={labelClass}>
+                Monthly expenses
+              </label>
+              <CurrencyInput
+                id="monthlyExpenses-mobile"
+                value={monthlyExpenses}
+                onChange={setMonthlyExpenses}
+                className={inputClass}
+              />
+            </div>
+            <div className="col-span-2">
+              <label htmlFor="vacancyPercent-mobile" className={labelClass}>
+                Vacancy %
+              </label>
+              <input
+                id="vacancyPercent-mobile"
+                type="number"
+                min={0}
+                max={100}
+                inputMode="numeric"
+                value={vacancyPercent}
+                onChange={(e) => setVacancyPercent(e.target.value)}
+                className={inputClass}
+              />
+            </div>
+          </div>
+        </MobileSectionCard>
+
+        <MobileSectionCard tone="subtle">
+          <MobileCollapsible
+            label={mortgageBalance || monthlyPayment || cashInvested ? "Debt and ownership" : "Add debt and ownership"}
+            defaultOpen={!!dealId || !!mortgageBalance || !!monthlyPayment}
+          >
+            <div className="space-y-3 pt-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="mortgageBalance-mobile" className={labelClass}>
+                    Mortgage balance
+                  </label>
+                  <CurrencyInput
+                    id="mortgageBalance-mobile"
+                    value={mortgageBalance}
+                    onChange={setMortgageBalance}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="monthlyPayment-mobile" className={labelClass}>
+                    Monthly payment
+                  </label>
+                  <CurrencyInput
+                    id="monthlyPayment-mobile"
+                    value={monthlyPayment}
+                    onChange={setMonthlyPayment}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="cashInvested-mobile" className={labelClass}>
+                    Cash invested
+                  </label>
+                  <CurrencyInput
+                    id="cashInvested-mobile"
+                    value={cashInvested}
+                    onChange={setCashInvested}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label htmlFor="ownershipPercent-mobile-debt" className={labelClass}>
+                    Ownership %
+                  </label>
+                  <input
+                    id="ownershipPercent-mobile-debt"
+                    type="number"
+                    min={1}
+                    max={100}
+                    inputMode="numeric"
+                    value={ownershipPercent}
+                    onChange={(e) => setOwnershipPercent(e.target.value)}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+            </div>
+          </MobileCollapsible>
+        </MobileSectionCard>
+      </MobileSectionCard>
+    </section>
+  );
+
+  const mobileResultsSurface = (
+    <section className="space-y-3.5">
+      <MobileSectionCard className="space-y-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+              Live result
+            </h3>
+            <p className="mt-1 text-sm text-muted">{cashFlowSignal}</p>
+          </div>
+          <div className="text-right">
+            <p className="text-[11px] uppercase tracking-wide text-muted">Cash flow</p>
+            <p className={`mt-1 text-lg font-semibold ${cashFlowTone}`}>
+              {formatCurrency(metrics.monthlyCashFlow)}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+            <p className="text-[11px] text-muted">Cap rate</p>
+            <p className="mt-1 text-base font-semibold text-foreground">
+              {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+            <p className="text-[11px] text-muted">DSCR</p>
+            <p className={`mt-1 text-base font-semibold ${dscrTone}`}>
+              {dscr != null ? dscr.toFixed(2) : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+            <p className="text-[11px] text-muted">Cash-on-cash</p>
+            <p className="mt-1 text-base font-semibold text-foreground">
+              {metrics.cashOnCashReturn != null
+                ? `${(metrics.cashOnCashReturn * 100).toFixed(2)}%`
+                : "—"}
+            </p>
+          </div>
+          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+            <p className="text-[11px] text-muted">Equity</p>
+            <p className="mt-1 text-base font-semibold text-foreground">
+              {formatCurrency(metrics.equity)}
+            </p>
+          </div>
+        </div>
+
+      </MobileSectionCard>
+
+      <MobileSectionCard tone="subtle">
+        <MobileCollapsible label="Stress test" defaultOpen={stressActive}>
+          <div className="space-y-3 pt-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Sensitivity
+              </p>
+              {stressActive && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRentStressPercent(0);
+                    setExpenseStressPercent(0);
+                  }}
+                  className="text-xs font-medium text-muted hover:text-foreground"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Rent sensitivity
+              </p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {([-10, 0, 10] as const).map((preset) => {
+                  const active = rentStressPercent === preset;
+                  return (
+                    <button
+                      key={`mobile-rent-${preset}`}
+                      type="button"
+                      onClick={() => setRentStressPercent(preset)}
+                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                        active
+                          ? "border-accent/50 bg-subtle text-foreground"
+                          : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
+                      }`}
+                    >
+                      {preset > 0 ? `+${preset}%` : `${preset}%`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Expense sensitivity
+              </p>
+              <div className="mt-1 flex flex-wrap gap-2">
+                {([-10, 0, 10] as const).map((preset) => {
+                  const active = expenseStressPercent === preset;
+                  return (
+                    <button
+                      key={`mobile-exp-${preset}`}
+                      type="button"
+                      onClick={() => setExpenseStressPercent(preset)}
+                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                        active
+                          ? "border-accent/50 bg-subtle text-foreground"
+                          : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
+                      }`}
+                    >
+                      {preset > 0 ? `+${preset}%` : `${preset}%`}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </MobileCollapsible>
+      </MobileSectionCard>
+
+      <MobileSectionCard tone="subtle">
+        <MobileCollapsible label="Full metrics">
+          <div className="pt-3">
+            <PropertyMetricsSection
+              metrics={{
+                monthlyCashFlow: metrics.monthlyCashFlow,
+                annualCashFlow: metrics.annualCashFlow,
+                equity: metrics.equity,
+                capRate: metrics.capRate,
+                ltv: metrics.ltv,
+                cashOnCashReturn: metrics.cashOnCashReturn,
+                noi: metrics.noi,
+                dscr,
+                annualRent: metrics.grossAnnualRent,
+              }}
+            />
+          </div>
+        </MobileCollapsible>
+      </MobileSectionCard>
+    </section>
+  );
+
+  const analyzerLocation = [city.trim(), state.trim()].filter(Boolean).join(", ");
+  const mobileHeader = (
+    <div className="space-y-3">
+      <div className="space-y-1">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Active deal
+        </p>
+        <p className="text-sm font-medium text-foreground">
+          {loadingDeal
+            ? "Loading analysis..."
+            : addressLine1.trim() || (dealId ? "Saved deal" : "Unsaved analysis")}
+        </p>
+        <div className="flex items-center gap-2">
+          <p className="text-xs text-muted">
+            {analyzerLocation || "Enter address, rent, and expenses to start."}
+          </p>
+          {dealLimit > 0 && (
+            <span className="shrink-0 text-xs text-muted">
+              · {dealCount}/{dealLimit} saved
+            </span>
+          )}
+        </div>
+      </div>
+      {saveError && (
+        <p className="rounded-xl border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative">
+          {saveError}
+        </p>
+      )}
+      {atLimit && !dealId && (
+        <p className="text-sm text-muted">
+          You&apos;ve reached your deal limit.{" "}
+          <Link href="/plans" className="font-medium text-foreground hover:underline">
+            Upgrade to save more deals
+          </Link>
+          .
+        </p>
+      )}
+    </div>
+  );
+
+  const mobileSummaryItems = [
+    {
+      label: "Cash flow",
+      value: formatCurrency(metrics.monthlyCashFlow),
+      tone: needsInputGuidance
+        ? "default"
+        : metrics.monthlyCashFlow >= 0
+          ? "positive"
+          : "negative",
+    },
+    {
+      label: "Cap rate",
+      value: metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—",
+    },
+    {
+      label: "DSCR",
+      value: dscr != null ? dscr.toFixed(2) : "—",
+      tone:
+        dscr == null ? "default" : dscr >= 1.2 ? "positive" : dscr >= 1 ? "warning" : "negative",
+    },
+    {
+      label: "Cash-on-cash",
+      value:
+        metrics.cashOnCashReturn != null
+          ? `${(metrics.cashOnCashReturn * 100).toFixed(2)}%`
+          : "—",
+    },
+  ] as const;
+
+  const mobileFooter = (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={handleSaveDeal}
+          disabled={saveDisabled}
+          className="rounded-xl bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          {saveStatus === "saving"
+            ? "Saving..."
+            : saveStatus === "saved"
+              ? "Saved"
+              : dealId
+                ? "Update deal"
+                : "Save deal"}
+        </button>
+        <button
+          type="button"
+          onClick={handleNewDeal}
+          className="rounded-xl border border-border bg-transparent px-4 py-2.5 text-sm font-medium text-muted hover:bg-subtle hover:text-foreground"
+        >
+          New deal
+        </button>
+      </div>
+      <p className="text-xs text-muted">
+        Saved analyses stay available in the full desktop workflow too.
+      </p>
+    </div>
+  );
+
+  if (isMobile) {
+    return (
+      <MobileToolShell
+        eyebrow="Analyzer"
+        title="Deal Analyzer"
+        context={mobileHeader}
+        summaryItems={[...mobileSummaryItems]}
+        footer={mobileFooter}
+        contentClassName="pt-3"
+      >
+        <div className="space-y-3">
+          {mobileInputsSurface}
+          {mobileResultsSurface}
+        </div>
+      </MobileToolShell>
+    );
   }
 
   return (
@@ -386,8 +966,9 @@ export function DealAnalyzerForm({
             </div>
           </div>
 
+          <MobileCollapsible label="Debt and ownership" defaultOpen={!!dealId || !!mortgageBalance}>
           <div className="rounded-md border border-border/70 bg-background/45 p-3.5">
-            <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
+            <h3 className="mb-3 hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">
               Debt and ownership
             </h3>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 sm:items-end">
@@ -445,6 +1026,7 @@ export function DealAnalyzerForm({
               </p>
             </div>
           </div>
+          </MobileCollapsible>
         </div>
       </section>
 
@@ -693,6 +1275,32 @@ export function DealAnalyzerForm({
           </p>
         )}
       </section>
+
+      {/* Mobile sticky results bar */}
+      {!needsInputGuidance && (
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 py-2.5 md:hidden">
+          <div className="flex items-center justify-between gap-3 text-sm">
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted">Cash flow</p>
+              <p className={`font-semibold ${cashFlowTone}`}>
+                {formatCurrency(metrics.monthlyCashFlow)}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted">Cap rate</p>
+              <p className="font-semibold text-foreground">
+                {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
+              </p>
+            </div>
+            <div className="min-w-0">
+              <p className="text-[11px] text-muted">DSCR</p>
+              <p className={`font-semibold ${dscrTone}`}>
+                {dscr != null ? dscr.toFixed(2) : "—"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

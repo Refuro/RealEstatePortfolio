@@ -9,8 +9,8 @@ When the user says **"run full audit"** or **"run all audits"** or **"full audit
 
 ## What to do
 
-1. Run all 12 audit lanes (Code, Math, Feature/UX, Security, Performance-Cost, Reliability-Ops, Data-Integrity, Business-Valuation, Growth-Funnel, Documentation, Legal-Compliance, Agent-Governance) following their respective process docs.
-2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-<lane>-audit.md` (use today's date).
+1. Run all **13** audit lanes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance-Cost, Reliability-Ops, Data-Integrity, Business-Valuation, Growth-Funnel, Documentation, Legal-Compliance, Agent-Governance) following their respective process docs.
+2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-*-audit.md` (use today's date). **Exception:** Mobile experience uses `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md` (see `docs/process/mobile-experience-audit-process.md`).
 3. After all reports are written, run the **synthesis pass** per `docs/process/full-audit-synthesis.md`.
 4. Write synthesis output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
 5. Audit only. Do not make code changes.
@@ -19,5 +19,5 @@ When the user says **"run full audit"** or **"run all audits"** or **"full audit
 ## References
 
 - Synthesis process: `docs/process/full-audit-synthesis.md`
-- Lane processes: `docs/process/*-audit*.md` and `docs/process/*-audit-process.md`
+- Lane processes: `docs/process/*-audit*.md` and `docs/process/*-audit-process.md` (Mobile experience also uses `docs/qa/mobile-experience-audit.md` for criteria)
 - Audit index: `docs/audits/README.md`
