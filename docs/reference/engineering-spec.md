@@ -524,6 +524,12 @@ Goal: make development sustainable.
 
 # 6. Calculation Backlog
 
+> **Superseded for product semantics:** Metric definitions, vacancy handling, ownership modes, and reconciliation with API/export are governed by [`docs/policies/ownership-metrics.md`](../policies/ownership-metrics.md) and [`docs/policies/analytics-math-policy.md`](../policies/analytics-math-policy.md). Implementation source of truth: [`app/lib/metrics/property-metrics.ts`](../../app/lib/metrics/property-metrics.ts) and [`app/lib/metrics/portfolio-metrics.ts`](../../app/lib/metrics/portfolio-metrics.ts).
+
+## Historical MVP formula sketch (do not implement from this list alone)
+
+The table below is a **pre-policy backlog sketch**. It omits vacancy, ownership scaling, and multi-lien debt rules. **Do not** copy these formulas into new code—use the policies and `computePropertyMetrics` / `computePortfolioMetrics` instead.
+
 ## Property Metrics Formula List
 
 ### Gross Annual Rent

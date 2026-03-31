@@ -271,6 +271,7 @@ That enables prompts like:
 - `run documentation audit`
 - `run legal audit`
 - `run full audit`
+- `run mobile audit` (Mobile experience lane; also part of the **13-lane** full audit)
 
 Reports are written into `docs/audits/`.
 

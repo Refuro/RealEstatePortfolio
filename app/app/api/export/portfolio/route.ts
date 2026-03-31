@@ -8,7 +8,6 @@ import {
 import { prisma } from "@/lib/db";
 import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
-import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { parseUnitRentsFromDb } from "@/lib/validations/property";
@@ -45,13 +44,19 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  const allProperties = await prisma.property.findMany({
+  const tier = getEffectiveTier(user);
+  const propertyLimit = getPropertyLimit(tier);
+  const propertyCountTotal = await prisma.property.count({
+    where: { userId: user.id },
+  });
+  const properties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
+    orderBy: { updatedAt: "desc" },
+    take: propertyLimit,
   });
-
-  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
-  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
+  const propertyCountIncluded = properties.length;
+  const truncated = propertyCountTotal > propertyCountIncluded;
 
   const headers = [
     "address",
@@ -208,6 +213,10 @@ export async function GET(request: NextRequest) {
     headers: {
       "Content-Type": "text/csv",
       "Content-Disposition": 'attachment; filename="portfolio-export.csv"',
+      "X-Veld-Property-Count-Total": String(propertyCountTotal),
+      "X-Veld-Property-Count-Included": String(propertyCountIncluded),
+      "X-Veld-Property-Limit": String(propertyLimit),
+      "X-Veld-Property-Slice-Truncated": truncated ? "true" : "false",
     },
   });
 }

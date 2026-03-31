@@ -9,7 +9,7 @@ export function Footer({ supportEmail }: FooterProps) {
   return (
     <footer className="border-t border-border bg-background px-4 py-6">
       <div className="mx-auto flex max-w-4xl flex-wrap items-center justify-center gap-x-6 gap-y-2 text-center text-sm text-muted">
-        <span>© 2025 Veld Portfolio</span>
+        <span>© {new Date().getFullYear()} Veld Portfolio</span>
         <Link
           href="/contact"
           className="hover:text-foreground"

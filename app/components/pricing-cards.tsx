@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
 import { captureClientEvent } from "@/lib/analytics-client";
@@ -144,7 +145,7 @@ export function PricingCards({
   return (
     <div className={className}>
       <div className="mb-10">
-        <div className="mx-auto flex w-fit items-center rounded-lg border border-border/70 bg-card p-1">
+        <div className="mx-auto flex w-full max-w-md items-center rounded-lg border border-border/70 bg-card p-1 md:w-fit">
           <button
             type="button"
             onClick={() => setBillingCycle("monthly")}
@@ -152,7 +153,7 @@ export function PricingCards({
               billingCycle === "monthly"
                 ? "bg-accent text-accent-foreground"
                 : "text-muted hover:bg-subtle hover:text-foreground"
-            }`}
+            } flex-1 md:flex-none`}
           >
             Monthly billing
           </button>
@@ -163,7 +164,7 @@ export function PricingCards({
               billingCycle === "yearly"
                 ? "bg-accent text-accent-foreground"
                 : "text-muted hover:bg-subtle hover:text-foreground"
-            }`}
+            } flex-1 md:flex-none`}
           >
             <span>Annual billing</span>
             <span className="ml-1 rounded-full bg-positive/15 px-1.5 py-0.5 text-[10px] font-semibold text-positive">
@@ -187,7 +188,7 @@ export function PricingCards({
           )}
         </p>
       </div>
-      <div className="mx-auto grid max-w-6xl gap-5 sm:grid-cols-3">
+      <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
       {PLANS.map((plan) => {
         const isCurrent =
           currentTier && currentTier.toLowerCase() === plan.tier;
@@ -216,12 +217,12 @@ export function PricingCards({
         return (
           <div
             key={plan.tier}
-            className={`rounded-xl border bg-card/95 p-5 shadow-sm ${cardBorder}`}
+            className={`rounded-xl border bg-card/95 p-4 shadow-sm md:p-5 ${cardBorder}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
-                <p className="mt-1 text-sm text-muted">{plan.description}</p>
+                <p className="mt-1 hidden text-sm text-muted md:block">{plan.description}</p>
                 {showSignUp && (
                   <p className="mt-2 text-xs font-medium text-foreground/90">
                     {plan.publicBestFor}
@@ -239,8 +240,18 @@ export function PricingCards({
                 </span>
               )}
             </div>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              <span className="rounded-full border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                {plan.propertyLimit} {plan.propertyLimit === 1 ? "property" : "properties"}
+              </span>
+              <span className="rounded-full border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                {plan.dealLimit} saved deals
+              </span>
+            </div>
             {plan.tier === "free" && (
-              <p className="mt-3 text-xl font-semibold text-foreground">Free</p>
+              <p className="mt-3 text-xl font-semibold text-foreground">
+                $0<span className="ml-0.5 text-base font-medium text-muted">/mo</span>
+              </p>
             )}
             {plan.tier === "investor" && (
               <p className="mt-3 text-xl font-semibold text-foreground">
@@ -282,7 +293,7 @@ export function PricingCards({
                 Save ${annualSavingsForPlan}/yr
               </p>
             )}
-            <ul className="mt-4 space-y-1.5 text-sm text-muted">
+            <ul className="mt-4 hidden space-y-1.5 text-sm text-muted md:block">
               {(showSignUp ? plan.publicFeatures : plan.features).map((feature) => (
                 <li key={feature} className="flex items-start gap-2">
                   <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-border" />
@@ -290,16 +301,28 @@ export function PricingCards({
                 </li>
               ))}
             </ul>
+            <div className="mt-4 md:hidden">
+              <MobileCollapsible label="What&apos;s included">
+                <ul className="space-y-1.5 text-sm text-muted">
+                  {(showSignUp ? plan.publicFeatures : plan.features).map((feature) => (
+                    <li key={feature} className="flex items-start gap-2">
+                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-border" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </MobileCollapsible>
+            </div>
             <div className="mt-5">
-              {plan.tier === "free" && !showSignUp && (
-                <span className="inline-block rounded-md bg-subtle px-3 py-1.5 text-sm text-muted">
-                  {isCurrent ? "Current plan" : "Default"}
+              {plan.tier === "free" && !showSignUp && isCurrent && (
+                <span className="inline-flex w-full items-center justify-center rounded-md bg-subtle px-3 py-2 text-sm text-muted md:w-auto">
+                  Current plan
                 </span>
               )}
               {plan.tier === "free" && showSignUp && (
                 <Link
                   href="/sign-up?intent=free"
-                  className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover md:w-auto"
                   onClick={() => setPlanIntent("free", "pricing_card")}
                 >
                   Choose Free
@@ -312,7 +335,7 @@ export function PricingCards({
                       ? "/sign-up?intent=investor"
                       : "/sign-up?intent=pro"
                   }
-                  className="inline-block rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover md:w-auto"
                   onClick={() =>
                     setPlanIntent(
                       plan.tier === "investor" ? "investor" : "pro",
@@ -328,7 +351,7 @@ export function PricingCards({
                   type="button"
                   onClick={() => handleUpgrade(plan.tier as "investor" | "pro")}
                   disabled={!!loading}
-                  className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
+                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50 md:w-auto"
                 >
                   {loading === plan.tier
                     ? "Redirecting…"
@@ -338,7 +361,7 @@ export function PricingCards({
                 </button>
               )}
               {isCurrent && plan.tier !== "free" && (
-                <span className="inline-block rounded-md bg-positive/10 px-3 py-1.5 text-sm text-positive">
+                <span className="inline-flex w-full items-center justify-center rounded-md bg-positive/10 px-3 py-2 text-sm text-positive md:w-auto">
                   Current plan
                 </span>
               )}

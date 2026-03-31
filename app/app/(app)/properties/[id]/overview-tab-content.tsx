@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format-currency";
+import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { BenchmarkRefreshButton } from "../benchmark-refresh-button";
 import { PropertyHero } from "./property-hero";
 import { PropertyHealthStrip } from "./property-health-strip";
@@ -39,25 +40,15 @@ export function OverviewTabContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Overview</h2>
-          <p className="mt-1 max-w-xl text-sm text-muted">
-            Performance and input snapshot. Edit fields on the full editor; open the Details tab for a
-            read-only ledger of everything on file.
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:items-end">
-          <Link
-            href={`/properties/${propertyId}/edit`}
-            className="inline-flex shrink-0 items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-          >
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Overview</h2>
+        <p className="mt-1 max-w-xl text-sm text-muted">
+          Performance and input snapshot. Use the Details tab for a full ledger, or{" "}
+          <Link href={`/properties/${propertyId}/edit`} className="font-medium text-accent hover:underline">
             Edit property
-          </Link>
-          <Link href={detailsTabHref} className="text-sm font-medium text-accent hover:underline">
-            View full property data (Details tab)
-          </Link>
-        </div>
+          </Link>{" "}
+          to change values.
+        </p>
       </div>
 
       <PropertyHero nickname={property.nickname} address={address} />
@@ -74,19 +65,13 @@ export function OverviewTabContent({
         mortgageData={mortgageDataForHealth}
       />
 
-      <section className="flex flex-wrap items-center gap-2">
-        <Link
-          href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
-          className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-subtle"
-        >
-          Open Modeling workspace
-        </Link>
-        {showRefreshBenchmark && (
+      {showRefreshBenchmark && (
+        <section className="flex flex-wrap items-center gap-2">
           <span className="rounded-md border border-border px-3 py-1.5">
             <BenchmarkRefreshButton propertyId={propertyId} label="Refresh benchmark" />
           </span>
-        )}
-      </section>
+        </section>
+      )}
 
       <section className="rounded-lg border border-border bg-card p-4">
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Inputs at a glance</h3>
@@ -159,10 +144,18 @@ export function OverviewTabContent({
       </section>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
-          Performance at a glance
-        </h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Performance at a glance
+          </h3>
+          <Link
+            href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
+            className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+          >
+            Open Modeling workspace
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="rounded-md bg-subtle/30 p-3">
             <p className="text-xs font-medium text-muted">Monthly cash flow</p>
             <p
@@ -174,7 +167,15 @@ export function OverviewTabContent({
           <div className="rounded-md bg-subtle/30 p-3">
             <p className="text-xs font-medium text-muted">DSCR</p>
             <p
-              className={`mt-1 text-lg font-semibold ${dscr != null && dscr >= 1 ? "text-positive" : "text-negative"}`}
+              className={`mt-1 text-lg font-semibold ${
+                dscr == null
+                  ? "text-muted"
+                  : dscr < 1
+                    ? "text-negative"
+                    : dscr < 1.2
+                      ? "text-warning"
+                      : "text-positive"
+              }`}
             >
               {dscr != null ? dscr.toFixed(2) : "—"}
             </p>
@@ -185,42 +186,52 @@ export function OverviewTabContent({
           </div>
           <div className="rounded-md bg-subtle/30 p-3">
             <p className="text-xs font-medium text-muted">Loan-to-value</p>
-            <p className="mt-1 text-lg font-semibold text-foreground">
+            <p
+              className={`mt-1 text-lg font-semibold ${
+                metrics.ltv == null
+                  ? "text-foreground"
+                  : metrics.ltv > 0.8
+                    ? "text-negative"
+                    : metrics.ltv > 0.7
+                      ? "text-warning"
+                      : "text-foreground"
+              }`}
+            >
               {metrics.ltv != null ? `${(metrics.ltv * 100).toFixed(1)}%` : "—"}
             </p>
           </div>
         </div>
-        <details className="mt-3 rounded-md border border-border bg-subtle/20 px-3 py-2">
-          <summary className="cursor-pointer text-sm font-medium text-foreground">
-            Show supporting metrics
-          </summary>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <p className="text-xs font-medium text-muted">NOI</p>
-              <p className="text-sm font-medium text-foreground">{formatCurrency(metrics.noi)}</p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted">Cap rate</p>
-              <p className="text-sm font-medium text-foreground">
-                {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted">Cash-on-cash return</p>
-              <p className="text-sm font-medium text-foreground">
-                {metrics.cashOnCashReturn != null
-                  ? `${(metrics.cashOnCashReturn * 100).toFixed(2)}%`
-                  : "—"}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted">Annual rent</p>
-              <p className="text-sm font-medium text-foreground">
-                {formatCurrency(metrics.grossAnnualRent)}
-              </p>
+        <MobileCollapsible label="Supporting metrics">
+          <div className="mt-3 rounded-md border border-border bg-subtle/20 px-3 py-3">
+            <p className="hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">Supporting metrics</p>
+            <div className="mt-0 grid grid-cols-2 gap-3 md:mt-3 lg:grid-cols-4">
+              <div>
+                <p className="text-xs font-medium text-muted">NOI</p>
+                <p className="text-sm font-medium text-foreground">{formatCurrency(metrics.noi)}</p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted">Cap rate</p>
+                <p className="text-sm font-medium text-foreground">
+                  {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted">Cash-on-cash return</p>
+                <p className="text-sm font-medium text-foreground">
+                  {metrics.cashOnCashReturn != null
+                    ? `${(metrics.cashOnCashReturn * 100).toFixed(2)}%`
+                    : "—"}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs font-medium text-muted">Annual rent</p>
+                <p className="text-sm font-medium text-foreground">
+                  {formatCurrency(metrics.grossAnnualRent)}
+                </p>
+              </div>
             </div>
           </div>
-        </details>
+        </MobileCollapsible>
       </section>
     </div>
   );

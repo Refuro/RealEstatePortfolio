@@ -72,7 +72,9 @@ export default async function AdminPage() {
         by: ["userId"],
         _count: { id: true },
       })
-      .then((r) => r.sort((a, b) => b._count.id - a._count.id))
+      .then((r) =>
+        r.sort((a, b) => b._count.id - a._count.id).slice(0, 100)
+      )
       .catch(() => []),
     prisma.user.findMany({
       where: { deletedAt: null },
@@ -90,6 +92,7 @@ export default async function AdminPage() {
     prisma.user.findMany({
       where: { deletedAt: null },
       select: { subscriptionTier: true, _count: { select: { properties: true } } },
+      take: 500,
     }),
   ]);
 

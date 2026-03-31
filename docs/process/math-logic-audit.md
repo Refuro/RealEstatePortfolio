@@ -14,10 +14,13 @@
 
 | Module | Path | Functions |
 |--------|------|-----------|
-| **Amortization** | `app/lib/amortization.ts` | `generateAmortizationSchedule`, `getProjectedBalanceAsOf`, `getEffectiveBalance`, `getBalanceSource`, `getPiForAmortization`, `getPayoffProjection`, `getExtraPaymentForYearsEarlier`, `getPayoffYearsWithExtra` |
+| **Amortization** | `app/lib/amortization.ts` | Core: `generateAmortizationSchedule`, `getProjectedBalanceAsOf`, `getEffectiveBalance`, `getBalanceSource`, `getPiForAmortization`, `getPaymentStartLagMonths`. Payoff: `getPayoffProjection`, `getToleranceAwarePayoffProjection`, `getToleranceResidualThreshold`, `isWithinTermEndTolerance`, `getToleranceAdjustedPayoffDate`. Extra payment: `getMonthsToPayoffWithExtraStrict`, `getMonthsToPayoffWithExtraWithTolerance`, `getExtraPaymentForYearsEarlier`, `getExtraPaymentForYearsEarlierWithTolerance`, `getPayoffYearsWithExtra`, `getPayoffYearsWithExtraWithTolerance`. |
 | **Property metrics** | `app/lib/metrics/property-metrics.ts` | `computePropertyMetrics` |
 | **Portfolio metrics** | `app/lib/metrics/portfolio-metrics.ts` | `computePortfolioMetrics` |
 | **Benchmark utils** | `app/lib/benchmark-utils.ts` | `isBenchmarkFresh`, `getBenchmarkDaysAgo`, `getBenchmarkPct`, `getBenchmarkLabel` |
+| **RentCast / quotas** | `app/lib/plans.ts` (`RENTCAST_HOURLY_LIMITS`), estimate routes | Hourly caps; shared pool per user (see `docs/reference/rentcast-quota.md`) |
+
+**Benchmark “freshness” window:** `isBenchmarkFresh` uses a **strict** ms comparison against a 60 **full-day** window (boundary is exclusive of the 61st day—see `analytics-math-policy.md` and tests). Marketing copy “within 60 days” is acceptable if understood as the same rule as code.
 
 **Future scope:** Refinance what-if (Phase 3), simulation page, any new math modules. Add to this inventory when implemented.
 
@@ -71,7 +74,7 @@ balance = max(0, balance - principal)
 
 ### 2.2 Property metrics (`lib/metrics/property-metrics.ts`)
 
-**Formulas (per docs/reference/engineering-spec.md §6):**
+**Formulas (canonical policies — engineering-spec §6 is a historical sketch; use policies first):**
 - effectiveRent = monthlyRent × (1 - vacancyPercent/100)
 - grossAnnualRent = effectiveRent × 12
 - annualExpenses = monthlyExpenses × 12
@@ -94,7 +97,7 @@ balance = max(0, balance - principal)
 ### 2.4 Benchmark utils (`lib/benchmark-utils.ts`)
 
 - getBenchmarkPct: (userRent - marketRent) / marketRent × 100; marketRent ≤ 0 → 0
-- isBenchmarkFresh: marketRentAsOf within 60 days
+- isBenchmarkFresh: `marketRentAsOf` is “fresh” only if strictly inside the same **60 full-day** window as §1.1 (ms boundary; not calendar-day fuzzy)
 - getBenchmarkLabel: abs(pct) < 1 → "at market"; else above/below
 
 ---

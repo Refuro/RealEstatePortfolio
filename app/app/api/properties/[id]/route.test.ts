@@ -61,7 +61,6 @@ const baseProperty = {
   notes: null,
   marketRent: null,
   marketRentAsOf: null,
-  notes: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   mortgages: [] as unknown[],

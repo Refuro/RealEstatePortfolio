@@ -19,10 +19,26 @@ export const getAppUser = cache(async function getAppUser() {
   const firstName = clerkUser.firstName ?? null;
   const lastName = clerkUser.lastName ?? null;
 
-  const user = await prisma.user.upsert({
+  const existing = await prisma.user.findUnique({
     where: { clerkUserId: clerkUser.id },
-    update: { email: primaryEmail, firstName, lastName },
-    create: {
+  });
+
+  if (existing) {
+    if (
+      existing.email === primaryEmail &&
+      existing.firstName === firstName &&
+      existing.lastName === lastName
+    ) {
+      return existing;
+    }
+    return prisma.user.update({
+      where: { id: existing.id },
+      data: { email: primaryEmail, firstName, lastName },
+    });
+  }
+
+  return prisma.user.create({
+    data: {
       clerkUserId: clerkUser.id,
       email: primaryEmail || `user-${clerkUser.id}@placeholder.local`,
       firstName,
@@ -30,8 +46,6 @@ export const getAppUser = cache(async function getAppUser() {
       subscriptionTier: "free",
     },
   });
-
-  return user;
 });
 
 /**

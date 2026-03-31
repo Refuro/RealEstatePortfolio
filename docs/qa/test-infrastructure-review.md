@@ -2,7 +2,7 @@
 
 **Purpose:** Single place to understand how tests are set up, what they actually prove, how they align with product math and intent, and what to do next. Intended as the baseline before relying on CI on every push.
 
-**Related:** [Testing implementation plan](../proposals/testing-implementation-plan.md), [Ownership metrics policy](../policies/ownership-metrics.md), [Analytics math policy](../policies/analytics-math-policy.md), [Property flow regression matrix](property-flow-regression-matrix.md).
+**Related:** [Testing implementation plan](../proposals/testing-implementation-plan.md), [Ownership metrics policy](../policies/ownership-metrics.md), [Analytics math policy](../policies/analytics-math-policy.md), [Property flow regression matrix](property-flow-regression-matrix.md), [Mobile shell verification](mobile-shell-verification.md) (manual QA + `MobileToolShell` unit tests; math still owned by `lib/` tests).
 
 **Last reviewed:** 2026-03-18 (aligned to repo state at that time).
 
@@ -29,11 +29,11 @@
 
 | File | Role |
 |------|------|
-| `app/vitest.config.ts` | `vitest run`, `include`: `lib/**/*.test.ts`, `app/**/*.test.ts`; coverage scoped to listed `lib/` modules + three `route.ts` files. |
+| `app/vitest.config.ts` | `vitest run`, `include`: `lib/**/*.test.ts`, `app/**/*.test.ts`, `components/**/*.test.tsx`; `vitest.setup.ts` loads `@testing-library/jest-dom`; component tests set `/** @vitest-environment jsdom */` per file so `lib/` / API tests stay on Node. Coverage scoped to listed `lib/` modules + three `route.ts` files. |
 | `app/package.json` | `test`, `test:watch`, `test:coverage`; `check` = **build + lint only** (tests not part of `check`). |
 | `.github/workflows/ci.yml` | `npm ci` + `npm run lint` + `npm run test` in `app/`; Node 20; concurrency cancel. See [§3.5](#35-ci-lint-test-and-build-strategy). |
 
-### 2.2 Test files (13)
+### 2.2 Test files (14+)
 
 **`lib/` — unit / contract**
 
@@ -51,13 +51,17 @@
 - `app/api/properties/[id]/route.test.ts` — GET/PATCH/DELETE.
 - `app/api/deals/route.test.ts` — GET/POST.
 
+**`components/` — UI contract (jsdom)**
+
+- `components/mobile-tool-shell.test.tsx` — `MobileToolShell` layout and modes vs children behavior (does not prove page-level math; see `lib/` tests and [mobile-shell-verification.md](mobile-shell-verification.md)).
+
 **Fixtures**
 
 - `lib/test/api-route-mocks.ts` — `mockActiveUser` for route tests.
 
 ### 2.3 Approximate scale
 
-On the order of **~90 tests** (exact count may drift). Full run is **fast** (seconds), suitable for pre-push.
+On the order of **~130+ tests** (exact count may drift). Full run is **fast** (seconds), suitable for pre-push.
 
 ---
 

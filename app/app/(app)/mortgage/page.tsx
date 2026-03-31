@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getEffectiveTier, getPropertyLimit } from "@/lib/plans";
 import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
 import { MortgageWorkspace } from "./mortgage-workspace";
 
@@ -13,10 +14,12 @@ export default async function MortgagePage({
   if (!user) redirect("/sign-in");
   const { propertyId, mortgageId } = await searchParams;
 
+  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
   const properties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
     orderBy: { updatedAt: "desc" },
+    take: propertyLimit,
   });
 
   const items = properties.map((p) => ({

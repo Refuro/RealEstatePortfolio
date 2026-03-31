@@ -8,7 +8,7 @@
 
 ## 1. Prerequisites
 
-- All lane reports from the same run exist in `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`.
+- All lane reports from the same run exist under `docs/audits/` (typically `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`). **Exception:** Mobile experience reports use `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md`.
 - Use the run date (e.g., `2026-03-19`) to identify which reports belong to this full-audit run.
 
 ---
@@ -56,6 +56,7 @@ Group consolidated tasks by domain:
 
 - **Security** — CSP, rate limiting, logging, auth, secrets
 - **UX / Feature** — Nav, IA, CTAs, styling, modals
+- **Mobile experience** — Narrow viewport shells, safe-area, touch (dedupe with Feature when the same fix)
 - **Performance** — Lazy loading, caching, throttling, bundle size
 - **Reliability** — Error boundaries, Sentry, health check, runbooks
 - **Data Integrity** — Import/export, schema, validation
@@ -80,6 +81,7 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 - Code
 - Math & Logic
 - Feature / UX / IA
+- Mobile experience
 - Security & Privacy
 - Performance & Cost
 - Reliability & Operations
@@ -151,7 +153,7 @@ Review the consolidated list above. Promote approved items to [docs/tasks.md](..
 
 When the agent runs a full audit:
 
-1. Run all 12 lane processes (or 11 if Code is skipped when unchanged).
+1. Run all **13** lane processes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, Documentation, Legal/Compliance, Agent Governance). If a lane is intentionally skipped (e.g. unchanged codebase for Code), note it in the synthesis **Audits included** section.
 2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`.
 3. Run this synthesis process.
 4. Write output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.

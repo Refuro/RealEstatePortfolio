@@ -7,7 +7,7 @@ import {
   recordRateLimit,
 } from "@/lib/rate-limit";
 import { createDealSchema } from "@/lib/validations/deal";
-import { canAddDeal, getEffectiveTier } from "@/lib/plans";
+import { canAddDeal, getDealLimit, getEffectiveTier } from "@/lib/plans";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 
 function serializeDeal(deal: {
@@ -88,12 +88,25 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const dealLimit = getDealLimit(getEffectiveTier(user));
+  const dealCountTotal = await prisma.savedDeal.count({
+    where: { userId: user.id },
+  });
+
   const deals = await prisma.savedDeal.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
   });
 
-  return NextResponse.json(deals.map(serializeDeal));
+  const exceedsPlanUiCap = dealCountTotal > dealLimit;
+
+  return NextResponse.json(deals.map(serializeDeal), {
+    headers: {
+      "X-Veld-Deal-Count-Total": String(dealCountTotal),
+      "X-Veld-Plan-Deal-Limit": String(dealLimit),
+      "X-Veld-Deals-Exceeds-Plan-Ui-Cap": exceedsPlanUiCap ? "true" : "false",
+    },
+  });
 }
 
 export async function POST(request: NextRequest) {

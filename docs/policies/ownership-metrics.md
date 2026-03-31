@@ -85,7 +85,13 @@ Where DSCR or LTV appears, copy/tooltips must avoid ambiguity about denominator 
 
 ---
 
-## 5) Implementation guardrails
+## 5) Saved deals & Deal Analyzer
+
+**Serialized metrics for saved deals** (`GET /api/deals`, deal analyzer flows) always use **`computePropertyMetrics(..., "proportional")`** regardless of the user’s portfolio **ownership display mode** (full liability vs proportional). That keeps comparisons between saved scenarios consistent and separates “analysis lens” from the portfolio-wide liability display setting. Property detail, dashboard, and export surfaces use the user’s selected mode per §2.
+
+---
+
+## 6) Implementation guardrails
 
 - Use shared metric helpers in `app/lib/metrics/`; do not duplicate formulas in components/pages.
 - If a task touches ownership behavior, update this document if formulas or semantics change.

@@ -68,22 +68,20 @@ export function DetailsTabContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-            Data & settings
-          </h2>
-          <p className="mt-1 max-w-xl text-sm text-muted">
-            Summary of what&apos;s on file. To change address, type, rent, expenses, notes, and more,
-            use the full editor—same fields as when you add a property.
-          </p>
-        </div>
-        <Link
-          href={`/properties/${propertyId}/edit`}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-        >
-          Edit property
-        </Link>
+      <div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Data & settings
+        </h2>
+        <p className="mt-1 max-w-xl text-sm text-muted">
+          Summary of what&apos;s on file. To change address, type, rent, expenses, notes, and more,{" "}
+          <Link
+            href={`/properties/${propertyId}/edit`}
+            className="font-medium text-accent hover:underline"
+          >
+            use the full editor
+          </Link>
+          .
+        </p>
       </div>
 
       <PropertyHealthStrip
@@ -190,7 +188,16 @@ export function DetailsTabContent({
             <div>
               <dt className="text-sm font-medium text-muted">Cash invested</dt>
               <dd className="text-sm font-medium text-foreground">
-                {property.cashInvested != null ? formatCurrency(Number(property.cashInvested)) : "—"}
+                {property.cashInvested != null ? (
+                  formatCurrency(Number(property.cashInvested))
+                ) : (
+                  <>
+                    <span>—</span>
+                    <span className="ml-1.5 text-xs font-normal text-muted">
+                      Add to unlock cash-on-cash return
+                    </span>
+                  </>
+                )}
               </dd>
             </div>
           </dl>

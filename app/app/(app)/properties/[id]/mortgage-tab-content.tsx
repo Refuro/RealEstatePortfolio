@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { MobileCollapsible } from "@/components/mobile-collapsible";
+import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobileToolShell } from "@/components/mobile-tool-shell";
+import { useIsMobile } from "@/lib/use-is-mobile";
 import { formatCurrency } from "@/lib/format-currency";
 import {
   getExtraPaymentForYearsEarlierWithTolerance,
@@ -177,6 +181,7 @@ export function MortgageTabContent({
   onNavigateToDetails,
   workspaceVariant = "default",
   onSelectedMortgageChange,
+  mobileHeader,
 }: {
   propertyId: string;
   mortgageData: MortgageForTabs[];
@@ -184,7 +189,9 @@ export function MortgageTabContent({
   onNavigateToDetails: () => void;
   workspaceVariant?: "default" | "workspace";
   onSelectedMortgageChange?: (mortgageId: string | null) => void;
+  mobileHeader?: ReactNode;
 }) {
+  const isMobile = useIsMobile();
   const initialMortgageId =
     initialSelectedMortgageId &&
     mortgageData.some((mortgage) => mortgage.id === initialSelectedMortgageId)
@@ -285,14 +292,6 @@ export function MortgageTabContent({
       baseSimulation.interestPaidTotal - scenarioSimulation.interestPaidTotal;
     return saved > 0 ? saved : 0;
   }, [baseSimulation, scenarioSimulation]);
-  const scenarioPayoffLabel = scenarioPayoffDate
-    ? scenarioPayoffDate.toLocaleDateString("en-US", {
-        month: "short",
-        year: "numeric",
-      })
-    : "Not amortizing";
-  const interestSavedLabel =
-    interestSaved != null ? formatCurrency(interestSaved) : "—";
   const rateLabel =
     selectedMortgage != null
       ? `${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
@@ -372,17 +371,21 @@ export function MortgageTabContent({
           Simulation controls
         </h3>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-          <Link
-            href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}${
-              selectedMortgage?.id
-                ? `&mortgageId=${encodeURIComponent(selectedMortgage.id)}`
-                : ""
-            }`}
-            className="font-medium text-muted hover:text-foreground hover:underline"
-          >
-            Open workspace
-          </Link>
-          <span className="text-muted">•</span>
+          {!isMortgageWorkspace && (
+            <>
+              <Link
+                href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}${
+                  selectedMortgage?.id
+                    ? `&mortgageId=${encodeURIComponent(selectedMortgage.id)}`
+                    : ""
+                }`}
+                className="font-medium text-muted hover:text-foreground hover:underline"
+              >
+                Open workspace
+              </Link>
+              <span className="text-muted">•</span>
+            </>
+          )}
           <Link
             href={`/properties/${propertyId}?tab=details#mortgages`}
             onClick={(e) => {
@@ -537,30 +540,6 @@ export function MortgageTabContent({
 
         {isMortgageWorkspace && (
           <>
-            <div className="rounded-md border border-border/65 bg-subtle/30 p-3">
-              <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
-                Scenario outcome
-              </p>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
-                  <p className="text-[11px] text-muted">
-                    Payoff with current extra
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-foreground">
-                    {scenarioPayoffLabel}
-                  </p>
-                </div>
-                <div className="rounded-md border border-border/60 bg-background/60 px-2.5 py-2">
-                  <p className="text-[11px] text-muted">
-                    Interest saved (est.)
-                  </p>
-                  <p className="mt-1 text-sm font-semibold text-positive">
-                    {interestSavedLabel}
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="rounded-md border border-border/65 bg-subtle/20 p-2.5">
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="rounded-md border border-border/60 bg-background/50 px-2 py-1 text-muted">
@@ -593,7 +572,7 @@ export function MortgageTabContent({
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
       <div className="rounded-md border border-border bg-card p-3">
         <p className="text-xs text-muted">Baseline payoff</p>
-        <p className="mt-1 min-h-5 text-sm font-medium text-foreground">
+        <p className="mt-1 min-h-5 text-lg font-semibold text-foreground">
           {baselinePayoffDate
             ? baselinePayoffDate.toLocaleDateString("en-US", {
                 month: "long",
@@ -604,7 +583,7 @@ export function MortgageTabContent({
       </div>
       <div className="rounded-md border border-border bg-card p-3">
         <p className="text-xs text-muted">With extra payment</p>
-        <p className="mt-1 min-h-5 text-sm font-medium text-foreground">
+        <p className="mt-1 min-h-5 text-lg font-semibold text-foreground">
           {scenarioPayoffDate
             ? scenarioPayoffDate.toLocaleDateString("en-US", {
                 month: "long",
@@ -615,13 +594,25 @@ export function MortgageTabContent({
       </div>
       <div className="rounded-md border border-border bg-card p-3">
         <p className="text-xs text-muted">Time saved</p>
-        <p className="mt-1 min-h-5 text-sm font-medium text-positive">
+        <p
+          className={`mt-1 min-h-5 text-lg font-semibold ${
+            payoffDeltaYears != null && payoffDeltaYears > 0
+              ? "text-positive"
+              : "text-muted"
+          }`}
+        >
           {payoffDeltaYears != null ? `${payoffDeltaYears} years` : "—"}
         </p>
       </div>
       <div className="rounded-md border border-border bg-card p-3">
         <p className="text-xs text-muted">Interest saved (est.)</p>
-        <p className="mt-1 min-h-5 text-sm font-medium text-positive">
+        <p
+          className={`mt-1 min-h-5 text-lg font-semibold ${
+            interestSaved != null && interestSaved > 0
+              ? "text-positive"
+              : "text-muted"
+          }`}
+        >
           {interestSaved != null ? formatCurrency(interestSaved) : "—"}
         </p>
       </div>
@@ -636,10 +627,10 @@ export function MortgageTabContent({
           : "rounded-lg border border-border bg-card p-4"
       }
     >
-      <h3 className="mb-1 text-sm font-semibold text-muted">
+      <h3 className="mb-1 hidden text-sm font-semibold text-muted md:block">
         Balance projection (baseline vs extra principal)
       </h3>
-      <p className="mb-3 text-xs text-muted">
+      <p className="mb-3 hidden text-xs text-muted md:block">
         Baseline follows current payment terms. &quot;With extra payment&quot;
         adds your extra principal each month to accelerate payoff.
       </p>
@@ -647,7 +638,9 @@ export function MortgageTabContent({
         <div
           className={`flex items-center justify-center text-sm text-muted ${
             isMortgageWorkspace
-              ? "h-[260px] xl:flex-1 xl:min-h-[320px]"
+              ? isMobile
+                ? "h-[220px]"
+                : "h-[260px] xl:flex-1 xl:min-h-[320px]"
               : "h-[220px] sm:h-[280px] lg:h-[320px]"
           }`}
         >
@@ -657,7 +650,9 @@ export function MortgageTabContent({
         <div
           className={
             isMortgageWorkspace
-              ? "h-[260px] xl:flex-1 xl:min-h-[320px]"
+              ? isMobile
+                ? "h-[220px]"
+                : "h-[260px] xl:flex-1 xl:min-h-[320px]"
               : "h-[220px] sm:h-[280px] lg:h-[320px]"
           }
         >
@@ -680,6 +675,19 @@ export function MortgageTabContent({
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;
                   const row = payload[0]?.payload as SimulationPoint;
+                  if (isMobile) {
+                    return (
+                      <div className="max-w-[180px] rounded border border-border bg-card px-2.5 py-1.5 text-xs shadow-sm">
+                        <p className="font-semibold text-foreground">{row.dateLabel}</p>
+                        <p className="text-muted">
+                          Base: {row.baselineBalance != null ? formatCurrency(row.baselineBalance) : "—"}
+                        </p>
+                        <p className="text-muted">
+                          Extra: {row.scenarioBalance != null ? formatCurrency(row.scenarioBalance) : "—"}
+                        </p>
+                      </div>
+                    );
+                  }
                   return (
                     <div className="rounded border border-border bg-card px-3 py-2 text-sm shadow-sm">
                       <p className="font-medium text-foreground">
@@ -721,14 +729,14 @@ export function MortgageTabContent({
           </ResponsiveContainer>
         </div>
       )}
-      <div className="mt-2 flex flex-wrap gap-4 text-xs text-muted">
+      <div className="mt-2 flex flex-wrap gap-4 text-[11px] text-muted md:text-xs">
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-3)]" />
           Baseline
         </span>
         <span className="inline-flex items-center gap-1">
           <span className="inline-block h-2 w-2 rounded-full bg-[var(--chart-1)]" />
-          With extra payment
+          With extra
         </span>
       </div>
     </div>
@@ -787,7 +795,219 @@ export function MortgageTabContent({
     </p>
   );
 
+  const mobileSummaryItems = [
+    {
+      label: "Baseline payoff",
+      value: baselinePayoffDate
+        ? baselinePayoffDate.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          })
+        : "Not amortizing",
+    },
+    {
+      label: "With extra",
+      value: scenarioPayoffDate
+        ? scenarioPayoffDate.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric",
+          })
+        : "Not amortizing",
+    },
+    {
+      label: "Time saved",
+      value: payoffDeltaYears != null ? `${payoffDeltaYears} years` : "—",
+      tone:
+        payoffDeltaYears == null
+          ? "default"
+          : payoffDeltaYears > 0
+            ? "positive"
+            : "default",
+    },
+    {
+      label: "Interest saved",
+      value: interestSaved != null ? formatCurrency(interestSaved) : "—",
+      tone:
+        interestSaved == null
+          ? "default"
+          : interestSaved > 0
+            ? "positive"
+            : "default",
+    },
+  ] as const;
+
+  const mobileMortgageSurface = (
+    <div className="space-y-3">
+      <MobileSectionCard className="space-y-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Payoff strategy
+          </h3>
+          <div className="flex flex-wrap items-center gap-2 text-xs">
+            <Link
+              href={`/properties/${propertyId}?tab=details#mortgages`}
+              onClick={(e) => {
+                e.preventDefault();
+                onNavigateToDetails();
+              }}
+              className="font-medium text-muted hover:text-foreground hover:underline"
+            >
+              Mortgage details
+            </Link>
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedYearsEarlier(null);
+                setExtraInput("0");
+              }}
+              className="font-medium text-muted transition-colors hover:text-foreground"
+            >
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <MobileSectionCard tone="subtle" className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Mortgage and payment
+          </p>
+          {mortgageData.length > 1 ? (
+            <label className="block text-xs font-medium text-muted">
+              Mortgage
+              <select
+                value={selectedMortgage?.id ?? ""}
+                onChange={(e) => {
+                  setSelectedMortgageId(e.target.value);
+                  setSelectedYearsEarlier(null);
+                  setExtraInput("0");
+                }}
+                className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
+              >
+                {mortgageData.map((m, idx) => (
+                  <option key={m.id} value={m.id}>
+                    Mortgage {idx + 1} - {formatCurrency(m.effectiveBalance ?? Number(m.currentBalance))}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : (
+            <div className="rounded-xl bg-background px-3 py-3">
+              <p className="text-[11px] text-muted">Selected mortgage</p>
+              <p className="mt-1 text-base font-semibold text-foreground">
+                {selectedMortgage
+                  ? `${formatCurrency(
+                      selectedMortgage.effectiveBalance ?? Number(selectedMortgage.currentBalance)
+                    )} at ${(Number(selectedMortgage.interestRate) * 100).toFixed(2)}%`
+                  : "—"}
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-3">
+            <label className="block text-xs font-medium text-muted">
+              Extra principal
+              <input
+                id="extra-payment-mobile"
+                type="text"
+                inputMode="decimal"
+                value={extraInput}
+                onChange={(e) => {
+                  setSelectedYearsEarlier(null);
+                  setExtraInput(e.target.value);
+                }}
+                className="mt-1.5 min-h-[44px] w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
+                placeholder="0"
+              />
+            </label>
+            <div className="rounded-xl bg-background px-3 py-3">
+              <p className="text-[11px] text-muted">Base P&I</p>
+              <p className="mt-1 text-base font-semibold text-foreground">
+                {normalizedMortgage
+                  ? `${formatCurrency(getPiForAmortization(normalizedMortgage))}/mo`
+                  : "—"}
+              </p>
+            </div>
+          </div>
+        </MobileSectionCard>
+
+        <MobileSectionCard tone="subtle" className="space-y-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            Pay off earlier
+          </p>
+          {hasAnyPayoffTarget ? (
+            <div className="flex flex-wrap gap-2">
+              {payoffTargetOptions.map(({ years, extra }) => {
+                const isSelected = selectedYearsEarlier === years;
+                const isDisabled = !extra;
+                return (
+                  <button
+                    key={years}
+                    type="button"
+                    disabled={isDisabled}
+                    onClick={() => {
+                      if (!extra) return;
+                      setSelectedYearsEarlier((prev) => (prev === years ? null : years));
+                      setExtraInput((prev) => {
+                        const next = selectedYearsEarlier === years ? "0" : String(extra);
+                        return next === prev ? prev : next;
+                      });
+                    }}
+                    className={`rounded-xl border px-3 py-2 text-sm transition ${
+                      isSelected
+                        ? "border-accent bg-accent/12 text-foreground ring-1 ring-accent/25"
+                        : "border-border bg-background text-muted hover:bg-subtle/60 hover:text-foreground"
+                    } ${isDisabled ? "cursor-not-allowed opacity-50" : ""}`}
+                  >
+                    <span className="font-semibold text-foreground">{years}y</span>{" "}
+                    <span>{extra ? `${formatCurrency(extra)}/mo` : "N/A"}</span>
+                  </button>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="text-xs text-muted">
+              No accelerated payoff targets are available for this mortgage yet.
+            </p>
+          )}
+          <p className="text-[11px] text-muted">
+            {rateLabel} · {termLabel}
+          </p>
+        </MobileSectionCard>
+      </MobileSectionCard>
+
+      <MobileSectionCard tone="subtle">
+        <MobileCollapsible label="Balance projection">
+          <div className="pt-3">{chartPanel}</div>
+        </MobileCollapsible>
+      </MobileSectionCard>
+
+      <MobileSectionCard tone="subtle">
+        <MobileCollapsible label="How this estimate works">
+          <div className="space-y-3 pt-3">
+            {baselineNote}
+            {estimateHelper}
+            {disclaimer}
+          </div>
+        </MobileCollapsible>
+      </MobileSectionCard>
+    </div>
+  );
+
   if (isMortgageWorkspace) {
+    if (isMobile) {
+      return (
+        <MobileToolShell
+          eyebrow="Workspace"
+          title="Mortgage"
+          context={mobileHeader}
+          summaryItems={[...mobileSummaryItems]}
+          contentClassName="pt-3"
+        >
+          {mobileMortgageSurface}
+        </MobileToolShell>
+      );
+    }
+
     return (
       <div className="space-y-4">
         {summaryCards}

@@ -1,7 +1,7 @@
 # Visual Assets Guide — Veld Portfolio
 
 **Version:** 1.0  
-**Last updated:** 2025-03-13  
+**Last updated:** 2026-03-30  
 **Purpose:** Asset inventory and design guidelines for consistent visual generation. Use this when creating or commissioning logos, icons, and illustrations for Veld.
 
 ---

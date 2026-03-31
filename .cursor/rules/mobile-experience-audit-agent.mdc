@@ -1,0 +1,21 @@
+---
+description: Mobile experience audit — narrow viewport, shells, touch, safe-area
+alwaysApply: false
+---
+
+# Mobile Experience Audit Command
+
+When the user says **"run mobile audit"**, **"mobile experience audit"**, **"run mobile UX audit"**, or **"narrow viewport audit"**:
+
+## What to do
+
+1. Follow `docs/process/mobile-experience-audit-process.md` and the criteria in `docs/qa/mobile-experience-audit.md`.
+2. Write the report to `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md` (use today's date).
+3. Audit only. Do not make code changes.
+4. After completion, summarize top findings and report location.
+
+## References
+
+- Process: `docs/process/mobile-experience-audit-process.md`
+- Criteria: `docs/qa/mobile-experience-audit.md`
+- Reports: `docs/audits/feature/`

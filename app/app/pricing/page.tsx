@@ -8,6 +8,7 @@ import { getEffectiveTier } from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
@@ -43,6 +44,18 @@ export default async function PricingPage() {
                 ? "Choose a plan based on how many properties you track."
                 : "Simple pricing for serious portfolio tracking. Start free, then scale as your portfolio grows."}
             </p>
+            {user && (
+              <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted">
+                Manage subscription and billing on{" "}
+                <Link
+                  href="/plans"
+                  className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+                >
+                  Plans &amp; billing
+                </Link>
+                .
+              </p>
+            )}
             {!user && (
               <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted">
                 <span className="rounded-full border border-border/70 px-3 py-1">
@@ -136,19 +149,26 @@ export default async function PricingPage() {
                         Can I cancel or upgrade later?
                       </summary>
                       <p className="mt-2 text-sm text-muted">
-                        Yes. You can update your plan anytime from account settings.
+                        Yes. You can update your plan anytime from{" "}
+                        <Link href="/plans" className="font-medium text-foreground underline">
+                          Plans &amp; billing
+                        </Link>{" "}
+                        (or Settings → subscription).
                       </p>
                     </details>
                   </div>
                 </div>
                 <div className="rounded-xl border border-border/70 bg-background/45 p-4 md:self-center">
                   <p className="text-sm font-medium text-foreground">New to Veld?</p>
-                  <Link
-                    href="/sign-up"
+                  <FunnelCtaLink
+                    href="/sign-up?intent=free"
+                    placement="pricing_footer"
+                    ctaId="create_free_account"
+                    planIntent="free"
                     className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
                   >
                     Create free account
-                  </Link>
+                  </FunnelCtaLink>
                   <p className="mt-4 text-sm font-medium text-foreground">
                     Returning user?
                   </p>

@@ -71,7 +71,9 @@ export default async function PrivacyPage() {
                 <strong>Neon</strong> — Database. We store your portfolio data (properties, mortgages, deals) in a PostgreSQL database hosted by Neon. Data is encrypted in transit and at rest.
               </li>
               <li>
-                <strong>PostHog</strong> — Optional product analytics (e.g. page views, signup events). We initialize PostHog only after you accept optional analytics via the in-app cookie banner; until then, no PostHog scripts load and no analytics events are sent.
+                <strong>PostHog</strong> — Product analytics (e.g. page views, signup events).{" "}
+                <strong>In the browser:</strong> we initialize PostHog only after you accept optional analytics via the in-app cookie banner; until then, no PostHog scripts load and no client analytics events are sent.{" "}
+                <strong>On the server:</strong> when billing or account events occur, we may send a small number of product events to PostHog from our backend (e.g. after Stripe subscription updates) using your user id — these do not rely on the browser cookie banner. See also our cookie section below for client-side tracking.
               </li>
               <li>
                 <strong>Google</strong> — When Google Ads is configured and you accept optional analytics/ads cookies, we load Google&apos;s tag (gtag.js) for measurement and conversion reporting. If you reject optional cookies, we do not load this tag. Google may use cookies or similar storage when the tag runs; see{" "}

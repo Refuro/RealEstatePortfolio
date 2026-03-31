@@ -401,9 +401,9 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
         >
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
-          <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+          <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
             {PROPERTY_EDIT_SECTION_NAV.map((s) => (
-              <li key={s.id}>
+              <li key={s.id} className="shrink-0">
                 <a href={`#${s.id}`} className="text-accent hover:underline">
                   {s.label}
                 </a>
@@ -833,7 +833,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             <div className="space-y-2">
               <div className="flex flex-wrap items-end gap-2">
                 {unitRentsDisplay.map((_, i) => (
-                  <div key={i} className="min-w-[100px] flex-1">
+                  <div key={i} className="min-w-0 w-full flex-1 sm:min-w-[100px] sm:w-auto">
                     <label htmlFor={`unitRent-${i}`} className={labelClass}>
                       Unit {i + 1} rent {isRented ? "*" : ""}
                     </label>

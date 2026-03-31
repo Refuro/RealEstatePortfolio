@@ -37,12 +37,12 @@ export function BillingPortalButton() {
   }
 
   return (
-    <div className="space-y-1">
+    <div className="w-full space-y-1">
       <button
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
+        className="w-full rounded-md border border-border bg-transparent px-3 py-1.5 text-center text-sm font-medium text-foreground hover:bg-subtle disabled:opacity-50"
       >
         {loading ? "Opening…" : "Manage billing"}
       </button>

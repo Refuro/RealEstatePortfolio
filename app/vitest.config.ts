@@ -7,7 +7,9 @@ const dirname = path.dirname(fileURLToPath(import.meta.url));
 export default defineConfig({
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "app/**/*.test.ts"],
+    // Component tests: use @vitest-environment jsdom at top of components/*.test.tsx
+    setupFiles: [path.resolve(dirname, "vitest.setup.ts")],
+    include: ["lib/**/*.test.ts", "app/**/*.test.ts", "components/**/*.test.tsx"],
     coverage: {
       provider: "v8",
       reporter: ["text", "html"],
@@ -25,7 +27,12 @@ export default defineConfig({
         "app/api/properties/[id]/route.ts",
         "app/api/deals/route.ts",
       ],
-      exclude: ["lib/**/*.test.ts", "lib/**/*.spec.ts", "app/**/*.test.ts"],
+      exclude: [
+        "lib/**/*.test.ts",
+        "lib/**/*.spec.ts",
+        "app/**/*.test.ts",
+        "components/**/*.test.tsx",
+      ],
     },
   },
   resolve: {

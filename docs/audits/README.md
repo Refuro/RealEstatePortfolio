@@ -7,6 +7,7 @@ Periodic AI-run audits of the product and codebase. Each lane has a process doc 
 | **Code** | [code-audit-process.md](../process/code-audit-process.md) | [code/](code/) |
 | **Math & Logic** | [math-logic-audit.md](../process/math-logic-audit.md) | [math/](math/) |
 | **Feature / UX / IA** | [feature-ux-audit-process.md](../process/feature-ux-audit-process.md) | [feature/](feature/) |
+| **Mobile experience** (narrow viewport & shells) | [mobile-experience-audit-process.md](../process/mobile-experience-audit-process.md) → [mobile-experience-audit.md](../qa/mobile-experience-audit.md) | [feature/](feature/) — `YYYY-MM-DD-mobile-experience-audit.md` |
 | **Security & Privacy** | [security-audit-process.md](../process/security-audit-process.md) | [security/](security/) |
 | **Performance & Cost** | [performance-cost-audit-process.md](../process/performance-cost-audit-process.md) | [performance-cost/](performance-cost/) |
 | **Reliability & Operations** | [reliability-ops-audit-process.md](../process/reliability-ops-audit-process.md) | [reliability-ops/](reliability-ops/) |
@@ -37,7 +38,7 @@ Do not leave partial lane renames merged, or audit commands and documentation wi
 
 - **Trigger:** Say "run full audit" or "run all audits".
 - **Flow:**
-1. Run all 12 audit lanes (Code, Math, Feature/UX, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, Documentation, Legal/Compliance, Agent Governance).
+1. Run all **13** audit lanes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, Documentation, Legal/Compliance, Agent Governance).
 2. After all reports are written, run the **synthesis pass** per [full-audit-synthesis.md](../process/full-audit-synthesis.md).
 3. Output: `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
 4. PM reviews synthesis and promotes approved items to [docs/tasks.md](../tasks.md).
@@ -56,6 +57,7 @@ Do not leave partial lane renames merged, or audit commands and documentation wi
 - **Documentation audit:** Say "run documentation audit" or "run doc audit".
 - **Legal/compliance audit:** Say "run legal audit" or "run compliance audit".
 - **Agent governance audit:** Say "run agent governance audit".
+- **Mobile experience audit:** Say "run mobile audit", "mobile experience audit", or "run mobile UX audit".
 
 ### Report naming convention
 
@@ -79,6 +81,7 @@ Examples:
 | Code | Monthly | Major refactor or architecture shift |
 | Math & Logic | Monthly | Any analytics/metrics contract change |
 | Feature / UX / IA | Monthly | Navigation, IA, onboarding, or major page redesign |
+| Mobile experience | Monthly (or with major UI) | Mobile shell, safe-area, touch, or `md:hidden` layout changes |
 | Security & Privacy | Monthly | Auth, billing, account, or integration security changes |
 | Performance & Cost | Monthly | New heavy UI/dependency or external API changes |
 | Reliability & Operations | Monthly | Release hardening and operational change windows |

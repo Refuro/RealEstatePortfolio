@@ -11,7 +11,12 @@ const MortgageTabContent = dynamic(
     import("../properties/[id]/mortgage-tab-content").then((m) => ({
       default: m.MortgageTabContent,
     })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <p className="p-4 text-sm text-muted">Loading mortgage workspace…</p>
+    ),
+  }
 );
 
 type MortgageProperty = {
@@ -68,6 +73,56 @@ export function MortgageWorkspace({
   );
   const selectedPropertyLabel = selectedProperty ? getPropertyLabel(selectedProperty) : "";
   const totalMortgages = selectedProperty?.mortgages.length ?? 0;
+  const mobileHeader = selectedProperty ? (
+    <div className="space-y-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+            Active property
+          </p>
+          <p className="mt-1 text-sm font-medium text-foreground">{selectedPropertyLabel}</p>
+        </div>
+        <span className="rounded-full border border-border/60 bg-background/50 px-2.5 py-1 text-xs text-muted">
+          {totalMortgages} {totalMortgages === 1 ? "mortgage" : "mortgages"}
+        </span>
+      </div>
+      <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+        Mortgage context
+        <select
+          value={selectedProperty.id}
+          onChange={(e) => {
+            const nextPropertyId = e.target.value;
+            setSelectedPropertyId(nextPropertyId);
+            syncMortgageWorkspaceQuery(nextPropertyId, null);
+          }}
+          disabled={properties.length <= 1}
+          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {properties.map((property) => (
+            <option key={property.id} value={property.id}>
+              {getPropertyLabel(property)}
+            </option>
+          ))}
+        </select>
+      </label>
+      {selectedProperty.mortgages.length > 0 && (
+        <div className="flex flex-wrap gap-2 text-sm">
+          <Link
+            href={`/properties/${selectedProperty.id}`}
+            className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+          >
+            Open property detail
+          </Link>
+          <Link
+            href={`/properties/${selectedProperty.id}?tab=details#mortgages`}
+            className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+          >
+            Edit mortgage details
+          </Link>
+        </div>
+      )}
+    </div>
+  ) : null;
 
   if (properties.length === 0) {
     return (
@@ -96,7 +151,7 @@ export function MortgageWorkspace({
 
   return (
     <div>
-      <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+      <div className="hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Mortgage</h1>
@@ -105,10 +160,14 @@ export function MortgageWorkspace({
             </p>
             {selectedProperty && (
               <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-                <span>Active property:</span>
-                <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
-                  {selectedPropertyLabel}
-                </span>
+                {properties.length <= 1 && (
+                  <>
+                    <span>Active property:</span>
+                    <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
+                      {selectedPropertyLabel}
+                    </span>
+                  </>
+                )}
                 <span className="rounded-full border border-border/60 bg-background/50 px-2 py-0.5 text-xs text-muted">
                   {totalMortgages} {totalMortgages === 1 ? "mortgage" : "mortgages"}
                 </span>
@@ -167,6 +226,7 @@ export function MortgageWorkspace({
               propertyId={selectedProperty.id}
               mortgageData={selectedProperty.mortgages}
               workspaceVariant="workspace"
+              mobileHeader={mobileHeader}
               initialSelectedMortgageId={
                 initialSelectedMortgageId &&
                 selectedProperty.mortgages.some((mortgage) => mortgage.id === initialSelectedMortgageId)
