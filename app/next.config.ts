@@ -43,6 +43,8 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  // Must match `turbopack.root` (Next warns if they differ). Same intent: trace from app package root in a multi-lockfile layout.
+  outputFileTracingRoot: appDir,
   turbopack: {
     root: appDir,
   },
