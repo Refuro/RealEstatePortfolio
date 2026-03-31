@@ -39,6 +39,7 @@
 
 - [QA index](qa/README.md)
 - [Test infrastructure review](qa/test-infrastructure-review.md) — suite review, correctness, next coverage, Docker/E2E notes
+- [Testing hardening proposal](qa/testing-hardening-proposal.md) — phased plan (billing, APIs, coverage, optional E2E) for high confidence
 - [Mobile shell verification](qa/mobile-shell-verification.md) — manual QA + `MobileToolShell` tests (math still in `lib/` tests)
 - [Mobile experience audit](qa/mobile-experience-audit.md) — comprehensive criteria for narrow viewports, touch, shells, and desktop parity
 - [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add property, edit, Overview/Details, APIs
