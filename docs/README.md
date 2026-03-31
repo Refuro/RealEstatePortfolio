@@ -3,6 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
+- [Latest audit synthesis](audits/synthesis/2026-03-30-audit-synthesis-4.md) — consolidated follow-ups from full audit Run 4
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
@@ -25,18 +26,21 @@
 ## Launch & growth
 
 - [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
+- [Pre-live telemetry QA (paid relaunch)](launch/pre-live-telemetry-qa-2026-03-30.md) — env + browser checks before scaling paid spend
 - [Channel posting playbook](launch/channel-posting-playbook.md) — rule-safe templates, moderation scripts, UTM naming
 - [Paid ads test plan](launch/paid-ads-test-plan.md) — 14-day paid experiment, budget tiers, decision gates
 - [Paid ads campaign build sheet](launch/paid-ads-campaign-build-sheet.md) — campaign structure, copy seeds, keyword starters
 - [Paid ads monitoring runbook](launch/paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations
 - [Paid ads readout template](launch/paid-ads-test-readout-template.md) — results + week-3 decision template
-- [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes
+- [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes; [PostHog views setup](launch/posthog-views-setup.md) — dashboards and insights
 - [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
 
 ## QA & regression
 
 - [QA index](qa/README.md)
 - [Test infrastructure review](qa/test-infrastructure-review.md) — suite review, correctness, next coverage, Docker/E2E notes
+- [Mobile shell verification](qa/mobile-shell-verification.md) — manual QA + `MobileToolShell` tests (math still in `lib/` tests)
+- [Mobile experience audit](qa/mobile-experience-audit.md) — comprehensive criteria for narrow viewports, touch, shells, and desktop parity
 - [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add property, edit, Overview/Details, APIs
 - [Testing implementation plan](proposals/testing-implementation-plan.md) — Vitest phases, what to test when
 
@@ -56,6 +60,8 @@
 - [Business/valuation audit process](process/business-valuation-audit-process.md)
 - [Growth funnel audit process](process/growth-funnel-audit-process.md)
 - [Agent governance audit process](process/agent-governance-audit-process.md)
+- [Documentation audit process](process/documentation-audit-process.md)
+- [Legal & compliance audit process](process/legal-compliance-audit-process.md)
 - [Full audit synthesis](process/full-audit-synthesis.md)
 
 ## Audits
@@ -69,6 +75,8 @@
 - [Data integrity audits](audits/data-integrity/)
 - [Business/valuation audits](audits/business/)
 - [Growth funnel audits](audits/growth-funnel/)
+- [Documentation audits](audits/documentation/)
+- [Legal/compliance audits](audits/legal-compliance/)
 - [Agent governance audits](audits/agent-governance/)
 - [Audit synthesis](audits/synthesis/)
 

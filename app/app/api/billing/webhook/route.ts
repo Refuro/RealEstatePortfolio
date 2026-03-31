@@ -9,6 +9,10 @@ import { captureServerEvent } from "@/lib/posthog-server";
 /**
  * Stripe webhook handler. Verifies signature with STRIPE_WEBHOOK_SECRET
  * per docs/security/security-notes.md. Syncs subscription state to DB.
+ *
+ * **Idempotency:** Stripe may retry the same `event.id`; Prisma upserts in `syncSubscriptionToDb`
+ * are safe to replay. `captureServerEvent` (PostHog) does not dedupe by `event.id` — duplicate
+ * deliveries can emit duplicate server-side analytics. See `docs/internal/stripe-webhook-posthog-idempotency.md`.
  */
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");

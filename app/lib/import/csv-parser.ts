@@ -169,6 +169,13 @@ export function parseRow(
   let parsedState = "";
   let parsedZip = "";
 
+  const addressLine2FromCol = getCol(
+    row,
+    "address line 2",
+    "addressLine2",
+    "address line2"
+  ).trim();
+
   if (addr && city && state && zipCode) {
     addressLine1 = addr;
     parsedCity = city;
@@ -328,7 +335,7 @@ export function parseRow(
   return {
     data: {
       addressLine1,
-      addressLine2: "",
+      addressLine2: addressLine2FromCol,
       city: parsedCity,
       state: parsedState,
       zipCode: parsedZip,

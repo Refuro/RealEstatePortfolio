@@ -11,7 +11,12 @@ const ProjectionsTabContent = dynamic(
     import("../properties/[id]/projections-tab-content").then((m) => ({
       default: m.ProjectionsTabContent,
     })),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <p className="p-4 text-sm text-muted">Loading projections…</p>
+    ),
+  }
 );
 
 type ModelingProperty = {
@@ -68,6 +73,39 @@ export function ModelingWorkspace({
   }, [selectedProperty]);
 
   const selectedPropertyLabel = selectedProperty ? getPropertyLabel(selectedProperty) : "";
+  const mobileHeader = selectedProperty ? (
+    <div className="space-y-3">
+      <div>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          Active property
+        </p>
+        <p className="mt-1 text-sm font-medium text-foreground">{selectedPropertyLabel}</p>
+      </div>
+      <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+        Modeling context
+        <select
+          value={selectedProperty.id}
+          onChange={(e) => setSelectedPropertyId(e.target.value)}
+          disabled={properties.length <= 1}
+          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+        >
+          {properties.map((property) => (
+            <option key={property.id} value={property.id}>
+              {getPropertyLabel(property)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <div className="flex flex-wrap gap-2 text-sm">
+        <Link
+          href={`/properties/${selectedProperty.id}`}
+          className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+        >
+          Open property detail
+        </Link>
+      </div>
+    </div>
+  ) : null;
 
   if (properties.length === 0) {
     return (
@@ -76,7 +114,7 @@ export function ModelingWorkspace({
         <p className="mt-2 text-base text-muted">
           Run portfolio-style what-if scenarios from one place.
         </p>
-        <div className="mt-8 rounded-lg border border-border bg-card p-8 text-center">
+        <div className="mt-8 rounded-xl border border-border/70 bg-card/95 p-8 text-center shadow-sm">
           <h2 className="text-lg font-medium text-foreground">
             Add your first property to start modeling
           </h2>
@@ -96,14 +134,14 @@ export function ModelingWorkspace({
 
   return (
     <div>
-      <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+      <div className="hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
             <p className="mt-1 text-sm text-muted">
               Run scenario assumptions in a global workspace.
             </p>
-            {selectedProperty && (
+            {selectedProperty && properties.length <= 1 && (
               <p className="mt-2 text-sm text-muted">
                 Active property:{" "}
                 <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
@@ -144,6 +182,7 @@ export function ModelingWorkspace({
         <div className="mt-4">
           <ProjectionsTabContent
             workspaceVariant="modeling"
+            mobileHeader={mobileHeader}
             monthlyRent={selectedProperty.monthlyRent}
             monthlyExpenses={selectedProperty.monthlyExpenses}
             estimatedValue={selectedProperty.currentEstimatedValue}

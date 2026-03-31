@@ -36,20 +36,76 @@ export default async function SettingsPage() {
         Account and billing settings.
       </p>
 
+      <section className="mt-6 grid gap-3 md:hidden">
+        <div className="rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+            Account snapshot
+          </p>
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Plan
+              </p>
+              <p className="mt-1 text-sm font-medium capitalize text-foreground">
+                {effectiveTier}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Email
+              </p>
+              <p className="mt-1 truncate text-sm font-medium text-foreground">
+                {user.email || "—"}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Properties
+              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {propertyCount} / {limit}
+              </p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+                Saved deals
+              </p>
+              <p className="mt-1 text-sm font-medium text-foreground">
+                {dealCount} / {dealLimit}
+              </p>
+            </div>
+          </div>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href="/plans"
+              className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Plans & billing
+            </Link>
+            <Link
+              href="#export"
+              className="rounded-xl border border-border bg-background px-3 py-2 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Export data
+            </Link>
+          </div>
+        </div>
+      </section>
+
       <section className="mt-8">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Privacy</h2>
         <CookiePreferencesSection />
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Appearance</h2>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Appearance</h2>
         <div className="rounded-lg border border-border bg-card p-6">
           <ThemeToggle />
         </div>
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Portfolio display</h2>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Portfolio display</h2>
         <div className="rounded-lg border border-border bg-card p-6">
           <OwnershipDisplayToggle
             initialMode={((user as { ownershipDisplayMode?: string | null }).ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability"}
@@ -58,7 +114,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Profile</h2>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Profile</h2>
         <div className="rounded-lg border border-border bg-card p-6">
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             {(user.firstName || user.lastName) && (
@@ -78,7 +134,7 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Plan & billing</h2>
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Plan & billing</h2>
         <div className="rounded-lg border border-border bg-card p-6">
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
@@ -145,8 +201,8 @@ export default async function SettingsPage() {
       </section>
 
       <section id="export" className="mt-8 scroll-mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Export your data</h2>
-        <div className="rounded-lg border border-border bg-card p-6 space-y-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Export your data</h2>
+        <div className="space-y-6 rounded-lg border border-border bg-card p-6">
           <p className="text-base text-muted">
             Download your properties and metrics as a CSV file.
           </p>
@@ -158,8 +214,8 @@ export default async function SettingsPage() {
       </section>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Delete account</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Delete account</h2>
+        <div className="rounded-lg border border-negative/20 bg-card p-6 md:border-border">
           <DeleteAccountSection />
         </div>
       </section>

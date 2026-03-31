@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -68,6 +68,7 @@ export function AppLayoutClient({
   const pathname = usePathname();
   const router = useRouter();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const drawerPanelRef = useRef<HTMLElement | null>(null);
 
   const closeDrawer = () => setDrawerOpen(false);
 
@@ -113,15 +114,50 @@ export function AppLayoutClient({
     }
   }, [drawerOpen]);
 
+  useEffect(() => {
+    if (!drawerOpen) return;
+    const panel = drawerPanelRef.current;
+    if (!panel) return;
+    const focusable = panel.querySelector<HTMLElement>(
+      'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    );
+    const t = window.setTimeout(() => focusable?.focus(), 0);
+    return () => window.clearTimeout(t);
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    if (drawerOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [drawerOpen]);
+
+  const touchStartX = useRef<number | null>(null);
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  }, []);
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (touchStartX.current === null) return;
+      const delta = e.changedTouches[0].clientX - touchStartX.current;
+      if (delta < -60) closeDrawer();
+      touchStartX.current = null;
+    },
+    [],
+  );
+
   return (
     <DraftProvider>
     <div className="flex min-h-screen bg-background">
       {/* Mobile top bar - visible only on < md */}
-      <header className="fixed left-0 right-0 top-0 z-40 flex h-14 items-center justify-between gap-4 border-b border-border bg-card px-4 md:hidden">
+      <header className="app-safe-area-top fixed left-0 right-0 top-0 z-40 flex min-h-14 items-center justify-between gap-4 border-b border-border bg-card px-4 md:hidden">
         <button
           type="button"
           onClick={() => setDrawerOpen(true)}
-          className="flex size-10 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-subtle"
+          className="flex size-11 shrink-0 items-center justify-center rounded-md text-foreground hover:bg-subtle"
           aria-label="Open menu"
         >
           <Menu size={24} />
@@ -129,7 +165,7 @@ export function AppLayoutClient({
         <div onClick={closeDrawer} className="min-w-0 flex-1">
           <LogoLink />
         </div>
-        <div className="flex size-10 shrink-0 items-center justify-center">
+        <div className="flex size-11 shrink-0 items-center justify-center">
           <UserButton afterSignOutUrl="/" />
         </div>
       </header>
@@ -156,7 +192,7 @@ export function AppLayoutClient({
         role="button"
         tabIndex={-1}
         onClick={closeDrawer}
-        className={`fixed inset-0 z-50 bg-foreground/20 transition-opacity md:hidden ${
+        className={`fixed inset-0 z-50 bg-foreground/20 transition-opacity app-respect-reduced-motion md:hidden ${
           drawerOpen ? "opacity-100" : "pointer-events-none opacity-0"
         }`}
         aria-hidden={!drawerOpen}
@@ -164,7 +200,14 @@ export function AppLayoutClient({
 
       {/* Mobile slide-out drawer */}
       <aside
-        className={`fixed left-0 top-0 z-50 flex h-full w-56 flex-col border-r border-border bg-card transition-transform duration-200 ease-out md:hidden ${
+        ref={drawerPanelRef}
+        id="app-mobile-nav-drawer"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Main navigation"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+        className={`app-respect-reduced-motion fixed left-0 top-0 z-50 flex h-full w-56 flex-col border-r border-border bg-card transition-transform duration-200 ease-out md:hidden ${
           drawerOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -186,7 +229,7 @@ export function AppLayoutClient({
 
       {/* Main content + footer */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="flex-1 overflow-auto p-4 pt-20 md:p-6 md:pt-6">
+        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
           <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
             {bannerProps && (
               <>
@@ -204,7 +247,9 @@ export function AppLayoutClient({
             {children}
           </div>
         </main>
-        <Footer supportEmail={supportEmail} />
+        <div className="app-safe-area-bottom">
+          <Footer supportEmail={supportEmail} />
+        </div>
       </div>
     </div>
     </DraftProvider>

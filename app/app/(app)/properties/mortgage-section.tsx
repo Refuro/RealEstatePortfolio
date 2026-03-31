@@ -84,7 +84,7 @@ export function MortgageSection({
             onClick={() => setShowForm(true)}
             className="text-sm font-medium text-accent hover:underline"
           >
-            Add mortgage
+            {mortgages.length > 0 ? "Add another mortgage" : "Add mortgage"}
           </button>
         )}
       </div>
@@ -157,7 +157,7 @@ export function MortgageSection({
               key={m.id}
               className="rounded-md border border-border bg-subtle/50 p-4"
             >
-              <dl className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
                 <div>
                   <dt className="text-sm font-medium text-muted">
                     {m.balanceSource === "stored" ? "Balance" : "Estimated balance"}
@@ -226,7 +226,7 @@ export function MortgageSection({
                   </div>
                 )}
                 {m.lenderName && (
-                  <div className="col-span-2">
+                  <div className="sm:col-span-2">
                     <dt className="text-sm font-medium text-muted">Lender</dt>
                     <dd className="text-sm font-medium text-foreground">{m.lenderName}</dd>
                   </div>

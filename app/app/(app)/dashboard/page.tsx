@@ -4,7 +4,6 @@ import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
-import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
@@ -17,9 +16,11 @@ import {
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
+import { WorkspaceNavMobile } from "./workspace-nav-mobile";
 
 export default async function DashboardPage({
   searchParams,
@@ -30,13 +31,13 @@ export default async function DashboardPage({
   if (!user) return null;
   const { onboarding } = await searchParams;
 
-  const allProperties = await prisma.property.findMany({
+  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
+  const properties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
+    orderBy: { updatedAt: "desc" },
+    take: propertyLimit,
   });
-
-  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
-  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
 
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
@@ -176,7 +177,7 @@ export default async function DashboardPage({
           </div>
         </div>
       )}
-      <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+      <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-3 shadow-sm md:p-4">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-sm text-muted">
@@ -186,7 +187,8 @@ export default async function DashboardPage({
               <MetricHelpLink />
             </div>
           </div>
-          <div className="flex flex-wrap gap-2">
+          {/* Desktop: individual workspace buttons */}
+          <div className="hidden flex-wrap gap-2 md:flex">
             <Link
               href={propertyHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
@@ -207,35 +209,32 @@ export default async function DashboardPage({
             </Link>
           </div>
         </div>
-        <div className="mt-3 flex flex-wrap gap-3 text-sm">
+        {/* Mobile: compact workspace dropdown */}
+        <div className="mt-3 md:hidden">
+          <WorkspaceNavMobile
+            propertyHref={propertyHref}
+            propertyLabel={singleProperty ? "Open property" : "View properties"}
+            modelingHref={modelingHref}
+            mortgageHref={mortgageHref}
+          />
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2">
           <Link
             href="/properties/new"
-            className="font-medium text-foreground hover:underline"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             Add property
           </Link>
-          <span className="text-muted">•</span>
           <Link
             href="/analyze"
-            className="font-medium text-foreground hover:underline"
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
           >
             Analyze a deal
           </Link>
-          {singleProperty && (
-            <>
-              <span className="text-muted">•</span>
-              <Link
-                href={propertyHref}
-                className="font-medium text-foreground hover:underline"
-              >
-                See full property details
-              </Link>
-            </>
-          )}
         </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         <MetricCard
           label={metrics.propertyCount > 1 ? "Total property value" : "Property value"}
           value={formatCurrency(metrics.totalMarketValue)}
@@ -260,57 +259,86 @@ export default async function DashboardPage({
           cashFlow={metrics.totalMonthlyCashFlow}
           compact
         />
-        <MetricCard
-          label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
-          value={
-            metrics.weightedCapRate != null
-              ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
-              : "—"
-          }
-          primary={false}
-          compact
-        />
+        <div className="hidden md:block">
+          <MetricCard
+            label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
+            value={
+              metrics.weightedCapRate != null
+                ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+                : "—"
+            }
+            primary={false}
+            compact
+          />
+        </div>
       </div>
 
-      <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {metrics.portfolioLtv != null && (
+      <MobileCollapsible label="More metrics">
+        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+          <div className="md:hidden">
+            <MetricCard
+              label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
+              value={
+                metrics.weightedCapRate != null
+                  ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+                  : "—"
+              }
+              primary={false}
+              compact
+            />
+          </div>
+          {metrics.portfolioLtv != null && (
+            <MetricCard
+              label={metrics.propertyCount > 1 ? "Portfolio LTV" : "LTV"}
+              value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+              primary={false}
+              compact
+              tone={
+                metrics.portfolioLtv > 0.8
+                  ? "negative"
+                  : metrics.portfolioLtv > 0.7
+                    ? "warning"
+                    : undefined
+              }
+            />
+          )}
           <MetricCard
-            label={metrics.propertyCount > 1 ? "Portfolio LTV" : "LTV"}
-            value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
+            label="NOI"
+            value={formatCurrency(metrics.totalNoi)}
             primary={false}
             compact
           />
-        )}
-        <MetricCard
-          label="NOI (Net Operating Income)"
-          value={formatCurrency(metrics.totalNoi)}
-          primary={false}
-          compact
-        />
-        {metrics.portfolioCashOnCashReturn != null && (
+          {metrics.portfolioCashOnCashReturn != null && (
+            <MetricCard
+              label="Cash-on-cash return"
+              value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
+              primary={false}
+              compact
+            />
+          )}
           <MetricCard
-            label="Cash-on-cash return"
-            value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
+            label="Annual rent"
+            value={formatCurrency(metrics.totalAnnualRent)}
             primary={false}
             compact
           />
-        )}
-        <MetricCard
-          label="Annual rent"
-          value={formatCurrency(metrics.totalAnnualRent)}
-          primary={false}
-          compact
-        />
-        {metrics.dscr != null && (
-          <MetricCard
-            label="DSCR"
-            value={metrics.dscr.toFixed(2)}
-            primary={false}
-            cashFlow={metrics.dscr >= 1 ? 1 : -1}
-            compact
-          />
-        )}
-      </div>
+          {metrics.dscr != null && (
+            <MetricCard
+              label="DSCR"
+              value={metrics.dscr.toFixed(2)}
+              primary={false}
+              compact
+              tone={
+                metrics.dscr < 1
+                  ? "negative"
+                  : metrics.dscr < 1.2
+                    ? "warning"
+                    : "positive"
+              }
+            />
+          )}
+        </div>
+      </MobileCollapsible>
 
       {metrics.propertyCount > 1 && (
         <RentVsMarketSection

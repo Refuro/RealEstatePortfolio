@@ -22,6 +22,7 @@ Reference docs:
 - `docs/policies/design-spec.md`
 - `docs/architecture-and-build-practices.md`
 - `docs/policies/analytics-math-policy.md` (for label density + context clarity)
+- **`docs/qa/mobile-experience-audit.md`** — when the audit scope is **mobile-only** (viewports &lt;768px, `MobileToolShell`, touch, keyboards), use this checklist; output may be `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md`.
 
 ---
 

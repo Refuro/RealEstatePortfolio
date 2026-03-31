@@ -84,6 +84,20 @@ describe("parseRow", () => {
     }
   });
 
+  it("parses address line 2 from dedicated column", () => {
+    const r = parseRow(
+      {
+        ...minimalRow,
+        addressLine2: "Unit 4B",
+      },
+      2
+    );
+    expect("error" in r).toBe(false);
+    if ("data" in r) {
+      expect(r.data.addressLine2).toBe("Unit 4B");
+    }
+  });
+
   it("returns error when address is missing", () => {
     const r = parseRow({ ...minimalRow, address: "" }, 3);
     expect("error" in r).toBe(true);

@@ -24,11 +24,11 @@ export function ChartWrapper({
         {title}
       </h3>
       {isEmpty ? (
-        <div className="mt-4 flex h-[240px] items-center justify-center rounded border border-dashed border-border bg-subtle/50 text-sm text-muted">
+        <div className="mt-4 flex h-[200px] items-center justify-center rounded border border-dashed border-border bg-subtle/50 text-sm text-muted sm:h-[240px]">
           {emptyMessage}
         </div>
       ) : (
-        <div className="mt-4 h-[240px] w-full">{children}</div>
+        <div className="mt-4 h-[200px] w-full sm:h-[240px]">{children}</div>
       )}
     </div>
   );

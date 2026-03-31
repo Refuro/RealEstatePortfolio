@@ -8,6 +8,12 @@ This folder contains feature-layout and UX information-architecture audits.
 2. Agent follows [docs/process/feature-ux-audit-process.md](../../process/feature-ux-audit-process.md).
 3. Reports are written here as `YYYY-MM-DD-feature-ux-audit.md`.
 
+### Mobile experience audit (narrow viewports, touch, shells)
+
+1. Follow [docs/process/mobile-experience-audit-process.md](../../process/mobile-experience-audit-process.md) and criteria in [docs/qa/mobile-experience-audit.md](../../qa/mobile-experience-audit.md).
+2. Write findings to **`YYYY-MM-DD-mobile-experience-audit.md`** in this folder (same severity + evidence pattern as other feature audits).
+3. Promote fixes to [docs/tasks.md](../../tasks.md) as usual.
+
 ## Reports
 
 Existing historical reports may use legacy names. New reports should use the standard naming above.

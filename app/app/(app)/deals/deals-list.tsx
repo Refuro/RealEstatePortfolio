@@ -14,7 +14,7 @@ function formatDate(iso: string): string {
   });
 }
 
-type SortKey = "newest" | "oldest";
+type SortKey = "newest" | "oldest" | "cash-flow-high" | "cash-flow-low" | "cap-rate-high";
 
 type DealItem = {
   id: string;
@@ -29,6 +29,7 @@ type DealItem = {
     monthlyCashFlow: number;
     capRate: number | null;
     equity: number;
+    cashOnCashReturn: number | null;
   };
 };
 
@@ -52,11 +53,14 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
           d.zipCode.includes(q)
       );
     }
-    return [...list].sort((a, b) =>
-      sort === "newest"
-        ? new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        : new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    );
+    return [...list].sort((a, b) => {
+      if (sort === "newest") return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      if (sort === "cash-flow-high") return b.metrics.monthlyCashFlow - a.metrics.monthlyCashFlow;
+      if (sort === "cash-flow-low") return a.metrics.monthlyCashFlow - b.metrics.monthlyCashFlow;
+      if (sort === "cap-rate-high") return (b.metrics.capRate ?? -Infinity) - (a.metrics.capRate ?? -Infinity);
+      return 0;
+    });
   }, [deals, search, sort]);
 
   async function handleDelete(id: string) {
@@ -92,6 +96,9 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
         >
           <option value="newest">Newest first</option>
           <option value="oldest">Oldest first</option>
+          <option value="cash-flow-high">Cash flow: high → low</option>
+          <option value="cash-flow-low">Cash flow: low → high</option>
+          <option value="cap-rate-high">Cap rate: high → low</option>
         </select>
       </div>
 
@@ -113,11 +120,11 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
                 <p className="mt-0.5 text-sm text-muted">
                   {[d.addressLine1, d.city, d.state, d.zipCode].filter(Boolean).join(", ")}
                 </p>
-                <dl className="mt-4 grid grid-cols-3 gap-2 text-sm">
+                <dl className="mt-4 grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
                   <div>
-                    <dt className="font-medium text-muted">Cash flow</dt>
+                    <dt className="font-medium text-muted">Monthly cash flow</dt>
                     <dd
-                      className={`font-medium ${d.metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+                      className={`font-medium ${d.metrics.monthlyCashFlow > 0 ? "text-positive" : d.metrics.monthlyCashFlow < 0 ? "text-negative" : "text-muted"}`}
                     >
                       {formatCurrency(d.metrics.monthlyCashFlow)}
                     </dd>
@@ -127,6 +134,14 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
                     <dd className="font-medium text-foreground">
                       {d.metrics.capRate != null
                         ? `${(d.metrics.capRate * 100).toFixed(2)}%`
+                        : "—"}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="font-medium text-muted">CoC return</dt>
+                    <dd className="font-medium text-foreground">
+                      {d.metrics.cashOnCashReturn != null
+                        ? `${(d.metrics.cashOnCashReturn * 100).toFixed(2)}%`
                         : "—"}
                     </dd>
                   </div>

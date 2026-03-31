@@ -678,7 +678,7 @@ function StepIncomeExpenses({
         <div className="space-y-3">
           <div className="flex flex-wrap items-end gap-2">
             {unitRents.map((_, i) => (
-              <div key={i} className="min-w-[120px] flex-1">
+              <div key={i} className="min-w-0 w-full flex-1 sm:min-w-[120px] sm:w-auto">
                 <label htmlFor={`unitRent-${i}`} className={labelClass}>
                   Unit {i + 1} rent {data.isRented ? "*" : ""}
                 </label>
@@ -1440,9 +1440,9 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
         className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
       >
         <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
-        <ul className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+        <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
           {ADD_SECTION_NAV.map((s) => (
-            <li key={s.id}>
+            <li key={s.id} className="shrink-0">
               <a
                 href={`#${s.id}`}
                 className="text-accent hover:underline"

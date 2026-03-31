@@ -90,4 +90,21 @@ describe("computePortfolioMetrics", () => {
     const m = computePortfolioMetrics([baseProperty("x")], "proportional");
     expect(m.weightedCapRate).toBeCloseTo(m.totalNoi / m.totalMarketValue, 5);
   });
+
+  it("aggregates two partial-ownership properties proportionally (portfolio totals)", () => {
+    const m = computePortfolioMetrics(
+      [
+        baseProperty("a", { ownershipPercent: 50 }),
+        baseProperty("b", { ownershipPercent: 25 }),
+      ],
+      "proportional"
+    );
+    expect(m.propertyCount).toBe(2);
+    expect(m.totalMarketValue).toBeGreaterThan(0);
+    expect(m.totalNoi).toBeGreaterThan(0);
+    const one = computePortfolioMetrics([baseProperty("a", { ownershipPercent: 50 })], "proportional");
+    const two = computePortfolioMetrics([baseProperty("b", { ownershipPercent: 25 })], "proportional");
+    expect(m.totalMarketValue).toBeCloseTo(one.totalMarketValue + two.totalMarketValue, 3);
+    expect(m.totalNoi).toBeCloseTo(one.totalNoi + two.totalNoi, 3);
+  });
 });

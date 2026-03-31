@@ -96,6 +96,30 @@ Define semantic tokens in `globals.css` and use them consistently.
 - **Responsive:** Stack grids on small screens (`grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`). No horizontal scroll.
 - **Mobile-also:** Test on both desktop and mobile (375px or real device). Use hamburger or simplified nav if many links; avoid squished text. Touch targets ≥ 44px.
 
+### 4.1 Mobile-specific guidelines
+
+The primary mobile/desktop breakpoint is `md` (768px). All mobile-specific changes use Tailwind responsive prefixes and `md:hidden` / `hidden md:block` patterns so desktop layout is never affected.
+
+| Pattern | Implementation | Example |
+|---------|---------------|---------|
+| **Metric grids** | 2-column on mobile, expanding at `lg`/`xl` | `grid-cols-2 lg:grid-cols-3 xl:grid-cols-5` |
+| **Progressive disclosure** | `MobileCollapsible` component — collapsed on mobile, always-open on `md`+ | Secondary metrics, supporting metrics, settings sections |
+| **Workspace navigation** | `<select>` dropdown on mobile, inline buttons on desktop | Dashboard "Jump to..." select, `md:hidden` / `hidden md:flex` |
+| **Form fields** | Single-column below `sm`, 2-column at `sm`+ | `grid-cols-1 sm:grid-cols-2` for mortgage fields |
+| **Jump/section links** | Horizontal scroll strip on mobile, wrapping on desktop | `overflow-x-auto md:flex-wrap` with `shrink-0` items |
+| **Filter/sort bars** | Horizontally scrollable on mobile | `overflow-x-auto` with `shrink-0` pill buttons |
+| **Touch targets** | Minimum 44×44px on interactive elements | `size-11` (44px) for hamburger and user buttons |
+| **Top padding** | `pt-16` on mobile (56px header + 8px breathing room) | `pt-16 md:pt-6` |
+| **Sticky results** | Compact fixed bottom bar on mobile for deal analyzer | `fixed bottom-0 left-0 right-0 md:hidden` |
+| **Pricing cards** | Stack on mobile, 3-across at `md` | `grid-cols-1 md:grid-cols-3` |
+| **Chart height** | Slightly shorter on mobile | `h-[200px] sm:h-[240px]` |
+| **MetricCard text** | Step down one size on mobile for compact cards | `text-base md:text-lg` |
+
+**Shared infrastructure:**
+
+- `useIsMobile` hook (`lib/use-is-mobile.ts`) — `useSyncExternalStore` with `(max-width: 767px)` media query, SSR-safe. Use for JS-driven show/hide when duplicating markup would be impractical.
+- `MobileCollapsible` component (`components/mobile-collapsible.tsx`) — renders children directly on `md`+, collapsible `<button>`/reveal on mobile. Use for secondary content that clutters the mobile viewport.
+
 ---
 
 ## 5. Component Patterns

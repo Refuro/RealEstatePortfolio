@@ -5,13 +5,13 @@ import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
-import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import {
   BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
   getBenchmarkLabel,
+  getBenchmarkTone,
 } from "@/lib/benchmark-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
@@ -19,6 +19,7 @@ import {
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { PropertiesFiltersMobile } from "./properties-filters-mobile";
 
 function BenchmarkLine({
   propertyId,
@@ -53,7 +54,14 @@ function BenchmarkLine({
     return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
   }
   if (eligibility === "eligible_fresh" && marketRent != null) {
-    return <p className="text-sm text-muted">{getBenchmarkLabel(userRent, marketRent)}</p>;
+    const tone = getBenchmarkTone(userRent, marketRent);
+    const colorClass =
+      tone === "positive"
+        ? "text-positive"
+        : tone === "negative"
+          ? "text-negative"
+          : "text-muted";
+    return <p className={`text-sm ${colorClass}`}>{getBenchmarkLabel(userRent, marketRent)}</p>;
   }
   return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
 }
@@ -131,14 +139,16 @@ export default async function PropertiesPage({
   if (!user) return null;
   const { filter, sort } = await searchParams;
 
-  const allProperties = await prisma.property.findMany({
-    where: { userId: user.id },
-    include: { mortgages: true },
-  });
-
   const propertyLimit = getPropertyLimit(getEffectiveTier(user));
-  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
-  const totalCount = allProperties.length;
+  const [totalCount, properties] = await Promise.all([
+    prisma.property.count({ where: { userId: user.id } }),
+    prisma.property.findMany({
+      where: { userId: user.id },
+      include: { mortgages: true },
+      orderBy: { updatedAt: "desc" },
+      take: propertyLimit,
+    }),
+  ]);
   const overLimit = totalCount > propertyLimit;
 
   type PropertyWithMortgages = (typeof properties)[number];
@@ -258,8 +268,7 @@ export default async function PropertiesPage({
             Add property
           </Link>
         </div>
-        <div className="flex flex-wrap items-center gap-3 text-sm">
-          <span className="font-medium text-muted">Tools:</span>
+        <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/modeling"
             className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
@@ -303,15 +312,39 @@ export default async function PropertiesPage({
           )}
           {!singlePropertyMode && (
             <div className="mb-5 rounded-lg border border-border bg-card p-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">Filter</span>
+              <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                    Portfolio view
+                  </p>
+                  <p className="mt-1 text-sm text-foreground">
+                    {visibleCards.length} {visibleCards.length === 1 ? "property" : "properties"} shown
+                  </p>
+                </div>
+                {(activeFilter !== "all" || activeSort !== "updated") && (
+                  <Link
+                    href="/properties"
+                    className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-subtle"
+                  >
+                    Reset
+                  </Link>
+                )}
+              </div>
+              <PropertiesFiltersMobile
+                activeFilter={activeFilter}
+                activeSort={activeSort}
+                filterOptions={FILTER_OPTIONS}
+                sortOptions={SORT_OPTIONS}
+              />
+              <div className="hidden items-center gap-2 overflow-x-auto md:flex">
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Filter</span>
                 {FILTER_OPTIONS.map((option) => {
                   const active = activeFilter === option.key;
                   return (
                     <Link
                       key={option.key}
                       href={buildPropertiesHref(option.key, activeSort)}
-                      className={`rounded-md border px-2.5 py-1 text-sm transition ${
+                      className={`shrink-0 rounded-md border px-2.5 py-1 text-sm transition ${
                         active
                           ? "border-accent bg-accent/10 text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
@@ -322,15 +355,15 @@ export default async function PropertiesPage({
                   );
                 })}
               </div>
-              <div className="mt-2 flex flex-wrap items-center gap-2">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted">Sort</span>
+              <div className="mt-2 hidden items-center gap-2 overflow-x-auto md:flex">
+                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Sort</span>
                 {SORT_OPTIONS.map((option) => {
                   const active = activeSort === option.key;
                   return (
                     <Link
                       key={option.key}
                       href={buildPropertiesHref(activeFilter, option.key)}
-                      className={`rounded-md border px-2.5 py-1 text-sm transition ${
+                      className={`shrink-0 rounded-md border px-2.5 py-1 text-sm transition ${
                         active
                           ? "border-accent bg-accent/10 text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
@@ -344,7 +377,7 @@ export default async function PropertiesPage({
             </div>
           )}
           {!singlePropertyMode && properties.length >= 1 && (
-            <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
               <MetricCard
                 label="Total value"
                 value={formatCurrency(portfolioMetrics.totalMarketValue)}
@@ -357,12 +390,14 @@ export default async function PropertiesPage({
                 primary
                 compact
               />
-              <MetricCard
-                label="Monthly cash flow"
-                value={formatCurrency(portfolioMetrics.totalMonthlyCashFlow)}
-                cashFlow={portfolioMetrics.totalMonthlyCashFlow}
-                compact
-              />
+              <div className="col-span-2 lg:col-span-1">
+                <MetricCard
+                  label="Monthly cash flow"
+                  value={formatCurrency(portfolioMetrics.totalMonthlyCashFlow)}
+                  cashFlow={portfolioMetrics.totalMonthlyCashFlow}
+                  compact
+                />
+              </div>
             </div>
           )}
           {!singlePropertyMode && visibleCards.length === 0 ? (
@@ -448,21 +483,21 @@ export default async function PropertiesPage({
                       </Link>
                       <Link
                         href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
-                        className="text-sm font-medium text-foreground hover:underline"
+                        className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                       >
                         Open Modeling
                       </Link>
                       {p.mortgages.length > 0 ? (
                         <Link
                           href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
-                          className="text-sm font-medium text-foreground hover:underline"
+                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                         >
                           Open Mortgage
                         </Link>
                       ) : (
                         <Link
                           href={`/properties/${p.id}?tab=details#mortgages`}
-                          className="text-sm font-medium text-foreground hover:underline"
+                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                         >
                           Add mortgage
                         </Link>
@@ -505,20 +540,20 @@ export default async function PropertiesPage({
                           p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)
                         ) && <InsightTag label="Needs update" />}
                       </div>
-                      <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
-                        <div>
+                      <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+                        <div className="flex items-center justify-between sm:block">
                           <dt className="font-medium text-muted">Value</dt>
                           <dd className="font-medium text-foreground">
                             {formatCurrency(Number(p.currentEstimatedValue))}
                           </dd>
                         </div>
-                        <div>
+                        <div className="flex items-center justify-between sm:block">
                           <dt className="font-medium text-muted">Equity</dt>
                           <dd className="font-medium text-foreground">
                             {formatCurrency(metrics.equity)}
                           </dd>
                         </div>
-                        <div>
+                        <div className="flex items-center justify-between sm:block">
                           <dt className="font-medium text-muted">Cash flow</dt>
                           <dd
                             className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
@@ -536,7 +571,7 @@ export default async function PropertiesPage({
                           marketRentAsOf={p.marketRentAsOf}
                         />
                       </div>
-                      <div className="mt-auto pt-3 flex flex-wrap items-center gap-2 text-sm">
+                      <div className="mt-auto pt-3 flex flex-wrap items-center gap-2">
                         <Link
                           href={`/properties/${p.id}`}
                           className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
@@ -545,21 +580,21 @@ export default async function PropertiesPage({
                         </Link>
                         <Link
                           href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
-                          className="font-medium text-foreground hover:underline"
+                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                         >
                           Open Modeling
                         </Link>
                         {p.mortgages.length > 0 ? (
                           <Link
                             href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
-                            className="font-medium text-foreground hover:underline"
+                            className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                           >
                             Open Mortgage
                           </Link>
                         ) : (
                           <Link
                             href={`/properties/${p.id}?tab=details#mortgages`}
-                            className="font-medium text-foreground hover:underline"
+                            className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
                           >
                             Add mortgage
                           </Link>

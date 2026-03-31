@@ -12,6 +12,7 @@
   --accent-foreground: #ffffff;
   --positive: #059669;
   --negative: #dc2626;
+  --warning: #d97706;
   /* Chart palette: restrained blues/teals/greens */
   --chart-1: #0ea5e9;
   --chart-2: #14b8a6;
@@ -34,6 +35,7 @@
     --accent-foreground: #0a0a0a;
     --positive: #34d399;
     --negative: #f87171;
+    --warning: #fbbf24;
     --chart-1: #38bdf8;
     --chart-2: #2dd4bf;
     --chart-3: #34d399;
@@ -55,6 +57,7 @@
   --accent-foreground: #ffffff;
   --positive: #059669;
   --negative: #dc2626;
+  --warning: #d97706;
   --chart-1: #0ea5e9;
   --chart-2: #14b8a6;
   --chart-3: #10b981;
@@ -75,6 +78,7 @@
   --accent-foreground: #0a0a0a;
   --positive: #34d399;
   --negative: #f87171;
+  --warning: #fbbf24;
   --chart-1: #38bdf8;
   --chart-2: #2dd4bf;
   --chart-3: #34d399;
@@ -95,6 +99,7 @@
   --color-accent-foreground: var(--accent-foreground);
   --color-positive: var(--positive);
   --color-negative: var(--negative);
+  --color-warning: var(--warning);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -123,5 +128,29 @@ input[type="date"] {
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) input[type="date"] {
     color-scheme: dark;
+  }
+}
+
+/* Mobile safe areas (notch / home indicator) — used with fixed chrome in app shell */
+.app-safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+/* Base padding + home indicator; must not replace p-4/p-6 bottom (safe-area alone was 0 on most browsers). */
+.app-safe-area-bottom {
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .app-safe-area-bottom {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-respect-reduced-motion {
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }

@@ -4,6 +4,13 @@ type MetricCardProps = {
   primary?: boolean;
   cashFlow?: number;
   compact?: boolean;
+  tone?: "positive" | "warning" | "negative";
+};
+
+const toneClass: Record<"positive" | "warning" | "negative", string> = {
+  positive: "text-positive",
+  warning: "text-warning",
+  negative: "text-negative",
 };
 
 export function MetricCard({
@@ -12,23 +19,24 @@ export function MetricCard({
   primary = true,
   cashFlow,
   compact = false,
+  tone,
 }: MetricCardProps) {
-  const valueClassName =
-    cashFlow !== undefined
-      ? `font-semibold ${cashFlow >= 0 ? "text-positive" : "text-negative"} ${
-          compact ? "text-lg" : "text-2xl"
-        }`
+  const sizeClass = compact ? "text-base md:text-lg" : "text-2xl";
+  const valueClassName = tone
+    ? `font-semibold ${toneClass[tone]} ${sizeClass}`
+    : cashFlow !== undefined
+      ? `font-semibold ${cashFlow >= 0 ? "text-positive" : "text-negative"} ${sizeClass}`
       : primary
         ? compact
-          ? "text-lg font-semibold text-foreground"
+          ? "text-base md:text-lg font-semibold text-foreground"
           : "text-2xl sm:text-3xl font-semibold text-foreground"
         : compact
-          ? "text-base font-medium text-foreground"
+          ? "text-sm md:text-base font-medium text-foreground"
           : "text-lg font-medium text-foreground";
 
   return (
     <div
-      className={`rounded-lg border border-border bg-card ${
+      className={`min-w-0 rounded-lg border border-border bg-card ${
         compact ? "p-3" : "p-5"
       }`}
     >
@@ -37,7 +45,7 @@ export function MetricCard({
       >
         {label}
       </dt>
-      <dd className={`mt-1 ${valueClassName}`}>{value}</dd>
+      <dd className={`mt-1 truncate ${valueClassName}`}>{value}</dd>
     </div>
   );
 }

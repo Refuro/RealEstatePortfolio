@@ -3,7 +3,6 @@ import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveBalance } from "@/lib/amortization";
 import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
-import { takeFirstNByUpdatedAt } from "@/lib/limit-utils";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
 
@@ -13,13 +12,19 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const allProperties = await prisma.property.findMany({
+  const tier = getEffectiveTier(user);
+  const propertyLimit = getPropertyLimit(tier);
+  const propertyCountTotal = await prisma.property.count({
+    where: { userId: user.id },
+  });
+  const properties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
+    orderBy: { updatedAt: "desc" },
+    take: propertyLimit,
   });
-
-  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
-  const properties = takeFirstNByUpdatedAt(allProperties, propertyLimit);
+  const propertyCountIncluded = properties.length;
+  const truncated = propertyCountTotal > propertyCountIncluded;
 
   type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
@@ -44,12 +49,20 @@ export async function GET() {
     };
   });
 
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
+    | "proportional"
+    | "full_liability";
   const metrics = computePortfolioMetrics(portfolioInput, displayMode);
 
   return NextResponse.json({
     ...metrics,
     weightedCapRate: metrics.weightedCapRate != null ? metrics.weightedCapRate : null,
     portfolioLtv: metrics.portfolioLtv != null ? metrics.portfolioLtv : null,
+    slice: {
+      propertyCountTotal,
+      propertyCountIncluded,
+      propertyLimit,
+      truncated,
+    },
   });
 }

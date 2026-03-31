@@ -13,6 +13,17 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-03-30",
+    title: "Mobile layout polish, deal safety, and portfolio clarity",
+    items: [
+      "Mobile: More breathing room below the top bar and at the bottom of the screen (safe-area) so content isn’t flush against the edges.",
+      "Deal analyzer: Your browser can warn you before leaving the page when you have unsaved changes.",
+      "Mobile tool shells: Extra padding in footers so action areas and helper text aren’t cramped at the bottom of cards.",
+      "Privacy policy: Clearer emphasis for PostHog—what runs in the browser after cookie consent vs. server-side product events (e.g. billing).",
+      "Portfolio summary and CSV export: Clear counts when your account has more properties than your plan includes in rolled-up totals—so numbers aren’t mistaken for your full portfolio.",
+    ],
+  },
+  {
     date: "2026-03-28",
     title: "Vacant-rent workflow and benchmark clarity",
     items: [

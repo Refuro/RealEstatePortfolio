@@ -18,7 +18,7 @@ Historical completion logs are archived in `docs/tasks-archived.md`.
 
 ---
 
-## Roadmap priority (value vs effort — 2025-03-15)
+## Roadmap priority (value vs effort — last reviewed 2026-03-30)
 
 | Order | Item | Effort | Value | Recommendation |
 |-------|------|--------|-------|----------------|
@@ -37,6 +37,32 @@ Historical completion logs are archived in `docs/tasks-archived.md`.
 ---
 
 ## Active tasks
+
+### Mobile shell verification (functionality, logic, math)
+
+*Process:* PM promotes here → **builder** implements per `.cursor/rules/builder-agent.mdc`. **Canonical math:** `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`. **Playwright/E2E:** out of scope for this batch.
+
+*Plan & checklist:* [`docs/qa/mobile-shell-verification.md`](qa/mobile-shell-verification.md). **Broader mobile audit criteria** (full app): [`docs/qa/mobile-experience-audit.md`](qa/mobile-experience-audit.md).
+
+#### Phase 0 — Manual QA (PM or owner)
+
+- [ ] **Run manual matrix** — At 320 / 375 / 430px and desktop ≥768px: verify all four `MobileToolShell` surfaces (Deal Analyzer, Modeling, Mortgage, Public calculator per landing/calc routes). Confirm functionality (shell chrome, inputs, collapsibles, charts), and spot-check logic/math against policies (see verification doc § Phase 0).
+  - *Acceptance:* Checklist in `docs/qa/mobile-shell-verification.md` completed or issues filed; no blocking regressions.
+
+#### Phase A — Vitest jsdom + `MobileToolShell` tests (builder)
+
+- [x] **Test infrastructure for React components** — Add `jsdom`, `@testing-library/react`, `@testing-library/jest-dom`. Extend `app/vitest.config.ts` so `components/**/*.test.tsx` uses `jsdom` without moving existing `lib/` / `app/api` tests off Node. Add Vitest setup for jest-dom matchers if needed.
+  - *Acceptance:* `npm run test` from `app/` passes; CI unchanged in intent (still `npm run test`).
+
+- [x] **`MobileToolShell` unit tests** — New file e.g. `app/components/mobile-tool-shell.test.tsx`: cover children vs `modes`, footer, summary rail content, optional eyebrow/title/description, and `md:hidden` on root.
+  - *Acceptance:* Tests are stable in CI; no snapshot churn on unrelated edits.
+
+#### Phase B — Optional integration smoke (builder, after A)
+
+- [ ] **Optional: `matchMedia` + public calculator smoke** — Mock `(max-width: 767px)` and render `PublicCalculator` (or minimal wrapper) to assert mobile shell path renders — only if low flake.
+  - *Acceptance:* Documented in `docs/qa/mobile-shell-verification.md`; skip with rationale if not worth maintenance.
+
+---
 
 ### Branding / metadata follow-up
 
@@ -516,8 +542,8 @@ Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`),
 
 - [x] **Forward CSP violation reports to Sentry** — Improve production visibility for CSP rollout monitoring.
   - *Acceptance:* `POST /api/csp-report` forwards violation reports to Sentry in production with sane grouping/sampling to avoid noise; local/dev behavior remains lightweight; docs for CSP rollout and monitoring mention where reports are reviewed.
-- [ ] **Prepare business metrics snapshot for next valuation pass** — Create a lightweight source of truth for revenue/usage metrics used in future business audits.
-  - *Acceptance:* A documented template or checklist exists for tracking core business metrics (at minimum MRR, churn, and active users), with clear note that the data may live outside the repo if preferred; next valuation audit can reference this source directly.
+- [ ] **Prepare business metrics snapshot for next valuation pass** — *Deferred by owner (2026-03-30): no in-repo MRR/subscriber snapshot until live metrics are available; valuation can use Stripe/PostHog exports ad hoc when needed.*
+  - *Acceptance (when re-enabled):* A documented template or checklist exists for tracking core business metrics (at minimum MRR, churn, and active users), with clear note that the data may live outside the repo if preferred; next valuation audit can reference this source directly.
 
 ### Low priority
 
@@ -574,6 +600,119 @@ Detailed completed QA/history sections were moved to `docs/tasks-archived.md` to
 - Property detail tabs UX refinements test checklist (verified complete; moved to archive).
 - Recently completed implementation notes and summaries.
 - Details tab Phase B inline editing completion checklist.
+
+---
+
+## Batch 14: Full audit synthesis follow-ups (2026-03-30 Run 4)
+
+*Source: `docs/audits/synthesis/2026-03-30-audit-synthesis-4.md`. **Excluded from this batch:** (1) **MRR/subscriber snapshot** — owner preference: no placeholder until real numbers exist (see Batch 12 note). (2) **CSP work** — deferred to **Batch 14 — Deferred: CSP** below; owner will review CSP implications with PM before implementation.*
+
+### Paid ads & paid acquisition (operational)
+
+*Aligns launch narrative with runbooks and QA so paid Search/social work is discoverable from docs.*
+
+- [x] **Launch plan operational links** — In `docs/launch/launch-plan.md`, ensure §2.2 (or adjacent) includes a short **Operational links** list: pre-live telemetry QA, paid-ads monitoring runbook, campaign build sheet, and at least one readout or variant doc under `docs/launch/`.
+  - *Acceptance:* From `launch-plan.md`, PM can open telemetry QA + runbook + campaign doc in ≤3 link hops; paths are valid.
+- [x] **Index paid acquisition docs** — `docs/README.md` Launch & growth lists `pre-live-telemetry-qa-2026-03-30.md` (or a stable “latest” pointer if renamed later).
+  - *Acceptance:* `docs/README.md` includes the pre-live QA doc alongside existing paid-ads entries.
+- [x] **Env prerequisites for ads + PostHog (owner checklist)** — `docs/setup/manual-steps.md` § Hosting (or a dedicated bullet) lists **all** of: `NEXT_PUBLIC_GOOGLE_ADS_ID`, `NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL`, `NEXT_PUBLIC_GOOGLE_ADS_PROPERTY_CREATED_CONVERSION_LABEL`, `NEXT_PUBLIC_POSTHOG_KEY`, `NEXT_PUBLIC_POSTHOG_HOST`, with pointer to `docs/launch/analytics.md` and `docs/launch/pre-live-telemetry-qa-2026-03-30.md`.
+  - *Acceptance:* New deploy checklist matches `pre-live-telemetry` §2; no contradictory “ads blocked” language without an “as of” date.
+
+### UX / Feature
+
+- [x] Add logged-in CTA or copy on `/pricing` pointing to `/plans`; align FAQ “account settings” wording with actual surfaces (`/plans`, Settings).
+- [x] Unify empty-state classes across `modeling-workspace.tsx`, `mortgage-workspace.tsx`, and `deals/page.tsx`.
+- [x] Mobile drawer: focus management and modal semantics (`app-layout-client.tsx`).
+- [x] Deal Analyzer: unsaved-changes warning (`beforeunload` when dirty; baseline after load/save) (`deal-analyzer-form.tsx`).
+- [x] Safe-area padding for fixed chrome and `prefers-reduced-motion` audit for animated UI.
+- [x] Footer: align `©` year with current year / policy refresh (coordinate with privacy/legal copy).
+
+### Performance
+
+- [x] Refactor tier-limited list/export/summary queries to use `orderBy` + `take` at the database (including deals).
+- [x] Add Prisma migration for `Property.userId`, `SavedDeal.userId`, and `Mortgage.propertyId` indexes; verify query plans.
+- [x] Admin: paginate or aggregate RentCast by-user stats; cap user scan for per-plan property averages.
+- [x] Spike: reduce `getAppUser` upsert to conditional updates after profile diff.
+
+### Reliability
+
+- [x] `Sentry.captureException` on Resend error in `app/app/api/contact/route.ts` when DSN present.
+- [x] Evaluate Stripe webhook idempotency for `captureServerEvent` paths (store `event.id` or document acceptance of duplicate analytics). — *Documented:* `docs/internal/stripe-webhook-posthog-idempotency.md` + comment on webhook route.
+- [x] Optional: CI smoke or documented script calling `/api/health` against staging. — *Doc:* `docs/runbooks/health-check-smoke.md`.
+- [x] Add `loading` fallback to dynamic imports in `mortgage-workspace.tsx` (and modeling workspace if applicable).
+
+### Data integrity
+
+- [x] Decide and implement API parity for plan limits on `GET /api/properties` and `GET /api/deals`, or publish a non-code contract for integrators. — *Contract:* `docs/internal/api-list-contract.md` (full GET lists vs UI caps).
+- [x] Clarify saved-deals vs `ownershipDisplayMode` in product copy or align deal metrics with user display mode.
+- [x] Optional: extend CSV import to support a distinct `address line 2` column when present.
+- [x] Document or query **effective tier** consistently for ops/analytics (override + Stripe). — *Doc:* `docs/internal/effective-tier-analytics.md` (+ links from `billing-matrix.md`).
+
+### Growth
+
+- [x] Add `FunnelCtaLink` (with `placement` / `cta_id` / `planIntent`) for pricing page footer “Create free account” and public calculator page inline “create a free account”. — *Calculator:* already used `FunnelCtaLink` on primary CTAs; pricing footer updated.
+- [x] Optionally add `FunnelCtaLink` for home “Simple pricing” → “View pricing” for consistent session-level CTA coverage. — *Already:* `See pricing` uses `FunnelCtaLink` (`landing_hero` / `view_pricing`).
+- [x] Fix `user_signed_up` dedup key documentation in `docs/launch/analytics.md` to match `posthog-signup-once.tsx`.
+
+### Governance
+
+- [x] Update `docs/cursor-agent-setup.md` for **12 lanes** and Documentation + Legal audit rules, process docs, folders, and clone checklist.
+- [x] Reconcile full-audit lane count / Code-skip wording between `docs/process/full-audit-synthesis.md` §6 and `.cursor/rules/full-audit-agent.mdc`.
+
+### Math
+
+- [x] Align `docs/reference/engineering-spec.md` §6 with current metrics policy or mark it superseded.
+- [x] Refresh `docs/process/math-logic-audit.md` module inventory and benchmark freshness phrasing.
+- [x] Add golden coverage for partial-ownership portfolio aggregation (if product priority). — *Test:* `app/lib/metrics/portfolio-metrics.test.ts`.
+
+### Business
+
+- [x] **Reconcile `docs/launch/launch-plan.md` §2.2 paid-ads vs telemetry** — Updated 2026-03-30: paid ads may run with PostHog + runbooks; superseded “keep ads off until baseline” language folded into dated note.
+- [x] Add Vitest coverage for `planTierFromPriceId` + webhook branches using Stripe fixtures (no live keys). — *Done:* `app/lib/stripe-config.test.ts` for `planTierFromPriceId`; webhook PostHog behavior documented (`docs/internal/stripe-webhook-posthog-idempotency.md`). *Deferred:* full route handler Vitest for webhook (heavy Stripe mocks).
+
+### Documentation
+
+- [x] Extend `docs/README.md` Process section with `documentation-audit-process.md` and `legal-compliance-audit-process.md`.
+- [x] Link `posthog-views-setup.md` from Launch & growth and/or `analytics.md`.
+- [x] Update `docs/audits/documentation/README.md` and `.cursor/rules/documentation-audit-agent.mdc` for optional `…-audit-N` same-day report naming.
+- [x] Add a latest-synthesis pointer to `docs/audits/synthesis/README.md` (or top-level `docs/README.md`).
+- [x] Refresh `docs/tasks.md` roadmap-priority table date label (or retitle to “last reviewed”) when next edited.
+- [x] Bump “Last updated” on `docs/visual-assets-guide.md` when content is next reviewed.
+
+### Legal / Compliance
+
+- [x] Privacy Policy: add explicit **server-side PostHog** (Stripe webhook) disclosure and relationship to cookie consent.
+
+### Code quality / hygiene
+
+- [x] Remove or consolidate duplicate Prisma seed entry in `app/package.json` after CLI verification. — *Removed redundant `package.json#prisma.seed`; canonical seed is `prisma.config.ts` → `migrations.seed`.*
+
+### Deferred: CSP (owner review with PM — keep for later)
+
+*Owner wants to collaborate on CSP before changes: what enforcement means, reporting vs blocking, and production implications.*
+
+- [ ] **(Deferred)** Verify production `CSP_ENFORCEMENT` and `NEXT_PUBLIC_APP_URL` values match `docs/policies/csp-rollout.md` expectations.
+- [ ] **(Deferred)** Optionally add a request body size guard for `POST /api/csp-report` if monitoring shows abuse.
+
+---
+
+## Batch 15: Data integrity & API clarity (2026-03-30 Run 5 synthesis)
+
+*Source: `docs/audits/synthesis/2026-03-30-audit-synthesis-5.md` and `docs/audits/data-integrity/2026-03-30-data-integrity-audit-5.md`. **Intent:** Remove ambiguity when plan caps, “latest N” slices, and full-list GETs coexist so totals and list counts cannot be confused.*
+
+### Data integrity & API contracts
+
+- [x] **Portfolio summary / export — explicit denominator** — `GET /api/portfolio/summary` returns `slice: { propertyCountTotal, propertyCountIncluded, propertyLimit, truncated }`. `GET /api/export/portfolio` sets `X-Veld-Property-Count-Total`, `X-Veld-Property-Count-Included`, `X-Veld-Property-Limit`, `X-Veld-Property-Slice-Truncated`. [`docs/internal/api-list-contract.md`](internal/api-list-contract.md) documents both.
+  - *Acceptance:* Summary JSON includes `slice` with correct counts when total properties &gt; plan limit and when under limit; CSV download response exposes the same counts via headers; contract doc matches implementation.
+- [x] **`GET /api/deals` vs capped deals UI** — API remains a **full** JSON array; response headers `X-Veld-Deal-Count-Total`, `X-Veld-Plan-Deal-Limit`, `X-Veld-Deals-Exceeds-Plan-Ui-Cap` document relationship to the Deals page cap. See [`docs/internal/api-list-contract.md`](internal/api-list-contract.md).
+  - *Acceptance:* Headers present on successful GET; when `dealCountTotal &gt; dealLimit`, `X-Veld-Deals-Exceeds-Plan-Ui-Cap` is `true`; integrators can read contract without breaking existing array clients.
+- [x] **Saved deals vs `ownershipDisplayMode`** — [`docs/policies/ownership-metrics.md`](policies/ownership-metrics.md) §5 states saved-deal/API metrics use **proportional** math only; the Deals page already explains proportional math vs portfolio full-liability mode (`app/app/(app)/deals/page.tsx`).
+  - *Acceptance:* Policy doc names saved deals + API; deals page copy remains consistent (no implication of full-liability parity for deal metrics).
+
+### Optional documentation
+
+- [x] **Multi-lien CSV round-trip** — [`docs/reference/portfolio-csv-export.md`](reference/portfolio-csv-export.md) § Import compatibility documents lossy re-import for multi-lien exports.
+  - *Acceptance:* One clear paragraph on round-trip limits; points operators to property detail for extra liens.
 
 ---
 

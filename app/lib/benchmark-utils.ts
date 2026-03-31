@@ -60,6 +60,16 @@ export function getBenchmarkPct(userRent: number, marketRent: number): number {
   return ((userRent - marketRent) / marketRent) * 100;
 }
 
+/** Returns the color tone for a rent-vs-market comparison. */
+export function getBenchmarkTone(
+  userRent: number,
+  marketRent: number
+): "positive" | "negative" | "neutral" {
+  const pct = getBenchmarkPct(userRent, marketRent);
+  if (Math.abs(pct) < 1) return "neutral";
+  return pct >= 0 ? "positive" : "negative";
+}
+
 /** Returns display label: "Rent X% below market" | "Rent X% above market" | "Rent at market". */
 export function getBenchmarkLabel(userRent: number, marketRent: number): string {
   const pct = getBenchmarkPct(userRent, marketRent);
