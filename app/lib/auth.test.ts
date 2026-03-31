@@ -1,4 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// auth.ts imports @/lib/db, which runs validateEnv() on load. GitHub Actions
+// does not have DATABASE_URL / Clerk / Stripe (Vercel does). Mock DB so isAdmin
+// tests never load db.ts — same idea as app route tests that vi.mock @/lib/db.
+vi.mock("@/lib/db", () => ({
+  prisma: {
+    user: {
+      findUnique: vi.fn(),
+      update: vi.fn(),
+      create: vi.fn(),
+    },
+  },
+}));
+
 import { isAdmin } from "./auth";
 
 describe("isAdmin", () => {
