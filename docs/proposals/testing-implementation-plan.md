@@ -1,7 +1,7 @@
 # Testing implementation plan
 
 **Status:** Phases 1–3 implemented (`lib/` units + mocked API route tests). **Phase 2 follow-up** (golden metrics fixtures, amortization UI-helper edges, 403 plan-limit API tests) done — see [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (*Completed: test infrastructure & hooks*). Phase 4 (E2E) is backlog.  
-**Related:** Batch 8 **test scope** (Vitest baseline + CI lint) is **complete** — same archive section. This doc remains the **phase labels** and expansion backlog reference. Policies: [`ownership-metrics.md`](../policies/ownership-metrics.md), [`analytics-math-policy.md`](../policies/analytics-math-policy.md); full review [`qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md).
+**Related:** Batch 8 **test scope** (Vitest baseline + CI lint) is **complete** — same archive section. This doc remains the **phase labels** and expansion backlog reference. **Forward-looking hardening:** [`qa/testing-hardening-proposal.md`](../qa/testing-hardening-proposal.md) (billing, expanded APIs, coverage gates, optional E2E). Policies: [`ownership-metrics.md`](../policies/ownership-metrics.md), [`analytics-math-policy.md`](../policies/analytics-math-policy.md); full review [`qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md).
 
 ---
 

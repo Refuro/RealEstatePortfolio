@@ -2,7 +2,7 @@
 
 **Status:** Living document — update as messaging and channels prove out.  
 **Last reviewed:** 2026-03-28  
-**Related:** Fulfills **Batch 8** item *Launch plan* in `docs/tasks.md`.
+**Related:** Fulfills **Batch 8** item *Launch plan* (checklist archived in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-30)**).
 
 ---
 
@@ -39,7 +39,7 @@
 | **Public changelog** | ✅ Shipped | `/changelog` + `lib/changelog-data.ts`. |
 | **RentCast dependency** | Ongoing ops | Keep messaging as "estimates," monitor quotas/errors per plan. |
 
-**Paid ads:** PostHog and core funnel events are live (`docs/launch/analytics.md`). **As of 2026-03-30:** paid acquisition may run alongside documented runbooks and readouts (`docs/launch/paid-ads-*`); keep spend and creative changes aligned with telemetry QA. *(Earlier “keep ads off until baseline” guidance applied before telemetry was shipped; see `docs/tasks.md` Batch 14 if you need to tighten this language further.)*
+**Paid ads:** PostHog and core funnel events are live (`docs/launch/analytics.md`). **As of 2026-03-30:** paid acquisition may run alongside documented runbooks and readouts (`docs/launch/paid-ads-*`); keep spend and creative changes aligned with telemetry QA. *(Earlier “keep ads off until baseline” guidance applied before telemetry was shipped; see [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-30)**, Batch 14 / Business, if you need to tighten this language further.)*
 
 **Operational links (paid acquisition + telemetry):**
 

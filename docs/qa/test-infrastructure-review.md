@@ -17,7 +17,7 @@
 | **Contracts** | Zod schemas for property, deal, mortgage, checkout exercised with representative valid/invalid cases; CSV import parser covered for core paths. |
 | **API layer** | Properties and deals routes tested with **mocked auth + Prisma + rate limit** — validates handler wiring, status codes, and validation paths; **does not** prove DB SQL, RLS, or real Clerk behavior. |
 | **CI** | GitHub Actions runs **`npm run lint`** then **`npm run test`** in `app/` on push (main/master/develop) and all PRs. **Production `npm run build`** is intentionally not duplicated in CI — see §3.5. |
-| **Gaps** | ~~No `lint` in CI~~ **resolved** (Phase 1); **build** still on Vercel / local `check` (§3.5); coverage thresholds not enforced; UI flows manual + regression matrix; Docker/Playwright in §6–8. |
+| **Gaps** | ~~No `lint` in CI~~ **resolved** (Phase 1); **build** still on Vercel / local `check` (§3.5); **coverage thresholds** enforced when running `npm run test:coverage` (§3.4); CI still runs `test` without coverage unless you add a job; UI flows manual + regression matrix; Docker/Playwright in §6–8. |
 
 **Bottom line:** The suite is a **solid foundation** for **numeric correctness** in shared `lib/` code and **request/response behavior** of selected API routes under mocks. It is **not** a substitute for manual smoke on critical UX or for eventual E2E on auth + navigation if you want that automated.
 
@@ -29,7 +29,7 @@
 
 | File | Role |
 |------|------|
-| `app/vitest.config.ts` | `vitest run`, `include`: `lib/**/*.test.ts`, `app/**/*.test.ts`, `components/**/*.test.tsx`; `vitest.setup.ts` loads `@testing-library/jest-dom`; component tests set `/** @vitest-environment jsdom */` per file so `lib/` / API tests stay on Node. Coverage scoped to listed `lib/` modules + three `route.ts` files. |
+| `app/vitest.config.ts` | `vitest run`, `include`: `lib/**/*.test.ts`, `app/**/*.test.ts`, `components/**/*.test.tsx`; `vitest.setup.ts` loads `@testing-library/jest-dom`; component tests set `/** @vitest-environment jsdom */` per file so `lib/` / API tests stay on Node. **Coverage** (`test:coverage`): instruments listed `lib/` modules + `lib/plans.ts` + Phase 1–2 `app/app/api/**/route.ts` files; **thresholds** on aggregate statements/lines/branches/functions — see §3.4. |
 | `app/package.json` | `test`, `test:watch`, `test:coverage`; `check` = **build + lint only** (tests not part of `check`). |
 | `.github/workflows/ci.yml` | `npm ci` + `npm run lint` + `npm run test` in `app/`; Node 20; concurrency cancel. See [§3.5](#35-ci-lint-test-and-build-strategy). |
 
@@ -61,7 +61,12 @@
 
 ### 2.3 Approximate scale
 
-On the order of **~130+ tests** (exact count may drift). Full run is **fast** (seconds), suitable for pre-push.
+On the order of **~190+ tests** (exact count may drift). Full run is **fast** (seconds), suitable for pre-push.
+
+### 2.4 Auth module (`lib/auth.ts`)
+
+- **`getAppUser` / `getActiveAppUser`** — Not unit-tested in isolation (Clerk `currentUser()` + Prisma). **Protected route behavior** (e.g. **401** when unauthenticated, soft-delete rejection via `deletedAt`) is covered by **`app/app/api/**/route.test.ts`** files that **`vi.mock("@/lib/auth")`** and drive `getActiveAppUser` / `getActiveAppUserMock`.
+- **`isAdmin`** — Unit tests in **`lib/auth.test.ts`** (`ADMIN_EMAILS` matching, case-insensitivity).
 
 ---
 
@@ -99,10 +104,12 @@ Mocks:
 
 - `benchmark-utils`, `date-utils`, and parts of `amortization` use **`vi.useFakeTimers` / `setSystemTime`** with **local `Date` constructors** where UTC ISO strings caused flakiness — appropriate fix; keep that discipline when adding more time-based tests.
 
-### 3.4 Coverage reports
+### 3.4 Coverage reports and thresholds
 
-- `npm run test:coverage` instruments **listed** files only (not the entire `app/` tree), which keeps reports **actionable** rather than flooding with untested routes at 0%.
-- **No enforced thresholds** yet — CI does not fail on coverage %; intentional early-stage, but worth revisiting once `lib/metrics` and `amortization` are stable.
+- `npm run test:coverage` instruments **listed** files in `app/vitest.config.ts` (not the entire `app/` tree), which keeps reports **actionable**.
+- **Aggregate thresholds** (v8, across included files): **statements ≥ 80%**, **lines ≥ 80%**, **branches ≥ 58%**, **functions ≥ 78%**. Running `vitest run --coverage` **fails** if thresholds are not met.
+- **CI:** GitHub Actions runs **`npm run test`** without coverage (fast PR signal). Run **`npm run test:coverage`** locally or add a separate CI job when you want to enforce coverage on every push.
+- **`lib/plans.ts`** is in the coverage include set and covered by **`lib/plans.test.ts`** (tier limits, `getEffectiveTier`, `canAddProperty` / `canAddDeal`).
 
 ### 3.5 CI: lint, test, and build strategy
 
@@ -244,6 +251,9 @@ Mocks:
 | 2026-03-18 | **Phase 1:** CI runs `npm run lint`; ESLint fix in `add-property-wizard` (deferred setState via `queueMicrotask`); §3.5 documents why `npm run build` stays off CI; executive summary updated. |
 | 2026-03-18 | **Phase 2:** `lib/test/fixtures/metrics-golden.ts` + `metrics-golden.test.ts`; amortization extra-payoff edge tests; `POST` 403 `PLAN_LIMIT_REACHED` tests for properties + deals (`mockFreeTierUser`). |
 | 2026-03-19 | **Phase 3 (optional):** Husky **pre-commit** + **pre-push** at repo root run `npm run lint` + `npm run test` from `app/`; see `docs/setup/run-and-smoke-test.md` (Git hooks). |
+| 2026-03-30 | **Testing hardening Phase 1 (P0):** Colocated Vitest for `POST /api/billing/webhook`, `POST /api/billing/create-checkout-session`, `GET /api/portfolio/summary`, `GET /api/export/portfolio`, `POST /api/account/delete`, `POST /api/account/delete-permanent` — mocks only; assertions aligned with [`docs/internal/api-list-contract.md`](../internal/api-list-contract.md) slice semantics and route contracts. See `docs/tasks.md` § Testing hardening. |
+| 2026-03-30 | **Testing hardening Phase 2 (P1):** Colocated Vitest for `POST /api/import/portfolio`, `GET`/`PATCH`/`DELETE /api/deals/[id]`, `GET /api/properties/[id]/metrics` — import: success, 400 no file, 403 at cap, 429; deals: auth/404/400/PATCH/DELETE; metrics: response equals `computePropertyMetrics` for same fixture. See `docs/tasks.md` § Testing hardening. |
+| 2026-03-30 | **Testing hardening Phase 3 (P2):** `lib/plans.test.ts` (table-driven tier limits); `lib/auth.test.ts` for `isAdmin` only; `vitest.config.ts` coverage **include** paths corrected to `app/app/api/...` + Phase 1–2 routes; **aggregate coverage thresholds** (statements/lines 80%, branches 58%, functions 78%). §2.4 auth strategy; §3.4 thresholds. |
 
 ---
 
