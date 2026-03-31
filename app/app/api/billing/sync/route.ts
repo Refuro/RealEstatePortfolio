@@ -32,7 +32,6 @@ export async function GET() {
       customer: user.stripeCustomerId,
       limit: 1,
       status: "all",
-      expand: ["data.status"],
     });
 
     const sub = subscriptions.data[0];

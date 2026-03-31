@@ -36,8 +36,10 @@ Format:
 Examples:
 - Google search spreadsheet ad:
   - `utm_source=google&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=search_spreadsheet_v1`
-- Meta portfolio ad:
-  - `utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_portfolio_v2`
+- Meta prospecting (portfolio-first — use one `utm_content` per ad/creative):
+  - `utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_spreadsheet_v1`
+  - `utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_portfolio_v1`
+  - `utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_dealworkflow_v1`
 - Retargeting ad:
   - `utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=retarget_nocard_v1`
 
@@ -354,47 +356,179 @@ template
 |---|---|---|
 | Spreadsheet Alternative | `search_spreadsheet_v1` | `/` |
 | Portfolio Tracking | `search_portfolio_v1` | `/` |
-| Investment Property Calculator | `calc_control_v1` | `/investment-property-calculator` |
-| Rental Analysis Calculator | `calc_control_v1` | `/investment-property-calculator` |
+| Investment Property Calculator | `calcu_control_v1` | `/investment-property-calculator` |
+| Rental Analysis Calculator | `calcu_control_v1` | `/investment-property-calculator` |
 | Deal Analyzer High Intent | `search_dealanalyzer_v1` | `/investment-property-calculator` |
 
 To run the paid variant test, duplicate Ad Group C and change `utm_content=calc_paid_v1` with landing `/lp/investment-property-calculator`.
 
 ---
 
-## 4) Meta prospecting build
+## 4) Meta prospecting build — step-by-step
 
-## 4.1 Campaign and ad sets
+**Positioning for this channel:** Portfolio tracker / landlord workflow — **not** the standalone calculator. Early tests showed weak signup conversion on calculator-led traffic; keep Meta landing on **`/`** (or `/pricing` only for price-specific creative). Do **not** use `/investment-property-calculator` for this Meta round.
 
-Campaign:
-- `Meta | Prospecting | Paid Test 2026Q1`
+### How Meta Ads is structured (read this first)
 
-Ad sets:
-- `Landlord_Investing_Interests`
-- `BRRR_HouseHack_Interests`
-- `Lookalike_WebVisitors` (if seed size is sufficient)
+```
+Account
+└── Campaign  ← objective, budget, special ad category (e.g. Housing in US)
+    └── Ad set  ← audience, placements, optimization event
+        └── Ad  ← creative + primary text + destination URL + UTM
+```
 
-## 4.2 Creative pack
+**You will create 1 campaign with 3 ad sets.** Each ad set = one audience + a small set of ads that share the same theme. All prospecting ads land on the **marketing home** with distinct `utm_content` values so PostHog can attribute angles.
 
-Minimum launch pack:
-- 2 static images (dashboard + deal analyzer)
-- 1 short product walkthrough (if available)
-- 3 primary texts (angles below)
+---
 
-Angle 1 (spreadsheet replacement):
-- "Still tracking your rentals in a spreadsheet? Veld helps you see equity, debt, and cash flow in one place."
+### 4.1 Create Campaign: Portfolio-first Prospecting
 
-Angle 2 (portfolio clarity):
-- "Know where your portfolio stands today. Track property-level and portfolio-level metrics without spreadsheet sprawl."
+In Meta Ads Manager: **+ Create** → **Campaign**
 
-Angle 3 (deal underwriting):
-- "Before buying your next property, run the deal math in one workflow and compare scenarios."
+Settings to enter:
+- **Buying type:** Auction
+- **Campaign objective:** **Sales** (preferred once Pixel can optimize) or **Traffic** (acceptable for a short learning phase if conversion volume is thin)
+- **Campaign name:** `Meta | Prospecting | Paid Test 2026Q1`
+- **Special ad categories:** **Housing** (United States) — required when advertising housing opportunities or related services; confirm with Meta’s current housing-ads policy for your exact copy/creative
+- **Budget:** daily amount from Section 1 (or use Advantage+ campaign budget and set ad set budgets to $0 if you consolidate at campaign level)
+- **A/B test:** off for v1 unless you are explicitly testing one variable
 
-CTA:
-- `Start free`
+**Conversion / performance goal (website):**
+- **Performance goal:** Maximize **conversions** (e.g. Complete registration or a Pixel custom event aligned with signup) when Events Manager has stable signal; otherwise Maximize **landing page views** or **link clicks** until the account has enough events
+- **Attribution:** Use the same attribution window your finance reporting expects (e.g. 7-day click / 1-day view) and keep it stable for the test
 
-Landing:
-- `/`
+**Save — then create ad sets inside this campaign.**
+
+---
+
+### 4.2 Ad Set A — Landlord & rental investing interests
+
+**Ad set name:** `Landlord_Investing_Interests`
+
+Suggested settings:
+- **Geography:** match Google (e.g. United States)
+- **Age:** 25–64 (adjust if your product skews older)
+- **Detailed targeting:** stack interests such as rental property, real estate investing, landlord, passive income, property management (pick concrete interest nodes in the UI; avoid over-narrowing on day one)
+- **Languages:** English
+- **Placements:** **Advantage+ placements** (recommended for v1) — or manual: Facebook Feed, Instagram Feed, Reels, Stories if you need control
+- **Optimization:** Align with campaign (conversions vs landing page views)
+- **Frequency:** monitor; if frequency climbs above ~3–4 in week one with weak CTR, refresh creative before raising budget
+
+**Ads to create (minimum 2 per ad set):** combine **static images** (dashboard, portfolio summary) with the copy blocks below. Use **one destination URL per primary angle** so reporting stays clean.
+
+#### Ad A1 — Spreadsheet replacement (primary text + link)
+
+**Primary text options (pick one per ad, or rotate):**
+```
+Still running your rentals from a spreadsheet? Veld pulls equity, debt, and cash flow into one dashboard so you stop reconciling tabs.
+```
+```
+Replace rental spreadsheet chaos with one workspace. See every property’s performance and your portfolio rollups in minutes — free to start.
+```
+
+**Headline (link title):**
+```
+Replace Your Rental Spreadsheet
+```
+
+**Description (optional):**
+```
+Portfolio dashboard for landlords. Free plan.
+```
+
+**CTA button:** `Sign up` or `Learn more`
+
+**Website URL:**
+```
+https://veldportfolio.com/?utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_spreadsheet_v1
+```
+
+#### Ad A2 — Portfolio clarity
+
+**Primary text:**
+```
+Know where your portfolio stands today — not after you rebuild the model. Property-level and portfolio-level metrics in one place.
+```
+
+**Headline:**
+```
+Your Rental Portfolio In One View
+```
+
+**Description:**
+```
+Track cash flow and equity across properties.
+```
+
+**Website URL:**
+```
+https://veldportfolio.com/?utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_portfolio_v1
+```
+
+---
+
+### 4.3 Ad Set B — BRRR / house hack interests
+
+**Ad set name:** `BRRR_HouseHack_Interests`
+
+Targeting: interests related to BRRR, house hacking, fix-and-hold, small multifamily (choose specific interest nodes in Ads Manager). Geography and age same as Ad Set A unless you split-test.
+
+**Ad B1 — Stack & workflow (not a calculator pitch)**
+
+**Primary text:**
+```
+Scaling from one house hack to a small portfolio? Keep assumptions, debt, and cash flow in one workflow so you compare the next deal without losing context.
+```
+
+**Headline:**
+```
+Built For Growing Investors
+```
+
+**Website URL:**
+```
+https://veldportfolio.com/?utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_dealworkflow_v1
+```
+
+**Ad B2 — Optional second creative:** same URL and angle, different hook (e.g. stress “one workspace” vs “compare scenarios”) — keep landing on `/`.
+
+---
+
+### 4.4 Ad Set C — Lookalike (website visitors)
+
+**Ad set name:** `Lookalike_WebVisitors`
+
+**Only enable if** your seed audience (e.g. site visitors 180d or purchasers) meets Meta’s minimum size; otherwise fold budget back into Ad Set A per `paid-ads-test-plan.md`.
+
+- **Source:** Custom audience from website (Pixel) or customer list if compliant
+- **Lookalike %:** start 1–3% in US; expand only if CPA is healthy
+- **Creatives:** reuse top-performing ads from Ad Set A or B; keep **`utm_content`** distinct for reporting, e.g. `meta_landing_lookalike_v1`:
+```
+https://veldportfolio.com/?utm_source=meta&utm_medium=paid&utm_campaign=paid_test_2026q1&utm_content=meta_landing_lookalike_v1
+```
+
+---
+
+### 4.5 Creative pack checklist (minimum)
+
+- **2+ static images:** dashboard / portfolio view; avoid “calculator only” screenshots as the hero unless testing later
+- **1 short video or GIF** (optional): 15s screen walkthrough of “add property → see portfolio”
+- **3 angles mapped to UTMs:** spreadsheet replacement (`meta_landing_spreadsheet_v1`), portfolio clarity (`meta_landing_portfolio_v1`), deal workflow / growth (`meta_landing_dealworkflow_v1`)
+
+---
+
+### 4.6 Meta vs Google: cost and intent (directional)
+
+Use as guardrails, not guarantees — **geo, match type, creative, and season** move numbers more than “Meta vs Google” in the abstract.
+
+| Dimension | Google Search (this account’s setup) | Meta prospecting |
+| --- | --- | --- |
+| **Auction** | Keyword intent; pay per click | Interest/lookalike + placements; often CPM-heavy delivery |
+| **Typical CPC** | Often **higher** on tight RE/investor queries | Often **lower** cold CPC than Search, but **quality varies** |
+| **Intent at click** | Usually **higher** (active search) | Usually **lower** (interruption / discovery) |
+| **What to compare** | **Cost per signup** and **cost per `property_created`** — not CPC alone | Same |
+
+**Plain summary:** Meta often looks “cheaper per click” than Google Search for cold traffic, but **cheaper clicks do not mean cheaper customers** until your funnel proves it. Expect to buy **more impressions** to earn a conversion; judge the channel on **CPA to your north-star events**, not on CPC.
 
 ---
 
@@ -426,7 +560,7 @@ Meta campaign naming:
 
 Ad creative naming:
 - `<channel>_<angle>_v<version>`
-  - e.g., `meta_spreadsheet_v1`
+  - e.g., `meta_landing_spreadsheet_v1` (matches `utm_content`)
   - e.g., `search_dealanalyzer_v2`
 
 ---
@@ -436,6 +570,8 @@ Ad creative naming:
 - [ ] UTM links validated in browser
 - [ ] Conversion events mapped in platforms where possible
 - [ ] Daily spend caps match selected tier
-- [ ] Negative keyword list added
+- [ ] **Google:** Negative keyword list added
+- [ ] **Meta:** Housing special ad category + destination URLs all point to `/` (or `/pricing` for price-led only) — no calculator URL for this Meta round
+- [ ] **Meta:** Pixel / Events Manager aligned with optimization goal (or learning goal set to landing page views if signal is thin)
 - [ ] Retargeting exclusions configured
 - [ ] Two creatives minimum per angle
