@@ -2,7 +2,7 @@
  * Public changelog entries. Shown on `/changelog`.
  *
  * Process: `docs/launch/changelog-process.md` — new **release day** = new object at the
- * **top**; **multiple deploys the same day** = add bullets to that day’s entry (no duplicate dates).
+ * **top**; **multiple deploys the same day** = add bullets to that day's entry (no duplicate dates).
  */
 export type ChangelogEntry = {
   /** ISO date (YYYY-MM-DD) */
@@ -13,42 +13,50 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
-    date: "2026-03-30",
-    title: "Mobile layout polish, deal safety, and portfolio clarity",
+    date: "2026-03-31",
+    title: "Calculators, deal vs portfolio, and portfolio print view",
     items: [
-      "Mobile: More breathing room below the top bar and at the bottom of the screen (safe-area) so content isn’t flush against the edges.",
-      "Deal analyzer: Your browser can warn you before leaving the page when you have unsaved changes.",
-      "Mobile tool shells: Extra padding in footers so action areas and helper text aren’t cramped at the bottom of cards.",
-      "Privacy policy: Clearer emphasis for PostHog—what runs in the browser after cookie consent vs. server-side product events (e.g. billing).",
-      "Portfolio summary and CSV export: Clear counts when your account has more properties than your plan includes in rolled-up totals—so numbers aren’t mistaken for your full portfolio.",
+      "Added a calculators hub with BRRRR, STR vs LTR, and fix-and-flip. Same tools available under Calculators in the sidebar when signed in.",
+      "STR vs LTR: compare short-term and long-term rental cash flow on the same financing.",
+      "Fix and flip: purchase + rehab + hold + sale → net profit, ROI, annualized return.",
+      "Saved deal view now shows how the deal compares to your portfolio (cap rate, CoC, DSCR, cash flow).",
+      "Print-friendly portfolio summary from the dashboard — use browser print / Save as PDF.",
+      "Rent and value quota warnings only show when you're actually close to the limit.",
+      "Vercel Web Analytics (visitor and page views in the Vercel dashboard) when you accept optional analytics — see privacy policy.",
+    ],
+  },
+  {
+    date: "2026-03-30",
+    title: "Mobile spacing, unsaved-changes warning, plan truncation clarity",
+    items: [
+      "Fixed top/bottom safe-area spacing on mobile so content isn't jammed against screen edges.",
+      "Deal analyzer warns before you navigate away with unsaved changes.",
+      "Portfolio totals now show how many properties are included when your plan truncates the count.",
     ],
   },
   {
     date: "2026-03-28",
-    title: "Vacant-rent workflow and benchmark clarity",
+    title: "Vacant property handling",
     items: [
-      "New rented/not-rented toggle in add/edit property flows with clearer vacant-state messaging.",
-      "When marked not rented, rent is treated as $0 and benchmark comparisons are hidden to avoid misleading rent-vs-market labels.",
-      "Rent UX polish: required markers and estimate actions now match rented state, and review explicitly shows vacant rent semantics.",
+      "Added rented / not-rented toggle to add and edit property flows.",
+      "Vacant properties use $0 rent and hide market-rent comparisons.",
     ],
   },
   {
     date: "2026-03-20",
-    title: "Product updates & launch readiness",
+    title: "Changelog, analytics, and status page",
     items: [
-      "Public changelog (this page) for release notes and SEO.",
-      "PostHog product analytics for funnel insights.",
-      "Richer analytics: subscription lifecycle and plan-limit signals, CSV import outcomes, person properties for plan tier and portfolio counts.",
-      "Docs: uptime monitoring for production health; public status: https://stats.uptimerobot.com/Z6ScA8Ip37.",
+      "Shipped this changelog.",
+      "Added product analytics (PostHog) for funnel visibility — see privacy policy for details.",
+      "Uptime status: https://stats.uptimerobot.com/Z6ScA8Ip37.",
     ],
   },
   {
     date: "2026-03",
-    title: "Portfolio experience & quality",
+    title: "Initial launch",
     items: [
-      "Unified add/edit property flows, property Overview & Details, deal analyzer and mortgage modeling.",
-      "Stripe billing (Free, Investor, Pro), CSV import/export, rent/value benchmarks.",
-      "Rate limits, health endpoint, Sentry error reporting, CI lint + tests.",
+      "Property tracking, deal analyzer, mortgage modeling, scenario projections.",
+      "Plans and billing (Free, Investor, Pro), CSV import/export, rent and value estimates.",
     ],
   },
 ];

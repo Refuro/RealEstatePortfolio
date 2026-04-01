@@ -3,6 +3,25 @@
  * Module G — principal vs interest by month, remaining balance over time.
  */
 
+/** Dollar-scale tolerance for P&I vs monthly interest comparisons. */
+export const AMORTIZATION_COMPARISON_EPSILON = 1e-4;
+
+/**
+ * True when the P&I portion is strictly below monthly interest on the balance
+ * (unpaid interest would capitalize — we do not model that; callers should reject or skip schedules).
+ * `annualInterestRate` is a decimal (e.g. 0.06 for 6%).
+ */
+export function isNegativeAmortizingPayment(
+  pi: number,
+  balance: number,
+  annualInterestRate: number
+): boolean {
+  if (balance <= 0 || pi <= 0) return false;
+  const monthlyRate = annualInterestRate / 12;
+  const interestDue = balance * monthlyRate;
+  return pi < interestDue - AMORTIZATION_COMPARISON_EPSILON;
+}
+
 export type AmortizationRow = {
   monthIndex: number;
   date: string; // YYYY-MM-DD
@@ -47,12 +66,16 @@ export function generateAmortizationSchedule(input: AmortizationInput): Amortiza
   for (let monthIndex = 0; monthIndex < totalMonths && balance > 0; monthIndex++) {
     const periodStart = new Date(start.getFullYear(), start.getMonth() + monthIndex, 1);
     const interest = balance * monthlyRate;
+    if (monthlyPayment + AMORTIZATION_COMPARISON_EPSILON < interest) {
+      return [];
+    }
     let principal = monthlyPayment - interest;
 
     // Pay off remaining balance only when payment is sufficient (avoids fake drop to 0 when payment is too low)
     if (principal >= balance) {
       principal = balance;
     }
+    principal = Math.max(0, principal);
     const payment = principal + interest;
     balance = Math.max(0, balance - principal);
 
@@ -291,6 +314,11 @@ export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection 
     return { payoffDate: null, remainingAtTermEnd: null };
   }
 
+  const annualRate = Number(mortgage.interestRate);
+  if (isNegativeAmortizingPayment(payment, balance, annualRate)) {
+    return { payoffDate: null, remainingAtTermEnd: Math.round(balance) };
+  }
+
   const monthsSinceStartDate = Math.max(
     0,
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
@@ -304,11 +332,18 @@ export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection 
 
   for (let i = 0; i < remainingMonths && runningBalance > 0; i++) {
     const interest = runningBalance * monthlyRate;
+    if (payment + AMORTIZATION_COMPARISON_EPSILON < interest) {
+      return {
+        payoffDate: null,
+        remainingAtTermEnd: Math.round(runningBalance),
+      };
+    }
     let principal = payment - interest;
 
     if (principal >= runningBalance) {
       principal = runningBalance;
     }
+    principal = Math.max(0, principal);
     runningBalance = Math.max(0, runningBalance - principal);
 
     if (runningBalance <= 0) {
@@ -365,6 +400,9 @@ export function getMonthsToPayoffWithExtraStrict(
 
   if (balance <= 0 || payment <= 0) return null;
 
+  const annualRateStrict = Number(mortgage.interestRate);
+  if (isNegativeAmortizingPayment(payment, balance, annualRateStrict)) return null;
+
   const monthsSinceStartDate = Math.max(
     0,
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
@@ -377,8 +415,10 @@ export function getMonthsToPayoffWithExtraStrict(
   let runningBalance = balance;
   for (let i = 0; i < cap && runningBalance > 0; i++) {
     const interest = runningBalance * monthlyRate;
+    if (payment + AMORTIZATION_COMPARISON_EPSILON < interest) return null;
     let principal = payment - interest;
     if (principal >= runningBalance) principal = runningBalance;
+    principal = Math.max(0, principal);
     runningBalance = Math.max(0, runningBalance - principal);
     if (runningBalance <= 0) return i + 1;
   }
@@ -409,6 +449,9 @@ export function getMonthsToPayoffWithExtraWithTolerance(
 
   if (balance <= 0 || payment <= 0) return null;
 
+  const annualRateTol = Number(mortgage.interestRate);
+  if (isNegativeAmortizingPayment(payment, balance, annualRateTol)) return null;
+
   const monthsSinceStartDate = Math.max(
     0,
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
@@ -421,8 +464,10 @@ export function getMonthsToPayoffWithExtraWithTolerance(
   let runningBalance = balance;
   for (let i = 0; i < cap && runningBalance > 0; i++) {
     const interest = runningBalance * monthlyRate;
+    if (payment + AMORTIZATION_COMPARISON_EPSILON < interest) return null;
     let principal = payment - interest;
     if (principal >= runningBalance) principal = runningBalance;
+    principal = Math.max(0, principal);
     runningBalance = Math.max(0, runningBalance - principal);
     if (runningBalance <= 0) return i + 1;
   }

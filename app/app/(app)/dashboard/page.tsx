@@ -21,6 +21,7 @@ import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
 import { WorkspaceNavMobile } from "./workspace-nav-mobile";
+import { PaidIntentCheckoutBanner } from "@/components/growth/paid-intent-checkout-banner";
 
 export default async function DashboardPage({
   searchParams,
@@ -31,7 +32,8 @@ export default async function DashboardPage({
   if (!user) return null;
   const { onboarding } = await searchParams;
 
-  const propertyLimit = getPropertyLimit(getEffectiveTier(user));
+  const effectiveTier = getEffectiveTier(user);
+  const propertyLimit = getPropertyLimit(effectiveTier);
   const properties = await prisma.property.findMany({
     where: { userId: user.id },
     include: { mortgages: true },
@@ -103,43 +105,54 @@ export default async function DashboardPage({
 
   if (metrics.propertyCount === 0) {
     return (
-      <div>
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <h1 className="text-2xl font-semibold text-foreground">
-            Welcome to Veld
-          </h1>
-          <p className="mt-2 text-base text-muted">
-            Track your rental properties and see equity, cash flow, and more at a
-            glance.
-          </p>
-          <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/properties/new"
-              className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-            >
-              Add your first property
-            </Link>
-            <Link
-              href="/analyze"
-              className="rounded-md border border-border px-4 py-2 text-base font-medium text-foreground hover:bg-subtle"
-            >
-              Analyze a deal
-            </Link>
+      <>
+        <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
+        <div>
+          <div className="rounded-lg border border-border bg-card p-8 text-center">
+            <h1 className="text-2xl font-semibold text-foreground">
+              Welcome to Veld
+            </h1>
+            <p className="mt-2 text-base text-muted">
+              Start with a property to unlock your dashboard — equity, cash flow, and benchmarks in
+              one place.
+            </p>
+            <div className="mt-6 flex justify-center">
+              <Link
+                href="/properties/new"
+                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Add your first property
+              </Link>
+            </div>
+            <details className="group mt-6 text-left">
+              <summary className="cursor-pointer list-none text-center text-sm text-muted hover:text-foreground [&::-webkit-details-marker]:hidden">
+                <span className="underline decoration-border underline-offset-4">More ways to get started</span>
+              </summary>
+              <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                <Link
+                  href="/analyze"
+                  className="rounded-md border border-border px-4 py-2 text-base font-medium text-foreground hover:bg-subtle"
+                >
+                  Analyze a deal
+                </Link>
+              </div>
+              <p className="mt-3 text-center text-sm text-muted">
+                Have a spreadsheet?{" "}
+                <Link href="/settings#export" className="font-medium text-foreground hover:underline">
+                  Import from CSV
+                </Link>{" "}
+                in Settings.
+              </p>
+            </details>
           </div>
-          <p className="mt-4 text-sm text-muted">
-            Have a spreadsheet?{" "}
-            <Link href="/settings#export" className="font-medium text-foreground hover:underline">
-              Import from CSV
-            </Link>{" "}
-            in Settings.
-          </p>
         </div>
-      </div>
+      </>
     );
   }
 
   return (
     <div>
+      <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
       <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
       {onboarding === "first-property" && (
         <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
@@ -206,6 +219,12 @@ export default async function DashboardPage({
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
               Open Mortgage workspace
+            </Link>
+            <Link
+              href="/export/portfolio-summary"
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Print portfolio summary
             </Link>
           </div>
         </div>

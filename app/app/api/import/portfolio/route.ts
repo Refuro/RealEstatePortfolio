@@ -10,6 +10,7 @@ import {
 } from "@/lib/rate-limit";
 import { getPropertyLimit, canAddProperty, getEffectiveTier } from "@/lib/plans";
 import { parseRow, type ImportRow } from "@/lib/import/csv-parser";
+import { getImportMortgageValidationError } from "@/lib/import/validate-import-mortgage";
 
 export async function POST(req: NextRequest) {
   const user = await getActiveAppUser();
@@ -64,6 +65,7 @@ export async function POST(req: NextRequest) {
   const canAdd = canAddProperty(tier, propertyCount);
 
   const validRows: ImportRow[] = [];
+  const validRowNumbers: number[] = [];
   const errors: { row: number; message: string }[] = [];
 
   for (let i = 0; i < rows.length; i++) {
@@ -73,6 +75,7 @@ export async function POST(req: NextRequest) {
       errors.push({ row: rowNum, message: result.error });
     } else {
       validRows.push(result.data);
+      validRowNumbers.push(rowNum);
     }
   }
 
@@ -113,26 +116,47 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Determine which rows to import
-  let rowsToImport: ImportRow[];
+  // Determine which rows to import (preserve CSV line numbers for mortgage validation errors)
+  type RowWithLine = { r: ImportRow; csvRow: number };
+  let rowsWithLines: RowWithLine[];
   if (selectedIndicesRaw) {
     const rawIndices = selectedIndicesRaw
       .split(",")
       .map((s) => parseInt(s.trim(), 10))
       .filter((n) => Number.isInteger(n) && n >= 0 && n < validRows.length);
     const indices = [...new Set(rawIndices)].sort((a, b) => a - b);
-    rowsToImport = indices.map((i) => validRows[i]);
-    // Enforce limit: only import up to slotsRemaining
-    rowsToImport = rowsToImport.slice(0, slotsRemaining);
+    rowsWithLines = indices
+      .slice(0, slotsRemaining)
+      .map((i) => ({ r: validRows[i], csvRow: validRowNumbers[i] }));
   } else {
-    rowsToImport = validRows.slice(0, slotsRemaining);
+    rowsWithLines = validRows
+      .slice(0, slotsRemaining)
+      .map((r, i) => ({ r, csvRow: validRowNumbers[i] }));
+  }
+
+  const mortgageErrors: { row: number; message: string }[] = [];
+  const allowedRows: RowWithLine[] = [];
+  for (const { r, csvRow } of rowsWithLines) {
+    const msg = getImportMortgageValidationError(r);
+    if (msg) {
+      mortgageErrors.push({ row: csvRow, message: msg });
+    } else {
+      allowedRows.push({ r, csvRow });
+    }
+  }
+
+  if (allowedRows.length === 0) {
+    return NextResponse.json({
+      imported: 0,
+      errors: [...errors, ...mortgageErrors],
+    });
   }
 
   let imported = 0;
 
   await prisma.$transaction(async (tx) => {
-    for (let i = 0; i < rowsToImport.length; i++) {
-      const r = rowsToImport[i];
+    for (let i = 0; i < allowedRows.length; i++) {
+      const r = allowedRows[i].r;
       const prop = await tx.property.create({
         data: {
           userId: user.id,
@@ -194,12 +218,15 @@ export async function POST(req: NextRequest) {
   await recordRateLimit(identifier, "import:portfolio");
 
   const limitErrors =
-    rowsToImport.length < validRows.length
+    rowsWithLines.length < validRows.length
       ? errors.concat({
           row: 0,
           message: `Only ${imported} of ${validRows.length} valid rows imported (property limit ${limit}).`,
         })
       : errors;
 
-  return NextResponse.json({ imported, errors: limitErrors });
+  return NextResponse.json({
+    imported,
+    errors: [...limitErrors, ...mortgageErrors],
+  });
 }

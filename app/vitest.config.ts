@@ -17,6 +17,8 @@ export default defineConfig({
         "lib/metrics/**/*.ts",
         "lib/amortization.ts",
         "lib/plans.ts",
+        "lib/str-ltr-calculator.ts",
+        "lib/fix-and-flip-calculator.ts",
         "lib/benchmark-utils.ts",
         "lib/date-utils.ts",
         "lib/import/csv-parser.ts",

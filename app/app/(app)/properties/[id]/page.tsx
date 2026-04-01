@@ -55,6 +55,8 @@ export default async function PropertyDetailPage({
     .filter(Boolean)
     .join(", ");
 
+  const pageTitle = property.nickname?.trim() || address || "Property";
+
   const mortgageData = property.mortgages.map((m: MortgageItem) => {
     const projection = getPayoffProjection(m);
     return {
@@ -127,6 +129,9 @@ export default async function PropertyDetailPage({
         <PropertyActions propertyId={property.id} />
       </div>
 
+      <h1 className="text-2xl font-semibold text-foreground">{pageTitle}</h1>
+
+      <div className="mt-6">
       <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>
         <PropertyDetailTabs
           propertyId={property.id}
@@ -151,6 +156,7 @@ export default async function PropertyDetailPage({
           displayMode={displayMode}
         />
       </Suspense>
+      </div>
     </div>
   );
 }

@@ -48,7 +48,7 @@ Order by source finding severity (from the audit that produced the task):
 3. Medium
 4. Low
 
-Within same severity, order by domain (Security first, then UX, Performance, Reliability, Data, Growth, Governance, Math, Business).
+Within same severity, order by domain (Security first, then UX, Performance, Reliability, Data, Growth, SEO, Governance, Math, Business).
 
 ### 3.4 Group
 
@@ -61,6 +61,7 @@ Group consolidated tasks by domain:
 - **Reliability** — Error boundaries, Sentry, health check, runbooks
 - **Data Integrity** — Import/export, schema, validation
 - **Growth** — Onboarding, funnel, conversion, screenshots
+- **SEO** — Metadata, sitemap/robots, canonicals, structured data, indexability
 - **Governance** — Rules, hooks, docs, stale references
 - **Math** — Projections, metrics, export columns
 - **Business** — Analytics, tests, changelog, launch
@@ -88,6 +89,7 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 - Data Integrity & Reconciliation
 - Business & Valuation
 - Growth Funnel & Activation
+- SEO (search & discovery)
 - Documentation
 - Legal & Compliance
 - AI Agent Governance
@@ -114,6 +116,9 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 ...
 
 ### Growth
+...
+
+### SEO
 ...
 
 ### Governance
@@ -146,6 +151,7 @@ Review the consolidated list above. Promote approved items to [docs/tasks.md](..
 | Security + AP1: "Add CSP" | Add baseline CSP (report-only mode) to `next.config.ts` |
 | Data Integrity + Math: "Add NOI and annual cash flow to export" | Add NOI and annual cash flow columns to portfolio export |
 | Feature + Growth: "Add product screenshots" | Add product screenshots to landing and pricing pages |
+| Performance + SEO: "Slow LCP on landing hero" | Optimize hero image / loading (Performance lead; SEO notes snippet impact) |
 
 ---
 
@@ -153,7 +159,7 @@ Review the consolidated list above. Promote approved items to [docs/tasks.md](..
 
 When the agent runs a full audit:
 
-1. Run all **13** lane processes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, Documentation, Legal/Compliance, Agent Governance). If a lane is intentionally skipped (e.g. unchanged codebase for Code), note it in the synthesis **Audits included** section.
+1. Run all **14** lane processes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, **SEO**, Documentation, Legal/Compliance, Agent Governance). If a lane is intentionally skipped (e.g. unchanged codebase for Code), note it in the synthesis **Audits included** section.
 2. Write each report to `docs/audits/<lane>/YYYY-MM-DD-*-audit.md`.
 3. Run this synthesis process.
 4. Write output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.

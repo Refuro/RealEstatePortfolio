@@ -9,7 +9,7 @@ import { BillingPortalButton } from "../settings/billing-portal-button";
 export const metadata: Metadata = {
   title: "Plans & billing",
   description:
-    "Veld Portfolio plans: Free, Investor, and Pro. Upgrade to track more properties.",
+    "Veld Portfolio plans: property and saved-deal limits by tier (Free, Investor, Pro). Upgrade for more capacity.",
 };
 
 export default async function PlansPage() {
@@ -37,7 +37,10 @@ export default async function PlansPage() {
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Plans & billing</h1>
       <p className="mt-1 text-base text-muted">
-        Choose a plan based on how many properties you track.
+        Each tier includes limits on{" "}
+        <span className="font-medium text-foreground">tracked properties</span> and{" "}
+        <span className="font-medium text-foreground">saved deals</span> from the Deal Analyzer.
+        Pick the cap that fits your portfolio.
       </p>
       {user && (
         <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">

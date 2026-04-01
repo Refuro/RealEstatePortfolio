@@ -2,7 +2,7 @@
 
 Recorded as we build. For manual security steps (e.g. production keys, webhooks), see [manual-steps.md](../setup/manual-steps.md).
 
-**Last reviewed:** 2026-03-28  
+**Last reviewed:** 2026-03-31  
 **Review cadence:** Monthly (or after material auth/billing/security changes)
 
 ---
@@ -28,17 +28,29 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 
 ---
 
-## Security headers + rate limiting (March 2025)
+## Security headers + CSP + `ApiRateLimitEntry` (2026-03)
 
-- **Security headers** — Added via `next.config.ts` async `headers()` for `/:path*`: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera, microphone, geolocation disabled).
-- **Rent estimate rate limit** — GET `/api/estimates/rent` is limited to 20 calls per user per hour. Uses `RentCastApiCall` table count; returns 429 with `{ error: "Rate limit exceeded. Try again later." }` when exceeded. DB-based, no new dependencies.
+- **Security headers** — `app/next.config.ts` `headers()` for `/:path*`: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera, microphone, geolocation disabled).
+- **CSP** — Same file builds a `Content-Security-Policy` string (Clerk, Stripe checkout iframes, Cloudflare Turnstile if used, `connect-src https:`, etc.). Default deployment uses **`Content-Security-Policy-Report-Only`** unless `CSP_ENFORCEMENT=true`, in which case the enforced **`Content-Security-Policy`** header is sent. Optional `report-uri` to `/api/csp-report` when `NEXT_PUBLIC_APP_URL` is set. Full directive list: [security-audit.md](./security-audit.md) §5.
+- **Route rate limits** — Sensitive routes use `lib/rate-limit.ts` (`RATE_LIMITS`, rolling 1h, `ApiRateLimitEntry`). Table of actions: [security-audit.md](./security-audit.md) §6.
 
 ---
 
-## Security audit (March 2025)
+## RentCast hourly quota (shared pool)
 
-- See [security-audit.md](./security-audit.md) for full assessment.
-- **Summary:** Auth, authorization, input validation, and secrets handling are strong. Gaps: no rate limiting, no security headers, RentCast estimate could be abused. Prioritize rate limiting and security headers.
+**Canonical doc:** [reference/rentcast-quota.md](../reference/rentcast-quota.md).
+
+- **Limits by tier:** `RENTCAST_HOURLY_LIMITS` in `app/lib/plans.ts` — **Free: 5**, **Investor: 10**, **Pro: 20** successful upstream calls per rolling hour (not the same as legacy “20/hour for rent only”).
+- **Shared counter:** Each successful RentCast-backed response increments one `RentCastApiCall` row. **Rent estimate, value estimate, and benchmark refresh** all count toward the **same** hourly cap for the user.
+- **Routes:** `GET /api/estimates/rent`, `GET /api/estimates/value`, `POST /api/properties/[id]/benchmark/refresh` (after successful provider response). Failed calls do not insert rows and do not consume quota.
+- **UI:** `GET /api/rentcast-quota` + `RentCastQuotaHint` surface remaining uses before 429.
+
+---
+
+## Security audit (rolling)
+
+- See [security-audit.md](./security-audit.md) for full assessment and CSP/rate-limit tables.
+- **Summary:** Auth, authorization, input validation, secrets, webhooks, and deleted-account controls remain strong. CSP and multiple rate-limit layers are in place; continue monitoring CSP reports before enforcing in production.
 
 ---
 
@@ -55,6 +67,7 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 ## Portfolio export abuse control (2026-03)
 
 - **GET `/api/export/portfolio`** — Rate limited via `ApiRateLimitEntry` action `export:portfolio` (15 requests per user per rolling hour; see `lib/rate-limit.ts`). Returns 429 when exceeded. Count is recorded only after a successful CSV response.
+- **GET `/api/export/portfolio-summary`** — Same portfolio aggregates as `GET /api/portfolio/summary`, rate limited via action `export:portfolio_summary` (15 requests per user per rolling hour). Used by the print-friendly portfolio summary page.
 
 ---
 

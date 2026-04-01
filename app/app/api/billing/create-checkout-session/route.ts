@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { getPublicAppBaseUrlForBilling } from "@/lib/env";
 import {
   checkRateLimit,
   getRateLimitIdentifier,
@@ -49,8 +51,7 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getPublicAppBaseUrlForBilling();
 
   try {
     const stripe = getStripe();
@@ -108,6 +109,10 @@ export async function POST(request: NextRequest) {
         timestamp: new Date().toISOString(),
       })
     );
+    Sentry.captureException(err instanceof Error ? err : new Error(String(err)), {
+      tags: { area: "billing", route: "billing/create-checkout-session" },
+      extra: { userId: user.id, plan, billingCycle },
+    });
     return NextResponse.json(
       { error: "Failed to create checkout session" },
       { status: 500 }

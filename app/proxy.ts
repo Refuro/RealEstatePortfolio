@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   "/terms",
   "/pricing",
   "/investment-property-calculator",
+  "/tools(.*)", // hub, /tools/brrr, /tools/str-vs-ltr, /tools/fix-and-flip, …
   "/lp/investment-property-calculator",
   "/changelog",
   "/contact",

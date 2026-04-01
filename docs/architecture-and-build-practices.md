@@ -215,7 +215,7 @@ Apply these when the task matches the context:
 
 **When adding a new page:**
 - [ ] **Public page (guest-accessible):** Add route to `proxy.ts` `isPublicRoute` so unauthenticated users can access it.
-- [ ] **SEO:** Add `metadata` with `title`, `description`, `alternates.canonical`, and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Add to `sitemap.ts` if it should be indexed.
+- [ ] **SEO:** Add `metadata` with `title`, `description`, `alternates.canonical`, and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Add to `sitemap.ts` if it should be indexed. Broader checks: [SEO audit process](process/seo-audit-process.md).
 - [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered.
 - [ ] **Design:** Use semantic tokens from `docs/policies/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
 - [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).

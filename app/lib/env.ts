@@ -38,3 +38,33 @@ export function assertStripeWebhookSecretForVercelDeploy(): void {
     );
   }
 }
+
+/**
+ * Stripe Checkout and Billing Portal success/cancel URLs use this origin.
+ * Fail fast on Vercel so production cannot silently fall back to localhost.
+ */
+export function assertPublicAppUrlForVercelDeploy(): void {
+  if (process.env.VERCEL !== "1") return;
+  const url = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (!url) {
+    throw new Error(
+      "NEXT_PUBLIC_APP_URL is required on Vercel (Stripe checkout success/cancel and portal return URLs). " +
+        "Add it in Vercel Project → Settings → Environment Variables. " +
+        "See app/.env.example and docs/setup/manual-steps.md."
+    );
+  }
+}
+
+/** Public site URL for billing redirects. Local dev may omit `NEXT_PUBLIC_APP_URL` (defaults to localhost). */
+export function getPublicAppBaseUrlForBilling(): string {
+  const raw = process.env.NEXT_PUBLIC_APP_URL?.trim();
+  if (process.env.VERCEL === "1") {
+    if (!raw) {
+      throw new Error(
+        "NEXT_PUBLIC_APP_URL is required at runtime on Vercel for billing URLs."
+      );
+    }
+    return raw.replace(/\/$/, "");
+  }
+  return raw?.replace(/\/$/, "") || "http://localhost:3000";
+}

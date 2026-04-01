@@ -3,16 +3,19 @@ import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
+import { SupportContactInstructions } from "@/components/legal/support-contact-instructions";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms of service for Veld Portfolio.",
+  description:
+    "Terms of Service for Veld Portfolio: using the portfolio analytics platform, accounts and data, Stripe subscriptions, refunds, cancellation, acceptable use, and liability limits.",
   alternates: { canonical: APP_URL + "/terms" },
   openGraph: {
     title: "Terms of Service | Veld Portfolio",
-    description: "Terms of service for Veld Portfolio.",
+    description:
+      "Terms of Service for Veld Portfolio: platform use, accounts, billing via Stripe, refunds, cancellation, and liability.",
     url: "/terms",
   },
 };
@@ -38,9 +41,19 @@ export default async function TermsPage() {
         <p className="mt-2 text-sm text-muted">
           Last updated: March 2026
         </p>
-        {/* TODO(legal): When operating entity is finalized (LLC vs sole proprietor), align the contracting party name and contact block with docs/business-launch-checklist.md before substantive edits to “we” / operator identity. */}
 
         <div className="mt-8 space-y-6 text-base text-foreground">
+          <section>
+            <h2 className="text-lg font-semibold">Contracting party</h2>
+            <p>
+              The Service is operated by an individual doing business as{" "}
+              <strong>Veld Portfolio</strong> (&quot;we,&quot; &quot;us,&quot; &quot;our&quot;). You
+              may see that name in the app, on Stripe receipts, and in these Terms. If the business is
+              later operated through a registered entity (for example an LLC), we will update this
+              section to name that entity.
+            </p>
+          </section>
+
           <section>
             <h2 className="text-lg font-semibold">Agreement</h2>
             <p>
@@ -114,7 +127,8 @@ export default async function TermsPage() {
           <section>
             <h2 className="text-lg font-semibold">Contact</h2>
             <p>
-              For questions about these Terms, contact us at the support email in the app footer.
+              For questions about these Terms,{" "}
+              <SupportContactInstructions supportEmail={supportEmail} />
             </p>
           </section>
         </div>

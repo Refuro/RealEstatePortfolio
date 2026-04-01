@@ -1,8 +1,21 @@
 # Internal billing matrix — Veld Portfolio
 
-**Purpose:** Single reference for plan tiers, limits, RentCast quotas, Stripe configuration, and display pricing env vars. **Not** user-facing legal copy.
+**Purpose:** Single reference for plan tiers, limits, RentCast quotas, Stripe configuration, display pricing env vars, and **who owns marketing/pricing surfaces** (“commercial matrix”). **Not** user-facing legal copy.
 
 **Code sources of truth:** `app/lib/plans.ts` (limits + `RENTCAST_HOURLY_LIMITS`), `app/lib/stripe-config.ts` (price IDs), `app/lib/pricing-display.ts` (display amounts).
+
+---
+
+## Marketing & pricing ownership
+
+Update names when roles change. **Any** change to public dollar amounts must match Stripe live prices **and** optional `NEXT_PUBLIC_PRICE_*` in Vercel (see checklist below).
+
+| Surface | Typical owner | Notes |
+|---------|----------------|-------|
+| Public `/pricing`, marketing site pricing copy | *Assign (e.g. founder / PM)* | Align with `PRICING_DISPLAY` / `NEXT_PUBLIC_PRICE_*` |
+| In-app `/plans`, upgrade CTAs, paywall copy | *Assign (e.g. product)* | Same numbers as Stripe checkout |
+| Stripe Product/Price names & descriptions | *Assign (e.g. founder)* | Dashboard must match `STRIPE_PRICE_ID_*` env |
+| Env vars in Vercel (`STRIPE_*`, `NEXT_PUBLIC_PRICE_*`) | Engineering + whoever approves price changes | Run checklist on each price change |
 
 ---
 
@@ -42,3 +55,4 @@ Use before or immediately after promoting a build to production (Stripe live mod
 - `docs/internal/stripe-webhook-posthog-idempotency.md` — Webhook replay vs PostHog
 - `docs/internal/effective-tier-analytics.md` — Override vs Stripe tier
 - `docs/internal/api-list-contract.md` — Full `GET` lists vs plan UI caps
+- `docs/launch/posthog-growth-funnel.md` — PostHog funnel: signup → property → plan view → checkout → subscribed

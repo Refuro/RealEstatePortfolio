@@ -130,6 +130,24 @@ describe("parseRow", () => {
       expect(r.data.currentMonthlyRent).toBe(0);
     }
   });
+
+  it("parses export-style mortgage and escrow headers (round-trip with GET /api/export/portfolio)", () => {
+    const r = parseRow(
+      {
+        ...minimalRow,
+        "property type": "single_family",
+        units: "1",
+        "mortgage balance (stored sum)": "175000",
+        "escrow amount (first lien)": "350",
+      },
+      5
+    );
+    expect("error" in r).toBe(false);
+    if ("data" in r) {
+      expect(r.data.mortgageBalance).toBe(175000);
+      expect(r.data.escrowAmount).toBe(350);
+    }
+  });
 });
 
 describe("resolveImportRentForCreate (re-exported behavior)", () => {

@@ -34,10 +34,11 @@ Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning
 | **`.cursor/rules/data-integrity-audit-agent.mdc`** | Data-integrity audit command. Trigger phrases: "run data integrity audit". Writes to `docs/audits/data-integrity/`. |
 | **`.cursor/rules/business-valuation-audit-agent.mdc`** | Business/valuation audit command. Trigger phrases: "run business audit", "run valuation audit". Writes to `docs/audits/business/`. |
 | **`.cursor/rules/growth-funnel-audit-agent.mdc`** | Growth-funnel audit command. Trigger phrases: "run growth audit". Writes to `docs/audits/growth-funnel/`. |
+| **`.cursor/rules/seo-audit-agent.mdc`** | SEO audit command. Trigger phrases: "run SEO audit", "seo audit". Writes to `docs/audits/seo/`. |
 | **`.cursor/rules/agent-governance-audit-agent.mdc`** | AI-agent governance audit command. Trigger phrases: "run agent governance audit". Writes to `docs/audits/agent-governance/`. |
 | **`.cursor/rules/documentation-audit-agent.mdc`** | Documentation audit command. Trigger phrases: "run documentation audit", "run doc audit". Writes to `docs/audits/documentation/`. |
 | **`.cursor/rules/legal-compliance-audit-agent.mdc`** | Legal & compliance audit command. Trigger phrases: "run legal audit", "run compliance audit". Writes to `docs/audits/legal-compliance/`. |
-| **`.cursor/rules/full-audit-agent.mdc`** | Full audit command. Trigger phrases: "run full audit", "run all audits". Runs **13** lanes (including Mobile experience), then synthesis pass per `docs/process/full-audit-synthesis.md`. Outputs `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. |
+| **`.cursor/rules/full-audit-agent.mdc`** | Full audit command. Trigger phrases: "run full audit", "run all audits". Runs **14** lanes (including Mobile experience and SEO), then synthesis pass per `docs/process/full-audit-synthesis.md`. Outputs `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. |
 | **`.cursor/hooks.json`** | Declares the two hooks: `subagentStop` (script below) and `beforeShellExecution` (prompt-based risk policy for shell commands). |
 | **`.cursor/hooks/on-subagent-stop.sh`** | Script run when a subagent stops. If the subagent completed, it can output a `followup_message` so the PM is prompted to review. Uses `jq` if available, else grep fallback. |
 | **`.cursor/hooks/on-subagent-stop.ps1`** | PowerShell variant for Windows when Git Bash/WSL is not available. Edit `hooks.json` to use this path instead of the `.sh` script if needed. |
@@ -67,6 +68,8 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/process/data-integrity-audit-process.md` | Process for reconciliation/data integrity audits. |
 | `docs/process/business-valuation-audit-process.md` | Process for business/valuation audits. |
 | `docs/process/growth-funnel-audit-process.md` | Process for growth/activation audits. |
+| `docs/process/seo-audit-process.md` | Process for SEO (search & discovery) audits. |
+| `docs/audits/seo/` | Folder for SEO audit reports. |
 | `docs/process/agent-governance-audit-process.md` | Process for AI-agent governance audits. |
 | `docs/process/documentation-audit-process.md` | Process for documentation hygiene audits. |
 | `docs/process/legal-compliance-audit-process.md` | Process for legal/compliance reviews (not a substitute for counsel). |

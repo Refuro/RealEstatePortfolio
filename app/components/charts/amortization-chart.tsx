@@ -25,12 +25,14 @@ export type AmortizationRow = {
 export function AmortizationChart({ propertyId }: { propertyId: string }) {
   const [schedule, setSchedule] = useState<AmortizationRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [negativeAmortization, setNegativeAmortization] = useState(false);
 
   useEffect(() => {
     fetch(`/api/properties/${propertyId}/amortization`)
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data.schedule)) setSchedule(data.schedule);
+        setNegativeAmortization(Boolean(data.negativeAmortization));
       })
       .finally(() => setLoading(false));
   }, [propertyId]);
@@ -56,7 +58,11 @@ export function AmortizationChart({ propertyId }: { propertyId: string }) {
     <ChartWrapper
       title="Mortgage amortization — balance over time"
       isEmpty={isEmpty}
-      emptyMessage="Add a mortgage to this property to see the amortization schedule."
+      emptyMessage={
+        negativeAmortization
+          ? "P&I doesn’t cover monthly interest on the current balance. Update the mortgage so payment (after escrow) is at least the monthly interest—then the schedule can be shown."
+          : "Add a mortgage to this property to see the amortization schedule."
+      }
     >
       {loading && (
         <div className="flex h-full items-center justify-center text-sm text-muted">

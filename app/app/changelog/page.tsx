@@ -12,7 +12,7 @@ const description =
   "Release notes for Veld Portfolio: rental portfolio analytics, deal analysis, mortgage modeling, and investor-focused improvements. See what’s new.";
 
 export const metadata: Metadata = {
-  title,
+  title: { absolute: title },
   description,
   keywords: [
     "Veld Portfolio",

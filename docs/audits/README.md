@@ -14,6 +14,7 @@ Periodic AI-run audits of the product and codebase. Each lane has a process doc 
 | **Data Integrity & Reconciliation** | [data-integrity-audit-process.md](../process/data-integrity-audit-process.md) | [data-integrity/](data-integrity/) |
 | **Business & Valuation** | [business-valuation-audit-process.md](../process/business-valuation-audit-process.md) | [business/](business/) |
 | **Growth Funnel & Activation** | [growth-funnel-audit-process.md](../process/growth-funnel-audit-process.md) | [growth-funnel/](growth-funnel/) |
+| **SEO** (search & discovery) | [seo-audit-process.md](../process/seo-audit-process.md) | [seo/](seo/) |
 | **Documentation** | [documentation-audit-process.md](../process/documentation-audit-process.md) | [documentation/](documentation/) |
 | **Legal & Compliance** | [legal-compliance-audit-process.md](../process/legal-compliance-audit-process.md) | [legal-compliance/](legal-compliance/) |
 | **AI Agent Governance** | [agent-governance-audit-process.md](../process/agent-governance-audit-process.md) | [agent-governance/](agent-governance/) |
@@ -38,7 +39,7 @@ Do not leave partial lane renames merged, or audit commands and documentation wi
 
 - **Trigger:** Say "run full audit" or "run all audits".
 - **Flow:**
-1. Run all **13** audit lanes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, Documentation, Legal/Compliance, Agent Governance).
+1. Run all **14** audit lanes (Code, Math, Feature/UX, **Mobile experience**, Security, Performance/Cost, Reliability/Ops, Data Integrity, Business/Valuation, Growth Funnel, **SEO**, Documentation, Legal/Compliance, Agent Governance).
 2. After all reports are written, run the **synthesis pass** per [full-audit-synthesis.md](../process/full-audit-synthesis.md).
 3. Output: `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
 4. PM reviews synthesis and promotes approved items to [docs/tasks.md](../tasks.md).
@@ -54,6 +55,7 @@ Do not leave partial lane renames merged, or audit commands and documentation wi
 - **Data integrity audit:** Say "run data integrity audit".
 - **Business valuation audit:** Say "run business audit" or "run valuation audit".
 - **Growth funnel audit:** Say "run growth audit".
+- **SEO audit:** Say "run SEO audit" or "run seo audit".
 - **Documentation audit:** Say "run documentation audit" or "run doc audit".
 - **Legal/compliance audit:** Say "run legal audit" or "run compliance audit".
 - **Agent governance audit:** Say "run agent governance audit".
@@ -72,6 +74,7 @@ Examples:
 - `2026-03-19-security-audit.md`
 - `2026-03-19-business-valuation-audit.md`
 - `2026-03-19-documentation-audit.md`
+- `2026-03-19-seo-audit.md`
 - `2026-03-19-legal-compliance-audit.md`
 
 ## Cadence and triggers
@@ -88,11 +91,12 @@ Examples:
 | Data Integrity & Reconciliation | Monthly | Schema/import-export/API contract changes |
 | Business & Valuation | Quarterly | Pricing/packaging/strategic readiness updates |
 | Growth Funnel & Activation | Monthly | Onboarding, pricing CTA, or signup-flow changes |
+| SEO | Monthly | New indexable routes, sitemap/robots/metadata changes, or major marketing copy |
 | Documentation | Monthly | Large doc cleanup, doc reorg, or repeated stale-reference drift |
 | Legal & Compliance | Quarterly | Privacy/terms/cookie/billing/marketing-copy changes or pre-launch review |
 | AI Agent Governance | Monthly | `.cursor/rules`, hooks, or process workflow updates |
 
-For major launches, run at least: Security, Legal/Compliance, Growth Funnel, Reliability/Ops, Data Integrity, and Code audits in the same release window.
+For major launches, run at least: Security, Legal/Compliance, Growth Funnel, **SEO**, Reliability/Ops, Data Integrity, and Code audits in the same release window.
 
 ## After review
 
