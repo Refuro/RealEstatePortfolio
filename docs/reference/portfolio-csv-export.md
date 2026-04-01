@@ -2,6 +2,8 @@
 
 **Last updated:** 2026-04-01
 
+**In-app notice:** Settings → Import from CSV shows a short warning that **re-importing a file exported from a property with multiple mortgages** may not recreate every lien (see §Import compatibility and Round-trip vs lossy matrix below).
+
 This document describes the `GET /api/export/portfolio` CSV so exports are interpretable and multi-mortgage behavior is explicit.
 
 ## Property type

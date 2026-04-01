@@ -194,12 +194,21 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "deals:delete");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const { id } = await params;
@@ -210,6 +219,7 @@ export async function DELETE(
 
   try {
     await prisma.savedDeal.delete({ where: { id, userId: user.id } });
+    await recordRateLimit(identifier, "deals:delete");
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Deal delete error:", err);

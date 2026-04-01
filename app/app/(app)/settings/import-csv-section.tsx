@@ -206,6 +206,14 @@ export function ImportCsvSection() {
       <p className="text-base text-muted">
         Import properties from a CSV file. Use the template to ensure correct format.
       </p>
+      <div
+        className="rounded-lg border border-border/80 bg-subtle/40 px-4 py-3 text-sm text-muted"
+        role="note"
+      >
+        <strong className="font-medium text-foreground">Multiple mortgages:</strong> one import row
+        creates at most one mortgage. If the property had several liens, add the remaining loans in
+        the property workspace after import, or treat a multi-lien export as reporting-only.
+      </div>
       <div className="flex flex-wrap items-center gap-3">
         <input
           ref={fileInputRef}

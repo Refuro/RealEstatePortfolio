@@ -6,8 +6,14 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { FixAndFlipCalculator } from "@/components/marketing/fix-and-flip-calculator";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import {
+  CalculatorFaqJsonLd,
+  CalculatorFaqSection,
+} from "@/components/marketing/calculator-faq";
+import { FIX_AND_FLIP_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "Fix and Flip Calculator",
@@ -21,37 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-function FaqJsonLd() {
-  const payload = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "How do you calculate fix and flip profit?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Net profit is sale proceeds after selling costs and loan payoff, minus cash invested (down payment, rehab, interest-only payments during hold, and monthly carrying costs).",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is a good ROI for house flipping?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Targets vary by market and risk. Many investors compare return on cash to alternative uses of capital and minimum hurdle rates after accounting for taxes and contingencies.",
-        },
-      },
-    ],
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
-    />
-  );
-}
-
 export default async function FixAndFlipCalculatorPage() {
   const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
@@ -64,7 +39,7 @@ export default async function FixAndFlipCalculatorPage() {
       <LandingNav userId={userId} landingVariant="fix_flip_v1" />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <FaqJsonLd />
+          <CalculatorFaqJsonLd items={FIX_AND_FLIP_CALCULATOR_FAQ} />
           <nav className="text-sm text-muted">
             <Link href="/tools" className="hover:text-foreground hover:underline">
               Calculators
@@ -86,6 +61,8 @@ export default async function FixAndFlipCalculatorPage() {
           <div className="mt-8">
             <FixAndFlipCalculator showCta landingVariant="fix_flip_v1" />
           </div>
+
+          <CalculatorFaqSection items={FIX_AND_FLIP_CALCULATOR_FAQ} />
 
           <p className="mt-6 text-center text-sm text-muted">
             <Link href="/tools" className="font-medium text-foreground hover:underline">

@@ -38,6 +38,30 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ## Active tasks
 
+### Audit synthesis — Ship phase (2026-04-01 full audit)
+
+*Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md) **Ship** triage. *Completed by builder 2026-04-01.*
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Visible FAQ + JSON-LD** | Public calculator routes that emit `FAQPage` JSON-LD (`/investment-property-calculator`, `/tools/brrr`, `/tools/str-vs-ltr`, `/tools/fix-and-flip`) render a visible FAQ section whose **questions and answers match verbatim** the structured data (`lib/marketing/calculator-faqs.ts` single source of truth). |
+| 2 | **Canonical URLs via `getAppOrigin()`** | Marketing/legal/landing `metadata.alternates.canonical` and root `metadataBase` use `getAppOrigin()` from `lib/app-url.ts` (trailing-slash stripped), consistent with `sitemap.ts`. |
+| 3 | **DELETE rate limits** | `RATE_LIMITS` includes `properties:delete`, `deals:delete`, `properties:mortgage-delete` (60/hr); corresponding route handlers call `checkRateLimit` / `recordRateLimit` on success; [`docs/security/security-audit.md`](security/security-audit.md) §6 table updated. |
+| 4 | **Account delete + Stripe** | If Stripe `subscriptions.cancel` throws, `Sentry.captureException`, response **503**, **no** soft-delete transaction; user sees retry/support message. |
+| 5 | **PATCH properties `userId`** | `PATCH` update uses `where: { id, userId }` (verify in code; no regression). |
+| 6 | **Multi-mortgage CSV disclosure** | `docs/reference/portfolio-csv-export.md` notes in-app warning; Settings import UI shows non-blocking notice about multi-lien lossy re-import. |
+| 7 | **Doc link sweep** | `roadmap.md`, `tasks-archived.md`, `property-flow-regression-matrix.md`, `architecture-and-build-practices.md` point to `docs/archive/proposals/...` for archived epics/QA where applicable. |
+
+- [x] **Ship 1** — Visible FAQ + shared FAQ data
+- [x] **Ship 2** — `getAppOrigin()` canonical sweep
+- [x] **Ship 3** — DELETE + mortgage DELETE rate limits + security doc
+- [x] **Ship 4** — Account delete Stripe failure handling + Sentry
+- [x] **Ship 5** — Verified PATCH `where` includes `userId`
+- [x] **Ship 6** — Multi-mortgage doc + import notice
+- [x] **Ship 7** — Documentation link sweep
+
+---
+
 ### Mobile shell verification (functionality, logic, math)
 
 *Process:* PM promotes here → **builder** implements per `.cursor/rules/builder-agent.mdc`. **Canonical math:** `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`. **Playwright/E2E:** out of scope for this batch.

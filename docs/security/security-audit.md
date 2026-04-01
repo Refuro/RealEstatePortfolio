@@ -122,8 +122,11 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 |------------|----------------|
 | `properties:create` | 20 |
 | `properties:patch` | 60 |
+| `properties:delete` | 60 |
+| `properties:mortgage-delete` | 60 |
 | `deals:create` | 20 |
 | `deals:patch` | 60 |
+| `deals:delete` | 60 |
 | `admin:tier-patch` | 30 |
 | `csp-report:post` | 240 (per IP; anonymous CSP violation reports) |
 | `import:portfolio` | 5 |

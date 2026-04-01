@@ -68,11 +68,24 @@ Group consolidated tasks by domain:
 - **Documentation** — Stale docs, archive candidates, broken references, folder hygiene
 - **Legal / Compliance** — Privacy, terms, consent, billing/marketing disclosure issues
 
+### 3.5 Triage (PM — what to promote to `tasks.md`)
+
+After grouping, **classify every consolidated item** into one of four buckets. Audits do **not** require inventing work; this step prevents “noise” from reading as mandatory. **Promote to [`docs/tasks.md`](../tasks.md) only from *Ship* and *Schedule* unless you explicitly accept optional work.**
+
+| Bucket | Meaning | Typical sources |
+|--------|---------|-----------------|
+| **Ship** | Tackle in the **next** implementation window: unresolved **Critical/High** from lanes, or **Medium** with clear user, security, SEO rich-result, or data-integrity risk. | Security, SEO (guideline risk), reliability of destructive flows |
+| **Schedule** | **Bounded Medium** improvements: UX/a11y, perf refactors with plan, docs that unblock teams, growth polish. Not blocking release if triage says so. | Feature, Growth, Mobile, Performance (non-experimental) |
+| **Optional / backlog** | **Low**, “optional”, “evaluate”, tech-debt refactors, **future** upgrades (e.g. next major). Explicit **won’t fix** can move here with a one-line reason in the synthesis. | Code maintainability XL, Prisma-next-major, optional DRY |
+| **Human-only / deferred** | **Legal counsel**, **owner sign-off**, **manual device QA**, **analytics verification in vendor UI**, anything AI cannot complete alone. | Business, Legal (counsel), manual viewport matrix |
+
+**“Clean” audit:** Reasonable goal = **no open items in *Ship*** after a pass; *Optional* may stay non-empty. Empty task-candidate sections on a lane report are valid when there are no actionable gaps.
+
 ---
 
 ## 4. Output
 
-Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
+Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. Include **§3.5 PM triage** as the primary promotion view. The flat **Consolidated task list** (by domain) is optional; use it as an **appendix** if you want both triage and a full inventory in one file.
 
 ```markdown
 # Full Audit Synthesis — YYYY-MM-DD
@@ -136,9 +149,25 @@ Write to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`:
 ### Legal / Compliance
 ...
 
+## PM triage (this run)
+
+Classify consolidated items per §3.5. **Ship** and **Schedule** are the default promotion targets for `tasks.md`.
+
+### Ship (next window)
+- [ ] ...
+
+### Schedule (next batch)
+- [ ] ...
+
+### Optional / backlog
+- [ ] ...
+
+### Human-only / deferred
+- [ ] ...
+
 ## PM review
 
-Review the consolidated list above. Promote approved items to [docs/tasks.md](../../tasks.md). The builder implements approved items.
+Review triage above. Promote **Ship** and **Schedule** items to [docs/tasks.md](../../tasks.md) unless explicitly deferred. The builder implements approved items.
 ```
 
 ---

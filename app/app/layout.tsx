@@ -7,6 +7,7 @@ import { CookieConsentBanner } from "@/components/consent/cookie-consent-banner"
 import { GoogleAdsGtagClient } from "@/components/analytics/google-ads-gtag";
 import { VercelAnalyticsClient } from "@/components/analytics/vercel-analytics";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
+import { getAppOrigin } from "@/lib/app-url";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,7 +20,7 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -69,7 +70,7 @@ export const metadata: Metadata = {
 };
 
 function JsonLdScript() {
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+  const APP_URL = getAppOrigin();
   const jsonLd = {
     "@context": "https://schema.org",
     "@graph": [

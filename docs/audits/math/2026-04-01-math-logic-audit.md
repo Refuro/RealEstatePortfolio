@@ -2,10 +2,10 @@
 
 ## Executive summary
 
-- All core formula checks **pass**: amortization iteration, property/portfolio metrics, benchmark freshness, and all calculator libs align with `docs/policies/ownership-metrics.md` and `docs/policies/analytics-math-policy.md`.
-- The **Medium finding from 2026-03-31** (negative amortization — payment below interest not blocked) is **resolved**: `isNegativeAmortizingPayment` is now exported from `amortization.ts`, guards are added to `getPayoffProjection` and both extra-payment helpers, and `mortgage.ts` enforces the constraint at schema validation with a user-facing error message.
-- One new **Low** observation: `fix-and-flip-calculator.ts` `annualizedRoiPercent` can return `NaN` for non-integer `12/holdMonths` exponents when total loss exceeds 100% of cash invested; no practical impact for typical inputs but worth hardening for the educational calculator.
-- Overall recommendation: **healthy, ship**; address the annualized-ROI NaN edge case opportunistically.
+- **In-scope modules** (`docs/process/math-logic-audit.md` §1.1): amortization, property-metrics, portfolio-metrics, benchmark-utils, and RentCast hourly caps in `plans.ts` — **all core formula and edge-case checks PASS**; no FAIL items in the math-lane tables below.
+- **Cross-module rules** (iteration parity, 180-day staleness, decimal rate usage) are **consistent** with the reference specs in the process doc §2.
+- **Observations (Low / NOTE only):** `generateAmortizationSchedule` uses an inline negative-amort check (`monthlyPayment + ε < interest`) rather than calling `isNegativeAmortizingPayment` (equivalent semantics); future-dated `balanceAsOfDate` is treated as “stored” because it satisfies `>= sixMonthsAgo`.
+- **Out of scope for this lane:** standalone calculators (`public-calculator`, BRRR, fix-and-flip, STR/LTR), API routes, and Prisma validation — not audited in this pass unless noted as supporting context.
 
 ---
 
@@ -13,47 +13,74 @@
 
 ### Critical
 
-- None.
+- None (in-scope modules).
 
 ### High
 
-- None.
+- None (in-scope modules).
 
 ### Medium
 
-- None. (Prior Medium — negative amortization — is resolved; see §Module results below.)
+- None (in-scope modules).
 
 ### Low
 
-- **`annualizedRoiPercent` NaN when loss > 100% of cash invested** — In `computeFixAndFlipResult`, when `netProfit / totalCashIn < -1`, the expression `Math.pow(1 + totalReturnRatio, 12 / holdMonths)` evaluates to `NaN` for any `holdMonths` that does not divide evenly into 12 (JavaScript returns `NaN` for a negative base raised to a non-integer exponent). Example: holdMonths=7, totalCashIn=$50k, netProfit=−$60k → `Math.pow(-0.2, 1.714...)` → `NaN`. Risk is limited to the educational calculator and only surfaces on extreme loss scenarios; however, the UI must handle `NaN` gracefully. — `app/lib/fix-and-flip-calculator.ts` line 75.
+- **`generateAmortizationSchedule` vs shared helper** — The schedule loop uses `monthlyPayment + AMORTIZATION_COMPARISON_EPSILON < interest` before aborting, while payoff/extra-payment paths use exported `isNegativeAmortizingPayment`. Behavior is aligned; unifying on one helper would reduce drift risk. — `app/lib/amortization.ts` (e.g. lines 69–71 vs 14–22).
 
-- **STR `annualGrossIncome` is pre-platform-fee gross (carry-forward from 2026-03-31)** — STR side returns `annualGrossStrBookings` (365 × occupancy × nightly rate, before platform fees), while LTR side returns `ltrMetrics.grossAnnualRent` (vacancy-adjusted). The type definition documents this intent; no formula error. Risk is label confusion if UI shows both under the same heading without qualification. — `app/lib/str-ltr-calculator.ts`.
+- **Future-dated `balanceAsOfDate`** — `getEffectiveBalance` / `getBalanceSource` treat any `balanceAsOfDate >= today − 180 days` as stored, including dates in the future. Unlikely with validated inputs; if it occurs, stored balance is used without warning. — `app/lib/amortization.ts` lines 175–180, 203–208.
 
 ---
 
 ## Evidence reviewed
 
-- `app/lib/amortization.ts` (full — all exports including new `isNegativeAmortizingPayment` and `AMORTIZATION_COMPARISON_EPSILON`)
+- `app/lib/amortization.ts` (full read — all listed exports through `getPayoffYearsWithExtraWithTolerance`)
 - `app/lib/metrics/property-metrics.ts` (full)
 - `app/lib/metrics/portfolio-metrics.ts` (full)
 - `app/lib/benchmark-utils.ts` (full)
-- `app/lib/public-calculator.ts` (full)
-- `app/lib/fix-and-flip-calculator.ts` (full)
-- `app/lib/brrr-calculator.ts` (full)
-- `app/lib/str-ltr-calculator.ts` (full)
-- `app/lib/plans.ts` (RentCast hourly limits)
-- `app/lib/validations/mortgage.ts` (full — negative amortization guard)
-- `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`
-- `docs/process/math-logic-audit.md` (scope, check matrix, reference specs)
-- Previous audit: `docs/audits/math/2026-03-31-math-logic-audit.md`
+- `app/lib/plans.ts` (`RENTCAST_HOURLY_LIMITS`, `getRentCastHourlyLimit`)
+- `docs/process/math-logic-audit.md` (§1–§7, edge matrix)
+- `docs/process/audit-report-template.md`
+- `docs/reference/rentcast-quota.md` (quota model vs code)
+- `docs/policies/analytics-math-policy.md` (referenced for benchmark §3.6; boundary matches code/tests)
+- Tests sampled for edge coverage: `app/lib/amortization.test.ts`, `app/lib/benchmark-utils.test.ts`
 
-**Limits of this pass:** Export/import call sites, deals API, portfolio-summary-payload, and mortgage-tab UI were not re-read (no formula changes signaled since 2026-03-31; those surfaces passed the prior audit). No runtime test execution.
+**Limits:** No `npm test` run this pass; conclusions are from static review and alignment with specs/tests on disk.
 
 ---
 
 ## Risk & impact assessment
 
-The previously identified negative amortization risk is closed at both the validation and computation layers. The remaining Low findings are limited to an educational calculator edge case (NaN on extreme loss) and a display-labeling note on STR gross income. Neither affects portfolio math, payoff projections, or any API/export surface. User-facing exposure is minimal.
+All **division-by-zero** paths in the scoped metrics and benchmark helpers are guarded (`estimatedValue > 0`, `marketRent > 0`, `totalMarketValue > 0`, `totalCashInvested > 0`, `totalAnnualDebtService > 0` where applicable). Amortization guards `balance ≤ 0` / `payment ≤ 0` before iterating.
+
+Unresolved Low items are **hygiene / data-quality** only; they do not change portfolio aggregates or benchmark percentages under normal inputs.
+
+---
+
+## Recommendations (prioritized)
+
+1. **Keep amortization iteration single-sourced** — Optionally refactor `generateAmortizationSchedule` to call `isNegativeAmortizingPayment` for the first-month (and per-month) check so schedule generation cannot diverge from payoff projection if epsilon rules ever change.
+2. **Document or reject future `balanceAsOfDate`** — If the product should never accept future as-of dates, enforce at validation; otherwise document that “stored” means “recent as-of” including forward-dated rows.
+3. **Next run** — Re-run after any change to `amortization.ts`, `metrics/*`, `benchmark-utils.ts`, or `RENTCAST_HOURLY_LIMITS`.
+
+---
+
+## Task candidates (optional)
+
+- [ ] (Optional) Call `isNegativeAmortizingPayment` from `generateAmortizationSchedule` for DRY consistency with `getPayoffProjection` / tests.
+
+---
+
+## Re-test checklist
+
+- [ ] After any code change to scoped libs: targeted `vitest` for `amortization`, `benchmark-utils`, `property-metrics`, `portfolio-metrics`.
+- [ ] `npm run check` when application code changes.
+
+---
+
+## Next trigger and cadence
+
+- **Trigger:** Monthly, or any merge touching `app/lib/amortization.ts`, `app/lib/metrics/*`, `app/lib/benchmark-utils.ts`, or RentCast quota constants.
+- **Recommended next window:** 2026-05-01 or next release touching analytics math.
 
 ---
 
@@ -63,83 +90,61 @@ The previously identified negative amortization risk is closed at both the valid
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `generateAmortizationSchedule` iteration matches spec (interest, principal capped at balance, balance update, 2-decimal rounding) | PASS | |
-| Edge: `originalLoanAmount ≤ 0` or `monthlyPayment ≤ 0` → `[]` | PASS | |
-| Negative amortization guard (mid-loop): `payment + ε < interest` → `[]` | PASS | Inline check equivalent to `isNegativeAmortizingPayment`; not calling the dedicated helper directly (see NOTE) |
-| `getPiForAmortization` escrow path; clamp P&I ≥ 0.01 | PASS | |
-| `getProjectedBalanceAsOf` before `startDate` → 0 | PASS | |
-| `getEffectiveBalance` / `getBalanceSource` staleness: both use 180-day window, identical logic | PASS | |
-| `getPayoffProjection` iteration matches `generateAmortizationSchedule`; caps at term | PASS | |
-| `getPayoffProjection` pre-loop negative amortization guard via `isNegativeAmortizingPayment` | PASS | **NEW** — resolved 2026-03-31 Medium finding |
-| `getPayoffProjection` mid-loop guard | PASS | **NEW** |
-| Edge: balance ≤ 0 or payment ≤ 0 → `{ payoffDate: null, remainingAtTermEnd: null }` | PASS | |
-| Edge: payment does not amortize → `remainingAtTermEnd` non-null, `payoffDate` null | PASS | |
-| `getMonthsToPayoffWithExtraStrict` — same iteration as `getPayoffProjection`; pre- and mid-loop guards | PASS | **NEW** guards |
-| `getMonthsToPayoffWithExtraWithTolerance` — same iteration; tolerance path calls `isWithinTermEndTolerance` | PASS | |
-| `getExtraPaymentForYearsEarlier` requires strict `payoffDate`; `targetMonths ≤ 0` → null | PASS | |
-| `getPayoffYearsWithExtra` `extraPayment < 0` → null; `payoffDate null` → null; rounds months/12 | PASS | |
-| Strict vs tolerance split per `analytics-math-policy.md` §3.7 | PASS | |
-| `isNegativeAmortizingPayment` function — correct formula; guards balance ≤ 0, pi ≤ 0 | PASS | **NEW** — new function since 2026-03-31 |
-| NOTE: `generateAmortizationSchedule` does not call `isNegativeAmortizingPayment` directly | NOTE | Uses inline `monthlyPayment + ε < interest` which is equivalent. No correctness issue; minor code-reuse inconsistency. |
+| `generateAmortizationSchedule`: interest = balance × monthlyRate; principal capped at balance; balance update; 2-decimal rounding | PASS | Lines 66–89; early exit when payment + ε < interest (negative amort) |
+| Edge: `originalLoanAmount ≤ 0` or `monthlyPayment ≤ 0` → `[]` | PASS | Lines 55–57 |
+| `getPiForAmortization`: P&I = payment − escrow when escrow included; clamp ≥ 0.01 | PASS | Lines 117–130 |
+| `getProjectedBalanceAsOf`: as-of before start month → 0 | PASS | Lines 144–148 |
+| `getEffectiveBalance` / `getBalanceSource`: same 180-day staleness (`setDate(-180)`, `>=`) | PASS | Lines 169–211 |
+| `getEffectiveBalance`: projected 0 → fallback `currentBalance` | PASS | Lines 191–192 |
+| `getPayoffProjection`: uses `getEffectiveBalance`, `getPiForAmortization`; iteration matches schedule logic; negative amort guard | PASS | Lines 302–360; `isNegativeAmortizingPayment` lines 317–320 |
+| Edge: balance ≤ 0 or payment ≤ 0 → `{ payoffDate: null, remainingAtTermEnd: null }` | PASS | Lines 313–315 |
+| Edge: payment does not amortize → `payoffDate` null, `remainingAtTermEnd` rounded | PASS | Lines 317–320, 335–339, 356–359 |
+| `getMonthsToPayoffWithExtraStrict` / `WithTolerance`: same iteration as payoff projection; guards | PASS | Lines 385–477 |
+| `getExtraPaymentForYearsEarlier`: requires `projection.payoffDate`; `targetMonths ≤ 0` → null | PASS | Lines 489–501 |
+| `getPayoffYearsWithExtra`: `extraPayment < 0` → null | PASS | Lines 586–587 |
+| Tolerance helpers: `getToleranceResidualThreshold`, `isWithinTermEndTolerance`, `getToleranceAdjustedPayoffDate`, `getToleranceAwarePayoffProjection` | PASS | Lines 258–377 |
+| `getPaymentStartLagMonths`: capped by `maxLagMonths` | PASS | Lines 242–256 |
+| Inline schedule check vs `isNegativeAmortizingPayment` | NOTE | Equivalent ε-threshold; see Low finding |
 
 ### lib/metrics/property-metrics.ts
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `effectiveRent = monthlyRent × (1 − vacancyPercent/100)` | PASS | |
-| `grossAnnualRent = effectiveRent × 12` (pre-scale internally; returned as `effectiveRent × 12 × scale`) | PASS | Matches analytics policy §3.4 (vacancy-adjusted, ownership-scaled annual rent) |
-| `annualExpenses = monthlyExpenses × 12` (returned as `× scale`) | PASS | |
-| `noi = grossAnnualRent − annualExpenses` (pre-scale); returned as `noi × scale` | PASS | |
-| `capRate = noi / estimatedValue` when `estimatedValue > 0` | PASS | Pre-scale noi/V ≡ `(noi × s)/(V × s)` per ownership policy; correct |
-| Edge: `estimatedValue = 0` → `capRate null`, `ltv null` | PASS | |
-| `monthlyCashFlow` proportional: `(R − E − P) × scale`; full liability: `R×scale − E×scale − P` | PASS | Matches `ownership-metrics.md` §2 table |
-| `equity = (V − D) × scale` | PASS | |
-| `ltv = D / V` unscaled (property leverage; ownership policy §2) | PASS | |
-| `cashOnCashReturn = annualCashFlow / (cashInvested × scale)` | PASS | |
-| Edge: `cashInvested null` or `0` → `cashOnCashReturn null` | PASS | |
-| `scaleLiabilityAmount`, `getAnnualDebtService`, `computeAnnualCashFlowFromAnnualInputs` consistent with mode | PASS | |
+| `effectiveRent = monthlyRent × (1 − vacancyPercent/100)` | PASS | Line 92 |
+| `grossAnnualRent`, `annualExpenses`, `noi` | PASS | Lines 94–96; outputs scaled lines 118–120 |
+| `capRate = noi / estimatedValue` when `estimatedValue > 0` | PASS | Line 97 |
+| Edge: `estimatedValue = 0` → `capRate` null, `ltv` null | PASS | Lines 97, 111 |
+| `monthlyCashFlow`: full_liability vs proportional per spec | PASS | Lines 101–103 |
+| `equity`, `ltv`, `cashOnCashReturn` | PASS | Lines 108–115 |
+| Edge: `cashInvested` null or ≤ 0 → `cashOnCashReturn` null | PASS | Lines 113–115 |
+| `scaleLiabilityAmount`, `getAnnualDebtService`, `computeAnnualCashFlowFromAnnualInputs` | PASS | Lines 37–73 |
 
 ### lib/metrics/portfolio-metrics.ts
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `weightedCapRate = totalNoi / totalMarketValue` (guard on `totalMarketValue > 0`) | PASS | `totalNoi` and `totalMarketValue` are both ownership-scaled; formula correct |
-| `portfolioLtv = totalDebt / totalMarketValue` | PASS | `totalDebt` is mode-dependent per policy |
-| `portfolioCashOnCashReturn = (totalMonthlyCashFlow × 12) / totalCashInvested` | PASS | Guard on `totalCashInvested > 0` |
-| `totalAnnualRent` = sum of `metrics.grossAnnualRent` (vacancy-adjusted, ownership-scaled) | PASS | Reconcilable with NOI rent basis per analytics policy §3.4 |
-| `totalMonthlyRent = metrics.grossAnnualRent / 12` | PASS | Same effective-R basis as NOI |
-| `dscr = totalNoi / totalAnnualDebtService` (guard on `totalAnnualDebtService > 0`) | PASS | |
-| `totalDebt` mode-dependent: full liability = full balance; proportional = balance × scale | PASS | |
-| Empty `properties` → zeros and nulls | PASS | |
+| `weightedCapRate = totalNoi / totalMarketValue` (guard `totalMarketValue > 0`) | PASS | Lines 107–108 |
+| `portfolioLtv = totalDebt / totalMarketValue` | PASS | Line 108 |
+| `portfolioCashOnCashReturn = (totalMonthlyCashFlow × 12) / totalCashInvested` | PASS | Lines 109–110 |
+| `dscr = totalNoi / totalAnnualDebtService` when debt service > 0 | PASS | Lines 104–105 |
+| Empty `properties` → zeros and nulls | PASS | Lines 42–59 |
+| `totalDebt` full_liability vs proportional | PASS | Lines 93–97 |
 
 ### lib/benchmark-utils.ts
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `BENCHMARK_FRESHNESS_MAX_MS = 60 × 24 × 60 × 60 × 1000` | PASS | |
-| `isBenchmarkFresh` / `isBenchmarkFreshAt`: `now − asOf < BENCHMARK_FRESHNESS_MAX_MS` (strict `<`) | PASS | Exactly 60 days old is stale; matches analytics policy §3.6 |
-| `getBenchmarkPct`: `marketRent ≤ 0` → `0`; formula `(userRent − marketRent) / marketRent × 100` | PASS | |
-| `getBenchmarkLabel`: `|pct| < 1` → `"Rent at market"` | PASS | |
-| `getBenchmarkEligibility` / `isBenchmarkComparable` / `shouldOfferBenchmarkRefresh` consistent | PASS | Single eligibility contract across surfaces |
+| `getBenchmarkPct`: `marketRent ≤ 0` → 0; else `(userRent − marketRent) / marketRent × 100` | PASS | Lines 58–60 |
+| `isBenchmarkFresh` / `isBenchmarkFreshAt`: strict `now − asOf < BENCHMARK_FRESHNESS_MAX_MS` | PASS | Lines 28–35; 60×24×60×60×1000 ms |
+| `getBenchmarkLabel`: `abs(pct) < 1` → "Rent at market" | PASS | Lines 74–79 |
+| `getBenchmarkDaysAgo` floors whole days | PASS | Lines 42–49 |
 
-### Calculators (lib)
-
-| Surface | Status | Notes |
-|---------|--------|-------|
-| `public-calculator.ts` — `computeMonthlyPayment`: percent→decimal, zero-rate fallback, division-by-zero guard (`pow − 1` only after `monthlyRate > 0`) | PASS | |
-| `public-calculator.ts` — DSCR uses `metrics.noi / getAnnualDebtService`; guard `annualDebtService > 0` | PASS | |
-| `brrr-calculator.ts` — refi loan amount, closing costs, cash-out, net cash left; clamps on all inputs; DSCR guarded | PASS | |
-| `fix-and-flip-calculator.ts` — interest-only hold, ROI formula, annualized ROI compound formula | PASS (with Low note) | `annualizedRoiPercent` returns NaN when loss > 100% of cash-in and `holdMonths` does not divide 12 evenly — see Low finding |
-| `str-ltr-calculator.ts` — STR net annual from occupancy/fees; LTR vacancy; shared loan; DSCR; `vacancyPercent: 0` for STR | PASS | `annualGrossIncome` semantic difference by side is by design and documented (Low carry-forward) |
-
-### lib/validations/mortgage.ts (negative amortization guard — new since 2026-03-31)
+### lib/plans.ts (RentCast hourly limits — §1.1)
 
 | Check | Status | Notes |
 |-------|--------|-------|
-| `validateMortgagePiCoversInterestFields` calls `isNegativeAmortizingPayment(pi, balance, rate)` | PASS | **NEW** — directly addresses 2026-03-31 Medium finding |
-| `createMortgageSchema.superRefine` integrates P&I guard; error path on `monthlyPayment` field | PASS | |
-| `validateEscrowAmount`: escrow < monthlyPayment when present and > 0 | PASS | Prevents escrow strip from producing zero/negative P&I at save time |
-| `updateMortgageSchema` (partial) — note: PATCH merges then calls `validateMortgagePiCoversInterestFields` per comment | PASS | Documented in mortgage route; not re-read this pass |
+| `RENTCAST_HOURLY_LIMITS`: free 5, investor 10, pro 20 | PASS | Lines 26–30; matches `docs/reference/rentcast-quota.md` |
+| `getRentCastHourlyLimit` fallback to free for unknown tier | PASS | Lines 47–49 |
 
 ---
 
@@ -147,59 +152,21 @@ The previously identified negative amortization risk is closed at both the valid
 
 | Rule | Status | Notes |
 |------|--------|-------|
-| `getPayoffProjection` ↔ `generateAmortizationSchedule` iteration (interest → principal cap → balance) | PASS | Identical logic |
-| `getEffectiveBalance` ↔ `getBalanceSource` staleness threshold (180 days) | PASS | Identical `setDate(-180)` and `>=` comparison |
-| Mortgage rate stored as decimal; `Number(rate) / 12` for monthly | PASS | Consistent across amortization.ts; calculators take percent and convert `/100/12` |
-| `getMonthsToPayoffWithExtraStrict` ↔ `getPayoffProjection` iteration | PASS | |
-| API/export strict payoff (`getPayoffProjection`) vs UI tolerance-aware helpers | PASS | Policy §3.7 respected |
-| Negative amortization guard in schedule/projection/extra-payment + validation layer | PASS | **NEW** — all four iteration sites now guarded |
-
----
-
-## Resolved findings (from 2026-03-31)
-
-| Finding | Resolution |
-|---------|------------|
-| **Medium: negative amortization — payment below interest not blocked** | `isNegativeAmortizingPayment` added as exported helper; pre-loop guard added to `getPayoffProjection`, `getMonthsToPayoffWithExtraStrict`, `getMonthsToPayoffWithExtraWithTolerance`; `validateMortgagePiCoversInterestFields` wired into `createMortgageSchema.superRefine` with user-facing error on `monthlyPayment`; `validateEscrowAmount` prevents escrow strip producing zero P&I at save. **Fully closed.** |
-
----
-
-## Recommendations (prioritized)
-
-1. **Guard `annualizedRoiPercent` against NaN** — In `computeFixAndFlipResult`, add a `Number.isFinite` check (or clamp `1 + totalReturnRatio` to ≥ 0 before `Math.pow`) so the field is `null` rather than `NaN` for catastrophic-loss scenarios. Minimal change; prevents UI from having to special-case `NaN`.
-2. **Confirm STR UI labels distinguish gross vs net income** — Verify that any surface displaying `annualGrossIncome` from the STR side explicitly labels it as "gross before platform fees" to avoid user confusion against the LTR side's vacancy-adjusted figure.
-3. **Consider calling `isNegativeAmortizingPayment` in `generateAmortizationSchedule`** — Replace the inline `monthlyPayment + AMORTIZATION_COMPARISON_EPSILON < interest` pre-return with a call to the dedicated helper for consistency. Low-priority code hygiene; no correctness impact.
-
----
-
-## Task candidates
-
-- [ ] Guard `annualizedRoiPercent` NaN: add `Number.isFinite` / clamp before `Math.pow` in `fix-and-flip-calculator.ts` line ~73–75; update or add test case for >100% loss scenario.
-
----
-
-## Re-test checklist
-
-- [ ] Verify `annualizedRoiPercent` NaN fix: unit test with holdMonths=7, netProfit < −totalCashIn confirms `null` (not `NaN`).
-- [ ] Regression: `npm run check` after any code change.
-- [ ] On next mortgage-validation change: confirm `updateMortgageSchema` PATCH path still calls `validateMortgagePiCoversInterestFields` after row merge.
-
----
-
-## Next trigger and cadence
-
-- **Trigger:** Monthly or after any change to `app/lib/amortization.ts`, `app/lib/metrics/*`, benchmark freshness logic, export/deal/mortgage metric payloads, or calculator files.
-- **Recommended next window:** 2026-05-01 or on the next release touching analytics math.
+| `getPayoffProjection` ↔ `generateAmortizationSchedule` iteration (interest → principal cap → balance) | PASS | Same monthlyRate = annual/12; same principal capping |
+| `getEffectiveBalance` ↔ `getBalanceSource` staleness (180 days) | PASS | Identical date math |
+| Mortgage rate: decimal annual; `/12` monthly | PASS | `amortization.ts` throughout |
+| `getMonthsToPayoffWithExtraStrict` ↔ `getPayoffProjection` iteration | PASS | Shared structure and guards |
+| Consumers: `validateMortgagePiCoversInterestFields` uses `isNegativeAmortizingPayment` | PASS (context) | `app/lib/validations/mortgage.ts` — supports amortization correctness at save time; not expanded audit |
 
 ---
 
 ## Findings / recommendations (math-lane index)
 
-No FAIL rows in any module table. One Low finding (annualized ROI NaN) in the educational fix-and-flip calculator; one Low carry-forward (STR gross income label). Prior Medium fully resolved.
+- **FAIL:** None in scoped modules.
+- **Low:** DRY note on `generateAmortizationSchedule` vs `isNegativeAmortizingPayment`; future `balanceAsOfDate` semantics.
 
 ---
 
 ## Changelog (audit scope)
 
-- **2026-04-01:** Routine monthly audit. Scope: amortization (all exports including new `isNegativeAmortizingPayment`), property-metrics, portfolio-metrics, benchmark-utils, public/brrr/fix-and-flip/str-ltr calculators, plans.ts, mortgage validation. Prior Medium (negative amortization) confirmed resolved. New Low: fix-and-flip `annualizedRoiPercent` NaN edge case.
-- **2026-03-31:** Initial audit. See `docs/audits/math/2026-03-31-math-logic-audit.md`.
+- **2026-04-01:** Math & Logic audit per `docs/process/math-logic-audit.md`. Scope: `app/lib/amortization.ts`, `app/lib/metrics/property-metrics.ts`, `app/lib/metrics/portfolio-metrics.ts`, `app/lib/benchmark-utils.ts`, `app/lib/plans.ts` (RentCast hourly limits). Report structure: `docs/process/audit-report-template.md` + process §7 tables.

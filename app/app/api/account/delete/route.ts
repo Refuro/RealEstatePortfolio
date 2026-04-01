@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { clerkClient } from "@clerk/nextjs/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -69,6 +70,17 @@ export async function POST(request: NextRequest) {
       await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
     } catch (err) {
       console.error("Failed to cancel Stripe subscription:", err);
+      Sentry.captureException(err instanceof Error ? err : new Error("Stripe subscription cancel failed"), {
+        tags: { route: "api/account/delete", userId: user.id },
+        extra: { stripeSubscriptionId: subscription.stripeSubscriptionId },
+      });
+      return NextResponse.json(
+        {
+          error:
+            "We could not cancel your subscription. Please try again in a moment or contact support.",
+        },
+        { status: 503 }
+      );
     }
   }
 

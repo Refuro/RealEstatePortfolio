@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
 import {
   updateMortgageSchema,
@@ -157,12 +162,21 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string; mortgageId: string }> }
 ) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "properties:mortgage-delete");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const { mortgageId } = await params;
@@ -177,5 +191,6 @@ export async function DELETE(
       property: { userId: user.id },
     },
   });
+  await recordRateLimit(identifier, "properties:mortgage-delete");
   return NextResponse.json({ success: true });
 }
