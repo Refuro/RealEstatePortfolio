@@ -513,9 +513,9 @@ export function FixAndFlipCalculator({
         </MobileToolShell>
       </div>
 
-      <div className={`hidden gap-5 lg:grid lg:grid-cols-12 ${compact ? "" : ""}`}>
-        <div className={compact ? "lg:col-span-7" : "lg:col-span-8"}>{inputsContent}</div>
-        <div className={compact ? "lg:col-span-5" : "lg:col-span-4"}>{resultsContent}</div>
+      <div className={`hidden gap-5 md:grid md:grid-cols-12 ${compact ? "" : ""}`}>
+        <div className={compact ? "md:col-span-7" : "md:col-span-8"}>{inputsContent}</div>
+        <div className={compact ? "md:col-span-5" : "md:col-span-4"}>{resultsContent}</div>
       </div>
     </section>
   );

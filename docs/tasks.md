@@ -62,6 +62,23 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ---
 
+### Audit synthesis — Ship run **-2** (tablet / `md`–`lg` calculator gap)
+
+*Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis-2.md`](audits/synthesis/2026-04-01-audit-synthesis-2.md) **Ship** item 1 (expanded to all calculator surfaces). *Completed by builder 2026-04-01.*
+
+**Problem:** Marketing calculators used `md:hidden` for `MobileToolShell` but `hidden lg:grid` for the desktop two-column layout, so **768px ≤ width &lt; 1024px** showed **no** inputs or results (public `/tools/*`, `/investment-property-calculator`, and signed-in `/calculators/*` — same components).
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Align breakpoints** | Desktop grid uses **`md:grid` / `md:grid-cols-12`** and column spans use **`md:col-span-*`** so the desktop layout appears at the same breakpoint where `md:hidden` hides the mobile shell (≥768px). |
+| 2 | **Coverage** | Applies to all four marketing calculator components: `public-calculator.tsx`, `brrr-calculator.tsx`, `str-ltr-calculator.tsx`, `fix-and-flip-calculator.tsx` (covers both `/tools/...` and `/calculators/...` pages that embed them). |
+| 3 | **Verification** | At **768px** and **900px** (or any width in 768–1023), each calculator shows full inputs + results; at **&lt;768px** mobile shell still works; at **≥1024px** desktop layout unchanged. |
+
+- [x] **Ship -2 #1** — Tablet breakpoint fix (`md` desktop grid + spans)
+- [x] **Ship -2 #2** — Mortgage `POST` / `PATCH` rate limits (`properties:mortgage-post`, `properties:mortgage-patch`, 60/hr; `security-audit.md` §6)
+
+---
+
 ### Mobile shell verification (functionality, logic, math)
 
 *Process:* PM promotes here → **builder** implements per `.cursor/rules/builder-agent.mdc`. **Canonical math:** `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`. **Playwright/E2E:** out of scope for this batch.

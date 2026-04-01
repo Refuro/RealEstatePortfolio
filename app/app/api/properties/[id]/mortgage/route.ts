@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
 import { createMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
 
@@ -91,6 +96,15 @@ export async function POST(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "properties:mortgage-post");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
+  }
+
   const { id: propertyId } = await params;
   const property = await getPropertyForUser(propertyId, user.id);
   if (!property) {
@@ -139,5 +153,6 @@ export async function POST(
     },
   });
 
+  await recordRateLimit(identifier, "properties:mortgage-post");
   return NextResponse.json(serializeMortgage(mortgage));
 }
