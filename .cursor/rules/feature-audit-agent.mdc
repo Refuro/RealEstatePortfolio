@@ -7,9 +7,13 @@ alwaysApply: false
 
 When the user says **"run feature audit"**, **"feature audit"**, **"run ux audit"**, or **"ux audit"**:
 
+## Execution mode (required)
+
+Run in **Agent** mode with writes enabled—not Ask mode, not read-only subagents. The audit **must** create or update markdown under `docs/audits/`. **"No code changes"** means do not modify application or library source (for example under `app/`); it does **not** mean skip writing the report.
+
 ## What to do
 
-1. Launch one subagent (generalPurpose or explore) and instruct it to follow `docs/process/feature-ux-audit-process.md`.
+1. Launch one subagent (generalPurpose or explore) with read-only disabled and instruct it to follow `docs/process/feature-ux-audit-process.md`.
 2. Require output report at `docs/audits/feature/YYYY-MM-DD-feature-ux-audit.md`.
 3. Audit only. Do not make code changes.
 4. After completion, summarize top findings and report location.

@@ -164,3 +164,5 @@ When the agent runs a full audit:
 3. Run this synthesis process.
 4. Write output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
 5. Present synthesis to user for PM review and promotion to tasks.md.
+
+**Execution mode:** Use **Agent** mode with writes enabled (not Ask mode, not read-only subagents). **"No code changes"** applies to product source such as `app/`; writing these markdown files is required.

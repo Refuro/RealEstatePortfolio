@@ -35,6 +35,12 @@ Do not leave partial lane renames merged, or audit commands and documentation wi
 
 ## Running audits
 
+### Agent execution (Cursor)
+
+Audits **must** create or update markdown under `docs/audits/`. Run them in **Agent** chat with edits enabled—not **Ask** mode, not read-only subagents. If you launch a **Task** subagent for a lane, leave **read-only** off so it can write the report file.
+
+Process phrases like **"audit only"** or **"no code changes"** mean: do not change application or library source (for example under `app/`) while producing the audit; they **do not** mean skip writing the report. A full audit is a large task—run lanes in whatever order fits, but each lane’s output file is required.
+
 ### Full audit (all lanes)
 
 - **Trigger:** Say "run full audit" or "run all audits".
