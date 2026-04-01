@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -28,6 +29,12 @@ export default async function AnalyzePage({
           <h1 className="text-2xl font-semibold text-foreground">Analyze deal</h1>
           <p className="mt-1 text-sm text-muted">
             Enter deal assumptions, review investment outcomes, and save for comparison.
+          </p>
+          <p className="mt-3 text-sm text-muted">
+            <Link href="/deals" className="font-medium text-accent hover:underline">
+              View saved deals
+            </Link>{" "}
+            to compare or edit analyses you&apos;ve already stored.
           </p>
         </div>
       </div>

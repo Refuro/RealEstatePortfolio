@@ -58,6 +58,407 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ---
 
+### Calculator & tools — metric color / semantic treatment (UX)
+
+*Escalated 2026-03-31.* *Source:* PM/design decision to make **coverage and risk-adjacent outputs** (e.g. DSCR, monthly cash flow) easier to scan on marketing and in-app calculator surfaces — without changing underlying math.
+
+*Scope (when built):* All **user-facing calculator results** that show DSCR, cash flow, cash-on-cash, cap rate, and similar metrics — including **BRRRR** (`BrrrCalculator`), **public / rental-style** (`PublicCalculator`), and any **calculators hub** or mobile variants that reuse the same result blocks. *Out of scope for this task:* changing formulas; portfolio dashboard property cards (separate product decision unless PM aligns).
+
+*Principles:*
+
+- **Semantic, not decorative:** Color (and optional icon) signals *band* (e.g. DSCR vs 1.0x), not brand flair.
+- **Not color-only:** Pair with **label, numeric precision, or short helper** so colorblind and screen-reader users get the same meaning (WCAG 1.4.1).
+- **Cautious copy:** Helpers stay **educational** (“Stabilized coverage”) — avoid implying lender approval; align tone with `docs/policies/ownership-metrics.md` where metrics overlap.
+- **Theme tokens:** Use existing CSS variables (`text-*`, `border-*`, subtle backgrounds) — no hard-coded hex in components; verify **light** and **dark** (and marketing vs app if themes diverge).
+
+**Proposed default bands (tune in implementation with PM):**
+
+| Metric | Suggested bands | Notes |
+|--------|-----------------|--------|
+| **DSCR** | ≥ **1.00** → positive/neutral; **0.90 up to 1.00** → caution; **under 0.90** or missing → muted/warning | Null/“—” → neutral, no “bad” tint. |
+| **Monthly cash flow** | **Non-negative** → positive; **negative** → negative/caution | Already intuitive; avoid alarming green for tiny positive amounts if PM prefers subtlety. |
+| **Cash-on-cash** | Only when numeric; optional bands for negative vs low vs high % | Often null on BRRRR when no equity left — keep **“—”** neutral (current behavior). |
+| **Cap rate** | **Informational** by default — optional single muted accent, not red/green “good/bad” | Cap rate without context misleads; PM may choose **no** semantic color. |
+
+- [x] **Spec + thresholds doc** — [`docs/policies/calculator-metric-tones.md`](policies/calculator-metric-tones.md) lists band edges, cap-rate exception, and CSS token note. Code: [`app/lib/calculator-metric-tones.ts`](../app/lib/calculator-metric-tones.ts).
+  - *Acceptance:* PM-approved; builder can implement without guessing; thresholds are versioned in one place.
+
+- [x] **`lib/calculator-metric-tones.ts` + `CalculatorMetric`** — `getDscrTone`, `getMonthlyCashFlowTone`, `getCashOnCashTone`, `getCapRateTone`; shared [`app/components/calculators/calculator-metric.tsx`](../app/components/calculators/calculator-metric.tsx). Tests: [`app/lib/calculator-metric-tones.test.ts`](../app/lib/calculator-metric-tones.test.ts).
+  - *Acceptance:* No duplicated threshold magic numbers across `brrr-calculator.tsx` and `public-calculator.tsx`; unit tests for boundary values (e.g. 0.89 vs 0.90 vs 1.00 vs null).
+
+- [x] **UI implementation** — `BrrrCalculator` + `PublicCalculator`: tinted metric values + optional **left border** on cards; mobile summary rails and mobile “Live result” cash flow use the same helpers.
+  - *Acceptance:* Manual spot-check on **BRRRR** and **public** routes at desktop and mobile widths; null and “—” states never show “error” red; negative cash flow is visibly distinct from positive.
+
+- [x] **Accessibility** — Helpers + numeric value remain; color uses existing theme tokens (`text-positive` / `text-warning` / `text-negative`). Policy doc states WCAG 1.4.1; no icon-only metrics added.
+  - *Acceptance:* No reliance on color alone for meaning; spot-check with keyboard + one screen reader path optional per PM.
+
+- [x] **Regression safety** — `npm run test` green (includes tone tests). ESLint clean on touched files; repo-wide `npm run lint` may still fail on unrelated files (e.g. export page).
+  - *Acceptance:* `npm run test` green; Vitest covers tone selection per helper.
+
+---
+
+### New calculators — STR vs LTR and Fix-and-flip (Phases A → C)
+
+*Escalated 2026-03-31.* *Strategy doc:* PM analysis recorded in chat. *Canonical patterns:* `proxy.ts` (public-route allowlist), `app/sitemap.ts` (sitemap entries), `app/app/tools/brrr/page.tsx` (public page pattern), `app/app/(app)/calculators/brrr/page.tsx` (in-app page pattern), `components/marketing/brrr-calculator.tsx` (calculator component pattern), `lib/brrr-calculator.ts` (pure-function lib pattern), `lib/calculator-metric-tones.ts` (tone helper pattern), `components/calculators/calculator-metric.tsx` (metric card pattern), `components/calculators/calculators-hub-cards.tsx` (hub card pattern).
+
+*Principles (apply to every phase):*
+
+- **Free math, gated portfolio intelligence.** Full calculator on every public `/tools/` route — no account gate on the math. Signed-in `/calculators/` shell is a soft upgrade (persistence, context). Paid upsell = portfolio impact, export, comparison.
+- **Pure-function lib first.** All math lives in `lib/<name>.ts` with `Input` / `Result` types, `clamp`/`Math.max` input sanitization, and a colocated `*.test.ts` before any UI is written.
+- **Reuse existing component stack.** `MobileToolShell` + `MobileSectionCard` + `MobileCollapsible` + `MobileSummaryRail` for mobile; desktop 12-col grid. `CalculatorMetric` for result tiles. `FunnelCtaLink` for CTAs. No new design primitives unless PM approves.
+- **SEO identical to existing pages.** `Metadata` with `title`, `description`, `alternates.canonical`, `openGraph`; `FaqJsonLd` inline JSON-LD; breadcrumb nav; cross-links to sibling calculators; no `robots: index:false` on public pages (in-app pages get `robots: {index:false, follow:true}`).
+- **Security identical to existing.** Add new public routes to `proxy.ts` `isPublicRoute` list; add to `sitemap.ts`. No new CSP changes needed (calculator components are client-side only, no external fetches). No API routes needed for these calculators.
+- **Tests: lib first, then UI optional.** Every `lib/*.ts` file must have a colocated `*.test.ts` with happy-path, zero/boundary, and sanitization cases before the PR ships. Coverage gate in `vitest.config.ts` must stay green. Mobile component tests are optional (follow existing guidance in testing-hardening-proposal).
+
+---
+
+#### Phase A — STR vs LTR calculator
+
+**Purpose:** Help an investor compare running a property as a short-term rental (STR) vs long-term rental (LTR) — NOI, monthly cash flow, and effective yield side by side. Serves existing investor persona making a real operating decision. Highest SEO + conversion fit of the remaining shortlist.
+
+**Public routes:** `/tools/str-vs-ltr` · **In-app route:** `/calculators/str-vs-ltr`
+
+**Math model:**
+
+- *STR inputs:* projected nightly rate, annual occupancy %, platform fee % (e.g. Airbnb/VRBO), monthly STR-specific expenses (cleaning, supplies, extra maintenance), shared inputs (purchase price or skip for operating-only mode, mortgage payment, ownership %, vacancy already baked into occupancy).
+- *LTR inputs:* monthly rent, vacancy %, monthly expenses, mortgage payment (shared with STR side for apples-to-apples).
+- *Outputs per side:* effective monthly income, annual gross, NOI, monthly cash flow, cap rate (if purchase price provided), DSCR (if mortgage payment provided).
+- *Comparison row:* STR vs LTR delta for NOI and monthly cash flow; tone from `getMonthlyCashFlowTone` / `getDscrTone`.
+- All inputs sanitized: `Math.max(0, …)` for money/rates, `clamp(0, 100)` for percentages, `clamp(0, 365)` for nights.
+
+- [x] **`lib/str-ltr-calculator.ts`** — Pure functions: `StrLtrCalculatorInput`, `StrLtrCalculatorResult`, `computeStrLtrResult(input)`. No UI imports. *Also:* `monthlyLtrExpenses` (LTR-only opex) + `downPaymentPercent` for loan balance.
+  - *Acceptance:*
+    - `StrLtrCalculatorInput` has `nightlyRate`, `annualOccupancyPercent`, `platformFeePercent`, `monthlyStrExpenses`, `monthlyLtrRent`, `monthlyLtrVacancyPercent`, `monthlySharedExpenses`, `monthlyMortgagePayment`, `purchasePrice` (optional, for cap rate), `ownershipPercent` (default 100).
+    - `StrLtrCalculatorResult` has `str` and `ltr` sub-objects each containing: `effectiveMonthlyIncome`, `annualGrossIncome`, `noi`, `monthlyCashFlow`, `capRate: number | null`, `dscr: number | null`; plus `delta: { noi, monthlyCashFlow }`.
+    - All inputs clamped/floored; negative money inputs → 0; percent inputs clamped 0–100.
+    - `npm run test` green.
+
+- [x] **`lib/str-ltr-calculator.test.ts`** — Colocated Vitest tests.
+  - *Acceptance:*
+    - **Happy path:** STR clearly beats LTR → delta positive, both DSCRs defined.
+    - **LTR wins:** expenses/fees flip the advantage → delta negative.
+    - **No mortgage:** DSCR null on both sides (not NaN, not 0).
+    - **Zero occupancy:** STR income = 0; cap rate null if no `purchasePrice`.
+    - **Sanitization:** negative nightly rate / occupancy >100 clamped; all outputs finite, no `NaN`.
+    - Coverage gate stays green.
+
+- [x] **`components/marketing/str-ltr-calculator.tsx`** — Client component following `brrr-calculator.tsx` structure exactly.
+  - *Acceptance:*
+    - Props: `compact?`, `showCta?`, `landingVariant?`, `surface?: "marketing" | "app"`.
+    - Default values produce **positive cash flow on at least one side** (STR) and DSCR ≥ 1.0 on both; spot-check with `computeStrLtrResult` before committing defaults.
+    - **Desktop (≥768px):** 12-col grid; inputs left (8 col), results right (4 col). Two `CalculatorMetric` groups side by side (STR / LTR) + a delta row. Uses `CalculatorMetric` for all metric tiles; tone from `getDscrTone` / `getMonthlyCashFlowTone` / `getCapRateTone`.
+    - **Mobile:** `MobileToolShell` with `summaryItems` (cash flow STR, cash flow LTR, DSCR STR, DSCR LTR). `MobileSectionCard` + `MobileCollapsible` for STR inputs, LTR inputs, and shared financing assumptions (mirror `brrr-calculator.tsx` mobile pattern exactly).
+    - `FunnelCtaLink` CTA (signed-out: sign-up; signed-in marketing: open analyze; app shell: deal analyzer + dashboard links).
+    - No hard-coded colors; all tones via `calculator-metric-tones.ts`.
+    - `npm run lint` clean on this file.
+
+- [x] **`app/app/tools/str-vs-ltr/page.tsx`** — Public marketing page.
+  - *Acceptance:*
+    - `Metadata`: `title: "STR vs LTR Calculator"`, `description` (≤160 chars, includes "short-term vs long-term rental"), `alternates.canonical: \`${APP_URL}/tools/str-vs-ltr\``, `openGraph`.
+    - `FaqJsonLd` with ≥2 Q&As (e.g. "How do STR platform fees affect returns?", "What occupancy makes STR worth it?").
+    - Breadcrumb nav: Calculators → STR vs LTR (same markup as `tools/brrr/page.tsx`).
+    - `auth()` for `userId`; `LandingNav`, `Footer`, `PlanIntentUrlSync` in `Suspense`.
+    - Cross-links footer: All calculators / BRRRR calculator / Investment property calculator.
+    - `<StrLtrCalculator showCta landingVariant="str_ltr_v1" />`.
+    - `robots` not set (indexable by default).
+
+- [x] **`app/app/(app)/calculators/str-vs-ltr/page.tsx`** — In-app shell page.
+  - *Acceptance:*
+    - `metadata.robots: { index: false, follow: true }`.
+    - Breadcrumb nav: Calculators → STR vs LTR.
+    - `<StrLtrCalculator surface="app" landingVariant="str_ltr_app" />`.
+    - No `LandingNav`/`Footer` (in app shell).
+
+- [x] **Security & routing** — `proxy.ts`: `"/tools(.*)"` already allows `/tools/str-vs-ltr` (no change; verified). `sitemap.ts`: `/tools/str-vs-ltr` at `priority: 0.8`. CSP unchanged; calculator is client-only.
+  - *Acceptance:* Public route reachable without auth; `npm run build` clean.
+
+- [x] **Hub cards** — `CalculatorsHubCards`: order **Investment property → BRRRR → STR vs LTR**; public/app `href`s wired.
+  - *Acceptance:* Third card + description as specified.
+
+- [x] **Roadmap update** — `docs/reference/roadmap.md` §1a **Shipped (v2)** + shortlist table note for STR vs LTR.
+
+---
+
+#### Phase B — Fix-and-flip calculator
+
+**Purpose:** Purchase + rehab + hold period + sale → net profit, ROI, and annualized return. Extends the existing "deal math" cluster (BRRRR already ships); cross-links naturally. Targets the active-investor persona who may later hold/BRRRR.
+
+**Public routes:** `/tools/fix-and-flip` · **In-app route:** `/calculators/fix-and-flip`
+
+**Math model:**
+
+- *Inputs:* purchase price, rehab cost, hold months, financing: purchase loan % (IO during hold), down payment %, ARV (after repair value), selling costs % of ARV (agent, closing), carrying costs/month (taxes, insurance, utilities — beyond interest).
+- *Outputs:* total cash in (down + rehab + holding interest + carrying costs), gross sale proceeds (ARV − selling costs), net profit (sale − loan payoff − total cash in), total ROI %, annualized ROI % (annualize from hold months), cash-on-cash return (net profit / cash invested out-of-pocket).
+- All inputs sanitized: same `clamp`/`Math.max` pattern as existing calcs.
+
+- [x] **`lib/fix-and-flip-calculator.ts`** — Pure functions: `FixAndFlipInput`, `FixAndFlipResult`, `computeFixAndFlipResult(input)`.
+  - *Acceptance:*
+    - `FixAndFlipInput` has: `purchasePrice`, `rehabCost`, `holdMonths`, `downPaymentPercent`, `purchaseLoanRatePercent` (IO), `arv`, `sellingCostsPercent`, `monthlyCarryingCosts`.
+    - `FixAndFlipResult` has: `downPaymentAmount`, `loanAmount`, `monthlyInterest`, `totalHoldingInterest`, `totalCarryingCosts`, `totalCashIn`, `grossSaleProceeds`, `sellingCosts`, `loanPayoff`, `netProfit`, `roiPercent`, `annualizedRoiPercent: number | null` (null if holdMonths = 0), `cashOnCashReturnPercent`.
+    - All sanitized; no NaN; `holdMonths` clamped 0–120.
+    - `npm run test` green.
+
+- [x] **`lib/fix-and-flip-calculator.test.ts`**
+  - *Acceptance:*
+    - **Happy path:** positive deal with ~6 month hold; `netProfit > 0`, `roiPercent > 0`.
+    - **Break-even:** ARV just covers all costs → `netProfit ≈ 0`.
+    - **Underwater deal:** high rehab/sell costs → `netProfit < 0` (handled without NaN).
+    - **Zero hold months:** `totalHoldingInterest = 0`; `annualizedRoiPercent = null`.
+    - **Zero down payment:** loan = purchase price; holding interest reflects full loan.
+    - **Sanitization:** negative inputs floored to 0; `sellingCostsPercent > 100` clamped.
+    - Coverage gate stays green.
+
+- [x] **`components/marketing/fix-and-flip-calculator.tsx`** — Client component following `brrr-calculator.tsx` structure.
+  - *Acceptance:*
+    - Props: `compact?`, `showCta?`, `landingVariant?`, `surface?: "marketing" | "app"`.
+    - Default values produce **positive net profit**; verify with `computeFixAndFlipResult` before committing.
+    - **Desktop:** 12-col grid; inputs left, results right. Key metric tiles: Net profit, Total ROI %, Annualized ROI %, Cash-on-cash. Footer line: "Cash in {amount} · Hold {n} months · Selling costs {amount}".
+    - **Mobile:** `MobileToolShell`; summary rail shows Net profit (tone: positive/negative), ROI % (default tone), Annualized ROI (default tone), hold months (informational). `MobileCollapsible` for financing assumptions.
+    - Profit/loss tone: `netProfit >= 0` → positive, `< 0` → negative (reuse `getMonthlyCashFlowTone` logic or extend `calculator-metric-tones.ts` with `getProfitTone` helper if needed — PM to decide; keep consistent with existing tones policy).
+    - `FunnelCtaLink` CTA (same pattern as BRRRR: sign-up or deal analyzer).
+    - `npm run lint` clean.
+
+- [x] **`app/app/tools/fix-and-flip/page.tsx`** — Public page.
+  - *Acceptance:*
+    - `Metadata`: `title: "Fix and Flip Calculator"`, `description` ≤160 chars (includes "net profit", "ROI", "fix and flip"), canonical `/tools/fix-and-flip`, `openGraph`.
+    - `FaqJsonLd` ≥2 Q&As (e.g. "How do you calculate fix and flip profit?", "What is a good ROI for house flipping?").
+    - Breadcrumb, cross-links (All calculators / BRRRR / Investment property calculator).
+    - `auth()`, `LandingNav`, `Footer`, `PlanIntentUrlSync`.
+    - `<FixAndFlipCalculator showCta landingVariant="fix_flip_v1" />`.
+
+- [x] **`app/app/(app)/calculators/fix-and-flip/page.tsx`** — In-app page.
+  - *Acceptance:* `robots: { index:false, follow:true }`, breadcrumb, `surface="app"`.
+
+- [x] **Security & routing** — `proxy.ts` + `sitemap.ts`.
+  - *Acceptance:*
+    - Public `/tools/*` calculators (including fix-and-flip) covered by existing **`/tools(.*)`** in `isPublicRoute` (comment in `proxy.ts`).
+    - `/tools/fix-and-flip` in `sitemap.ts` at `priority: 0.8`.
+    - `npm run build` clean.
+
+- [x] **Hub cards** — Add Fix-and-flip entry to `CalculatorsHubCards`.
+  - *Acceptance:* Fourth `<li>` with correct `href` for both variants. Description: "Estimate net profit, ROI, and annualized return on a flip — purchase, rehab, hold, and sale."
+
+- [x] **`calculator-metric-tones.ts` extension (if needed)** — Add `getProfitTone(netProfit: number): CalculatorMetricTone` if `getMonthlyCashFlowTone` isn't semantically right for a one-time profit number.
+  - *Acceptance:* Not needed — `getMonthlyCashFlowTone` used for net profit / ROI tiles (same positive/negative semantics).
+
+- [x] **Roadmap update** — Mark Fix-and-flip as shipped in `docs/reference/roadmap.md`.
+
+---
+
+#### Phase C — Infrastructure: cross-calculator shared defaults + `vitest.config.ts` coverage expansion
+
+*Run concurrently with Phase B, or immediately after Phase A; does not block Phase A or B shipping independently.*
+
+- [x] **Coverage gate expansion** — Add new lib files to `coverage.include` in `vitest.config.ts`.
+  - *Acceptance:*
+    - `"lib/str-ltr-calculator.ts"` (already present) and `"lib/fix-and-flip-calculator.ts"` added to `coverage.include`.
+    - `npm run test:coverage` still passes existing thresholds (statements ≥ 80%, lines ≥ 80%, branches ≥ 58%, functions ≥ 78%).
+
+- [x] **`calculators-hub-cards.tsx` ordering** — PM approves order (suggested: Investment property → BRRRR → STR vs LTR → Fix-and-flip).
+  - *Acceptance:* Hub displays all four cards in agreed order; no broken links; both `"public"` and `"app"` variants correct.
+
+- [x] **Cross-link audit** — Every existing public calculator page links to the new ones in its footer.
+  - *Acceptance:* `/tools/brrr` footer and `/investment-property-calculator` footer each gain links to `/tools/str-vs-ltr` and `/tools/fix-and-flip` (in addition to existing links); no broken `href`s.
+
+- [x] **Sitemap priority review** — Confirm `/tools/str-vs-ltr` and `/tools/fix-and-flip` at `priority: 0.8`; confirm `/tools` hub bumps to `priority: 0.85` now that hub has four entries.
+  - *Acceptance:* `sitemap.ts` updated; `npm run build` clean.
+
+---
+
+### Full audit remediation — 2026-03-31 synthesis
+
+*Promoted from:* [`docs/audits/synthesis/2026-03-31-audit-synthesis.md`](audits/synthesis/2026-03-31-audit-synthesis.md) and per-lane reports `docs/audits/*/2026-03-31-*-audit.md`.
+
+**Tracking tags**
+
+| Tag | Meaning |
+|-----|--------|
+| **`[Synth]`** | Item appears in the synthesis consolidated task list — check off here to see what is still open vs addressed. |
+| **`[Synth+]`** | Strongly implied by a lane report; not a separate line in synthesis (avoid duplicate PM tickets). |
+
+**Out of scope for this plan (do not start here):** Refactors of very large TSX modules (wizard, deal analyzer, projections tab, etc.); dashboard data-path refactor to merge duplicate server work with `buildPortfolioSummaryPayload`; broad onboarding modal redesign. Those remain deferred until PM opens a dedicated batch.
+
+**Process:** Builder implements by phase unless PM parallelizes; each phase exit = acceptance bullets met + `npm run test` green + `npm run lint` green on touched files.
+
+---
+
+#### Phase 1 — Data trust & billing truth (P0) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` CSV import column aliases** — Accept export header strings: `escrow amount (first lien)`, `mortgage balance (stored sum)` (and any other export-only keys the import parser still drops).
+  - *Acceptance:* Importing a row whose keys match a fresh CSV export restores first-lien escrow and stored mortgage balance fields correctly; existing aliases unchanged.
+- [x] **`[Synth]` CSV round-trip regression test** — Vitest: object shaped like export headers parses to expected escrow + mortgage fields.
+  - *Acceptance:* Colocated or `lib/import` test; `npm run test` green.
+- [x] **`[Synth]` Doc: portfolio CSV matrix** — Update [`docs/reference/portfolio-csv-export.md`](reference/portfolio-csv-export.md) with which columns round-trip vs import-only vs export-only.
+  - *Acceptance:* Table or list matches code after alias change; PM can verify without reading parsers.
+
+- [x] **`[Synth]` Privacy: Resend + Sentry** — Extend `app/app/privacy/page.tsx` third-party / data-processors narrative: **Resend** (transactional email), **Sentry** (errors, optional client SDK, CSP-related telemetry as implemented).
+  - *Acceptance:* Wording matches actual code paths; no new service claims without code reference.
+
+- [x] **`[Synth]` Billing sync failures visible** — `app/app/(app)/app-layout-client.tsx`: on `/api/billing/sync` non-OK or `catch`, log structured context and `Sentry.captureException` (or shared helper); do not empty-catch.
+  - *Acceptance:* Forced failure in dev/staging produces a Sentry event (or documented log sink); successful sync unchanged.
+
+---
+
+#### Phase 2 — Observability & defense-in-depth (P1) — **✓ complete (2026-03-31)** (optional `error.tsx` item not done)
+
+- [x] **`[Synth]` RentCast upstream errors → Sentry** — `app/app/api/estimates/rent/route.ts`, `.../estimates/value/route.ts`, `.../properties/[id]/benchmark/refresh/route.ts`: on upstream failure, capture to Sentry (sample if noisy).
+  - *Acceptance:* Controlled failure path emits event; happy path unchanged; no PII in payload.
+
+- [x] **`[Synth]` Benchmark refresh `update` where** — Include `userId` (or equivalent ownership) in Prisma `update` `where` for benchmark refresh path.
+  - *Acceptance:* Code review + existing tests green; behavior unchanged for valid user.
+
+- [x] **`[Synth]` Property PATCH `update` where** — `app/app/api/properties/[id]/route.ts`: `update` includes `userId` in `where` clause (defense-in-depth).
+  - *Acceptance:* PATCH tests still pass; 404/403 semantics unchanged for wrong owner.
+
+- [x] **`[Synth]` Billing portal route errors** — `app/app/api/billing/portal/route.ts`: unexpected errors call Sentry (not only `console`).
+  - *Acceptance:* Align with other billing routes; no secret leakage in event.
+
+- [ ] **`[Synth+]` `error.tsx` Sentry + React 19** — *Skipped in this batch per PM; optional follow-up.*
+  - *Acceptance:* PM approves scope; no duplicate flood of events in dev; document choice in PR.
+
+---
+
+#### Phase 3 — SEO quick wins (P1) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Title template duplication** — Eliminate doubled “Veld Portfolio” in rendered `<title>` on `/`, `/changelog`, `/contact`, and any route using full title string plus root `template`.
+  - *Acceptance:* Spot-check View Source or devtools for listed URLs; titles read naturally; brand once.
+
+- [x] **`[Synth]` `robots.ts` vs app shell** — Align `disallow` list with non-public authenticated prefixes; no accidental block of marketing URLs.
+  - *Acceptance:* Fetch `/robots.txt` in staging/production checklist; compare to `proxy.ts` public allowlist.
+
+- [x] **`[Synth]` FAQ JSON-LD on `/tools/brrr`** — Match pattern used on other calculator public pages (≥2 Q&As, honest copy).
+  - *Acceptance:* Rich Results Test passes FAQ where applicable; build clean.
+
+- [x] **`[Synth]` Terms meta description** — Expand `metadata.description` on terms page for clearer snippets.
+  - *Acceptance:* ≤~160 chars target; accurate; no legal overclaim.
+
+---
+
+#### Phase 4 — UX & mobile (P2) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Portfolio export on mobile** — Surface “Print / export portfolio summary” (or equivalent) from mobile dashboard path comparable to desktop workspace strip.
+  - *Acceptance:* 375px width: user can reach export without desktop-only control; link target matches existing route.
+
+- [x] **`[Synth]` Analyze ↔ Deals** — Above-the-fold link or short copy on Analyze pointing to `/deals` (saved deals).
+  - *Acceptance:* New user sees path to saved deals without scrolling past primary form.
+
+- [x] **`[Synth]` Property detail page title** — Heading/title pattern aligned with `docs/policies/design-spec.md` page title guidance.
+  - *Acceptance:* One clear H1; consistent with list → detail IA.
+
+- [x] **`[Synth]` Calculators hub padding** — Remove double padding between `(app)/calculators/page.tsx` and `app-layout-client` `main` if present.
+  - *Acceptance:* Visual parity with sibling app pages; no layout regression on mobile.
+
+- [x] **`[Synth]` Deal Analyzer mobile sticky bar safe-area** — Bottom inset for home-indicator devices on sticky results bar.
+  - *Acceptance:* Verified on notched device or simulator; no overlap with system UI.
+
+- [x] **`[Synth+]` `MobileCollapsible` tap target** — Minimum ~44px hit height where feasible without breaking layout.
+  - *Acceptance:* Spot-check tools + app calculator collapsibles.
+
+- [x] **`[Synth+]` `LandingNav` mobile drawer a11y** — Escape to close, focus trap or return focus, `dialog` semantics aligned with app drawer pattern.
+  - *Acceptance:* Keyboard smoke: Tab, Escape; spot-check screen reader label.
+
+- [x] **`[Synth+]` Root `viewport` / `viewportFit`** — No `viewportFit: 'cover'` change: home-indicator spacing handled via `env(safe-area-inset-bottom)` on Deal Analyzer sticky bar and `MobileToolShell` footer; root layout already uses safe-area-aware app shell classes.
+  - *Acceptance:* Document decision; no regression on Android/desktop.
+
+---
+
+#### Phase 5 — Growth copy & funnel (P2) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Home pricing strip** — Mention **saved deals** limits per tier where property limits are shown.
+  - *Acceptance:* Copy matches `lib/plans.ts` limits; legal/marketing review if needed.
+
+- [x] **`[Synth]` Post-auth paid intent** — Continuation after `investor`/`pro` signup (banner, redirect, or documented `afterSignUpUrl` strategy).
+  - *Acceptance:* PM-defined happy path documented; implementation matches intent.
+
+- [x] **`[Synth]` Empty state / welcome** — Recommended first path + secondary actions collapsed or de-emphasized per growth audit.
+  - *Acceptance:* PM sign-off on copy hierarchy.
+
+- [x] **`[Synth]` `/plans` intro** — Copy mentions **properties and deals** where relevant.
+  - *Acceptance:* Consistent with plan limits.
+
+- [x] **`[Synth]` Sign-in Terms + Privacy** — Footer or links match sign-up parity (same legal links).
+  - *Acceptance:* Both auth pages link to `/privacy` and `/terms`.
+
+- [x] **`[Synth]` Billing success CTA** — Balance “dashboard first” vs return to paywall context per growth audit.
+  - *Acceptance:* PM picks primary CTA; single primary button.
+
+- [x] **`[Synth+]` `clearPlanIntent` after subscribe** — If analytics should reset funnel intent after successful checkout, wire clear.
+  - *Acceptance:* PostHog/person props still correct for tier after test checkout.
+
+---
+
+#### Phase 6 — Legal, security docs, support (P2 / counsel) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Terms operating entity** — Resolve `TODO(legal)` with counsel; update `app/app/terms/page.tsx`.
+  - *Acceptance:* Counsel-approved entity string; TODO removed.
+
+- [x] **`[Synth]` `SUPPORT_EMAIL` behavior** — Production env always set **or** Privacy/Terms/contact copy explains `/contact` when footer email hidden.
+  - *Acceptance:* Staging without env does not imply a broken mailto; production verified.
+
+- [x] **`[Synth]` Refresh `docs/security/security-audit.md`** — CSP and rate-limit sections match `app/next.config.ts` and `app/lib/rate-limit.ts`.
+  - *Acceptance:* Engineer can triage incident from doc without wrong directives.
+
+- [x] **`[Synth]` `docs/security/security-notes.md` RentCast** — Align hourly/tiered quota wording with [`docs/reference/rentcast-quota.md`](reference/rentcast-quota.md) / `lib/plans.ts`.
+  - *Acceptance:* Single source of truth referenced.
+
+---
+
+#### Phase 7 — Math edge case (P1–P2) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Negative amortization guard** — When P&amp;I &lt; accrued interest, product decision: reject input, clamp, or disclose in UI/schedule — implement in `lib/amortization` + validation + tests per math audit.
+  - *Acceptance:* No silent nonsensical schedules; unit tests cover edge case; mortgage/deal flows still pass existing tests.
+
+---
+
+#### Phase 8 — Business / analytics hygiene (non-code or light config) — **✓ complete (2026-03-31)**
+
+- [x] **`[Synth]` Commercial matrix (internal)** — Single living doc or sheet: tier ↔ Stripe price IDs ↔ `NEXT_PUBLIC_PRICE_*` ↔ marketing owner.
+  - *Acceptance:* PM can answer “what price is live?” in one place.
+  - *Done:* [`docs/internal/billing-matrix.md`](internal/billing-matrix.md) — matrix + **Marketing & pricing ownership** table + release checklist.
+
+- [x] **`[Synth]` Investor one-pager** — ICP, differentiation, shipped proof, explicit gaps (honest).
+  - *Acceptance:* Linked from `docs/launch/` or internal; not necessarily customer-facing.
+  - *Done:* [`docs/launch/investor-style-one-pager.md`](launch/investor-style-one-pager.md) — revised 2026-03-31 (analytics + commercial docs, honest gaps).
+
+- [x] **`[Synth]` PostHog named funnel** — Funnel definition: signup → first property → plan view → checkout attempt → subscribed.
+  - *Acceptance:* Exists in PostHog UI or documented steps to recreate.
+  - *Done:* [`docs/launch/posthog-growth-funnel.md`](launch/posthog-growth-funnel.md) — step mapping to `app/lib/analytics-events.ts` + PostHog UI instructions + saved insight name **`Growth funnel — signup to subscribed`** (create in PostHog per doc).
+
+---
+
+#### Phase 9 — Production gate from 2026-04-01 synthesis (P0/P1) — **✓ complete (2026-04-01)**
+
+- [x] **`[Synth 4-01]` Critical: CSV import mortgage validation parity** — `POST /api/import/portfolio` must enforce the same mortgage constraints as create/update mortgage routes (`validateEscrowAmount`, `validateMortgagePiCoversInterestFields` / schema-equivalent), with row-level errors for invalid rows.
+  - *Acceptance:* Import rejects escrow >= payment and P&I < monthly interest rows with clear row-level messages; valid rows still import; regression tests cover both failure modes and one passing case; **mark this item complete in [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md)** when shipped.
+  - *Done:* [`app/lib/import/validate-import-mortgage.ts`](../app/lib/import/validate-import-mortgage.ts) + [`app/lib/import/validate-import-mortgage.test.ts`](../app/lib/import/validate-import-mortgage.test.ts); import route merges mortgage errors and filters rows; [`app/app/api/import/portfolio/route.test.ts`](../app/app/api/import/portfolio/route.test.ts) covers escrow failure, P&I failure, and partial import.
+
+- [x] **`[Synth 4-01]` Critical: Client-side Sentry initialization** — Add browser Sentry config (`app/sentry.client.config.ts`) and align app error-boundary capture behavior so frontend exceptions are observable in production.
+  - *Acceptance:* Browser-thrown test error appears in Sentry (non-localhost env), app error boundary capture path is consistent and DSN-safe, no client build/runtime regressions, and **mark this item complete in [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md)** when shipped.
+  - *Done:* [`app/sentry.client.config.ts`](../app/sentry.client.config.ts); [`app/(app)/error.tsx`](../app/app/(app)/error.tsx) calls `captureException` only when `NEXT_PUBLIC_SENTRY_DSN` is set.
+
+- [x] **`[Synth 4-01]` Production billing reliability hardening** — (a) add `Sentry.captureException` in `POST /api/billing/create-checkout-session` catch path, and (b) fail-fast on missing `NEXT_PUBLIC_APP_URL` for production/Vercel deployments.
+  - *Acceptance:* Forced checkout failure is captured in Sentry with safe context; deploy/runtime guard prevents localhost fallback URLs in production; checkout success/cancel redirects still work; tests/checks pass; **mark this item complete in [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md)** when shipped.
+  - *Done:* [`app/lib/env.ts`](../app/lib/env.ts) `assertPublicAppUrlForVercelDeploy` + `getPublicAppBaseUrlForBilling`; [`app/instrumentation.ts`](../app/instrumentation.ts); checkout/portal routes use billing base URL; [`create-checkout-session/route.test.ts`](../app/app/api/billing/create-checkout-session/route.test.ts) Sentry mock + Stripe failure case.
+
+- [x] **`[Synth 4-01]` SEO hardening: explicit noindex for authenticated app shell** — Add explicit `robots: { index: false, follow: false }` metadata strategy for authenticated app surfaces (`app/(app)` layout and/or per-route coverage) instead of relying only on disallow + auth redirects.
+  - *Acceptance:* Authenticated routes (e.g. `/dashboard`, `/properties`, `/analyze`, `/plans`) emit non-indexable metadata signals in production, public marketing/tool routes remain indexable/canonicalized as intended, and **mark this item complete in [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md)** when shipped.
+  - *Done:* [`app/(app)/layout.tsx`](../app/app/(app)/layout.tsx) `metadata.robots`.
+
+---
+
+#### Deferred from synthesis (explicitly not this plan)
+
+*Check here only when promoting work — do not implement as part of phases above without new PM task.*
+
+- [ ] **`[Synth]` Mega-module refactors** — Wizard, deal analyzer, projections tab, etc. (Code audit) — **deferred.**
+- [ ] **`[Synth]` Onboarding modal decorative reduction** — **deferred** with mega-ui batch.
+- [ ] **`[Synth]` `@theme` `primary` vs `text-primary` / `bg-primary`** — **deferred** unless blocking a Phase 1–4 task.
+- [ ] **`[Synth]` Dashboard + `buildPortfolioSummaryPayload` deduplication** — **deferred** (medium refactor; Performance audit).
+- [ ] **`[Synth]` PostHog `/api/me` debounce** — **deferred** until RUM shows pain or after P0–P2 stable.
+- [ ] **`[Synth]` Optional Clerk preconnect** — **deferred** until RUM evidence.
+
+---
+
 ### Pre-launch / PM — PostHog production (Batch 8.1)
 
 - [ ] **Vercel production env** — `NEXT_PUBLIC_POSTHOG_KEY` / host set in Vercel; **production** loads the snippet and events appear in PostHog (“Live events”). Full acceptance bullets lived under Batch 8.1 in [`docs/tasks-archived.md`](tasks-archived.md) § Tasks.md archive (2026-03-30).

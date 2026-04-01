@@ -7,6 +7,7 @@ export const RATE_LIMITS: Record<string, number> = {
   "deals:create": 20,
   "import:portfolio": 5,
   "export:portfolio": 15,
+  "export:portfolio_summary": 15,
   "account:delete": 5,
   "account:delete-permanent": 3,
   "billing:create-checkout": 10,

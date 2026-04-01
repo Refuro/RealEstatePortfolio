@@ -37,12 +37,14 @@ Partial renames create stale command wiring and stale onboarding guidance.
 | Code | `docs/process/code-audit-process.md` | `code-audit-agent.mdc` |
 | Math & Logic | `docs/process/math-logic-audit.md` | `math-audit-agent.mdc` |
 | Feature / UX / IA | `docs/process/feature-ux-audit-process.md` | `feature-audit-agent.mdc` |
+| Mobile experience | `docs/process/mobile-experience-audit-process.md` (criteria: `docs/qa/mobile-experience-audit.md`) | `mobile-experience-audit-agent.mdc` — reports: `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md` |
 | Security & Privacy | `docs/process/security-audit-process.md` | `security-audit-agent.mdc` |
 | Performance & Cost | `docs/process/performance-cost-audit-process.md` | `performance-cost-audit-agent.mdc` |
 | Reliability & Ops | `docs/process/reliability-ops-audit-process.md` | `reliability-ops-audit-agent.mdc` |
 | Data Integrity | `docs/process/data-integrity-audit-process.md` | `data-integrity-audit-agent.mdc` |
 | Business & Valuation | `docs/process/business-valuation-audit-process.md` | `business-valuation-audit-agent.mdc` |
 | Growth Funnel | `docs/process/growth-funnel-audit-process.md` | `growth-funnel-audit-agent.mdc` |
+| SEO | `docs/process/seo-audit-process.md` | `seo-audit-agent.mdc` |
 | Documentation | `docs/process/documentation-audit-process.md` | `documentation-audit-agent.mdc` |
 | Legal & Compliance | `docs/process/legal-compliance-audit-process.md` | `legal-compliance-audit-agent.mdc` |
 | AI Agent Governance | `docs/process/agent-governance-audit-process.md` | `agent-governance-audit-agent.mdc` |

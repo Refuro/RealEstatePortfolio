@@ -10,6 +10,10 @@ const { prismaMock } = vi.hoisted(() => ({
       update: vi.fn(),
       delete: vi.fn(),
     },
+    property: {
+      count: vi.fn(),
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -94,6 +98,8 @@ describe("GET /api/deals/[id]", () => {
   it("returns deal with metrics aligned with computePropertyMetrics (proportional)", async () => {
     const deal = baseDeal();
     prismaMock.savedDeal.findFirst.mockResolvedValue(deal);
+    prismaMock.property.count.mockResolvedValue(0);
+    prismaMock.property.findMany.mockResolvedValue([]);
     const { GET } = await import("./route");
     const res = await GET(
       new NextRequest("http://localhost/api/deals/deal-1"),
@@ -121,6 +127,11 @@ describe("GET /api/deals/[id]", () => {
     );
     expect(data.metrics).toEqual(expectedMetrics);
     expect(data.id).toBe("deal-1");
+    expect(data.portfolioContext).toMatchObject({
+      propertyCount: 0,
+      propertyCountTotal: 0,
+      truncated: false,
+    });
   });
 });
 

@@ -2,11 +2,106 @@
 
 **Purpose:** Canonical backlog of value-add features, initiatives, and long-term vision. The PM promotes items from here to `docs/tasks.md` when ready to build. The builder references this doc for scope and acceptance criteria when a task references a roadmap item.
 
+**Strategy:** Stay in the **investor intelligence** lane — not property management (rent collection, tenants, maintenance, full GL accounting). Deeper analysis: `docs/internal/differentiator-value-add-analysis.md`.
+
 ---
 
-## 1. Near-term (Prioritized Value-Add)
+## 1. Product map — how major surfaces relate (avoid duplicate work)
 
-Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
+| Surface | Primary job | Not a substitute for |
+|---------|-------------|----------------------|
+| **Dashboard** | Portfolio snapshot, drill-down to property | Full underwriting |
+| **Analyze deal** (`/analyze`) | Full in-app deal workspace; saved **Deals** | Quick one-off calculators |
+| **Modeling** (`/modeling`) | Time-horizon projections for an **owned** property | Hypothetical property sandbox (see §Simulation remainder) |
+| **Mortgage** | Loans, payoff, amortization on real properties | Standalone BRRR/flip math (→ **Tools hub**) |
+| **Deals** | Saved analyses; convert to property | Portfolio-wide alerts |
+| **Investment property calculator** (public) | Marketing + SEO funnel | Logged-in portfolio truth |
+| **Tools hub** (planned) | Fast calculators; **some routes public** for SEO/acquisition | Full Analyze workspace |
+| **§1a Strategic backlog** | Alerts, deal↔portfolio, exports, comparison UI | Benchmarking v2 (done) or staleness nudges alone |
+
+---
+
+## 1a. Strategic backlog (market-informed) — decision intelligence & growth
+
+Prioritized initiatives (2026). Each has **one** primary purpose; older sections below **point here** instead of re-scoping the same work.
+
+### Portfolio insights & prioritized alerts
+
+**Priority:** 9
+
+**Purpose:** From **metrics + nudges** to **what to do next** — ranked, plain-language guidance (e.g. weak DSCR, rent opportunity, refi worth a look, stale assumptions).
+
+**Distinct from:** **Benchmarking** and **data staleness nudges** (shipped) — this layer **interprets** and **prioritizes**. Complements **Refinance / payoff insights**.
+
+---
+
+### Deal-to-portfolio continuity
+
+**Priority:** 9
+
+**Purpose:** “If I buy this, how do portfolio aggregates change?”, deal vs **portfolio averages**, **convert deal → property** with minimal re-entry.
+
+**Distinct from:** **Analyze deal** (workspace), **Modeling** (owned-only projections), **Tools** (no portfolio context). Replaces the loose “property evaluation tool” notion — any Evaluate flow should serve **this**, not a second deal analyzer.
+
+**Shipped (v1):** `GET /api/deals/[id]` includes `portfolioContext` (snapshot: weighted cap, portfolio cash-on-cash, DSCR, total monthly cash flow, property counts). **Analyze deal** shows a **Compared to your portfolio** panel when a saved deal is loaded (empty portfolio → add-property CTA).
+
+---
+
+### Scenario & deal comparison (side-by-side)
+
+**Priority:** 10
+
+**Purpose:** **Two** scenarios or **two** deals on one screen (base vs conservative, Deal A vs Deal B).
+
+**Distinct from:** **Modeling** presets, which tune **one** projection path. Optional link to **Simulation** remainder (hypothetical property) if shipped later.
+
+---
+
+### Investor outputs & sharing (PDF, lender summary, read-only link)
+
+**Priority:** 11–12
+
+**Purpose:** Credible **PDF/summary** for lender/partner/CPA; assumptions visible. Optional **read-only snapshot link** (time-boxed).
+
+**Distinct from:** CSV export; **full Schedule E / bank sync** (deferred, §6). **Consolidates** the former standalone “Report section” bullet — one initiative.
+
+**Shipped (v1):** **Print-friendly portfolio summary** at `/export/portfolio-summary` (browser print / save as PDF), backed by rate-limited `GET /api/export/portfolio-summary` with an assumptions footer. Read-only links and server-generated PDF remain backlog.
+
+---
+
+### CPA-friendly export (lightweight)
+
+**Priority:** 14 — *Optional*
+
+**Purpose:** Totals + assumptions for a CPA **without** Plaid or full bookkeeping. **Not** Baselane-class tax automation unless strategy changes.
+
+---
+
+### Tools hub — calculators (authenticated + **public for SEO**)
+
+**Priority:** 10–11 (incremental)
+
+**Purpose:** Fast BRRR, flip, wholesale, STR vs LTR, etc. **Acquisition:** selected tools ship as **public, indexable** routes (same pattern as **`/investment-property-calculator`**): canonical URLs, title/description, internal links, CTA to sign up or open **Analyze**. Avoid duplicating the whole app — **thin** public layer, richer optional when signed in.
+
+**Public vs signed-in:** Public = limited fields + core math + CTA; signed-in users use **`/calculators`** inside the app shell (sidebar), parallel to public **`/tools`** (same calculator components; SEO/canonical stay on **`/tools`** and **`/investment-property-calculator`** for ads).
+
+**Distinct from:** **Analyze deal**, **Modeling**, standalone marketing calculator (sibling; link from hub).
+
+*Calculator shortlist and nav: see **§2 Tools hub** below (single detailed table).*
+
+**Shipped (v1):** **`/tools`** hub, **`/tools/brrr`**, canonical **`/investment-property-calculator`**, **`/calculators`** in-app hub + **`/calculators/brrr`** + **`/calculators/investment-property-calculator`**; **Calculators** app nav → `/calculators`; **proxy** allowlist for public `/tools` routes.
+
+**Shipped (v2):** **`/tools/str-vs-ltr`** and **`/calculators/str-vs-ltr`** — STR vs LTR comparison calculator (see §2 Tools hub shortlist).
+
+**Shipped (v3):** **`/tools/fix-and-flip`** and **`/calculators/fix-and-flip`** — fix-and-flip profit / ROI calculator (IO hold, sale at ARV).
+
+**Future — calculator ↔ workspace continuity (backlog, not scheduled):** Public calculators do **not** persist inputs or push assumptions into **Analyze deal** today; CTAs are aligned to that fact. Later options to promote when ready: (1) **Query-string (or hash) prefill** to `/analyze` for overlapping fields (e.g. purchase, mortgage, LTR rent)—honest per calculator; (2) **Named saved calculator sessions** (per user, per tool); (3) **STR / multi-mode fields** inside the deal analyzer only if ICP justifies the scope. Promote to `docs/tasks.md` when prioritizing.
+
+---
+
+## 2. Near-term (Prioritized Value-Add) — detailed tracks
+
+Post-MVP features in suggested order. Promote to `docs/tasks.md` when ready to build.
 
 ### Completed (reference)
 
@@ -24,6 +119,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 | Admin membership override | Done |
 | Error tracking (Sentry) | Done |
 | Mortgage balance advancement (Phase 1 — effective balance, balance as of) | Done |
+| Dashboard — single-property improvements | Done — see `docs/archive/proposals/dashboard-single-property-proposal.md` (archived as implemented) |
+| Benchmarking v2 (rental-status-aware) | Done — see §Benchmarking v2 below |
+| Projections / cashflow timeline (single property) | Done — `ProjectionsTabContent` on property + `/modeling` workspace; rent/expense/value growth, hold period, charts, sale option |
 
 ### Mortgage balance advancement (Phase 1 — amortization projection + manual override) — **Shipped**
 
@@ -39,7 +137,7 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 **Remaining / deferred (not Phase 1 blockers):**
 
 - **Bank-led automation:** Plaid or similar — explicitly **out of scope** for Phase 1; see `docs/plaid-considerations.md`.
-- **Roadmap follow-ups** elsewhere in this doc (e.g. benchmarking v2, property detail overhaul) are separate initiatives.
+- **Roadmap follow-ups** elsewhere in this doc (e.g. property detail polish) are separate initiatives.
 
 ---
 
@@ -57,9 +155,9 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Benchmarking v2: rental-status-aware comparison
+### Benchmarking v2: rental-status-aware comparison — ✓ Done
 
-**Priority:** 9
+**Priority:** 9 (complete)
 
 **Scope:** Refine benchmark semantics so rent-vs-market comparisons only show when the property is actively rented and rent is present. Avoid treating missing/non-rental states as meaningful benchmark percentages.
 
@@ -73,11 +171,11 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Dashboard — single-property improvements
+### Dashboard — single-property improvements — ✓ Done
 
-**Priority:** 9
+**Scope (original):** Improve dashboard for single-property users so they see charts and discover tools (equity, cash flow, value breakdown, property detail). See `docs/archive/proposals/dashboard-single-property-proposal.md` — proposal is **archived as implemented**.
 
-**Scope:** Improve dashboard for single-property users so they see charts and discover tools (equity, cash flow, value breakdown, property detail). See `docs/archive/proposals/dashboard-single-property-proposal.md` for all six items: show Equity & Cash flow charts, add View property path, value breakdown for debt vs. value, refine Add property CTA, contextual Quick actions, property page teaser.
+**Verification:** `app/app/(app)/dashboard/page.tsx` implements single-property paths (e.g. `propertyHref`, `modelingHref`, `mortgageHref`, `WorkspaceNavMobile` with `singlePropertyId`, hero / at-a-glance behavior for one property).
 
 ---
 
@@ -89,19 +187,42 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-### Simulation page
+### Simulation page (vs current Modeling)
 
-**Priority:** 11
+**Priority:** 11 — **partially delivered** as **Modeling** + **Projections**
 
-**Scope:** Full modeling page: adjust all inputs (rent, value, expenses, mortgage), add hypothetical property to portfolio, see impact on totals. Dense but powerful. Extends scenario concept.
+**What shipped today:**
+
+- **`/modeling`** — Global workspace; `ProjectionsTabContent` (`app/app/(app)/properties/[id]/projections-tab-content.tsx`) for scenario inputs: rent / expense / value growth, vacancy, hold years, optional sale analysis, presets (conservative/base/upside), cash-flow and equity charts over time, mortgage amortization in the projection loop.
+- **Property detail** — Overview/Details tabs; `tab=projections` redirects to Modeling (see `property-detail-tabs.tsx`).
+
+**What the original “simulation page” scope still implied (not the same as Modeling alone):**
+
+- **Hypothetical property** — Add a *what-if* property not in the DB and see metrics (not built as a first-class flow).
+- **Portfolio-level impact** — “See impact on **totals**” across the whole portfolio when assumptions change (Modeling is **per selected property**, not a combined portfolio simulation).
+
+**Conclusion:** **Modeling covers the core “adjust inputs + time horizon + cashflow/equity over time”** intent for **one property at a time**. Keep this roadmap item open only if you still want **hypothetical deals** and/or **portfolio-aggregated** simulation; otherwise treat as **done** and close the item in `tasks.md` when PM confirms. **Side-by-side scenario comparison** is scoped under **§1a** (not duplicate UI in Modeling alone).
 
 ---
 
-### Report section (PDF/print portfolio summary)
+### Tools hub — detail (see §1a for strategy & SEO)
 
-**Priority:** 12
+**Priority:** 10–11
 
-**Scope:** Professional output; share with partners/lenders.
+**Summary:** Dedicated **Tools** nav → hub; calculators listed below. **Public routes** for selected tools = **SEO + acquisition** (indexable, canonical, CTAs); see **§1a Tools hub**. **Signed-in** hub may add richer saves later.
+
+**Calculator shortlist (pick 2–3 first):**
+
+| Tool | Purpose |
+|------|--------|
+| **BRRRR** | Purchase + rehab + ARV → refi, cash in deal, post-refi CoC. |
+| **Fix-and-flip** | Purchase, rehab, hold, ARV, sell → net profit / ROI. — **Shipped** (`/tools/fix-and-flip`, `/calculators/fix-and-flip`). |
+| **Wholesale / assignment** | ARV, MAO, fee → spread. |
+| **STR vs LTR** | Bookings, occupancy, fees → vs long-term rent. — **Shipped** (`/tools/str-vs-ltr`, `/calculators/str-vs-ltr`). |
+| **Rent vs buy** | Horizon + appreciation sanity check. |
+| **Mortgage comparison** | Only if clearly different from **Mortgage** workspace. |
+
+**Navigation:** `/tools` hub; deep links per tool; link **Investment property calculator** as sibling entry. **PDF / lender / read-only sharing:** **§1a Investor outputs** (not duplicated here).
 
 ---
 
@@ -133,33 +254,33 @@ Post-MVP features in suggested order. Promote to `tasks.md` when ready to build.
 
 ---
 
-## 2. Medium-term (Larger Initiatives)
+## 3. Medium-term (Larger Initiatives)
 
-Not yet scheduled; captured as backlog. Promote to `tasks.md` when ready.
+Not yet scheduled; captured as backlog. Promote to `docs/tasks.md` when ready.
 
-### Property detail page overhaul
+### Property detail page overhaul — **largely shipped** (verify against original vision)
 
-**Scope:** Redesign the property detail page as a user-centric home base. Current page stacks many sections (property details, mortgages, metrics, scenarios, amortization); tools are easy to miss. Target: card-based layout, clearer section headers, better discoverability. Consider collapsible sections or progressive disclosure. See `docs/proposals/refinance-payoff-proposal.md` §7 for options and rationale.
+**Original scope:** User-centric home base; card-based layout; mortgage/scenarios not buried.
+
+**What shipped:** Tabbed **Overview** vs **Details** (`property-detail-tabs.tsx`); **Mortgage** and **Projections** moved to dedicated **Mortgage** and **Modeling** workspaces (deep links via `?tab=`). Reduces vertical stacking on the property page.
+
+**Possible remaining gap:** Roadmap “card-based” layout and extra discoverability polish — if the product still feels tool-heavy, treat as **visual polish** (see below) rather than a second overhaul.
 
 ---
 
-### Property evaluation tool
+### Property evaluation — superseded by §1a
 
-Enter property specs (address, purchase price, estimated value, rent, expenses, mortgage terms, etc.) and get an evaluation of key statistics (cap rate, cash-on-cash, NOI, etc.) to help determine if it's a good investment. Useful for analyzing deals before adding them to the portfolio. May be a standalone "Evaluate" flow or a pre-add step.
+**Do not plan a separate “evaluation” product** parallel to **Analyze deal**. Any quick-eval or pre-add flow should roll into **Deal-to-portfolio continuity** (**§1a**): same metrics story, emphasis on **compare to portfolio** and **promote to property**.
 
 ### Visual refresh & unified aesthetic
 
-Major face-lift to the site: improved visual fidelity, cohesive design system, and a unified aesthetic across all pages. Includes typography, color palette, spacing, component styling, and overall polish.
+**Status:** Ongoing via **Design spec v2** (`docs/policies/design-spec.md`, last updated 2026-03-19) — not a single “done” milestone. **Major face-lift** (full-site redesign) remains backlog if you want a discrete relaunch; incremental polish has shipped with dashboard/property/modeling work.
 
-### Cashflow / profitability timeline simulator
+### Cashflow / profitability timeline simulator — ✓ **Core v1 done** (single property)
 
-Project cashflow and equity over time (5–30 years). Model rent escalation, expense inflation, and mortgage paydown to show how profitability evolves. Users can adjust inputs to explore scenarios and make decisions.
+**Delivered in:** `ProjectionsTabContent` — used on property projections path and **`/modeling`** (`modeling-workspace.tsx`). Rent/expense/value growth, configurable hold period, equity and cash-flow series, cash-flow-positive year, optional sale at hold, presets (conservative / base / upside / custom), assumption transparency in UI.
 
-**Core (v1):** Single property; rent escalation, expense inflation, time horizon; monthly cashflow chart, equity chart, key milestones (e.g. year cashflow turns positive). **Always show the assumptions used** so users understand where numbers come from. Inputs editable so users can try different scenarios.
-
-**Future expansion:** Portfolio view, refinance scenarios, sale scenarios, conservative vs. optimistic presets.
-
-**UX:** Single view with essential inputs prominent; optional inputs (vacancy, appreciation, CapEx) in expandable "More assumptions" section. Avoid separate Simple/Advanced modes—one flexible view with clear organization and full transparency on assumptions.
+**Still backlog (from original “Future expansion”):** **Portfolio-aggregated** timeline (all properties) — aligns with **§1a Simulation** remainder and **insights** layer; richer refinance/sale presets may overlap **Refinance / payoff insights**.
 
 ### Mortgage payment history / snapshots
 
@@ -167,7 +288,7 @@ Monthly mortgage payments can change over time (e.g. annual escrow adjustments f
 
 ---
 
-## 3. External API Integration Opportunities
+## 4. External API Integration Opportunities
 
 Ways to enhance UX by pulling data from third-party APIs. MLS excluded (expensive, legal barriers).
 
@@ -185,21 +306,21 @@ Ways to enhance UX by pulling data from third-party APIs. MLS excluded (expensiv
 
 ---
 
-## 4. Long-term Vision
+## 5. Long-term Vision
 
-Future product direction (from mvp-spec):
+Future product direction (from mvp-spec). Overlaps **§1a** where noted.
 
 - Automated property value updates
 - Rent estimate tracking
-- Refinance recommendations
-- Portfolio optimization insights
-- Deal analysis tools for new acquisitions
+- Refinance recommendations (see **§1a** + **Refinance / payoff insights**)
+- Portfolio optimization insights (**§1a** alerts / portfolio simulation if built)
+- Deal analysis tools for new acquisitions (**Tools hub**, **Analyze deal**)
 
 **Ultimate goal:** Create a **portfolio intelligence platform for real estate investors**.
 
 ---
 
-## 5. Deferred (Validate First)
+## 6. Deferred (Validate First)
 
 Defer until validated or user base justifies:
 
@@ -215,7 +336,7 @@ Defer until validated or user base justifies:
 
 ## Workflow
 
-1. **New idea** → Add to this doc (appropriate section).
+1. **New idea** → Add to **§1a** if strategic, or the appropriate detailed section; avoid duplicating the same scope in two places.
 2. **Ready to build** → PM promotes item to `docs/tasks.md` with concrete tasks and acceptance criteria.
-3. **Builder** → Works from `tasks.md`; references this doc for full scope when a task references a roadmap item.
-4. **When done** → Mark item done in this doc (e.g. add to Completed table) and check off in `tasks.md`.
+3. **Builder** → Works from `docs/tasks.md`; references this doc for full scope when a task references a roadmap item.
+4. **When done** → Mark item done in this doc (e.g. add to Completed table) and check off in `docs/tasks.md`.

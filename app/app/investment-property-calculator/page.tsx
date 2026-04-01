@@ -12,7 +12,7 @@ const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 export const metadata: Metadata = {
   title: "Investment Property Calculator",
   description:
-    "Free investment property calculator for monthly cash flow, cap rate, DSCR, and cash-on-cash return. Save your analysis by creating a free Veld account.",
+    "Free investment property calculator for monthly cash flow, cap rate, DSCR, and cash-on-cash. Create a free Veld account to save deals in Analyze and track your portfolio.",
   alternates: { canonical: `${APP_URL}/investment-property-calculator` },
   openGraph: {
     title: "Investment Property Calculator | Veld Portfolio",
@@ -48,7 +48,7 @@ function FaqJsonLd() {
         name: "Can I save calculator results?",
         acceptedAnswer: {
           "@type": "Answer",
-          text: "Yes. Create a free account to save analyses and continue in the full deal analyzer and portfolio workspace.",
+          text: "This calculator does not store your session. A free account lets you save deals in the deal analyzer and track properties in your portfolio—you enter assumptions there.",
         },
       },
     ],
@@ -75,15 +75,13 @@ export default async function InvestmentPropertyCalculatorPage() {
         <div className="mx-auto max-w-6xl">
           <FaqJsonLd />
           <header className="text-center">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted">
-              Public calculator
-            </p>
+            <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculator</p>
             <h1 className="mt-2 text-3xl font-semibold text-foreground">
               Investment Property Calculator
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
-              Estimate rental property performance with a quick calculator, then save your work in
-              Veld to compare deals and track portfolio-level metrics.
+              Estimate rental property performance on this page. With a free account, save deals in
+              Analyze and track owned properties in your portfolio.
             </p>
           </header>
 
@@ -92,12 +90,19 @@ export default async function InvestmentPropertyCalculatorPage() {
           </div>
 
           <p className="mt-5 text-center text-sm text-muted">
-            Works for single-family and multifamily quick estimates. For scenario comparisons,
-            saved analyses, and deal tracking,{" "}
+            Works for single-family and multifamily quick estimates. Compare STR vs long-term rent on{" "}
+            <Link href="/tools/str-vs-ltr" className="font-medium text-foreground hover:underline">
+              the STR vs LTR calculator
+            </Link>
+            ; model a flip with the{" "}
+            <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
+              fix-and-flip calculator
+            </Link>
+            . For saved deals, portfolio tracking, and comparisons in the app,{" "}
             <Link href="/sign-up?intent=free" className="font-medium text-foreground hover:underline">
               create a free account
             </Link>{" "}
-            and continue in the full deal analyzer.
+            (calculator inputs are not transferred automatically).
           </p>
         </div>
       </main>

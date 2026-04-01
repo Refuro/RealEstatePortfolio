@@ -3,6 +3,10 @@ import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { updateDealSchema } from "@/lib/validations/deal";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import {
+  buildPortfolioSummaryPayload,
+  toDealPortfolioContext,
+} from "@/lib/server/portfolio-summary-payload";
 
 async function getDealForUser(dealId: string, userId: string) {
   return prisma.savedDeal.findFirst({
@@ -97,7 +101,13 @@ export async function GET(
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
 
-  return NextResponse.json(serializeDeal(deal));
+  const portfolioPayload = await buildPortfolioSummaryPayload(user);
+  const portfolioContext = toDealPortfolioContext(portfolioPayload);
+
+  return NextResponse.json({
+    ...serializeDeal(deal),
+    portfolioContext,
+  });
 }
 
 export async function PATCH(

@@ -1,18 +1,28 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { MobileSectionCard } from "@/components/mobile-section-card";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
+import { CalculatorMetric } from "@/components/calculators/calculator-metric";
 import { formatCurrency } from "@/lib/format-currency";
 import { computePublicCalculatorResult } from "@/lib/public-calculator";
+import {
+  calculatorToneValueClass,
+  getCapRateTone,
+  getCashOnCashTone,
+  getDscrTone,
+  getMonthlyCashFlowTone,
+} from "@/lib/calculator-metric-tones";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 
 type PublicCalculatorProps = {
   compact?: boolean;
   showCta?: boolean;
   landingVariant?: string;
+  surface?: "marketing" | "app";
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -24,11 +34,13 @@ export function PublicCalculator({
   compact = false,
   showCta = false,
   landingVariant,
+  surface = "marketing",
 }: PublicCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
+  const isAppShell = surface === "app";
   const [purchasePrice, setPurchasePrice] = useState("300000");
-  const [monthlyRent, setMonthlyRent] = useState("2400");
+  const [monthlyRent, setMonthlyRent] = useState("2500");
   const [monthlyExpenses, setMonthlyExpenses] = useState("700");
   const [downPaymentPercent, setDownPaymentPercent] = useState("20");
   const [interestRatePercent, setInterestRatePercent] = useState("7");
@@ -178,23 +190,30 @@ export function PublicCalculator({
   const resultsContent = (
     <div>
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-        <Metric label="Monthly cash flow" value={formatCurrency(result.metrics.monthlyCashFlow)} />
-        <Metric
+        <CalculatorMetric
+          label="Monthly cash flow"
+          value={formatCurrency(result.metrics.monthlyCashFlow)}
+          tone={getMonthlyCashFlowTone(result.metrics.monthlyCashFlow)}
+        />
+        <CalculatorMetric
           label="Cap rate"
           value={result.metrics.capRate != null ? `${(result.metrics.capRate * 100).toFixed(2)}%` : "—"}
+          tone={getCapRateTone()}
         />
-        <Metric
+        <CalculatorMetric
           label="DSCR"
           value={result.dscr != null ? result.dscr.toFixed(2) : "—"}
           helper={result.dscr != null ? (result.dscr >= 1 ? "Above 1.0 is stronger" : "Below 1.0 is tighter") : undefined}
+          tone={getDscrTone(result.dscr)}
         />
-        <Metric
+        <CalculatorMetric
           label="Cash-on-cash"
           value={
             result.metrics.cashOnCashReturn != null
               ? `${(result.metrics.cashOnCashReturn * 100).toFixed(2)}%`
               : "—"
           }
+          tone={getCashOnCashTone(result.metrics.cashOnCashReturn)}
         />
       </div>
       <p className="mt-3 text-xs text-muted">
@@ -204,28 +223,47 @@ export function PublicCalculator({
 
       {showCta && (
         <div className="mt-4">
-          <FunnelCtaLink
-            href={isSignedIn ? "/analyze" : "/sign-up?intent=free"}
-            placement="public_calculator"
-            ctaId="save_analysis_signup"
-            planIntent="free"
-            landingVariant={landingVariant}
-            className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            {isSignedIn ? "Save this analysis in full analyzer" : "Save this analysis"}
-          </FunnelCtaLink>
-          <div className="mt-2">
-            <FunnelCtaLink
-              href={isSignedIn ? "/analyze" : "/sign-up?intent=investor"}
-              placement="public_calculator"
-              ctaId="open_full_analyzer"
-              planIntent="investor"
-              landingVariant={landingVariant}
-              className="text-sm font-medium text-muted hover:text-foreground hover:underline"
-            >
-              {isSignedIn ? "Open full deal analyzer" : "Need deeper analysis? Create free account"}
-            </FunnelCtaLink>
-          </div>
+          {isAppShell ? (
+            <div className="flex flex-col gap-2">
+              <Link
+                href="/analyze"
+                className="inline-flex w-fit rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Open deal analyzer
+              </Link>
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-muted hover:text-foreground hover:underline"
+              >
+                Dashboard
+              </Link>
+            </div>
+          ) : isSignedIn ? null : (
+            <>
+              <FunnelCtaLink
+                href="/sign-up?intent=free"
+                placement="public_calculator"
+                ctaId="save_analysis_signup"
+                planIntent="free"
+                landingVariant={landingVariant}
+                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Create a free account
+              </FunnelCtaLink>
+              <div className="mt-2">
+                <FunnelCtaLink
+                  href="/sign-up?intent=investor"
+                  placement="public_calculator"
+                  ctaId="open_full_analyzer"
+                  planIntent="investor"
+                  landingVariant={landingVariant}
+                  className="text-sm font-medium text-muted hover:text-foreground hover:underline"
+                >
+                  Track deals & portfolio — see plans
+                </FunnelCtaLink>
+              </div>
+            </>
+          )}
         </div>
       )}
     </div>
@@ -235,23 +273,17 @@ export function PublicCalculator({
     {
       label: "Cash flow",
       value: formatCurrency(result.metrics.monthlyCashFlow),
-      tone: result.metrics.monthlyCashFlow >= 0 ? "positive" : "negative",
+      tone: getMonthlyCashFlowTone(result.metrics.monthlyCashFlow),
     },
     {
       label: "Cap rate",
       value: result.metrics.capRate != null ? `${(result.metrics.capRate * 100).toFixed(2)}%` : "—",
+      tone: getCapRateTone(),
     },
     {
       label: "DSCR",
       value: result.dscr != null ? result.dscr.toFixed(2) : "—",
-      tone:
-        result.dscr == null
-          ? "default"
-          : result.dscr >= 1.2
-            ? "positive"
-            : result.dscr >= 1
-              ? "warning"
-              : "negative",
+      tone: getDscrTone(result.dscr),
     },
     {
       label: "Cash-on-cash",
@@ -259,6 +291,7 @@ export function PublicCalculator({
         result.metrics.cashOnCashReturn != null
           ? `${(result.metrics.cashOnCashReturn * 100).toFixed(2)}%`
           : "—",
+      tone: getCashOnCashTone(result.metrics.cashOnCashReturn),
     },
   ] as const;
 
@@ -399,57 +432,82 @@ export function PublicCalculator({
           </div>
           <div className="text-right">
             <p className="text-[11px] uppercase tracking-wide text-muted">Cash flow</p>
-            <p className={`mt-1 text-lg font-semibold ${result.metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}>
+            <p
+              className={`mt-1 text-lg font-semibold ${calculatorToneValueClass[getMonthlyCashFlowTone(result.metrics.monthlyCashFlow)]}`}
+            >
               {formatCurrency(result.metrics.monthlyCashFlow)}
             </p>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <Metric
+          <CalculatorMetric
             label="Cap rate"
             value={result.metrics.capRate != null ? `${(result.metrics.capRate * 100).toFixed(2)}%` : "—"}
+            tone={getCapRateTone()}
           />
-          <Metric
+          <CalculatorMetric
             label="DSCR"
             value={result.dscr != null ? result.dscr.toFixed(2) : "—"}
             helper={result.dscr != null ? (result.dscr >= 1 ? "Above 1.0 is stronger" : "Below 1.0 is tighter") : undefined}
+            tone={getDscrTone(result.dscr)}
           />
-          <Metric
+          <CalculatorMetric
             label="Cash-on-cash"
             value={
               result.metrics.cashOnCashReturn != null
                 ? `${(result.metrics.cashOnCashReturn * 100).toFixed(2)}%`
                 : "—"
             }
+            tone={getCashOnCashTone(result.metrics.cashOnCashReturn)}
           />
-          <Metric label="Monthly cash flow" value={formatCurrency(result.metrics.monthlyCashFlow)} />
+          <CalculatorMetric
+            label="Monthly cash flow"
+            value={formatCurrency(result.metrics.monthlyCashFlow)}
+            tone={getMonthlyCashFlowTone(result.metrics.monthlyCashFlow)}
+          />
         </div>
 
-        {showCta && (
-          <div className="space-y-2 pt-1">
-            <FunnelCtaLink
-              href={isSignedIn ? "/analyze" : "/sign-up?intent=free"}
-              placement="public_calculator"
-              ctaId="save_analysis_signup"
-              planIntent="free"
-              landingVariant={landingVariant}
-              className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-            >
-              {isSignedIn ? "Save this analysis in full analyzer" : "Save this analysis"}
-            </FunnelCtaLink>
-            <FunnelCtaLink
-              href={isSignedIn ? "/analyze" : "/sign-up?intent=investor"}
-              placement="public_calculator"
-              ctaId="open_full_analyzer"
-              planIntent="investor"
-              landingVariant={landingVariant}
-              className="text-sm font-medium text-muted hover:text-foreground hover:underline"
-            >
-              {isSignedIn ? "Open full deal analyzer" : "Need deeper analysis? Create free account"}
-            </FunnelCtaLink>
-          </div>
-        )}
+        {showCta &&
+          (isAppShell ? (
+            <div className="space-y-2 pt-1">
+              <Link
+                href="/analyze"
+                className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Open deal analyzer
+              </Link>
+              <Link
+                href="/dashboard"
+                className="block text-center text-sm font-medium text-muted hover:text-foreground hover:underline"
+              >
+                Dashboard
+              </Link>
+            </div>
+          ) : isSignedIn ? null : (
+            <div className="space-y-2 pt-1">
+              <FunnelCtaLink
+                href="/sign-up?intent=free"
+                placement="public_calculator"
+                ctaId="save_analysis_signup_m"
+                planIntent="free"
+                landingVariant={landingVariant}
+                className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Create a free account
+              </FunnelCtaLink>
+              <FunnelCtaLink
+                href="/sign-up?intent=investor"
+                placement="public_calculator"
+                ctaId="open_full_analyzer_m"
+                planIntent="investor"
+                landingVariant={landingVariant}
+                className="block text-center text-sm font-medium text-muted hover:text-foreground hover:underline"
+              >
+                Track deals & portfolio — see plans
+              </FunnelCtaLink>
+            </div>
+          ))}
       </MobileSectionCard>
     </div>
   );
@@ -479,23 +537,5 @@ export function PublicCalculator({
         <div className={compact ? "lg:col-span-5" : "lg:col-span-4"}>{resultsContent}</div>
       </div>
     </section>
-  );
-}
-
-function Metric({
-  label,
-  value,
-  helper,
-}: {
-  label: string;
-  value: string;
-  helper?: string;
-}) {
-  return (
-    <div className="rounded-md border border-border/70 bg-background/45 px-3 py-2">
-      <p className="text-xs text-muted">{label}</p>
-      <p className="mt-1 text-base font-semibold text-foreground">{value}</p>
-      {helper ? <p className="mt-0.5 text-[11px] text-muted">{helper}</p> : null}
-    </div>
   );
 }

@@ -10,7 +10,9 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  Sentry.captureException(error);
+  if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+    Sentry.captureException(error);
+  }
   void error; // Required by Next.js; not displayed to avoid leaking internal details
   return (
     <div className="rounded-lg border border-border bg-card p-8 text-center">

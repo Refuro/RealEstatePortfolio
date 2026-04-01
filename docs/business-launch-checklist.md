@@ -70,8 +70,10 @@ Form a limited liability company. The LLC is a separate legal entity. Your perso
 
 ### Suggested LLC name
 
-- **Veld Software LLC** — Legal entity name
+- **Veld Software LLC** — Legal entity name (if you form an LLC, update the Terms of Service and Privacy Policy to name the entity)
 - **Veld Portfolio** — Trade name (DBA) for the product
+
+**Current in-app copy (as of March 2026):** Terms and Privacy describe the operator as an **individual** doing business as Veld Portfolio (sole proprietor–style). Replace with your legal entity name when you register a business.
 
 ### Timeline
 

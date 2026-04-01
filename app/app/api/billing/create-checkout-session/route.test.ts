@@ -2,6 +2,12 @@ import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { mockActiveUser } from "@/lib/test/api-route-mocks";
 
+const captureExceptionMock = vi.fn();
+
+vi.mock("@sentry/nextjs", () => ({
+  captureException: (...args: unknown[]) => captureExceptionMock(...args),
+}));
+
 const sessionsCreate = vi.fn().mockResolvedValue({
   url: "https://checkout.stripe.com/c/pay/cs_test_123",
 });
@@ -64,6 +70,7 @@ function postJson(body: unknown) {
 describe("POST /api/billing/create-checkout-session", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    captureExceptionMock.mockClear();
     checkRateLimitMock.mockResolvedValue({ allowed: true });
     getActiveAppUserMock.mockResolvedValue({
       ...mockActiveUser,
@@ -101,6 +108,16 @@ describe("POST /api/billing/create-checkout-session", () => {
     expect(sessionsCreate).toHaveBeenCalled();
     expect(customersCreate).not.toHaveBeenCalled();
     expect(recordRateLimitMock).toHaveBeenCalled();
+  });
+
+  it("captures to Sentry when Stripe checkout creation throws", async () => {
+    sessionsCreate.mockRejectedValueOnce(new Error("stripe down"));
+    const { POST } = await import("./route");
+    const res = await POST(
+      postJson({ plan: "investor", billingCycle: "monthly" })
+    );
+    expect(res.status).toBe(500);
+    expect(captureExceptionMock).toHaveBeenCalled();
   });
 
   it("creates Stripe customer when user has no stripeCustomerId", async () => {

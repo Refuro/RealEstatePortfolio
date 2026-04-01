@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveBalance, getBalanceSource, getPayoffProjection } from "@/lib/amortization";
-import { updateMortgageSchema, validateEscrowAmount } from "@/lib/validations/mortgage";
+import {
+  updateMortgageSchema,
+  validateEscrowAmount,
+  validateMortgagePiCoversInterestFields,
+} from "@/lib/validations/mortgage";
 
 async function getMortgageForUser(mortgageId: string, userId: string) {
   return prisma.mortgage.findFirst({
@@ -104,6 +108,29 @@ export async function PATCH(
       { status: 400 }
     );
   }
+
+  const mergedForPi = {
+    originalLoanAmount:
+      data.originalLoanAmount ?? existing.originalLoanAmount.toString(),
+    currentBalance: data.currentBalance ?? existing.currentBalance.toString(),
+    interestRate: data.interestRate ?? existing.interestRate.toString(),
+    termYears: data.termYears ?? existing.termYears,
+    startDate: data.startDate ?? existing.startDate,
+    monthlyPayment,
+    escrowIncluded: data.escrowIncluded ?? existing.escrowIncluded,
+    escrowAmount:
+      data.escrowAmount !== undefined
+        ? data.escrowAmount
+        : existing.escrowAmount?.toString() ?? null,
+  };
+  const piCheck = validateMortgagePiCoversInterestFields(mergedForPi);
+  if (!piCheck.ok) {
+    return NextResponse.json(
+      { error: piCheck.message, details: { fieldErrors: { monthlyPayment: [piCheck.message] } } },
+      { status: 400 }
+    );
+  }
+
   const updatePayload: Record<string, unknown> = {};
   if (data.originalLoanAmount !== undefined) updatePayload.originalLoanAmount = data.originalLoanAmount;
   if (data.currentBalance !== undefined) updatePayload.currentBalance = data.currentBalance;

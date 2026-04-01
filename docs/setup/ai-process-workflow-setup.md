@@ -64,12 +64,14 @@ Optional but part of this repo's broader AI workflow:
 - `.cursor/rules/code-audit-agent.mdc`
 - `.cursor/rules/math-audit-agent.mdc`
 - `.cursor/rules/feature-audit-agent.mdc`
+- `.cursor/rules/mobile-experience-audit-agent.mdc`
 - `.cursor/rules/security-audit-agent.mdc`
 - `.cursor/rules/performance-cost-audit-agent.mdc`
 - `.cursor/rules/reliability-ops-audit-agent.mdc`
 - `.cursor/rules/data-integrity-audit-agent.mdc`
 - `.cursor/rules/business-valuation-audit-agent.mdc`
 - `.cursor/rules/growth-funnel-audit-agent.mdc`
+- `.cursor/rules/seo-audit-agent.mdc`
 - `.cursor/rules/documentation-audit-agent.mdc`
 - `.cursor/rules/legal-compliance-audit-agent.mdc`
 - `.cursor/rules/agent-governance-audit-agent.mdc`
@@ -271,7 +273,8 @@ That enables prompts like:
 - `run documentation audit`
 - `run legal audit`
 - `run full audit`
-- `run mobile audit` (Mobile experience lane; also part of the **13-lane** full audit)
+- `run mobile audit` (Mobile experience lane; also part of the **14-lane** full audit)
+- `run SEO audit`
 
 Reports are written into `docs/audits/`.
 

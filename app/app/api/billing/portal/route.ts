@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
+import { getPublicAppBaseUrlForBilling } from "@/lib/env";
 import { getStripe } from "@/lib/stripe-config";
 
 export async function POST() {
@@ -15,8 +17,7 @@ export async function POST() {
     );
   }
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+  const baseUrl = getPublicAppBaseUrlForBilling();
 
   try {
     const stripe = getStripe();
@@ -28,6 +29,9 @@ export async function POST() {
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("Billing portal error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Billing portal session failed"), {
+      tags: { area: "billing", route: "billing/portal" },
+    });
     return NextResponse.json(
       { error: "Failed to create billing portal session" },
       { status: 500 }

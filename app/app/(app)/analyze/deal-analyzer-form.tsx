@@ -14,6 +14,7 @@ import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { PropertyMetricsSection } from "../properties/property-metrics-section";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
+import type { DealPortfolioContext } from "@/lib/server/portfolio-summary-payload";
 
 const inputClass =
   "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
@@ -23,6 +24,95 @@ interface DealAnalyzerFormProps {
   dealId?: string;
   dealCount?: number;
   dealLimit?: number;
+}
+
+function DealPortfolioCompareBlock({
+  portfolio,
+  dealCapRate,
+  dealCoc,
+  dealDscr,
+  dealMonthlyCf,
+}: {
+  portfolio: DealPortfolioContext;
+  dealCapRate: number | null;
+  dealCoc: number | null;
+  dealDscr: number | null;
+  dealMonthlyCf: number;
+}) {
+  const fmtPct = (p: number | null) => (p != null ? `${(p * 100).toFixed(2)}%` : "—");
+  const empty = portfolio.propertyCount === 0;
+
+  if (empty) {
+    return (
+      <MobileSectionCard className="space-y-2">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Compared to your portfolio
+        </h3>
+        <p className="text-sm text-muted">
+          Add at least one property to your portfolio to compare this deal&apos;s metrics at a glance.
+        </p>
+        <Link
+          href="/properties/new"
+          className="inline-flex text-sm font-medium text-accent hover:underline"
+        >
+          Add property
+        </Link>
+      </MobileSectionCard>
+    );
+  }
+
+  return (
+    <MobileSectionCard className="space-y-3">
+      <div>
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          Compared to your portfolio
+        </h3>
+        <p className="mt-1 text-xs text-muted">
+          Portfolio uses your ownership display mode and up to {portfolio.propertyCount} included
+          properties
+          {portfolio.truncated ? " (plan limit applies)" : ""}.
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[280px] text-sm">
+          <thead>
+            <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted">
+              <th className="py-2 pr-2 font-medium">Metric</th>
+              <th className="py-2 pr-2 font-medium">This deal</th>
+              <th className="py-2 font-medium">Portfolio</th>
+            </tr>
+          </thead>
+          <tbody className="text-foreground">
+            <tr className="border-b border-border/60">
+              <td className="py-2 pr-2 text-muted">Cap rate</td>
+              <td className="py-2 pr-2 font-medium">{fmtPct(dealCapRate)}</td>
+              <td className="py-2 font-medium">{fmtPct(portfolio.weightedCapRate)}</td>
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="py-2 pr-2 text-muted">Cash-on-cash</td>
+              <td className="py-2 pr-2 font-medium">{fmtPct(dealCoc)}</td>
+              <td className="py-2 font-medium">{fmtPct(portfolio.portfolioCashOnCashReturn)}</td>
+            </tr>
+            <tr className="border-b border-border/60">
+              <td className="py-2 pr-2 text-muted">DSCR</td>
+              <td className="py-2 pr-2 font-medium">{dealDscr != null ? dealDscr.toFixed(2) : "—"}</td>
+              <td className="py-2 font-medium">
+                {portfolio.dscr != null ? portfolio.dscr.toFixed(2) : "—"}
+              </td>
+            </tr>
+            <tr>
+              <td className="py-2 pr-2 text-muted">Monthly cash flow</td>
+              <td className="py-2 pr-2 font-medium">{formatCurrency(dealMonthlyCf)}</td>
+              <td className="py-2 font-medium">{formatCurrency(portfolio.totalMonthlyCashFlow)}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[11px] text-muted">
+        Deal metrics are from the assumptions above; portfolio metrics aggregate saved properties.
+      </p>
+    </MobileSectionCard>
+  );
 }
 
 type StressPreset = -10 | 0 | 10;
@@ -53,6 +143,7 @@ export function DealAnalyzerForm({
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
   const [loadingDeal, setLoadingDeal] = useState(!!dealId);
+  const [portfolioContext, setPortfolioContext] = useState<DealPortfolioContext | null>(null);
 
   const formSnapshot = useMemo(
     () =>
@@ -148,6 +239,11 @@ export function DealAnalyzerForm({
         setOwnershipPercent(String(data.ownershipPercent ?? 100));
         setVacancyPercent(String(data.vacancyPercent ?? 5));
         setCashInvested(data.cashInvested ?? "");
+        if (data.portfolioContext) {
+          setPortfolioContext(data.portfolioContext as DealPortfolioContext);
+        } else {
+          setPortfolioContext(null);
+        }
       })
       .finally(() => {
         if (!cancelled) setLoadingDeal(false);
@@ -244,6 +340,7 @@ export function DealAnalyzerForm({
     setExpenseStressPercent(0);
     setSaveStatus("idle");
     setSaveError(null);
+    setPortfolioContext(null);
     router.replace("/analyze");
   }
 
@@ -540,6 +637,15 @@ export function DealAnalyzerForm({
 
   const mobileResultsSurface = (
     <section className="space-y-3.5">
+      {dealId && portfolioContext && (
+        <DealPortfolioCompareBlock
+          portfolio={portfolioContext}
+          dealCapRate={metrics.capRate}
+          dealCoc={metrics.cashOnCashReturn}
+          dealDscr={dscr}
+          dealMonthlyCf={metrics.monthlyCashFlow}
+        />
+      )}
       <MobileSectionCard className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
@@ -1243,6 +1349,16 @@ export function DealAnalyzerForm({
           </div>
         </div>
 
+        {dealId && portfolioContext && (
+          <DealPortfolioCompareBlock
+            portfolio={portfolioContext}
+            dealCapRate={metrics.capRate}
+            dealCoc={metrics.cashOnCashReturn}
+            dealDscr={dscr}
+            dealMonthlyCf={metrics.monthlyCashFlow}
+          />
+        )}
+
         {saveError && (
           <p className="text-sm text-negative">
             {saveError}
@@ -1278,7 +1394,7 @@ export function DealAnalyzerForm({
 
       {/* Mobile sticky results bar */}
       {!needsInputGuidance && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 py-2.5 md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom,0px))] md:hidden">
           <div className="flex items-center justify-between gap-3 text-sm">
             <div className="min-w-0">
               <p className="text-[11px] text-muted">Cash flow</p>
