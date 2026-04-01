@@ -2,7 +2,7 @@
 
 Recorded as we build. For manual security steps (e.g. production keys, webhooks), see [manual-steps.md](../setup/manual-steps.md).
 
-**Last reviewed:** 2026-03-31  
+**Last reviewed:** 2026-04-01  
 **Review cadence:** Monthly (or after material auth/billing/security changes)
 
 ---
@@ -22,7 +22,9 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 - *Add any new security-related decisions or findings here (e.g. new APIs, auth changes, rate limiting, headers).*
 
 - **Google Ads (gtag)** — When `NEXT_PUBLIC_GOOGLE_ADS_ID` is set, the root layout loads `gtag.js` from Google for ads measurement (client-side third-party script). ID is public; no secret. See privacy policy for disclosure.
-- **CSP reporting** — `POST /api/csp-report` remains public for anonymous browser submissions. In development it logs compact reports to the server console; in production it forwards grouped, sampled CSP violations to Sentry (tag `signal=csp`) so rollout monitoring is visible without flooding events.
+- **CSP reporting** — `POST /api/csp-report` remains public for anonymous browser submissions. In development it logs compact reports to the server console; in production it forwards grouped, sampled CSP violations to Sentry (tag `signal=csp`) so rollout monitoring is visible without flooding events. **Abuse guard:** request body is capped at **8192 bytes** (`CSP_REPORT_MAX_BODY_BYTES`); oversized bodies return **413**. **Rate limit:** `csp-report:post` (per IP, rolling 1h) via `ApiRateLimitEntry` — see [security-audit.md](./security-audit.md) §6.
+
+- **GET `/api/health`** — **Public** (no auth) by design for load balancers and uptime checks. Returns only `status` + `database` connectivity — see [security-audit.md](./security-audit.md) §7.
 
 - Audit lane reference: `docs/process/security-audit-process.md` and `docs/audits/security/`.
 
@@ -31,8 +33,8 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 ## Security headers + CSP + `ApiRateLimitEntry` (2026-03)
 
 - **Security headers** — `app/next.config.ts` `headers()` for `/:path*`: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera, microphone, geolocation disabled).
-- **CSP** — Same file builds a `Content-Security-Policy` string (Clerk, Stripe checkout iframes, Cloudflare Turnstile if used, `connect-src https:`, etc.). Default deployment uses **`Content-Security-Policy-Report-Only`** unless `CSP_ENFORCEMENT=true`, in which case the enforced **`Content-Security-Policy`** header is sent. Optional `report-uri` to `/api/csp-report` when `NEXT_PUBLIC_APP_URL` is set. Full directive list: [security-audit.md](./security-audit.md) §5.
-- **Route rate limits** — Sensitive routes use `lib/rate-limit.ts` (`RATE_LIMITS`, rolling 1h, `ApiRateLimitEntry`). Table of actions: [security-audit.md](./security-audit.md) §6.
+- **CSP** — Same file builds a `Content-Security-Policy` string (Clerk, Stripe checkout iframes, Vercel scripts/analytics as needed, Cloudflare Turnstile if used, `connect-src https:`, etc.). Default deployment uses **`Content-Security-Policy-Report-Only`** unless `CSP_ENFORCEMENT=true`, in which case the enforced **`Content-Security-Policy`** header is sent. Optional `report-uri` to `/api/csp-report` when `NEXT_PUBLIC_APP_URL` is set. Full directive list: [security-audit.md](./security-audit.md) §5.
+- **Route rate limits** — Sensitive routes use `lib/rate-limit.ts` (`RATE_LIMITS`, rolling 1h, `ApiRateLimitEntry`). Includes `PATCH` on property/deal resources, admin tier override, and CSP reports. Table of actions: [security-audit.md](./security-audit.md) §6.
 
 ---
 

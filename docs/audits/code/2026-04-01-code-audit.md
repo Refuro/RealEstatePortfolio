@@ -2,10 +2,10 @@
 
 ## Executive summary
 
-- Overall code health is solid on core guardrails: protected APIs consistently use `getActiveAppUser()` (with documented exceptions), write paths are Zod-validated, and chart-heavy surfaces use `next/dynamic` with `ssr: false` plus placeholders.
-- Highest risk remains maintainability: several critical product flows are still concentrated in very large TSX files (1k-1.5k LOC), increasing change risk and review complexity.
-- Medium risks remain in design/security consistency: a few UI surfaces still use undocumented `primary` token classes and decorative modal chrome, and some update/delete mutations rely on pre-check ownership but do not include `userId` in the Prisma `where` clause for defense-in-depth.
-- Recommendation: prioritize scoped refactors on the largest modules and tighten ownership constraints in direct mutation calls when those routes are touched next.
+- **Overall health:** The codebase aligns well with `docs/architecture-and-build-practices.md` and `docs/security/security-notes.md`: protected APIs use `getActiveAppUser()` (with `getAppUser()` only on `POST /api/account/restore` as documented), Prisma access is `userId`-scoped for portfolio entities, write paths use Zod in sampled routes, metrics live in `lib/metrics/`, and Recharts-heavy surfaces use `next/dynamic` with `ssr: false` and loading placeholders where reviewed (dashboard charts; modeling/mortgage workspaces defer `projections-tab-content` / `mortgage-tab-content`).
+- **Top risks:** Several UI modules far exceed the ~300-line maintainability guideline, concentrating wizard, analyzer, and form logic in single files. A few surfaces diverge from `docs/policies/design-spec.md` §9 (heavy shadows, decorative blur orbs, `primary` token usage). `GET /api/deals/[id]` loads a full portfolio summary via `buildPortfolioSummaryPayload` on every request, which can duplicate work as portfolios grow.
+- **Security posture:** No Critical issues identified in this pass; IDOR controls use `findFirst` / `where: { id, userId }` patterns on reviewed property and deal routes; Stripe webhook verifies signatures; public routes match `proxy.ts` expectations.
+- **Recommendation:** When touching oversized files, extract subcomponents or hooks incrementally; tighten design-token usage on marketing/legal links and the onboarding modal; consider slimming deal-detail API work (lighter portfolio slice or caching) if profiling shows cost.
 
 ---
 
@@ -17,88 +17,142 @@
 
 ### High
 
-- **Oversized UI modules increase regression risk and slow iteration** — Architecture guidance targets focused files (~300 lines), but core workflow files remain several multiples larger, mixing rendering, state, and domain-specific UI behavior in single modules. This materially raises onboarding and change risk in high-traffic product areas.  
-  **Evidence:**  
-  - `app/app/(app)/properties/add-property-wizard.tsx` (~1591 lines)  
-  - `app/app/(app)/properties/[id]/projections-tab-content.tsx` (~1361 lines)  
-  - `app/app/(app)/analyze/deal-analyzer-form.tsx` (~1422 lines)  
-  - `app/app/(app)/properties/[id]/mortgage-tab-content.tsx` (~1035 lines)  
-  - `app/app/(app)/properties/property-form.tsx` (~1027 lines)  
-  - `app/app/(app)/properties/page.tsx` (~613 lines)  
-  - `app/components/marketing/str-ltr-calculator.tsx` (~741 lines), `app/components/marketing/brrr-calculator.tsx` (~640 lines)
+- **Architecture / maintainability — very large UI and form modules** — `docs/architecture-and-build-practices.md` §4.1 suggests keeping files focused and considering splits past ~300 lines. Multiple production files exceed that by a large margin, increasing regression risk, review cost, and merge conflict frequency.  
+  **Evidence (line counts from workspace enumeration, approximate):**  
+  - `app/app/(app)/properties/add-property-wizard.tsx` (~1528 lines)  
+  - `app/app/(app)/analyze/deal-analyzer-form.tsx` (~1389 lines)  
+  - `app/app/(app)/properties/property-form.tsx` (~988 lines)  
+  - `app/app/(app)/properties/page.tsx` (~600 lines)  
+  - `app/components/marketing/str-ltr-calculator.tsx` (~714 lines), `brrr-calculator.tsx` (~624), `public-calculator.tsx` (~522), `fix-and-flip-calculator.tsx` (~501)  
+  - `app/components/pricing-cards.tsx` (~511 lines)
 
 ### Medium
 
-- **Authorization defense-in-depth is inconsistent on some mutations** — Ownership is checked with user-scoped pre-queries (`findFirst`), but several write operations still mutate by `id` only instead of `id + userId`. Current behavior is safe as written; risk is future regressions if pre-checks are modified or bypassed.  
-  **Evidence:** `app/app/api/deals/[id]/route.ts` (`prisma.savedDeal.update({ where: { id } })`, `prisma.savedDeal.delete({ where: { id } })`), `app/app/api/properties/[id]/route.ts` (`prisma.property.delete({ where: { id } })`).
+- **Design compliance — onboarding welcome modal** — `docs/policies/design-spec.md` §9 discourages heavy shadows and decorative visual noise; §1 emphasizes clarity over decoration. The welcome modal uses strong elevation and decorative blurred orbs.  
+  **Evidence:** `app/app/(app)/onboarding-panel.tsx` — e.g. `shadow-2xl` on the dialog container, `blur-3xl` accent orbs, `shadow-lg shadow-accent/25` and `hover:-translate-y-px` on the primary CTA (lines ~96–135).
 
-- **Design token/pattern drift in onboarding + legal page links** — UI still uses `bg-primary`/`text-primary` classes while `globals.css` `@theme inline` defines semantic tokens around `accent`, `muted`, `border`, etc., not `primary`. Onboarding modal also uses decorative blur/shadow treatments that conflict with the design spec's "clarity over decoration" posture.  
-  **Evidence:** `app/app/(app)/onboarding-panel.tsx` (`bg-primary/15`, `blur-3xl`, `shadow-2xl`), `app/app/privacy/page.tsx` (`text-primary` links), `app/app/globals.css` (no `--color-primary` token mapping in `@theme inline`).
+- **Design compliance — semantic tokens vs `primary`** — The design spec centers on `accent`, `muted`, `border`, etc. A few usages rely on `text-primary` / `bg-primary/15`, which can drift from the documented semantic palette if `primary` is not explicitly part of the same `@theme` contract.  
+  **Evidence:** `app/app/privacy/page.tsx` (`text-primary` on links, ~93–102); `app/app/(app)/onboarding-panel.tsx` (`bg-primary/15`, ~98).
 
-- **API observability is uneven on billing/account failure paths** — Some critical route failures are logged to console but not reported to Sentry, despite architecture guidance to capture unexpected API failures.  
-  **Evidence:** `app/app/api/billing/create-checkout-session/route.ts` (catch block logs structured error only), `app/app/api/account/delete/route.ts` and `app/app/api/account/delete-permanent/route.ts` (Stripe/Clerk cancellation/delete errors logged via `console.error` without Sentry capture).
+- **Design compliance — marketing imagery chrome** — Homepage and pricing pages use `shadow-lg` on large images/screenshots. Acceptable for marketing polish but noted against §9 “heavy shadows” preference.  
+  **Evidence:** `app/app/page.tsx`, `app/app/pricing/page.tsx` (e.g. `shadow-lg` on image containers, ~203 and ~117–135 regions).
+
+- **Efficiency — deal detail GET loads full portfolio summary** — `GET` handlers call `buildPortfolioSummaryPayload(user)`, which runs `loadPortfolioSummaryCore` (property `count`, `findMany` with mortgages up to tier limit, portfolio metrics). That repeats work already done elsewhere and scales with portfolio size whenever a saved deal is opened.  
+  **Evidence:** `app/app/api/deals/[id]/route.ts` (calls `buildPortfolioSummaryPayload` after loading the deal, ~110–111); `app/lib/server/portfolio-summary-payload.ts` (`buildPortfolioSummaryPayload`, `loadPortfolioSummaryCore`).
+
+- **Security / defense in depth — property PATCH update `where` clause** — After `getPropertyForUser` proves ownership, `PATCH` uses `prisma.property.update({ where: { id } })`. Adding `userId` to `where` would harden against future edits that might bypass the pre-check.  
+  **Evidence:** `app/app/api/properties/[id]/route.ts` (flow after line ~58; update section).
+
+- **Observability — permanent account delete partial failures** — Stripe subscription cancel and Clerk user delete failures are logged with `console.error` but not reported to Sentry, unlike many other API error paths that call `Sentry.captureException`.  
+  **Evidence:** `app/app/api/account/delete-permanent/route.ts` (~72–74, ~83–85).
 
 ### Low
 
-- **Extra client-side fetch on amortization chart adds latency and weakens failure UX** — Amortization data is fetched client-side after render, introducing an additional round-trip and no explicit error-state branch (only loading/empty). This is acceptable today but adds friction on slow networks.  
-  **Evidence:** `app/components/charts/amortization-chart.tsx` (`useEffect` fetch to `/api/properties/${propertyId}/amortization` with no error UI), `app/app/(app)/properties/[id]/amortization-chart-dynamic.tsx`.
+- **Performance — `force-dynamic` scoped appropriately** — `export const dynamic = "force-dynamic"` appears on `(app)` layout and specific app pages (e.g. analyze, admin), not the root layout, matching `docs/architecture-and-build-practices.md` §2.5.  
+  **Evidence:** `app/app/(app)/layout.tsx`, `app/app/(app)/analyze/page.tsx`, `app/app/(app)/admin/layout.tsx`, `app/app/(app)/admin/page.tsx`.
 
-- **Route handler concentration in deal route** — `app/app/api/deals/[id]/route.ts` bundles serialization + metrics orchestration + CRUD in one file. Functional today, but this drifts from the "thin route, lib-centric logic" target and increases cognitive load for edits.  
-  **Evidence:** `app/app/api/deals/[id]/route.ts` (inline `serializeDeal` and metric composition logic).
+- **Performance — config** — `next.config.ts` sets `experimental.optimizePackageImports` for `lucide-react` and `recharts`. Root layout includes preconnect/dns-prefetch for RentCast, Clerk, Stripe, PostHog as applicable.  
+  **Evidence:** `app/next.config.ts` (~51–53); `app/app/layout.tsx` (~118–137).
+
+- **Performance — no ISR on session-aware public pages** — Public pages using `auth()` for nav are dynamically rendered; absence of `revalidate` matches the documented tradeoff in `docs/architecture-and-build-practices.md` §2.5.  
+  **Evidence:** `app/app/privacy/page.tsx` (`auth()` usage, no `revalidate` export).
+
+- **Architecture — billing portal body parsing** — `POST /api/billing/portal` uses `JSON.parse` with manual narrowing for optional fields; critical fields use `isValidPaidTier` / `isValidBillingCycle` and `resolveBillingPortalReturnPath`. Acceptable alternative to Zod for minimal optional JSON; Stripe calls remain server-side.  
+  **Evidence:** `app/app/api/billing/portal/route.ts` (~37–51).
+
+- **Technical debt — `eslint-disable` usage** — Single targeted disable for `set-state-in-effect` in theme toggle; justified by comment.  
+  **Evidence:** `app/app/(app)/settings/theme-toggle.tsx` (~19).
+
+- **Product mantra** — Core flows (property CRUD, deals, estimates, billing) generally follow thoughtful validation and clear error JSON; friction increases when navigating very large single-file wizards (cognitive load for contributors more than end users).
 
 ---
 
 ## Evidence reviewed
 
-- **Process/policy docs:** `docs/process/code-audit-process.md`, `docs/process/audit-report-template.md`, `docs/policies/design-spec.md`, `docs/architecture-and-build-practices.md`, `docs/security/security-notes.md`
-- **Core app/config surfaces:** `app/app/layout.tsx`, `app/app/(app)/layout.tsx`, `app/next.config.ts`, `app/proxy.ts`, `app/app/globals.css`
-- **API security/architecture sample:** `app/app/api/properties/[id]/route.ts`, `app/app/api/deals/[id]/route.ts`, `app/app/api/billing/create-checkout-session/route.ts`, `app/app/api/billing/portal/route.ts`, `app/app/api/billing/sync/route.ts`, `app/app/api/billing/webhook/route.ts`, `app/app/api/account/delete/route.ts`, `app/app/api/account/delete-permanent/route.ts`, `app/app/api/onboarding/route.ts`, `app/app/api/me/route.ts`, `app/app/api/properties/[id]/amortization/route.ts`
-- **UI/performance sample:** `app/app/(app)/dashboard/dashboard-charts.tsx`, `app/components/charts/{equity-chart.tsx,debt-vs-value-chart.tsx,cash-flow-chart.tsx,amortization-chart.tsx}`, `app/app/(app)/properties/[id]/amortization-chart-dynamic.tsx`, `app/app/(app)/onboarding-panel.tsx`, `app/app/privacy/page.tsx`
-- **Repo-wide sweeps run:** auth usage (`getActiveAppUser`/`getAppUser`) across API routes, Zod/validation usage, `next/dynamic` + `ssr: false` chart loading, raw `<img>` usage, semantic token drift (`text-primary`/`bg-primary`), and `any` usage
-- **Limits of this pass:** No runtime load testing, dependency vulnerability scan, or full file-by-file manual review of every component. Findings are based on policy review + targeted deep reads + repo-wide pattern sweeps.
+**Process and policy (read in full):**
+
+- `docs/process/code-audit-process.md`
+- `docs/process/audit-report-template.md`
+- `docs/policies/design-spec.md`
+- `docs/architecture-and-build-practices.md`
+- `docs/security/security-notes.md`
+
+**App configuration and shell:**
+
+- `app/proxy.ts` (public route matcher vs Clerk `auth.protect`)
+- `app/next.config.ts` (headers, `optimizePackageImports`, Sentry wrapper)
+- `app/app/layout.tsx` (metadata, preconnect, providers)
+- `app/app/(app)/layout.tsx` (`force-dynamic` scope)
+- `app/app/globals.css` (CSS variables and semantic mapping)
+
+**API routes (systematic sample — auth, scope, validation):**
+
+- `app/app/api/properties/route.ts`, `app/app/api/properties/[id]/route.ts`
+- `app/app/api/properties/[id]/metrics/route.ts`, `app/app/api/properties/[id]/amortization/route.ts`
+- `app/app/api/deals/route.ts`, `app/app/api/deals/[id]/route.ts`
+- `app/app/api/import/portfolio/route.ts`, `app/app/api/export/portfolio/route.ts`
+- `app/app/api/billing/portal/route.ts`, `app/app/api/billing/sync/route.ts`, `app/app/api/billing/subscription-details/route.ts`, `app/app/api/billing/webhook/route.ts`
+- `app/app/api/account/restore/route.ts` (`getAppUser` — expected)
+- `app/app/api/admin/users/[id]/tier/route.ts`
+- `app/app/api/account/delete-permanent/route.ts`
+- `app/app/api/health/route.ts`, `app/app/api/csp-report/route.ts` (public by design per security notes)
+
+**Lib and shared server logic:**
+
+- `app/lib/server/portfolio-summary-payload.ts`
+- `app/lib/auth.ts` (referenced via imports; patterns consistent with security notes)
+
+**Components and pages (sampled across design and performance dimensions):**
+
+- `app/app/(app)/dashboard/dashboard-charts.tsx` (dynamic chart imports)
+- `app/app/(app)/modeling/modeling-workspace.tsx`, `app/app/(app)/mortgage/mortgage-workspace.tsx` (dynamic tab content)
+- `app/app/(app)/onboarding-panel.tsx`
+- `app/app/(app)/properties/[id]/property-detail-tabs.tsx`
+- `app/components/pricing-cards.tsx`, `app/app/page.tsx`, `app/app/pricing/page.tsx`
+- Grep passes: `getActiveAppUser` / `getAppUser` across `app/app/api`, `recharts` imports, `zinc-`/`slate-` raw palette classes, `any` usage, `force-dynamic`, `next/dynamic`
+
+**Limits of this pass:** Not every file under `app/` was read line-by-line; findings combine policy checks, representative deep reads, and targeted searches. Runtime performance was not profiled; the deal GET cost is a static code-structure observation.
 
 ---
 
 ## Risk & impact assessment
 
-- **Maintainability risk:** High likelihood / medium-to-high impact. Large modules in core flows are the biggest source of future regression cost.
-- **Security posture:** Low current exposure due existing ownership pre-checks, but medium future-risk if code evolves without preserving those checks.
-- **Design consistency:** Medium likelihood / medium product impact. Drift is localized but user-visible in onboarding/legal contexts.
-- **Performance:** Low immediate impact; chart-loading patterns are generally good and compliant, with minor UX/network optimization opportunities.
+- **Unresolved High (large files):** Slower feature delivery and higher defect rate on the heaviest modules; impact is team velocity and quality rather than immediate user-facing outage.
+- **Medium (design drift, deal GET weight, property update hardening):** UX brand consistency and spec alignment; deal API may add latency and DB load for users with large portfolios; missing `userId` on `update` is a low-likelihood footgun if the route is refactored incorrectly later.
+- **Medium/Low (Sentry gaps on delete path):** Failed Stripe cancel or Clerk delete during permanent delete could leave inconsistent external state with limited production visibility.
 
 ---
 
 ## Recommendations (prioritized)
 
-1. Split the largest property/deal-analyzer modules incrementally (when touched) into section components + hooks/lib utilities, starting with `add-property-wizard.tsx`, `projections-tab-content.tsx`, and `deal-analyzer-form.tsx`.
-2. Add `userId` to direct mutation `where` clauses for deal/property delete/update operations that currently rely on pre-check ownership only.
-3. Normalize `primary` usages to documented semantic tokens (or define `primary` explicitly in `globals.css` theme mapping) and simplify onboarding modal decorative effects to align with the design spec.
-4. Add Sentry capture for unexpected failures in checkout/account destructive flows where only console logging exists today.
-5. Consider moving amortization schedule fetching into a server-provided payload (or add explicit error state + retry) to reduce post-render latency and improve failure UX.
+1. When editing the largest wizards/forms (`add-property-wizard`, `deal-analyzer-form`, `property-form`), extract sections, hooks, or child components to shrink files and isolate testable units.
+2. Reconcile onboarding and legal link styling with `docs/policies/design-spec.md`: reduce decorative blur/shadow on the welcome modal where product agrees; map `text-primary` links to documented tokens (`accent` / underline patterns).
+3. Profile `GET /api/deals/[id]` under realistic portfolio sizes; if costly, return a narrower `portfolioContext` or reuse cached summary data instead of full `buildPortfolioSummaryPayload` on every load.
+4. Add `userId` to `prisma.property.update` `where` in `app/app/api/properties/[id]/route.ts` for defense in depth.
+5. Consider `Sentry.captureException` (with careful PII avoidance) for non-fatal failures in `app/app/api/account/delete-permanent/route.ts` when Stripe or Clerk calls fail.
 
 ---
 
-## Task candidates
+## Task candidates (optional)
 
-- [ ] Refactor plan for oversized core files in property/deal analyzer flows (modular extraction with no behavior change).
-- [ ] Harden `app/app/api/deals/[id]/route.ts` and `app/app/api/properties/[id]/route.ts` mutations with `userId`-scoped `where` constraints.
-- [ ] Replace or define `primary` token usage in onboarding/privacy surfaces; align modal visual treatment with design-spec minimalism.
-- [ ] Add `Sentry.captureException` to checkout/account failure paths that currently only log.
-- [ ] Improve amortization chart error UX and/or server-data handoff to avoid extra client fetch latency.
+- [ ] Extract first slice from `add-property-wizard.tsx` or `deal-analyzer-form.tsx` into focused modules (goal: reduce file length and clarify boundaries).
+- [ ] Align `onboarding-panel.tsx` and `privacy/page.tsx` link styles with semantic tokens per design spec.
+- [ ] Optimize `GET /api/deals/[id]` portfolio context payload after confirming cost in staging or production metrics.
+- [ ] Harden `PATCH /api/properties/[id]` update `where` with `userId`.
+- [ ] Add Sentry reporting for Stripe/Clerk failures on permanent account delete.
 
 ---
 
 ## Re-test checklist
 
-- [ ] Verify property/deal mutation routes still reject cross-user IDs after `where` hardening.
-- [ ] Verify onboarding and privacy page link styles in light/dark mode after token cleanup.
-- [ ] Simulate Stripe/Clerk failures and confirm Sentry events include safe context (no secrets/PII overexposure).
-- [ ] Verify amortization chart behavior on network failure (error state or retry path) if UX hardening is implemented.
-- [ ] Run `npm run check` from `app/` when remediation code changes are made.
+- [ ] Verify any fix for High maintainability extractions (smoke: add property, deal analyzer, property edit).
+- [ ] Verify deal detail and settings after deal API or portfolio payload changes.
+- [ ] Verify property PATCH still rejects cross-user access (regression test or manual).
+- [ ] `npm run check` (when code changes are made)
 
 ---
 
 ## Next trigger and cadence
 
-- **Trigger:** Monthly, pre-release, or after major changes to property/deal flows, billing APIs, or design tokens.
-- **Recommended next window:** 2026-05-01 (or immediately after the next substantial property/deals refactor).
+- **Trigger:** Monthly or after major feature work touching `app/` UI, API, or billing.
+- **Recommended next run:** 2026-05-01 or next release milestone, whichever comes first.

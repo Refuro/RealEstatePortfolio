@@ -6,8 +6,14 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { PublicCalculator } from "@/components/marketing/public-calculator";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import {
+  CalculatorFaqJsonLd,
+  CalculatorFaqSection,
+} from "@/components/marketing/calculator-faq";
+import { INVESTMENT_PROPERTY_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "Investment Property Calculator",
@@ -22,45 +28,6 @@ export const metadata: Metadata = {
   },
 };
 
-function FaqJsonLd() {
-  const payload = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "How do you calculate rental property cash flow?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Cash flow is monthly rent minus monthly expenses and debt service, adjusted for vacancy assumptions.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What is a good DSCR for rental property?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "A DSCR above 1.0 generally means NOI covers debt service. Many investors target 1.20 or higher for safety.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Can I save calculator results?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "This calculator does not store your session. A free account lets you save deals in the deal analyzer and track properties in your portfolio—you enter assumptions there.",
-        },
-      },
-    ],
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
-    />
-  );
-}
-
 export default async function InvestmentPropertyCalculatorPage() {
   const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
@@ -73,7 +40,7 @@ export default async function InvestmentPropertyCalculatorPage() {
       <LandingNav userId={userId} landingVariant="calc_control_v1" />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <FaqJsonLd />
+          <CalculatorFaqJsonLd items={INVESTMENT_PROPERTY_CALCULATOR_FAQ} />
           <header className="text-center">
             <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculator</p>
             <h1 className="mt-2 text-3xl font-semibold text-foreground">
@@ -88,6 +55,8 @@ export default async function InvestmentPropertyCalculatorPage() {
           <div className="mt-8">
             <PublicCalculator showCta landingVariant="calc_control_v1" />
           </div>
+
+          <CalculatorFaqSection items={INVESTMENT_PROPERTY_CALCULATOR_FAQ} />
 
           <p className="mt-5 text-center text-sm text-muted">
             Works for single-family and multifamily quick estimates. Compare STR vs long-term rent on{" "}

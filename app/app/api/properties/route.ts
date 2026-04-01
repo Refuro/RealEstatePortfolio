@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
@@ -9,7 +10,10 @@ import {
 } from "@/lib/rate-limit";
 import { createPropertySchema } from "@/lib/validations/property";
 import { serializePropertyForApi } from "@/lib/serialize/property-api";
-import { createMortgageSchema } from "@/lib/validations/mortgage";
+import {
+  createMortgageSchema,
+  validateEscrowAmount,
+} from "@/lib/validations/mortgage";
 import { canAddProperty, getEffectiveTier } from "@/lib/plans";
 
 export async function GET() {
@@ -88,6 +92,17 @@ export async function POST(request: NextRequest) {
       );
     }
     const m = mortgageParsed.data;
+    const escrowStr =
+      m.escrowAmount != null && m.escrowAmount !== ""
+        ? String(m.escrowAmount)
+        : null;
+    const escrowCheck = validateEscrowAmount(escrowStr, m.monthlyPayment);
+    if (!escrowCheck.success) {
+      return NextResponse.json(
+        { error: escrowCheck.error, details: { fieldErrors: { "mortgage.escrowAmount": [escrowCheck.error] } } },
+        { status: 400 }
+      );
+    }
     mortgageData = {
       originalLoanAmount: m.originalLoanAmount,
       currentBalance: m.currentBalance,
@@ -138,58 +153,66 @@ export async function POST(request: NextRequest) {
     unitRentsJson = Array(n).fill(perUnit);
   }
 
-  const property = await prisma.property.create({
-    data: {
-      userId: user.id,
-      nickname: data.nickname ?? null,
-      addressLine1: data.addressLine1,
-      addressLine2: data.addressLine2 ?? null,
-      city: data.city,
-      state: data.state,
-      zipCode: data.zipCode,
-      propertyType: data.propertyType,
-      units: data.units,
-      ownershipPercent: data.ownershipPercent ?? 100,
-      purchasePrice: data.purchasePrice,
-      purchaseDate: data.purchaseDate,
-      currentEstimatedValue: data.currentEstimatedValue,
-      currentMonthlyRent: totalRent,
-      isRented,
-      unitRents: unitRentsJson ?? Prisma.DbNull,
-      bedrooms: data.bedrooms ?? null,
-      bathrooms: data.bathrooms ?? null,
-      unitMix: data.unitMix ?? null,
-      squareFeet: data.squareFeet ?? null,
-      currentMonthlyExpenses: data.currentMonthlyExpenses,
-      vacancyPercent: data.vacancyPercent ?? 5,
-      cashInvested: data.cashInvested ?? null,
-      notes: data.notes ?? null,
-      marketRent: data.marketRent ?? null,
-      marketRentAsOf: data.marketRentAsOf ? new Date(data.marketRentAsOf) : null,
-    },
-  });
-
-  if (mortgageData) {
-    await prisma.mortgage.create({
+  try {
+    const property = await prisma.property.create({
       data: {
-        propertyId: property.id,
-        ...mortgageData,
+        userId: user.id,
+        nickname: data.nickname ?? null,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2 ?? null,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        propertyType: data.propertyType,
+        units: data.units,
+        ownershipPercent: data.ownershipPercent ?? 100,
+        purchasePrice: data.purchasePrice,
+        purchaseDate: data.purchaseDate,
+        currentEstimatedValue: data.currentEstimatedValue,
+        currentMonthlyRent: totalRent,
+        isRented,
+        unitRents: unitRentsJson ?? Prisma.DbNull,
+        bedrooms: data.bedrooms ?? null,
+        bathrooms: data.bathrooms ?? null,
+        unitMix: data.unitMix ?? null,
+        squareFeet: data.squareFeet ?? null,
+        currentMonthlyExpenses: data.currentMonthlyExpenses,
+        vacancyPercent: data.vacancyPercent ?? 5,
+        cashInvested: data.cashInvested ?? null,
+        notes: data.notes ?? null,
+        marketRent: data.marketRent ?? null,
+        marketRentAsOf: data.marketRentAsOf ? new Date(data.marketRentAsOf) : null,
       },
     });
+
+    if (mortgageData) {
+      await prisma.mortgage.create({
+        data: {
+          propertyId: property.id,
+          ...mortgageData,
+        },
+      });
+    }
+
+    await recordRateLimit(identifier, "properties:create");
+
+    const full = await prisma.property.findUnique({
+      where: { id: property.id },
+      include: { mortgages: true },
+    });
+    if (!full) {
+      return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      ...serializePropertyForApi(full),
+      createdFirstProperty,
+    });
+  } catch (err) {
+    console.error("Property create error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Property create failed"), {
+      tags: { route: "api/properties", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to create property" }, { status: 500 });
   }
-
-  await recordRateLimit(identifier, "properties:create");
-
-  const full = await prisma.property.findUnique({
-    where: { id: property.id },
-    include: { mortgages: true },
-  });
-  if (!full) {
-    return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
-  }
-
-  return NextResponse.json({
-    ...serializePropertyForApi(full),
-    createdFirstProperty,
-  });
 }

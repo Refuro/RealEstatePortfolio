@@ -6,8 +6,14 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { StrLtrCalculator } from "@/components/marketing/str-ltr-calculator";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import {
+  CalculatorFaqJsonLd,
+  CalculatorFaqSection,
+} from "@/components/marketing/calculator-faq";
+import { STR_VS_LTR_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "STR vs LTR Calculator",
@@ -22,37 +28,6 @@ export const metadata: Metadata = {
   },
 };
 
-function FaqJsonLd() {
-  const payload = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "How do STR platform fees affect returns?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "Platform fees reduce gross booking revenue before operating expenses. This calculator applies your fee percentage to gross nightly revenue after occupancy.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "What occupancy makes short-term rental worth it vs long-term?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "It depends on nightly rate, fees, and expenses. Raise occupancy or nightly rate until STR cash flow and NOI beat your long-term rent scenario on the same financing.",
-        },
-      },
-    ],
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
-    />
-  );
-}
-
 export default async function StrVsLtrCalculatorPage() {
   const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
@@ -65,7 +40,7 @@ export default async function StrVsLtrCalculatorPage() {
       <LandingNav userId={userId} landingVariant="str_ltr_v1" />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <FaqJsonLd />
+          <CalculatorFaqJsonLd items={STR_VS_LTR_CALCULATOR_FAQ} />
           <nav className="text-sm text-muted">
             <Link href="/tools" className="hover:text-foreground hover:underline">
               Calculators
@@ -87,6 +62,8 @@ export default async function StrVsLtrCalculatorPage() {
           <div className="mt-8">
             <StrLtrCalculator showCta landingVariant="str_ltr_v1" />
           </div>
+
+          <CalculatorFaqSection items={STR_VS_LTR_CALCULATOR_FAQ} />
 
           <p className="mt-6 text-center text-sm text-muted">
             <Link href="/tools" className="font-medium text-foreground hover:underline">

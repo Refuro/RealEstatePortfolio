@@ -57,3 +57,22 @@ export function planTierFromPriceId(priceId: string): "investor" | "pro" | null 
   if (priceId === ids.proMonthly || priceId === ids.proYearly) return "pro";
   return null;
 }
+
+/** Billing interval (monthly/yearly) from Stripe price ID. */
+export function billingIntervalFromPriceId(priceId: string): "monthly" | "yearly" | null {
+  const ids = getPriceIds();
+  if (priceId === ids.investorMonthly || priceId === ids.proMonthly) return "monthly";
+  if (priceId === ids.investorYearly || priceId === ids.proYearly) return "yearly";
+  return null;
+}
+
+/**
+ * Parse billing interval from a stored planName like "investor_monthly" or "pro_yearly".
+ * Old rows that only stored the tier name ("investor", "pro") return null.
+ */
+export function parsePlanNameInterval(planName: string | null | undefined): "monthly" | "yearly" | null {
+  if (!planName) return null;
+  if (planName.endsWith("_yearly")) return "yearly";
+  if (planName.endsWith("_monthly")) return "monthly";
+  return null;
+}

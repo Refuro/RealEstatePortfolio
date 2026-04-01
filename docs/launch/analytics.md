@@ -193,6 +193,9 @@ Emitted from Stripe webhook path after subscription sync. Metadata includes `pla
 |-------|------|
 | `property_created` | After successful `POST /api/properties` |
 | `deal_created` | After successful new deal save from Deal analyzer |
+| `plan_limit_hit` | Client fires when an API returns `PLAN_LIMIT_REACHED` (property, deal, import, etc.); includes `resource` where applicable. |
+| `plan_limit_upgrade_cta_clicked` | User clicks a tracked **Upgrade** link to `/plans` (`UpgradePlanLink`, `placement` property). |
+| `funnel_cta_clicked` | Tracked marketing links (`FunnelCtaLink`), e.g. **`landing_pricing_preview`** on the home page **View pricing** CTA. |
 
 **Page views:** `$pageview` on client-side navigations (pathname + URL with query).
 

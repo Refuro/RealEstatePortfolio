@@ -4,8 +4,9 @@ import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { CHANGELOG_ENTRIES } from "@/lib/changelog-data";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 const title = "Product updates & changelog — Veld Portfolio";
 const description =

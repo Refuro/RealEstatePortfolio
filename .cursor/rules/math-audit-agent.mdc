@@ -7,13 +7,17 @@ alwaysApply: false
 
 When the user says **"run math audit"**, **"math audit"**, **"math and logic audit"**, or **"run math and logic audit"**:
 
+## Execution mode (required)
+
+Run in **Agent** mode with writes enabled—not Ask mode, not read-only subagents. The audit **must** create or update markdown under `docs/audits/`. **"No code changes"** means do not modify application or library source (for example under `app/`); it does **not** mean skip writing the report.
+
 ## What to do
 
-1. **Launch a subagent** (generalPurpose) with a prompt that:
+1. **Launch a subagent** (generalPurpose) with **read-only disabled** and a prompt that:
    - Instructs the agent to follow `docs/process/math-logic-audit.md` in full
    - Tells the agent to audit the modules listed in the scope (amortization, property-metrics, portfolio-metrics, benchmark-utils)
    - Requires the agent to output the report to `docs/audits/math/YYYY-MM-DD-math-logic-audit.md` (use today's date in ISO format)
-   - States: **Audit only. Do not make code changes.** The user reviews the report and creates tasks from findings as needed.
+   - States: **Do not modify files under `app/`; must write the full report file.** The user reviews the report and creates tasks from findings as needed.
 
 2. **Single agent** — Use one subagent for the full audit, not multiple.
 
@@ -28,7 +32,7 @@ Perform a Math & Logic Audit following docs/process/math-logic-audit.md.
 2. For each module in the scope (§1.1): read the implementation, verify formulas match the reference specs (§2), trace edge cases from the matrix (§4), check cross-module consistency rules (§3), and verify division-by-zero guards and rounding.
 3. Document results in the output format (§7) with PASS/FAIL/NOTE for each check.
 4. Write the report to docs/audits/math/YYYY-MM-DD-math-logic-audit.md (use today's date).
-5. Do NOT make any code changes. Audit only.
+5. Do NOT modify files under app/.
 
 Return a brief summary of top findings when done.
 ```

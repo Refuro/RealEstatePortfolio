@@ -47,8 +47,22 @@ Use before or immediately after promoting a build to production (Stripe live mod
 
 ---
 
+## Auxiliary billing API routes (read paths)
+
+| Route | Role |
+|-------|------|
+| `GET /api/billing/status` | JSON for clients: effective tier, property count vs limit, optional `subscription.status` / period end from DB. |
+| `GET /api/billing/sync` | Re-sync subscription from Stripe for users with a Stripe customer id; can downgrade tier if Stripe shows no active subscription (respects admin tier override). |
+| `GET /api/billing/subscription-details` | Richer subscription details (e.g. cancel-at-period-end) after internal Stripe sync — used when refreshing Settings. |
+
+Webhook and checkout are covered in [`docs/setup/manual-steps.md`](../setup/manual-steps.md) and `docs/internal/stripe-webhook-posthog-idempotency.md`.
+
+---
+
 ## Related docs
 
+- [`stripe-webhook-production-verification.md`](stripe-webhook-production-verification.md) — confirm webhooks in prod (Stripe Dashboard).
+- [`stripe-subscription-switch-behavior.md`](stripe-subscription-switch-behavior.md) — plan changes vs multiple subscriptions.
 - `docs/setup/manual-steps.md` — Stripe setup steps
 - `docs/reference/rentcast-quota.md` — Hourly pool semantics
 - `app/.env.example` — Commented variable names

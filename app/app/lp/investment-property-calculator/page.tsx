@@ -7,8 +7,9 @@ import { Footer } from "@/components/footer";
 import { PublicCalculator } from "@/components/marketing/public-calculator";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "Investment Property Calculator",

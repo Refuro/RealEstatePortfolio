@@ -33,6 +33,19 @@ vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
 }));
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
+  getRateLimitIdentifier: vi.fn((userId: string | null) =>
+    userId ? `user:${userId}` : "ip:unknown"
+  ),
+}));
+
 const baseProperty = {
   id: "prop-1",
   userId: mockActiveUser.id,
@@ -112,6 +125,7 @@ describe("GET /api/properties/[id]", () => {
 describe("PATCH /api/properties/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    checkRateLimitMock.mockResolvedValue({ allowed: true });
     getActiveAppUserMock.mockResolvedValue(mockActiveUser);
     prismaMock.property.findFirst.mockResolvedValue({ ...baseProperty } as never);
   });
@@ -121,6 +135,14 @@ describe("PATCH /api/properties/[id]", () => {
     const { PATCH } = await import("./route");
     const res = await PATCH(patchRequest({ nickname: "x" }), paramsFor("prop-1"));
     expect(res.status).toBe(401);
+  });
+
+  it("returns 429 when rate limit is exceeded", async () => {
+    checkRateLimitMock.mockResolvedValue({ allowed: false });
+    const { PATCH } = await import("./route");
+    const res = await PATCH(patchRequest({ nickname: "x" }), paramsFor("prop-1"));
+    expect(res.status).toBe(429);
+    expect(prismaMock.property.findFirst).not.toHaveBeenCalled();
   });
 
   it("returns 404 when property not found", async () => {
@@ -159,6 +181,10 @@ describe("PATCH /api/properties/[id]", () => {
     expect(res.status).toBe(200);
     const json = await res.json();
     expect(json.nickname).toBe("HQ");
+    expect(recordRateLimitMock).toHaveBeenCalledWith(
+      `user:${mockActiveUser.id}`,
+      "properties:patch"
+    );
   });
 
   it("splits currentMonthlyRent using effective property type (not stale single_family)", async () => {
@@ -220,6 +246,8 @@ describe("DELETE /api/properties/[id]", () => {
     const { DELETE } = await import("./route");
     const res = await DELETE({} as NextRequest, paramsFor("prop-1"));
     expect(res.status).toBe(200);
-    expect(prismaMock.property.delete).toHaveBeenCalledWith({ where: { id: "prop-1" } });
+    expect(prismaMock.property.delete).toHaveBeenCalledWith({
+      where: { id: "prop-1", userId: mockActiveUser.id },
+    });
   });
 });

@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
@@ -385,12 +385,12 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         <div className="rounded-md px-4 py-2 text-sm text-negative">
           {error}
           {(error.includes("Upgrade") || error.includes("limit")) && (
-            <Link
-              href="/plans"
+            <UpgradePlanLink
+              placement="property_form_plan_limit"
               className="ml-1 font-medium underline hover:no-underline"
             >
               Upgrade plan
-            </Link>
+            </UpgradePlanLink>
           )}
         </div>
       )}

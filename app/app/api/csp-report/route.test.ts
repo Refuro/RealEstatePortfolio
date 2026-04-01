@@ -1,6 +1,17 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
+  getRateLimitIdentifier: vi.fn(() => "ip:127.0.0.1"),
+}));
+
 const { sentryMock, scopeMock } = vi.hoisted(() => {
   const scopeMock = {
     setLevel: vi.fn(),
@@ -30,6 +41,7 @@ function postRequest(payload: unknown) {
 describe("POST /api/csp-report", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    checkRateLimitMock.mockResolvedValue({ allowed: true });
     vi.unstubAllEnvs();
     vi.resetModules();
   });
@@ -83,5 +95,35 @@ describe("POST /api/csp-report", () => {
     ]);
     expect(scopeMock.setTag).toHaveBeenCalledWith("signal", "csp");
     expect(sentryMock.captureMessage).toHaveBeenCalledWith("CSP violation: script-src");
+  });
+
+  it("returns 429 when rate limit is exceeded", async () => {
+    checkRateLimitMock.mockResolvedValue({ allowed: false });
+    const { POST } = await import("./route");
+    const res = await POST(
+      new NextRequest("http://localhost/api/csp-report", {
+        method: "POST",
+        body: "{}",
+        headers: { "content-type": "application/json" },
+      })
+    );
+    expect(res.status).toBe(429);
+    expect(recordRateLimitMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 413 when Content-Length exceeds max body size", async () => {
+    const { POST, CSP_REPORT_MAX_BODY_BYTES } = await import("./route");
+    const big = CSP_REPORT_MAX_BODY_BYTES + 1;
+    const res = await POST(
+      new NextRequest("http://localhost/api/csp-report", {
+        method: "POST",
+        body: "x",
+        headers: {
+          "content-type": "application/json",
+          "content-length": String(big),
+        },
+      })
+    );
+    expect(res.status).toBe(413);
   });
 });

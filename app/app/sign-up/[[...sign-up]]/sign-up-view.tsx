@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { SignUp } from "@clerk/nextjs";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import { PlanIntentSignUpReinforcement } from "@/components/analytics/plan-intent-sign-up-reinforcement";
 
 export function SignUpView() {
   return (
     <>
       <PlanIntentUrlSync />
+      <PlanIntentSignUpReinforcement />
       <SignUp
         appearance={{
           elements: {

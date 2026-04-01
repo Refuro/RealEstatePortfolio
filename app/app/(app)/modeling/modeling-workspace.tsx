@@ -82,7 +82,7 @@ export function ModelingWorkspace({
         <p className="mt-1 text-sm font-medium text-foreground">{selectedPropertyLabel}</p>
       </div>
       <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-        Modeling context
+        Property
         <select
           value={selectedProperty.id}
           onChange={(e) => setSelectedPropertyId(e.target.value)}
@@ -134,10 +134,10 @@ export function ModelingWorkspace({
 
   return (
     <div>
-      <div className="hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
+      <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
+      <div className="mt-4 hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
             <p className="mt-1 text-sm text-muted">
               Run scenario assumptions in a global workspace.
             </p>
@@ -151,7 +151,7 @@ export function ModelingWorkspace({
             )}
           </div>
           <label className="w-full text-xs font-medium uppercase tracking-wide text-muted lg:w-80">
-            Modeling context
+            Property
             <select
               value={selectedProperty?.id ?? ""}
               onChange={(e) => setSelectedPropertyId(e.target.value)}

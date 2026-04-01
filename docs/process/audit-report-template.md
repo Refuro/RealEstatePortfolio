@@ -2,6 +2,8 @@
 
 Use this template for all AI-run audits unless a lane process explicitly requires extra sections.
 
+**For agents:** Phrases like “audit only” or “no code changes” mean **do not modify application or library source** (for example under `app/`). Writing this report file under `docs/audits/` is **required**, not optional—run in Agent mode with writes enabled, not Ask/read-only.
+
 ---
 
 ## Required structure
@@ -72,3 +74,5 @@ Include only if findings warrant implementation work. Omit section if audit foun
 - Recommendations must be implementation-oriented.
 - When present, task candidates must be small enough to move into active backlog quickly. Omit the Task candidates section if there are no actionable findings — do not invent work.
 - Audits are review-only; do not make code changes during audit runs.
+
+**PM triage (full audits):** After a full-audit synthesis, items are classified into **Ship / Schedule / Optional / Human-only** per [`full-audit-synthesis.md`](./full-audit-synthesis.md) §3.5. Only **Ship** and **Schedule** are default promotion targets for [`docs/tasks.md`](../tasks.md); **Optional** is explicit backlog or “won’t fix.”

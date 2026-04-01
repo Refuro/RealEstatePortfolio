@@ -181,7 +181,7 @@ During the 7-10 day run, spend 5 minutes each morning:
 2. Check View 1 (funnel) — did conversion rate hold or drop?
 3. Check View 4 (daily trend) — any spike or flatline in signups?
 4. Check View 3 (ad group comparison) — any single `utm_content` dominating?
-5. Cross-reference against the daily log in `docs/launch/paid-ads-round2-search-ops-2026-03-30.md`
+5. Cross-reference against the archived daily log in [`docs/archive/launch/paid-ads-readouts/paid-ads-round2-search-ops-2026-03-30.md`](../archive/launch/paid-ads-readouts/paid-ads-round2-search-ops-2026-03-30.md)
 
 ---
 

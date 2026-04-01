@@ -5,6 +5,7 @@ import { PricingCards } from "@/components/pricing-cards";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { BillingPortalButton } from "../settings/billing-portal-button";
+import { parsePlanNameInterval } from "@/lib/stripe-config";
 
 export const metadata: Metadata = {
   title: "Plans & billing",
@@ -25,6 +26,7 @@ export default async function PlansPage() {
     : [0, 0, null];
   const propertyLimit = getPropertyLimit(effectiveTier);
   const dealLimit = getDealLimit(effectiveTier);
+  const billingInterval = parsePlanNameInterval(subscription?.planName);
   const periodEndLabel = subscription?.currentPeriodEnd
     ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
         month: "short",
@@ -73,6 +75,12 @@ export default async function PlansPage() {
                     </span>
                   </span>
                 )}
+                {billingInterval && (
+                  <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                    Cycle:{" "}
+                    <span className="font-medium capitalize text-foreground">{billingInterval}</span>
+                  </span>
+                )}
                 {periodEndLabel && (
                   <span className="col-span-2 rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted sm:col-span-1">
                     Renews:{" "}
@@ -97,7 +105,30 @@ export default async function PlansPage() {
         currentTier={effectiveTier}
         className="mt-8"
         showSignUp={false}
+        billingPortalReturnPath="/plans"
+        currentBillingCycle={billingInterval}
       />
+      <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted">
+        Subscriptions renew until you cancel. See our Terms:{" "}
+        <Link
+          href="/terms#subscriptions-and-payments"
+          className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+        >
+          Subscriptions and Payments
+        </Link>
+        ,{" "}
+        <Link href="/terms#refunds" className="font-medium text-foreground underline underline-offset-2 hover:text-accent">
+          Refunds
+        </Link>
+        , and{" "}
+        <Link
+          href="/terms#cancellation"
+          className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+        >
+          Cancellation
+        </Link>
+        .
+      </p>
     </div>
   );
 }

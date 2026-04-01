@@ -37,7 +37,7 @@ export function getImportMortgageValidationError(r: ImportRow): string | null {
     currentBalance: String(r.mortgageBalance),
     interestRate: String(r.mortgageRate),
     termYears,
-    startDate: r.purchaseDate,
+    startDate: r.mortgageStartDate ?? r.purchaseDate,
     monthlyPayment: monthlyStr,
     escrowIncluded: escrowStr != null,
     escrowAmount: escrowStr,

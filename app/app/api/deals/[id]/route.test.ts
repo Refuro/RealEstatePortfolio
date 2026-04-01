@@ -30,6 +30,19 @@ vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
 }));
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
+  getRateLimitIdentifier: vi.fn((userId: string | null) =>
+    userId ? `user:${userId}` : "ip:unknown"
+  ),
+}));
+
 function dec(s: string) {
   return { toString: () => s };
 }
@@ -138,6 +151,7 @@ describe("GET /api/deals/[id]", () => {
 describe("PATCH /api/deals/[id]", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    checkRateLimitMock.mockResolvedValue({ allowed: true });
     getActiveAppUserMock.mockResolvedValue(mockActiveUser);
     prismaMock.savedDeal.findFirst.mockResolvedValue(baseDeal());
     prismaMock.savedDeal.update.mockImplementation(async ({ data }: { data: { nickname?: string } }) => ({
@@ -177,7 +191,15 @@ describe("PATCH /api/deals/[id]", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.nickname).toBe("My deal");
-    expect(prismaMock.savedDeal.update).toHaveBeenCalled();
+    expect(prismaMock.savedDeal.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "deal-1", userId: mockActiveUser.id },
+      })
+    );
+    expect(recordRateLimitMock).toHaveBeenCalledWith(
+      `user:${mockActiveUser.id}`,
+      "deals:patch"
+    );
   });
 });
 
@@ -219,7 +241,7 @@ describe("DELETE /api/deals/[id]", () => {
     const data = await res.json();
     expect(data.success).toBe(true);
     expect(prismaMock.savedDeal.delete).toHaveBeenCalledWith({
-      where: { id: "deal-1" },
+      where: { id: "deal-1", userId: mockActiveUser.id },
     });
   });
 });

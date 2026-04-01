@@ -101,7 +101,7 @@ When `NEXT_PUBLIC_APP_URL` is set, the policy includes **`report-uri {baseUrl}/a
 **Policy string (concatenated in code; summarize here):**
 
 - `default-src 'self'`
-- `script-src` — `'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com`
+- `script-src` — `'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://vercel.live`
 - `style-src` — `'self' 'unsafe-inline'`
 - `img-src` — `'self' data: https://img.clerk.com https:`
 - `font-src` — `'self' data:`
@@ -121,7 +121,14 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | Action key | Limit / hour |
 |------------|----------------|
 | `properties:create` | 20 |
+| `properties:patch` | 60 |
+| `properties:delete` | 60 |
+| `properties:mortgage-delete` | 60 |
 | `deals:create` | 20 |
+| `deals:patch` | 60 |
+| `deals:delete` | 60 |
+| `admin:tier-patch` | 30 |
+| `csp-report:post` | 240 (per IP; anonymous CSP violation reports) |
 | `import:portfolio` | 5 |
 | `export:portfolio` | 15 |
 | `export:portfolio_summary` | 15 |
@@ -132,3 +139,14 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 **RentCast hourly quota** is **not** this table — it uses `RentCastApiCall` counts and `getRentCastHourlyLimit` / `RENTCAST_HOURLY_LIMITS` in `lib/plans.ts`. See [reference/rentcast-quota.md](../reference/rentcast-quota.md).
 
 **Source of truth:** `app/lib/rate-limit.ts` (`RATE_LIMITS`).
+
+---
+
+## 7. Health endpoint — `GET /api/health`
+
+| Aspect | Stance |
+|--------|--------|
+| **Auth** | **Public** — no Clerk session required. Intended for load balancers (e.g. Vercel), uptime monitors, and orchestration probes. |
+| **Information disclosed** | Minimal JSON: `status` and `database` connectivity (`connected` / `disconnected`). No user data, secrets, or stack traces in the response body. |
+| **Abuse** | Low risk; read-only probe. If abuse or noisy scanning becomes an issue, mitigate at the **edge** (WAF, IP allowlists for internal monitors, or platform-level rate limits) rather than breaking standard health-check semantics. |
+| **Threat model** | Documented here as intentional public exposure for operability; not a secret admin surface. |

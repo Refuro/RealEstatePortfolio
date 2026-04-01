@@ -46,7 +46,7 @@ app/
 | **`/properties/[id]`** | `property-detail-tabs.tsx`, `overview-tab-content.tsx`, `details-tab-content.tsx` | Tabs: **Overview** (metrics + inputs snapshot + health strip) and **Details** (read-only ledger + embedded `MortgageSection`). Shared **`property-health-strip.tsx`**. Types in **`property-detail-types.ts`**. |
 | **Workspaces** | `modeling-workspace.tsx` → `projections-tab-content`; `mortgage-workspace.tsx` → `mortgage-tab-content` | Deep-link with `?propertyId=`. |
 
-**IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see `epic-a-discovery.md` A3). Do not reintroduce triple inline PATCH without an explicit product decision.
+**IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) A3). Do not reintroduce triple inline PATCH without an explicit product decision.
 
 ### Established Patterns
 - **Auth:** Protected API routes use `getActiveAppUser()` (or `getAppUser()` only where soft-deleted users must act, e.g. restore); return 401 if null when appropriate. See `docs/security/security-notes.md`.

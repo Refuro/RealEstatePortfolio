@@ -5,10 +5,7 @@ import { getPropertyTotalRent } from "@/lib/property-utils";
 import { computePortfolioMetrics } from "@/lib/metrics/portfolio-metrics";
 import type { User } from "@prisma/client";
 
-/**
- * Shared portfolio aggregates for dashboard API, deal context, and exports.
- */
-export async function buildPortfolioSummaryPayload(user: User) {
+async function loadPortfolioSummaryCore(user: User) {
   const tier = getEffectiveTier(user);
   const propertyLimit = getPropertyLimit(tier);
   const propertyCountTotal = await prisma.property.count({
@@ -20,10 +17,10 @@ export async function buildPortfolioSummaryPayload(user: User) {
     orderBy: { updatedAt: "desc" },
     take: propertyLimit,
   });
+  type PropertyWithMortgages = (typeof properties)[number];
   const propertyCountIncluded = properties.length;
   const truncated = propertyCountTotal > propertyCountIncluded;
 
-  type PropertyWithMortgages = (typeof properties)[number];
   const portfolioInput = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
       (sum: number, m) => sum + getEffectiveBalance(m),
@@ -52,9 +49,10 @@ export async function buildPortfolioSummaryPayload(user: User) {
   const metrics = computePortfolioMetrics(portfolioInput, displayMode);
 
   return {
-    ...metrics,
-    weightedCapRate: metrics.weightedCapRate != null ? metrics.weightedCapRate : null,
-    portfolioLtv: metrics.portfolioLtv != null ? metrics.portfolioLtv : null,
+    metrics,
+    properties,
+    displayMode,
+    effectiveTier: tier,
     slice: {
       propertyCountTotal,
       propertyCountIncluded,
@@ -62,6 +60,26 @@ export async function buildPortfolioSummaryPayload(user: User) {
       truncated,
     },
   };
+}
+
+/**
+ * Shared portfolio aggregates for dashboard API, deal context, and exports.
+ */
+export async function buildPortfolioSummaryPayload(user: User) {
+  const { metrics, slice } = await loadPortfolioSummaryCore(user);
+  return {
+    ...metrics,
+    weightedCapRate: metrics.weightedCapRate != null ? metrics.weightedCapRate : null,
+    portfolioLtv: metrics.portfolioLtv != null ? metrics.portfolioLtv : null,
+    slice,
+  };
+}
+
+/**
+ * Dashboard page: same metrics/slice as API summary plus property rows (single query).
+ */
+export async function buildDashboardPortfolioPayload(user: User) {
+  return loadPortfolioSummaryCore(user);
 }
 
 export type DealPortfolioContext = {

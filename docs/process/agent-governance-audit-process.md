@@ -8,6 +8,8 @@
 
 ## 1. Scope
 
+The **full audit** (`full-audit-agent`) runs **14 lanes**: Code; Math & Logic; Feature / UX / IA; **Mobile experience**; Security & Privacy; Performance & Cost; Reliability & Operations; Data Integrity & Reconciliation; Business & Valuation; Growth Funnel & Activation; **SEO** (search & discovery); Documentation; Legal & Compliance; AI Agent Governance. Lane outputs live under `docs/audits/<lane>/`.
+
 Audit:
 
 - `.cursor/rules/*` coverage and drift

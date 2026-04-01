@@ -4,6 +4,7 @@ export const AnalyticsEvents = {
   PROPERTY_CREATED: "property_created",
   DEAL_CREATED: "deal_created",
   CHECKOUT_STARTED: "checkout_started",
+  BILLING_PORTAL_OPENED: "billing_portal_opened",
   SUBSCRIPTION_ACTIVATED: "subscription_activated",
   // --- Batch 10 funnel (new names are snake_case) ---
   FUNNEL_CTA_CLICKED: "funnel_cta_clicked",
@@ -13,6 +14,7 @@ export const AnalyticsEvents = {
   SUBSCRIPTION_UPDATED: "subscription_updated",
   SUBSCRIPTION_CANCELED: "subscription_canceled",
   PLAN_LIMIT_HIT: "plan_limit_hit",
+  PLAN_LIMIT_UPGRADE_CTA_CLICKED: "plan_limit_upgrade_cta_clicked",
   IMPORT_COMPLETED: "import_completed",
   IMPORT_FAILED: "import_failed",
 } as const;

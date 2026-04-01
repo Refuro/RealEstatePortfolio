@@ -2,14 +2,26 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
 import { BillingSuccessClearIntent } from "@/components/growth/billing-success-clear-intent";
+import { getDealLimit, getEffectiveTier, getPropertyLimit } from "@/lib/plans";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+function tierDisplayName(tier: string): string {
+  const t = tier.toLowerCase();
+  if (t === "investor") return "Investor";
+  if (t === "pro") return "Pro";
+  return "Free";
+}
+
 export default async function BillingSuccessPage() {
   const user = await getAppUser();
   if (!user) return null;
+
+  const tier = getEffectiveTier(user);
+  const propertyLimit = getPropertyLimit(tier);
+  const dealLimit = getDealLimit(tier);
 
   return (
     <div className="py-8">
@@ -18,8 +30,10 @@ export default async function BillingSuccessPage() {
         Subscription active
       </h1>
       <p className="mt-4 text-base text-muted">
-        Thank you for subscribing. Your plan is now active and your property and saved-deal limits
-        have been updated. Manage billing anytime in Settings.
+        Thank you for subscribing. You&apos;re on the{" "}
+        <span className="font-medium text-foreground">{tierDisplayName(tier)}</span> plan — up to{" "}
+        {propertyLimit} propert{propertyLimit === 1 ? "y" : "ies"} and {dealLimit} saved deals. Manage
+        billing anytime in Settings.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link

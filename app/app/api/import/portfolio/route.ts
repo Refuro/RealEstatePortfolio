@@ -201,7 +201,7 @@ export async function POST(req: NextRequest) {
             balanceAsOfDate: r.balanceAsOfDate,
             interestRate: r.mortgageRate,
             termYears: r.mortgageTerm,
-            startDate: r.purchaseDate,
+            startDate: r.mortgageStartDate ?? r.purchaseDate,
             monthlyPayment: r.monthlyPayment,
             escrowIncluded: r.escrowAmount != null && r.escrowAmount > 0,
             escrowAmount: r.escrowAmount,

@@ -4,9 +4,9 @@
  *
  * **Post-auth paid intent (Investor / Pro):** Clerk `afterSignUpUrl` stays `/dashboard` so every
  * signup lands in-app. While the user remains on the Free tier, `PaidIntentCheckoutBanner` reads
- * stored intent and nudges toward `/plans` (dismissible per session). After successful Stripe
- * checkout, `clearPlanIntent` on the billing success page resets storage so funnel state does not
- * linger.
+ * stored intent and nudges toward `/plans` (dismiss hides the banner for a cooldown via
+ * localStorage). After successful Stripe checkout, `clearPlanIntent` on the billing success page
+ * resets storage so funnel state does not linger.
  *
  * Precedence (highest first):
  * 1. Valid `?intent=` on the current URL — canonical when present; overwrites storage and restarts TTL.

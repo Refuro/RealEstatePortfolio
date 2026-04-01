@@ -72,7 +72,11 @@ export function computeFixAndFlipResult(raw: FixAndFlipInput): FixAndFlipResult 
   let annualizedRoiPercent: number | null = null;
   if (holdMonths > 0 && totalCashIn > 0) {
     const totalReturnRatio = netProfit / totalCashIn;
-    annualizedRoiPercent = (Math.pow(1 + totalReturnRatio, 12 / holdMonths) - 1) * 100;
+    // When loss exceeds 100% of cash in, (1 + ratio) <= 0 and the power is not real → NaN.
+    if (1 + totalReturnRatio > 0) {
+      annualizedRoiPercent =
+        (Math.pow(1 + totalReturnRatio, 12 / holdMonths) - 1) * 100;
+    }
   }
 
   return {

@@ -38,6 +38,30 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ## Active tasks
 
+### Audit synthesis — Ship phase (2026-04-01 full audit)
+
+*Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md) **Ship** triage. *Completed by builder 2026-04-01.*
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Visible FAQ + JSON-LD** | Public calculator routes that emit `FAQPage` JSON-LD (`/investment-property-calculator`, `/tools/brrr`, `/tools/str-vs-ltr`, `/tools/fix-and-flip`) render a visible FAQ section whose **questions and answers match verbatim** the structured data (`lib/marketing/calculator-faqs.ts` single source of truth). |
+| 2 | **Canonical URLs via `getAppOrigin()`** | Marketing/legal/landing `metadata.alternates.canonical` and root `metadataBase` use `getAppOrigin()` from `lib/app-url.ts` (trailing-slash stripped), consistent with `sitemap.ts`. |
+| 3 | **DELETE rate limits** | `RATE_LIMITS` includes `properties:delete`, `deals:delete`, `properties:mortgage-delete` (60/hr); corresponding route handlers call `checkRateLimit` / `recordRateLimit` on success; [`docs/security/security-audit.md`](security/security-audit.md) §6 table updated. |
+| 4 | **Account delete + Stripe** | If Stripe `subscriptions.cancel` throws, `Sentry.captureException`, response **503**, **no** soft-delete transaction; user sees retry/support message. |
+| 5 | **PATCH properties `userId`** | `PATCH` update uses `where: { id, userId }` (verify in code; no regression). |
+| 6 | **Multi-mortgage CSV disclosure** | `docs/reference/portfolio-csv-export.md` notes in-app warning; Settings import UI shows non-blocking notice about multi-lien lossy re-import. |
+| 7 | **Doc link sweep** | `roadmap.md`, `tasks-archived.md`, `property-flow-regression-matrix.md`, `architecture-and-build-practices.md` point to `docs/archive/proposals/...` for archived epics/QA where applicable. |
+
+- [x] **Ship 1** — Visible FAQ + shared FAQ data
+- [x] **Ship 2** — `getAppOrigin()` canonical sweep
+- [x] **Ship 3** — DELETE + mortgage DELETE rate limits + security doc
+- [x] **Ship 4** — Account delete Stripe failure handling + Sentry
+- [x] **Ship 5** — Verified PATCH `where` includes `userId`
+- [x] **Ship 6** — Multi-mortgage doc + import notice
+- [x] **Ship 7** — Documentation link sweep
+
+---
+
 ### Mobile shell verification (functionality, logic, math)
 
 *Process:* PM promotes here → **builder** implements per `.cursor/rules/builder-agent.mdc`. **Canonical math:** `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`. **Playwright/E2E:** out of scope for this batch.
@@ -444,18 +468,164 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
   - *Acceptance:* Authenticated routes (e.g. `/dashboard`, `/properties`, `/analyze`, `/plans`) emit non-indexable metadata signals in production, public marketing/tool routes remain indexable/canonicalized as intended, and **mark this item complete in [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md)** when shipped.
   - *Done:* [`app/(app)/layout.tsx`](../app/app/(app)/layout.tsx) `metadata.robots`.
 
+- [x] **`[Synth 4-01]` Plan changes via Billing Portal (no stacked subscriptions)** — Free → paid stays on Stripe Checkout; paid users switching tier use `POST /api/billing/portal` with allowlisted `returnPath` (`/plans`, `/pricing`, `/settings`). `POST /api/billing/create-checkout-session` returns **409** if an active/trialing/past_due/unpaid subscription already exists. *Plan:* [`docs/internal/billing-plan-change-portal-implementation-plan.md`](internal/billing-plan-change-portal-implementation-plan.md).
+  - *Acceptance:* Paid user “Switch to …” opens portal, not a second Checkout session; free user still gets Checkout; `npm run test` green; PostHog `billing_portal_opened` from pricing cards when changing plans.
+
 ---
 
-#### Deferred from synthesis (explicitly not this plan)
+#### Phases 10–21 — 2026-04-01 synthesis backlog ([`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md))
 
-*Check here only when promoting work — do not implement as part of phases above without new PM task.*
+*Source of truth for open synthesis items is the audit synthesis doc; each phase below lists each item **once** (no duplicate bullets across phases). When a phase ships, check it off here and mirror in the synthesis consolidated list.*
+
+**Suggested order:** 10 → 11 → 12 (safety & data) → 13 (ops/perf) → 14–16 (product surfaces) → 17–20 (docs/legal/governance) → 21 (manual verification gate). Phases 14 (UX) and 15 (growth) may parallelize after 13 if resourced.
+
+---
+
+##### Phase 10 — Security & threat-model hygiene (`[Synth 4-01]`) — **✓ complete (2026-04-01)**
+
+*Boundary:* Transport/abuse/docs only — no CSV/export or mortgage math (those are Phases 11–12).
+
+- [x] Targeted rate limits for high-risk mutating routes: `PATCH /api/properties/[id]`, `PATCH /api/deals/[id]`, `PATCH /api/admin/users/[id]/tier`. *`lib/rate-limit.ts`; recorded after successful mutation.*
+- [x] Lightweight abuse guard for `POST /api/csp-report` (request body-size cap and/or minimal spam throttle). *Max body 8192 B + per-IP rate limit `csp-report:post`.*
+- [x] Decide and document production stance for `GET /api/health` exposure (public vs restricted) in threat model / security docs. *Public LB probe — [`docs/security/security-audit.md`](security/security-audit.md) §7.*
+- [x] Refresh `docs/security/security-audit.md` and `docs/security/security-notes.md` to match current CSP sources and rollout behavior in `app/next.config.ts`.
+
+---
+
+##### Phase 11 — Data integrity: API writes & ownership (`[Synth 4-01]`) — **✓ complete (2026-04-01)**
+
+*Boundary:* Server-side validation and Prisma `where` scoping — not CSV column semantics or export formatting (Phase 12).
+
+- [x] Add `validateEscrowAmount` parity to embedded mortgage creation in `POST /api/properties` (align with mortgage API / CSV import rules).
+- [x] Harden write-path ownership defense-in-depth: user-scoped `where` constraints for property/mortgage delete/update calls that are currently id-only. *Property `delete`; mortgage `update`/`delete`; deal `update`/`delete`.*
+
+---
+
+##### Phase 12 — Data integrity: CSV import/export & reference doc (`[Synth 4-01]`) — **✓ complete (2026-04-01)**
+
+*Boundary:* Import/export pipeline and `portfolio-csv-export` documentation — not generic API property create (Phase 11).
+
+- [x] Add explicit mortgage start-date import support (vs implicit `purchaseDate` proxy) and document fallback behavior. *`mortgage start date` columns in `csv-parser`; import + validation use `mortgageStartDate ?? purchaseDate`.*
+- [x] Fix export zero-vs-empty handling for mortgage balance columns (paid-off `0` vs no-mortgage blank). *`GET /api/export/portfolio` uses `lienCount === 0` for blank vs numeric string.*
+- [x] Update [`docs/reference/portfolio-csv-export.md`](reference/portfolio-csv-export.md) with round-trip / export-only / lossy matrix and explicit percent basis notes. *Plus `mortgage start date (first lien)` export column.*
+
+---
+
+##### Phase 13 — Reliability & performance (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Observability on hot paths + client/server cost — not new funnel product events (Phase 15) or SEO (Phase 16).
+
+- [x] Wrap high-traffic CRUD routes in structured try/catch + `Sentry.captureException` with `userId` and route metadata. *Properties + deals POST/PATCH/DELETE.*
+- [x] Implement Stripe webhook `event.id` deduplication for PostHog server captures (avoid duplicate analytics on retries). Align with [`docs/internal/stripe-webhook-posthog-idempotency.md`](internal/stripe-webhook-posthog-idempotency.md) if applicable. *`StripePosthogDedup` + `lib/stripe-webhook-posthog.ts`.*
+- [x] Reduce `PostHogPersonProperties` `/api/me` fan-out from every pathname change to mount/event-driven sync.
+- [x] Unify dashboard data loading with `buildPortfolioSummaryPayload` (or shared server loader) to remove duplicated query and metric logic. *`buildDashboardPortfolioPayload`.*
+- [x] Split heavy client bundles in analyze/marketing paths (`deal-analyzer-form` subregions, homepage `PublicCalculator`) with staged dynamic loading where practical. *Homepage `PublicCalculator` dynamic; deal-analyzer subregions still deferred.*
+- [ ] Evaluate whether app-shell `force-dynamic` can be narrowed or isolated as traffic scales.
+- [x] Optional: add Clerk preconnect/dns-prefetch in layout if RUM shows auth-origin connection delay. *`NEXT_PUBLIC_CLERK_PRECONNECT_ORIGIN` or `dns-prefetch` fallback.*
+
+---
+
+##### Phase 14 — UX, accessibility & mobile (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* In-app UX and marketing shell polish — not analytics instrumentation (Phase 15) or SEO mechanics (Phase 16).
+
+- [x] Add mobile-accessible page-level `<h1>` landmarks for Modeling and Mortgage workspaces (narrow breakpoints). *(Synthesis merges a duplicate Mobile-lane note into this UX item.)*
+- [x] Visible error feedback in `PastDueBanner` when billing portal launch fails.
+- [x] Rewrite in-app calculators hub copy to remove SEO implementation language; keep user-facing intent only.
+- [x] Reduce CTA overload: simplify Properties header action stack and promote one clear post-first-property next-step CTA. *Short “Modeling” / “Mortgage” links; primary remains Add property.*
+- [x] Align workspace selector labels to user language (e.g. “Property” vs “Modeling context” / “Mortgage context”).
+- [x] Increase landing-nav hamburger touch target from `size-10` to at least 44×44 (`size-11`) for parity with app shell controls. *`components/landing-nav.tsx` — `size-11` + `min-h/w-11`.*
+- [ ] Run a device-backed narrow viewport matrix pass (320 / 375 / 390 / 430 and 767 / 768 boundary) and log evidence in the mobile verification or audit notes.
+
+---
+
+##### Phase 15 — Growth & activation (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Measurement and activation copy/UX — not PostHog transport efficiency (Phase 13) or billing matrix internal doc (Phase 17).
+
+- [x] Track missing funnel events on high-intent paths: landing pricing-preview CTA and `PLAN_LIMIT_HIT` upgrade CTAs. *`funnel_cta_clicked` + `plan_limit_upgrade_cta_clicked`.*
+- [x] Add plan-intent reinforcement content on sign-up for `investor` / `pro` intent users.
+- [x] Improve activation discovery by surfacing alternative first actions without hidden disclosure friction. *Dashboard empty state “More ways to get started” + onboarding banner.*
+- [x] Upgrade billing success content to include activated plan and new limits, not only generic success copy.
+- [x] Reduce repeated paid-intent banner fatigue (bounded local persistence for dismiss behavior).
+
+---
+
+##### Phase 16 — SEO tooling & math edge (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Public discovery + one calculator edge case — not app-shell `noindex` (Phase 9).
+
+- [x] Normalize root canonical / sitemap URL formatting to one convention (`sitemap.ts`, `metadata` patterns). *`getAppOrigin()` in `sitemap.ts` / `robots.ts`; pricing uses `getAppOrigin()`.*
+- [x] Add lightweight release SEO regression check (script or checklist) so `sitemap.ts`, `robots.ts`, and route indexing intent stay aligned. *[`docs/qa/seo-release-checklist.md`](qa/seo-release-checklist.md).*
+- [x] Guard `annualizedRoiPercent` in `fix-and-flip-calculator` against `NaN` in &gt;100% loss edge cases; add targeted unit test.
+
+---
+
+##### Phase 17 — Business, launch & internal analytics docs (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Operational documentation and evidence — not repo-wide README indexing (Phase 18).
+
+- [x] Verify and document `past_due` user-facing path end-to-end (status route → shell → visible banner/state). *[`docs/internal/past-due-user-path.md`](internal/past-due-user-path.md).*
+- [x] Extend [`docs/internal/billing-matrix.md`](internal/billing-matrix.md) with auxiliary billing route behavior (`/sync`, `/status`, `/subscription-details`).
+- [x] Complete and evidence the PostHog named funnel verification checklist in [`docs/launch/posthog-growth-funnel.md`](launch/posthog-growth-funnel.md).
+- [ ] Close unchecked operational items in [`docs/launch/launch-plan.md`](launch/launch-plan.md) section 9 against production reality. *Doc note added 2026-04-01; production verification remains on owner.*
+- [x] Document currently undefined analytics events (beyond core funnel) in launch analytics docs. *[`docs/launch/analytics.md`](launch/analytics.md), posthog-growth-funnel supplement.*
+
+---
+
+##### Phase 18 — Repository documentation housekeeping (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Doc moves and indexing — not legal copy (Phase 20).
+
+- [x] Archive completed proposals from `docs/proposals/` into `docs/archive/proposals/` (active proposals only in root). *Archived 2026-04-01; kept `refinance-payoff-proposal.md`, `test-hardening-phase-1-2-plan.md`, `testing-implementation-plan.md`.*
+- [x] Expand `docs/README.md` indexing for `docs/internal/` and missing policy/process/launch docs.
+- [x] Archive dated paid-ads readout artifacts from `docs/launch/` into an archive location. *[`docs/archive/launch/paid-ads-readouts/`](archive/launch/paid-ads-readouts/README.md).*
+- [ ] Clean up superseded same-day documentation audit reruns once canonical copy is confirmed. *Owner: keep multiple same-day audits as real artifacts (2026-04-01).*
+
+---
+
+##### Phase 19 — Governance (`[Synth 4-01]`) — **✓ complete (2026-04-01)**
+
+*Boundary:* Agent/process docs only — not calculator product code.
+
+- [x] Fix stale lane count in `docs/cursor-agent-setup.md` summary (“12” → “14”).
+- [x] Add explicit 14-lane statement (including SEO + Mobile experience) in `docs/process/agent-governance-audit-process.md`.
+- [x] Optionally add [`docs/policies/calculator-metric-tones.md`](policies/calculator-metric-tones.md) to `.cursor/rules/builder-agent.mdc` references for calculator-surface tasks.
+
+---
+
+##### Phase 20 — Legal & compliance (`[Synth 4-01]`) — **partial (2026-04-01)**
+
+*Boundary:* Customer-facing legal and pricing disclosure — builder implements copy/links; counsel review is an owner step.
+
+- [x] Add concise billing/refund/cancellation disclosure near pricing and upgrade CTAs, linking to exact Terms sections. *Anchors `#subscriptions-and-payments`, `#refunds`, `#cancellation` on `/terms`.*
+- [ ] Route Terms recurring-billing/auto-renew wording through counsel for target jurisdictions *(owner / PM; track outcome in repo or legal folder as appropriate)*.
+- [ ] Standardize legal-page metadata hygiene (exact “Last updated” date format; optionally consistent processor policy links). *Terms/Privacy already use “Last updated: Month YYYY”; optional Privacy processor sentence deferred.*
+
+---
+
+##### Phase 21 — Synthesis manual verification gate (`[Synth 4-01]`)
+
+*Boundary:* QA and evidence after implementation waves — no new product scope (re-run audits and smoke tests once Phases 10–20 are sufficiently complete). *PM/owner runs these; not automated in-repo.*
+
+- [ ] Re-run impacted lane audits (minimum: Reliability, Data Integrity, Growth, Mobile when those domains were touched).
+- [ ] Smoke: sign-up/sign-in, checkout, webhook sync, portal launch, `past_due` recovery (after billing-related phases).
+- [ ] Manual CSV: export → import round-trip with escrow, stored balance, and negative-amortization edge rows (after Phase 12).
+- [ ] Live/staging: verify `robots.txt`, `sitemap.xml`, and app-route `noindex` / public canonical behavior (after Phase 16).
+
+---
+
+#### Deferred from synthesis (explicitly not in Phases 10–21)
+
+*Large or design-pending items stay deferred until promoted explicitly.*
 
 - [ ] **`[Synth]` Mega-module refactors** — Wizard, deal analyzer, projections tab, etc. (Code audit) — **deferred.**
 - [ ] **`[Synth]` Onboarding modal decorative reduction** — **deferred** with mega-ui batch.
-- [ ] **`[Synth]` `@theme` `primary` vs `text-primary` / `bg-primary`** — **deferred** unless blocking a Phase 1–4 task.
-- [ ] **`[Synth]` Dashboard + `buildPortfolioSummaryPayload` deduplication** — **deferred** (medium refactor; Performance audit).
-- [ ] **`[Synth]` PostHog `/api/me` debounce** — **deferred** until RUM shows pain or after P0–P2 stable.
-- [ ] **`[Synth]` Optional Clerk preconnect** — **deferred** until RUM evidence.
+- [ ] **`[Synth]` `@theme` `primary` vs `text-primary` / `bg-primary`** — **deferred** unless blocking another task.
+
+*The following were **promoted** into Phase 13 (no longer deferred here): dashboard + `buildPortfolioSummaryPayload` deduplication; PostHog `/api/me` fan-out reduction; optional Clerk preconnect.*
+
+*Batch 14 (deferred backlog below):* CSP enforcement verification in production still applies; **Phase 10** covers synthesis `csp-report` abuse guard. Complete Batch 14 verification alongside or after Phase 10 as appropriate.
 
 ---
 
@@ -473,7 +643,7 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 - [ ] **Batch 9 — Declined:** Onboarding panel decorative style simplification; optional nav micro-copy / tooltip changes — *no action unless design direction changes.*
 - [ ] **Batch 11 — Deferred:** Trust strip / testimonials / logos (out of approved Batch 11 scope).
 - [ ] **Batch 12 — Deferred:** Prepare business metrics snapshot for next valuation pass (MRR/subscriber); *owner preference: no in-repo placeholder until live metrics exist.*
-- [ ] **Batch 14 — Deferred: CSP** — Verify production `CSP_ENFORCEMENT` and `NEXT_PUBLIC_APP_URL` match [`docs/policies/csp-rollout.md`](policies/csp-rollout.md); optionally add request body size guard for `POST /api/csp-report` if monitoring shows abuse.
+- [ ] **Batch 14 — Deferred: CSP** — Verify production `CSP_ENFORCEMENT` and `NEXT_PUBLIC_APP_URL` match [`docs/policies/csp-rollout.md`](policies/csp-rollout.md). *`POST /api/csp-report` abuse/body guard is scheduled in **Phase 10** (synthesis); keep Batch 14 focused on rollout verification.*
 
 ---
 

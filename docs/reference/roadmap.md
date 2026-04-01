@@ -330,7 +330,7 @@ Defer until validated or user base justifies:
 - **Mobile app** — Defer until web usage justifies.
 - **OAuth login, two-factor authentication** — Auth enhancements (mvp-spec).
 
-**Shipped (reference):** Add-property / edit / property detail (Overview + Details) overhaul — Epics A–G complete; design and history in `docs/proposals/add-property-experience-overhaul.md`. **Business & quality (Batch 8)** — PostHog, changelog, uptime — also complete; see `docs/tasks-archived.md` § **Tasks.md archive (2026-03-20)** and `docs/launch/launch-plan.md` §6. **Ongoing audits** follow cadence in `docs/audits/README.md` (not gated on the above).
+**Shipped (reference):** Add-property / edit / property detail (Overview + Details) overhaul — Epics A–G complete; design and history in `docs/archive/proposals/add-property-experience-overhaul.md`. **Business & quality (Batch 8)** — PostHog, changelog, uptime — also complete; see `docs/tasks-archived.md` § **Tasks.md archive (2026-03-20)** and `docs/launch/launch-plan.md` §6. **Ongoing audits** follow cadence in `docs/audits/README.md` (not gated on the above).
 
 ---
 
