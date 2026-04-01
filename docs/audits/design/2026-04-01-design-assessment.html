@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veld Portfolio — Design Assessment 2026-04-01</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --bg-subtle: #f4f4f5;
+      --card: #ffffff;
+      --border: #e4e4e7;
+      --fg: #0a0a0a;
+      --fg-muted: #71717a;
+      --accent: #0a0a0a;
+      --positive: #059669;
+      --negative: #dc2626;
+      --warning: #d97706;
+      --info: #0ea5e9;
+      --purple: #7c3aed;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    a { color: var(--info); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Layout */
+    .page-wrap {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    /* Header */
+    .report-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .report-header .meta {
+      font-size: 12px;
+      color: var(--fg-muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 500;
+      margin-bottom: .5rem;
+    }
+    .report-header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -.02em;
+    }
+    .report-header .subtitle {
+      color: var(--fg-muted);
+      margin-top: .4rem;
+      font-size: .9rem;
+    }
+    .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 3px 10px;
+      font-size: 11.5px;
+      color: var(--fg-muted);
+      background: var(--card);
+    }
+    .tag .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* TOC */
+    .toc {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+    .toc h3 {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      font-weight: 600;
+      color: var(--fg-muted);
+      margin-bottom: .75rem;
+    }
+    .toc ol { list-style: decimal; padding-left: 1.25rem; }
+    .toc ol li { margin-bottom: .3rem; font-size: 13.5px; }
+    .toc ol li a { color: var(--fg); }
+    .toc ol li a:hover { color: var(--info); text-decoration: underline; }
+
+    /* Sections */
+    .section { margin-bottom: 3rem; }
+    .section-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -.015em;
+      margin-bottom: 1rem;
+      padding-bottom: .75rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+    .section-title .num {
+      font-size: 11px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 2px 7px;
+      color: var(--fg-muted);
+      font-weight: 600;
+    }
+
+    /* Verdict summary */
+    .verdict-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .verdict-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 1rem;
+    }
+    .verdict-card .vc-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .07em;
+      color: var(--fg-muted);
+      margin-bottom: .4rem;
+    }
+    .verdict-card .vc-score {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -.03em;
+    }
+    .verdict-card .vc-note {
+      font-size: 12px;
+      color: var(--fg-muted);
+      margin-top: .25rem;
+    }
+    .score-good   { color: var(--positive); }
+    .score-ok     { color: var(--warning); }
+    .score-poor   { color: var(--negative); }
+
+    /* Callout boxes */
+    .callout {
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+      font-size: 13.5px;
+      border-left: 3px solid;
+    }
+    .callout-info    { background: #eff6ff; border-color: var(--info); }
+    .callout-warn    { background: #fffbeb; border-color: var(--warning); }
+    .callout-good    { background: #ecfdf5; border-color: var(--positive); }
+    .callout-bad     { background: #fef2f2; border-color: var(--negative); }
+    .callout-purple  { background: #f5f3ff; border-color: var(--purple); }
+    .callout strong  { font-weight: 600; }
+    .callout p + p   { margin-top: .4rem; }
+
+    /* Two-column split */
+    .cols-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    @media (max-width: 640px) { .cols-2 { grid-template-columns: 1fr; } }
+
+    .split-card {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 1.25rem;
+    }
+    .split-card h4 {
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: .75rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+    }
+    .split-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .split-card ul li {
+      padding: .3rem 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--fg-muted);
+      display: flex;
+      gap: .5rem;
+      align-items: flex-start;
+    }
+    .split-card ul li:last-child { border-bottom: none; }
+    .split-card ul li .li-icon { flex-shrink: 0; margin-top: 1px; }
+
+    /* Issue list */
+    .issue-list { list-style: none; padding: 0; }
+    .issue-list li {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: start;
+      gap: .75rem;
+      padding: .9rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .issue-list li:last-child { border-bottom: none; }
+    .issue-idx {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--fg-muted);
+      min-width: 22px;
+      margin-top: 2px;
+    }
+    .issue-body h5 {
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-bottom: .2rem;
+    }
+    .issue-body p {
+      font-size: 13px;
+      color: var(--fg-muted);
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 6px;
+      padding: 2px 7px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .badge-high    { background: #fef2f2; color: var(--negative); border: 1px solid #fecaca; }
+    .badge-medium  { background: #fffbeb; color: var(--warning); border: 1px solid #fde68a; }
+    .badge-low     { background: #f0fdf4; color: var(--positive); border: 1px solid #bbf7d0; }
+    .badge-pub     { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+    .badge-app     { background: #f5f3ff; color: #6d28d9; border: 1px solid #ddd6fe; }
+    .badge-both    { background: var(--bg-subtle); color: var(--fg-muted); border: 1px solid var(--border); }
+
+    /* Research table */
+    .research-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin: 1rem 0;
+    }
+    .research-table th {
+      text-align: left;
+      padding: .6rem .75rem;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--fg-muted);
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+    }
+    .research-table td {
+      padding: .65rem .75rem;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .research-table tr:last-child td { border-bottom: none; }
+    .research-table tr:hover td { background: var(--bg-subtle); }
+    .check { color: var(--positive); font-weight: 700; }
+    .cross { color: var(--negative); font-weight: 700; }
+    .neutral { color: var(--fg-muted); }
+
+    /* Priority recs */
+    .rec-group { margin-bottom: 1.75rem; }
+    .rec-group-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--fg-muted);
+      margin-bottom: .6rem;
+      padding-bottom: .4rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .rec-item {
+      display: flex;
+      gap: .75rem;
+      align-items: flex-start;
+      padding: .75rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .rec-item:last-child { border-bottom: none; }
+    .rec-num {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: var(--fg);
+      color: var(--bg);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 1px;
+    }
+    .rec-body h5 {
+      font-size: 13.5px;
+      font-weight: 600;
+      margin-bottom: .2rem;
+    }
+    .rec-body p {
+      font-size: 13px;
+      color: var(--fg-muted);
+    }
+    .rec-tags { display: flex; gap: .35rem; flex-wrap: wrap; margin-top: .4rem; }
+
+    /* Color swatch */
+    .swatch-row { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; }
+    .swatch {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      border: 1px solid rgba(0,0,0,.1);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 600;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,.4);
+      position: relative;
+    }
+    .swatch:hover::after {
+      content: attr(title);
+      position: absolute;
+      bottom: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--fg);
+      color: var(--bg);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    /* Pros/cons */
+    .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin: 1rem 0; }
+    @media (max-width: 640px) { .pros-cons { grid-template-columns: 1fr; } }
+    .pros-block, .cons-block {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      padding: 1rem;
+    }
+    .pros-block h4 { color: var(--positive); font-size: 13px; font-weight: 700; margin-bottom: .5rem; }
+    .cons-block h4 { color: var(--negative); font-size: 13px; font-weight: 700; margin-bottom: .5rem; }
+    .pros-block ul, .cons-block ul { list-style: none; padding: 0; }
+    .pros-block ul li, .cons-block ul li {
+      font-size: 13px;
+      padding: .25rem 0;
+      display: flex;
+      gap: .5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .pros-block ul li:last-child, .cons-block ul li:last-child { border-bottom: none; }
+
+    /* Separator */
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+
+    /* Code-style tokens */
+    code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11.5px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      color: var(--fg);
+    }
+
+    /* Accordion */
+    details {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--card);
+      margin: .5rem 0;
+      overflow: hidden;
+    }
+    summary {
+      padding: .75rem 1rem;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 13.5px;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    summary::after { content: '↓'; font-size: 12px; color: var(--fg-muted); }
+    details[open] summary::after { content: '↑'; }
+    details > :not(summary) { padding: .25rem 1rem 1rem; }
+
+    /* Print */
+    @media print {
+      .toc { page-break-inside: avoid; }
+      .section { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <div class="report-header">
+    <div class="meta">Design Assessment · Veld Portfolio · April 1, 2026</div>
+    <h1>Aesthetic &amp; Function Design Review</h1>
+    <p class="subtitle">Full audit of public marketing and in-app design direction. Research-backed with competitive benchmarking and prioritized recommendations.</p>
+    <div class="tag-row">
+      <span class="tag"><span class="dot" style="background:#0ea5e9"></span> Public / Marketing</span>
+      <span class="tag"><span class="dot" style="background:#7c3aed"></span> In-App / Dashboard</span>
+      <span class="tag"><span class="dot" style="background:#059669"></span> Strengths</span>
+      <span class="tag"><span class="dot" style="background:#dc2626"></span> Issues</span>
+      <span class="tag"><span class="dot" style="background:#d97706"></span> Opportunities</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h3>Contents</h3>
+    <ol>
+      <li><a href="#verdict">Executive Verdict</a></li>
+      <li><a href="#stack">Stack &amp; Token Audit</a></li>
+      <li><a href="#public">Public / Marketing Design</a></li>
+      <li><a href="#inapp">In-App / Dashboard Design</a></li>
+      <li><a href="#split">Should You Split the Design Systems?</a></li>
+      <li><a href="#research">Competitive Research &amp; Industry Benchmarks</a></li>
+      <li><a href="#issues">Full Issue Inventory</a></li>
+      <li><a href="#recs">Prioritized Recommendations</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. VERDICT -->
+  <div class="section" id="verdict">
+    <div class="section-title"><span class="num">01</span> Executive Verdict</div>
+
+    <div class="verdict-grid">
+      <div class="verdict-card">
+        <div class="vc-label">Overall Design</div>
+        <div class="vc-score score-ok">6 / 10</div>
+        <div class="vc-note">Competent but not differentiated. Functional clarity achieved; visual identity not yet.</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">Marketing Site</div>
+        <div class="vc-score score-ok">5 / 10</div>
+        <div class="vc-note">Undersells the product. No visual story, no social proof, weak above-the-fold.</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">In-App UX</div>
+        <div class="vc-score score-ok">7 / 10</div>
+        <div class="vc-note">Information architecture is solid. Missing micro-delight and hierarchy accents.</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">Consistency</div>
+        <div class="vc-score score-good">8 / 10</div>
+        <div class="vc-note">Token system is well-defined and consistently applied. Good dark mode.</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">Modernity</div>
+        <div class="vc-score score-ok">6.5 / 10</div>
+        <div class="vc-note">Tech stack is modern (Geist, Tailwind v4, Next 16). Visual patterns are behind peers.</div>
+      </div>
+      <div class="verdict-card">
+        <div class="vc-label">Brand Identity</div>
+        <div class="vc-score score-poor">4 / 10</div>
+        <div class="vc-note">Near-zero brand color. The logo is a text string. Feels anonymous.</div>
+      </div>
+    </div>
+
+    <div class="callout callout-warn">
+      <strong>The core tension:</strong> Your spec explicitly targets a "Robinhood-inspired minimal" aesthetic — and you've achieved the minimal part well. But Robinhood's design actually has strong brand presence: a distinctive green accent, bold typography, gradient backgrounds, and animated transitions. What Veld has is the stripped-down skeleton of that concept without the visual energy that makes it compelling. The result is <em>clinical</em> rather than <em>confident</em>.
+    </div>
+
+    <div class="callout callout-info">
+      <strong>The good news:</strong> The structural foundation is correct. Semantic tokens, progressive disclosure, accessible hierarchy, and a clean component model are all in place. You're not rebuilding — you're <em>elevating</em>. Most of the high-impact improvements are additive, not destructive.
+    </div>
+  </div>
+
+  <!-- 2. STACK AUDIT -->
+  <div class="section" id="stack">
+    <div class="section-title"><span class="num">02</span> Stack &amp; Token Audit</div>
+
+    <div class="cols-2">
+      <div class="split-card">
+        <h4>🟢 What's Working</h4>
+        <ul>
+          <li><span class="li-icon">✓</span> <strong>Geist Sans</strong> — Excellent. Used by Vercel, Linear. Clean, geometric, reads trust at any size.</li>
+          <li><span class="li-icon">✓</span> <strong>Tailwind CSS v4</strong> — Up-to-date. CSS-variable-based theming via <code>@theme inline</code> is the correct v4 pattern.</li>
+          <li><span class="li-icon">✓</span> <strong>Semantic tokens</strong> — <code>--background</code>, <code>--accent</code>, <code>--positive</code>, <code>--foreground-muted</code> etc. are all well-named and consistently used throughout.</li>
+          <li><span class="li-icon">✓</span> <strong>Dark mode</strong> — System preference + explicit override via <code>data-theme</code>. Both paths work correctly. Contrast is appropriate.</li>
+          <li><span class="li-icon">✓</span> <strong>Recharts</strong> — Reasonable for this use case. Not the flashiest charting lib but stable and well-supported.</li>
+          <li><span class="li-icon">✓</span> <strong>Lucide icons</strong> — Consistent stroke weight, modern, correct choice for this aesthetic.</li>
+        </ul>
+      </div>
+      <div class="split-card">
+        <h4>🟡 Token Concerns</h4>
+        <ul>
+          <li><span class="li-icon">⚠</span> <strong>Zero brand hue</strong> — The accent is <code>#0a0a0a</code> (pure black). No color in the brand vocabulary at all outside semantic red/green/amber.</li>
+          <li><span class="li-icon">⚠</span> <strong>Chart colors are all cool-toned blues/teals</strong> — <code>chart-1</code> through <code>chart-5</code> are all from the same family. No warm accent for differentiation.</li>
+          <li><span class="li-icon">⚠</span> <strong>No spacing tokens</strong> in CSS — Spacing is documented in the spec but not defined as CSS variables or Tailwind theme extensions. Inconsistencies can creep in.</li>
+          <li><span class="li-icon">⚠</span> <strong>Missing interaction tokens</strong> — No <code>--ring</code>, no <code>--focus-ring</code>. Focus state uses <code>ring-accent/20</code> per spec but isn't enforced as a token.</li>
+          <li><span class="li-icon">⚠</span> <strong>No motion tokens</strong> — No defined transition durations/easing in the token layer. <code>transition-colors</code> and <code>duration-200</code> used ad hoc in components.</li>
+        </ul>
+      </div>
+    </div>
+
+    <p style="margin: 1rem 0 .5rem; font-weight: 600; font-size: 13px;">Current Color Palette</p>
+    <div class="swatch-row">
+      <div class="swatch" style="background:#fafafa; color:#aaa; border: 1px solid #e4e4e7" title="--background #fafafa">BG</div>
+      <div class="swatch" style="background:#f4f4f5; color:#aaa; border: 1px solid #e4e4e7" title="--background-subtle #f4f4f5">Sub</div>
+      <div class="swatch" style="background:#ffffff; color:#aaa; border: 1px solid #e4e4e7" title="--card #ffffff">Card</div>
+      <div class="swatch" style="background:#0a0a0a" title="--foreground #0a0a0a">FG</div>
+      <div class="swatch" style="background:#71717a" title="--foreground-muted #71717a">Mut</div>
+      <div class="swatch" style="background:#e4e4e7; color:#aaa;" title="--border #e4e4e7">Bdr</div>
+      <div class="swatch" style="background:#0a0a0a" title="--accent #0a0a0a (= foreground!)">Acc</div>
+      <div class="swatch" style="background:#059669" title="--positive #059669">+</div>
+      <div class="swatch" style="background:#dc2626" title="--negative #dc2626">−</div>
+      <div class="swatch" style="background:#d97706" title="--warning #d97706">⚠</div>
+      <div class="swatch" style="background:#0ea5e9" title="--chart-1 #0ea5e9">C1</div>
+      <div class="swatch" style="background:#14b8a6" title="--chart-2 #14b8a6">C2</div>
+      <div class="swatch" style="background:#10b981" title="--chart-3 #10b981">C3</div>
+      <div class="swatch" style="background:#3b82f6" title="--chart-4 #3b82f6">C4</div>
+      <div class="swatch" style="background:#06b6d4" title="--chart-5 #06b6d4">C5</div>
+    </div>
+    <p style="font-size: 12px; color: var(--fg-muted); margin-top: .3rem;">Hover swatches to see token names. Notable: accent = foreground = near-black. The entire interactive vocabulary is monochromatic.</p>
+  </div>
+
+  <!-- 3. PUBLIC DESIGN -->
+  <div class="section" id="public">
+    <div class="section-title"><span class="num">03</span> Public / Marketing Design</div>
+
+    <div class="callout callout-warn">
+      <strong>Summary:</strong> The landing page is honest, clean, and functional — but it doesn't sell. It reads more like a utility page than a product worth trying. The design says "I exist" but not "you should care." The gap is almost entirely about visual energy and storytelling, not structure.
+    </div>
+
+    <details>
+      <summary>Hero Section Analysis</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The hero is pure centered text: a small uppercase label, an <code>h1</code> headline, a subline, two CTAs, and three trust pills. No visual anchor. No product visible above the fold on any screen size.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ Headline copy is clear and specific</li>
+            <li>✓ "No card required" trust pills are correctly placed near CTA</li>
+            <li>✓ Mobile-first flow is clean</li>
+          </ul></div>
+          <div class="cons-block"><h4>Missing</h4><ul>
+            <li>✗ Product screenshot not visible above the fold</li>
+            <li>✗ No visual anchor or illustration — just text</li>
+            <li>✗ The `py-12 sm:py-16 md:py-20` padding creates a lot of empty gray space</li>
+            <li>✗ "Veld Portfolio" label above h1 is redundant — they're already on the site</li>
+          </ul></div>
+        </div>
+        <div class="callout callout-info" style="margin-top:.75rem">
+          <strong>Benchmark:</strong> Stessa, Rentastic, and most modern SaaS landing pages show the product dashboard or a mockup immediately in the hero. The rule of thumb is that users should see what they're signing up for <em>before</em> they scroll. Currently the product screenshot is section 3 (after the hero and calculator section).
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Navigation Analysis</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The landing nav contains: Calculators, Pricing, <strong>Privacy</strong>, <strong>Terms</strong>, Changelog, Sign in, Sign up. Privacy and Terms are legal/utility links — they're cluttering primary nav real estate that should be reserved for conversion-oriented destinations.</p>
+        <div class="callout callout-warn" style="margin-top:.75rem">
+          <strong>Issue:</strong> The logo is the text string "Veld" rendered in <code>text-lg font-semibold</code>. There is no brand mark. On a 14-inch laptop at arm's length, this is barely distinguishable from nav copy. Compare: Stessa uses a green wordmark; Rentastic uses a colored logo. Brand mark matters for recall.
+        </div>
+        <p style="margin-top:.75rem; font-size: 13px; color: var(--fg-muted)"><strong>Suggested nav:</strong> Logo mark · Calculators · Pricing · Changelog · [Sign in] · [Get started →]<br>Move Privacy/Terms to footer only (they're already there).</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Section Rhythm &amp; Visual Cadence</summary>
+      <div>
+        <p style="margin-bottom:.75rem">There are 5 sections below the hero. All use the same pattern: <code>border-t border-border bg-card/30</code> or similar. Every section heading uses the same <code>text-sm font-semibold uppercase tracking-wide text-muted</code> style. The result is a page with zero visual differentiation between sections.</p>
+        <table class="research-table" style="margin-top:.75rem">
+          <thead><tr><th>Section</th><th>Background</th><th>Heading Style</th><th>Issue</th></tr></thead>
+          <tbody>
+            <tr><td>Hero</td><td><code>bg-background</code></td><td>h1 + muted label</td><td class="neutral">OK — different from rest</td></tr>
+            <tr><td>Calculator preview</td><td><code>bg-card/30</code></td><td>uppercase muted sm</td><td class="cross">Same as all sections below</td></tr>
+            <tr><td>Product screenshot</td><td><code>bg-card/30</code></td><td>No heading</td><td class="neutral">No heading = no context</td></tr>
+            <tr><td>Value props</td><td><code>bg-card/50</code></td><td>uppercase muted sm</td><td class="cross">Identical style</td></tr>
+            <tr><td>Pricing preview</td><td><code>bg-background</code></td><td>text-2xl semibold</td><td class="check">Better — uses h2 size</td></tr>
+          </tbody>
+        </table>
+        <div class="callout callout-warn" style="margin-top:.75rem">
+          <strong>The uppercase-tracking-wide-text-muted heading is overused.</strong> It appears on every section, in the nav, on pricing cards, in the app sidebar section headers, on the dashboard — it's the most common UI pattern in the product. By the third use it becomes wallpaper.
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Value Props Cards</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The value props section renders 4 cards: Replace spreadsheets, Rent & value estimates, Deal analyzer, Scenario modeling. Each has a small bordered icon box (size-10/12), a title, and a description line.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ 4-column grid on lg+ is the right density</li>
+            <li>✓ Mobile stacks to horizontal card layout (icon + text side by side)</li>
+            <li>✓ Clean, not cluttered</li>
+          </ul></div>
+          <div class="cons-block"><h4>Issues</h4><ul>
+            <li>✗ Icons are <code>text-muted</code> — they blend into the card. No visual pop.</li>
+            <li>✗ The bordered box around the icon adds weight without adding meaning.</li>
+            <li>✗ The descriptions are very short (7-9 words). They read as labels, not benefits.</li>
+            <li>✗ No differentiation between the 4 props — they all look identical at a glance.</li>
+          </ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Pricing Preview on Landing</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The pricing section on the landing page shows three plan names as small <code>rounded-md border border-border bg-card</code> pills, then a "View pricing" button. This is the thinnest section on the entire page.</p>
+        <div class="callout callout-bad" style="margin-top:.75rem">
+          <strong>This section is too weak.</strong> Pricing is one of the highest-intent sections on any marketing page. Users who scroll this far are evaluating commitment. Three small pills with text like "Free $0 · 1 property · 5 saved deals" don't convey value — they convey limits. The CTA competes with nothing. This is an opportunity to anchor the "start free" narrative more compellingly.
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Missing Elements (Conversion Gaps)</summary>
+      <div>
+        <ul class="issue-list" style="padding: 0;">
+          <li>
+            <span class="issue-idx">#1</span>
+            <div class="issue-body">
+              <h5>No social proof anywhere</h5>
+              <p>No testimonials, user count, review stars, press mentions, or "used by X investors" claim. This is the most common conversion booster on marketing pages and it's completely absent from Veld's landing.</p>
+            </div>
+            <span class="badge badge-high">High impact</span>
+          </li>
+          <li>
+            <span class="issue-idx">#2</span>
+            <div class="issue-body">
+              <h5>Product not visible above the fold</h5>
+              <p>The dashboard screenshot is the 3rd section. Competitors show their product immediately. People sign up for tools, not concepts.</p>
+            </div>
+            <span class="badge badge-high">High impact</span>
+          </li>
+          <li>
+            <span class="issue-idx">#3</span>
+            <div class="issue-body">
+              <h5>No "how it works" narrative</h5>
+              <p>There's no step-by-step "Add properties → See equity → Analyze deals" flow. The landing goes hero → calculator → screenshot → features → pricing. There's no story arc.</p>
+            </div>
+            <span class="badge badge-medium">Medium</span>
+          </li>
+          <li>
+            <span class="issue-idx">#4</span>
+            <div class="issue-body">
+              <h5>No contrast between calculator section and the rest</h5>
+              <p>The embedded calculator is actually a great conversion tool. But it's buried as one of 5 uniformly-styled sections. It deserves visual emphasis.</p>
+            </div>
+            <span class="badge badge-medium">Medium</span>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- 4. IN-APP -->
+  <div class="section" id="inapp">
+    <div class="section-title"><span class="num">04</span> In-App / Dashboard Design</div>
+
+    <div class="callout callout-good">
+      <strong>Summary:</strong> The in-app design is genuinely well-structured. The information architecture is logical, progressive disclosure is implemented correctly, mobile handling is thoughtful, and the token system keeps things consistent. The issues here are <em>quality-of-life</em> and <em>emotional design</em> — not fundamental problems.
+    </div>
+
+    <details>
+      <summary>Shell &amp; Navigation</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The app shell uses a <code>w-56</code> left sidebar with sticky positioning, a <code>h-14</code> header bar, and a full-height nav. Mobile uses a slide-out drawer from the left with a fixed top bar showing the hamburger + logo + UserButton.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ Swipe-to-close gesture on mobile drawer (<code>delta &lt; -60</code>)</li>
+            <li>✓ Focus trap on drawer open (a11y correct)</li>
+            <li>✓ Route change auto-closes drawer</li>
+            <li>✓ Sidebar is sticky — doesn't scroll away on long pages</li>
+            <li>✓ UserButton at bottom of sidebar (account area) is correct placement</li>
+          </ul></div>
+          <div class="cons-block"><h4>Issues</h4><ul>
+            <li>✗ 9+ nav items flat — Dashboard, Properties, Modeling, Mortgage, Calculators, Analyze deal, Deals, Plans, Settings, (Admin) — no grouping or visual hierarchy between primary and secondary tools.</li>
+            <li>✗ Nav uses <code>text-base</code> (16px) for items — slightly large for sidebar nav. Most modern sidebars use 13-14px.</li>
+            <li>✗ "Getting started / Add property" is styled as a ghost link (muted) with a Lightbulb icon — it gets lost visually. This is arguably the most important CTA in the sidebar for new users.</li>
+            <li>✗ No group labels (e.g., "Portfolio", "Tools", "Account") to help users scan quickly.</li>
+            <li>✗ Logo is just text "Veld" — no icon mark. Contributes to weak brand presence.</li>
+          </ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Dashboard &amp; Metric Cards</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The dashboard follows the spec's "numbers first" philosophy correctly. 5 primary metric cards, a "More metrics" collapsible, charts, and rent-vs-market section. Structure is good.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ Primary metrics visible immediately (value, debt, equity, cash flow)</li>
+            <li>✓ Progressive disclosure via MobileCollapsible for secondary metrics</li>
+            <li>✓ Cash flow correctly uses positive/negative color</li>
+            <li>✓ LTV and DSCR show appropriate warning/negative tones</li>
+            <li>✓ Single-property upsell card at bottom is well-placed and non-intrusive</li>
+          </ul></div>
+          <div class="cons-block"><h4>Issues</h4><ul>
+            <li>✗ MetricCards have no trend data — just a static number with no context of direction (up/down from last month).</li>
+            <li>✗ All metric cards look identical regardless of importance. Total equity and DSCR use the same visual weight system. The F-pattern "north star" idea is there in theory but not visible hierarchy.</li>
+            <li>✗ The action row (Add property, Analyze a deal, workspace links) is inside a card but looks like a navigation menu. It blends into the metric cards.</li>
+            <li>✗ No skeleton loaders matching card shapes — loading.tsx files presumably show blank state.</li>
+            <li>✗ The "Portfolio summary across X properties" info line is redundant with the page heading "Dashboard" and the metric cards themselves.</li>
+          </ul></div>
+        </div>
+        <div class="callout callout-info" style="margin-top:.75rem">
+          <strong>Biggest opportunity in the dashboard:</strong> Trend indicators. Even a tiny arrow or delta value (+$1,200 vs last estimate) on total equity and cash flow would dramatically increase the "dashboard feel" and give users a reason to return. Right now the numbers are static — there's no story of change.
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Visual Hierarchy &amp; Section Pattern Overuse</summary>
+      <div>
+        <p style="margin-bottom:.75rem">Throughout the app, sections use <code>rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm</code>. Section headers use <code>text-sm font-semibold uppercase tracking-wide text-muted</code>. These are applied so uniformly that visual hierarchy breaks down at the page level.</p>
+        <div class="callout callout-warn" style="margin-top:.75rem">
+          <strong>The "uppercase tracking-wide text-muted" overuse problem:</strong> This pattern appears as: section headers in the app, section headers on the landing page, the "Veld Portfolio" label above the hero h1, the "Try the free calculator" heading, the "What you get" heading, the "See what you get" pricing section header. It's the single most frequently used non-body text pattern in the product. When everything is de-emphasized, nothing is de-emphasized — the pattern loses its purpose.
+        </div>
+        <p style="margin-top: .75rem; font-size: 13px; color: var(--fg-muted)">Recommendation: Reserve this pattern for <em>actual</em> secondary labels inside data-dense sections (chart titles, metric group headers). Use proper heading hierarchy (<code>h2</code> with meaningful size) for marketing sections and key in-app section titles.</p>
+      </div>
+    </details>
+
+    <details>
+      <summary>Empty States &amp; Onboarding</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The zero-state dashboard uses a centered card with welcome text, a primary CTA, and a <code>&lt;details&gt;</code> element for "More ways to get started". The spec references empty-properties.png and empty-deals.png assets.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ Primary CTA "Add your first property" is prominent</li>
+            <li>✓ Progressive disclosure hides extra options by default</li>
+            <li>✓ Text is friendly and direct</li>
+          </ul></div>
+          <div class="cons-block"><h4>Missing</h4><ul>
+            <li>✗ The empty state image (empty-properties.png) is not rendered in the dashboard zero state — just text and a button.</li>
+            <li>✗ No illustration = no brand personality at the most impressionable moment (first login).</li>
+            <li>✗ The OnboardingPanel is conditional on progress — new users see a panel but its design (unread code) needs review as a moment of delight vs. task checklist.</li>
+          </ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Pricing Cards (In-App Context)</summary>
+      <div>
+        <p style="margin-bottom:.75rem">The pricing card component is among the better-designed parts of the product. The billing toggle, savings badge, current plan ring, and feature list are all well-implemented.</p>
+        <div class="pros-cons" style="margin-top:.75rem">
+          <div class="pros-block"><h4>Working</h4><ul>
+            <li>✓ <code>ring-1 ring-positive/60</code> on current plan is a nice detail</li>
+            <li>✓ Annual savings context line is helpful and contextual</li>
+            <li>✓ Mobile collapses features behind MobileCollapsible — good pattern</li>
+            <li>✓ "Recommended next" badge for Investor (when on free) is correct nudge</li>
+          </ul></div>
+          <div class="cons-block"><h4>Issues</h4><ul>
+            <li>✗ Feature bullets use tiny <code>bg-border</code> dots — not visible enough. Checkmarks (✓) are standard and much clearer.</li>
+            <li>✗ The recommended/highlighted card doesn't visually pop enough vs. the others. The <code>border-accent/60 ring-accent/30</code> is very subtle.</li>
+            <li>✗ On mobile, all three cards stack identically — there's no visual break to make the recommended card stand out.</li>
+          </ul></div>
+        </div>
+      </div>
+    </details>
+
+    <details>
+      <summary>Micro-interactions &amp; Motion</summary>
+      <div>
+        <p style="margin-bottom:.75rem">Current motion usage: <code>transition-transform duration-200 ease-out</code> on the mobile drawer slide. <code>transition-colors</code> on buttons. <code>backdrop-blur-sm</code> on the landing nav overlay. That's essentially the entire motion vocabulary of the product.</p>
+        <div class="callout callout-warn" style="margin-top:.75rem">
+          <strong>2026 benchmark note:</strong> Leading SaaS products (Linear, Vercel Dashboard, Notion) use subtle but purposeful micro-animations: hover state transitions on cards, chart reveal animations on mount, number counting on first load, smooth collapsible transitions. Veld has almost none of these. The product feels "instant" but also slightly static and lifeless.
+        </div>
+        <p style="margin-top: .75rem; font-size: 13px; color: var(--fg-muted)">Note: Veld correctly includes <code>app-respect-reduced-motion</code> CSS class for accessibility. This is the right foundation — motion should be additive from this base, not the default.</p>
+      </div>
+    </details>
+
+  </div>
+
+  <!-- 5. SPLIT QUESTION -->
+  <div class="section" id="split">
+    <div class="section-title"><span class="num">05</span> Should You Split the Design Systems?</div>
+
+    <div class="callout callout-good">
+      <strong>Verdict: No hard split needed — but apply intentional divergence.</strong> The token system (<code>globals.css</code>) should remain shared. The in-app and marketing surfaces should use the same colors, font, and base components. However, the <em>visual expression</em> of those tokens should diverge in a few targeted ways.
+    </div>
+
+    <div class="cols-2" style="margin-top:1rem">
+      <div class="split-card">
+        <h4>🌐 Marketing Site Needs</h4>
+        <ul>
+          <li><span class="li-icon">→</span> Larger type scales for headings (h1 at 3xl-5xl is right, but section h2s need more size variety)</li>
+          <li><span class="li-icon">→</span> More generous whitespace between sections (currently sections feel packed)</li>
+          <li><span class="li-icon">→</span> Visual variety in section backgrounds (use <code>bg-background</code> for some, <code>bg-card</code> for others, possibly one with a subtle tinted background)</li>
+          <li><span class="li-icon">→</span> Social proof and testimonial components (not needed in-app)</li>
+          <li><span class="li-icon">→</span> Feature icons that are more visually prominent (larger, with a color accent, or custom SVG)</li>
+          <li><span class="li-icon">→</span> A brand accent color used <em>only</em> on marketing (gradient hint, one colored CTA)</li>
+          <li><span class="li-icon">→</span> More emotional, "wow" copy with visual amplifiers (bold stat callouts, etc.)</li>
+        </ul>
+      </div>
+      <div class="split-card">
+        <h4>📊 In-App Needs</h4>
+        <ul>
+          <li><span class="li-icon">→</span> Stays dense and data-first — this is correct for a financial tool</li>
+          <li><span class="li-icon">→</span> Can remain mostly monochromatic — accent black/white works here</li>
+          <li><span class="li-icon">→</span> Needs trend indicators and delta values on metrics</li>
+          <li><span class="li-icon">→</span> Needs sidebar nav grouping/hierarchy improvements</li>
+          <li><span class="li-icon">→</span> Needs subtle hover/transition polish on cards and rows</li>
+          <li><span class="li-icon">→</span> Needs empty state illustrations (already designed per visual assets guide)</li>
+          <li><span class="li-icon">→</span> Feature bullets → checkmarks</li>
+          <li><span class="li-icon">→</span> Consider a keyboard command palette for power users</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout callout-purple" style="margin-top:1rem">
+      <strong>The one shared change that helps both:</strong> Introduce a single brand accent hue — even a very subtle one. A muted indigo (e.g., <code>#6366f1</code>) or a warm teal (e.g., <code>#0d9488</code>) used for one thing only — the primary CTA button — would give the product a visual identity without breaking the minimal aesthetic. Currently the primary button is pure black, which disappears into the "foreground" token conceptually.
+    </div>
+  </div>
+
+  <!-- 6. RESEARCH -->
+  <div class="section" id="research">
+    <div class="section-title"><span class="num">06</span> Competitive Research &amp; Industry Benchmarks</div>
+
+    <p style="margin-bottom:1rem; color: var(--fg-muted); font-size: 13.5px;">What peers and the broader SaaS design landscape are doing in 2026 that Veld is not yet doing.</p>
+
+    <table class="research-table">
+      <thead>
+        <tr>
+          <th>Design Pattern</th>
+          <th>Industry (2026)</th>
+          <th>Stessa / Competitors</th>
+          <th>Veld Today</th>
+          <th>Gap</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Brand accent color</strong></td>
+          <td class="check">Standard (Stripe blue, Robinhood green, Notion gray)</td>
+          <td class="check">Stessa green; Rentastic branded palette</td>
+          <td class="cross">None — accent = black</td>
+          <td class="cross">High</td>
+        </tr>
+        <tr>
+          <td><strong>Social proof on landing</strong></td>
+          <td class="check">Near-universal (user counts, testimonials, logos)</td>
+          <td class="check">Rentastic has testimonials; Landlord Studio shows customer quotes</td>
+          <td class="cross">Absent</td>
+          <td class="cross">High</td>
+        </tr>
+        <tr>
+          <td><strong>Product screenshot in hero</strong></td>
+          <td class="check">Dominant pattern</td>
+          <td class="check">Most competitors show app screenshot in first section</td>
+          <td class="neutral">Below fold (section 3)</td>
+          <td class="neutral">Medium</td>
+        </tr>
+        <tr>
+          <td><strong>Trend indicators on metrics</strong></td>
+          <td class="check">Standard in fintech dashboards (Robinhood, Plaid, Stripe)</td>
+          <td class="check">Stessa shows historical chart overlays</td>
+          <td class="cross">Static numbers only</td>
+          <td class="cross">High</td>
+        </tr>
+        <tr>
+          <td><strong>Dark mode</strong></td>
+          <td class="check">Required for "power user" tools (2026 standard)</td>
+          <td class="neutral">Stessa: limited dark mode; Rentastic: no dark mode</td>
+          <td class="check">Fully implemented</td>
+          <td class="check">Ahead of peers</td>
+        </tr>
+        <tr>
+          <td><strong>Cmd/Ctrl+K command palette</strong></td>
+          <td class="check">Expected in any tool with 10+ features (Linear, Vercel, etc.)</td>
+          <td class="neutral">Not present in most RE tools</td>
+          <td class="cross">Not present</td>
+          <td class="neutral">Medium (opportunity)</td>
+        </tr>
+        <tr>
+          <td><strong>Progressive disclosure</strong></td>
+          <td class="check">Best practice — show simple first, reveal on demand</td>
+          <td class="neutral">Partial in most RE tools</td>
+          <td class="check">Well implemented (MobileCollapsible, show more)</td>
+          <td class="check">On par</td>
+        </tr>
+        <tr>
+          <td><strong>Feature checkmarks (✓) in pricing</strong></td>
+          <td class="check">Universal — dot bullets are unusual and harder to scan</td>
+          <td class="check">All competitors use checkmarks or similar icons</td>
+          <td class="cross">Tiny dot bullets</td>
+          <td class="neutral">Minor</td>
+        </tr>
+        <tr>
+          <td><strong>Empty state illustrations</strong></td>
+          <td class="check">Expected for zero-data states</td>
+          <td class="neutral">Partial across competitors</td>
+          <td class="neutral">Assets exist but not all rendered</td>
+          <td class="neutral">Medium</td>
+        </tr>
+        <tr>
+          <td><strong>Skeleton loaders</strong></td>
+          <td class="check">Standard in data-heavy apps</td>
+          <td class="neutral">Partial</td>
+          <td class="neutral">Loading.tsx files exist; quality unknown</td>
+          <td class="neutral">Medium</td>
+        </tr>
+        <tr>
+          <td><strong>Micro-animations</strong></td>
+          <td class="check">Hover effects, chart mounts, state transitions</td>
+          <td class="neutral">Limited in RE tools</td>
+          <td class="cross">Minimal — only drawer slide and color transitions</td>
+          <td class="neutral">Medium</td>
+        </tr>
+        <tr>
+          <td><strong>Sidebar nav grouping</strong></td>
+          <td class="check">Group labels for 5+ items (Linear, Vercel, Hubspot)</td>
+          <td class="neutral">Varies</td>
+          <td class="cross">9 flat items, no grouping</td>
+          <td class="neutral">Medium</td>
+        </tr>
+        <tr>
+          <td><strong>Geist / Inter font</strong></td>
+          <td class="check">Dominant in modern SaaS (Vercel, Linear, many others)</td>
+          <td class="neutral">Competitors use system fonts or older choices</td>
+          <td class="check">Geist — ahead of most RE tool peers</td>
+          <td class="check">Ahead</td>
+        </tr>
+        <tr>
+          <td><strong>Token-based theming</strong></td>
+          <td class="check">Industry standard</td>
+          <td class="neutral">Partial in most RE tools</td>
+          <td class="check">Well-implemented in globals.css</td>
+          <td class="check">On par or ahead</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout callout-info" style="margin-top:1.25rem">
+      <strong>Research finding — 2026 SaaS design principles (SaaSUI, SaaSFrame, Devian):</strong>
+      <p style="margin-top:.4rem">The dominant themes across all research are: (1) <em>Calm design</em> — less visible by default, more on demand. Veld is already here. (2) <em>Action-oriented dashboards</em> — don't just show data, guide the next action. Veld has the CTA structure but not the visual weight. (3) <em>Emotional design entering B2B</em> — micro-delight, personality in copy, celebration moments. Veld is entirely absent here. (4) <em>Strategic minimalism</em> — every element earns its place. Veld achieves this on structure but not on visual identity.</p>
+    </div>
+  </div>
+
+  <!-- 7. ISSUE INVENTORY -->
+  <div class="section" id="issues">
+    <div class="section-title"><span class="num">07</span> Full Issue Inventory</div>
+    <p style="color: var(--fg-muted); font-size: 13px; margin-bottom: 1rem;">All identified issues ranked by impact. Surface labels: <span class="badge badge-pub">Public</span> <span class="badge badge-app">In-App</span> <span class="badge badge-both">Both</span></p>
+
+    <ul class="issue-list">
+
+      <li>
+        <span class="issue-idx">I-01</span>
+        <div class="issue-body">
+          <h5>No brand accent color — accent is pure black/white</h5>
+          <p>The primary button, active nav item, and key CTAs all use <code>--accent: #0a0a0a</code>. This is functionally the same as <code>--foreground</code>. There is no hue in the brand vocabulary, making everything feel anonymous and hard to visually anchor. Even Robinhood uses a distinctive green.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-high">High</span>
+          <span class="badge badge-both">Both</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-02</span>
+        <div class="issue-body">
+          <h5>No social proof on landing page</h5>
+          <p>Zero testimonials, user counts, star ratings, or trust logos. This is the largest single conversion gap on the marketing site. Users evaluating financial tools need reassurance from other users.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-high">High</span>
+          <span class="badge badge-pub">Public</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-03</span>
+        <div class="issue-body">
+          <h5>Product screenshot not visible above the fold</h5>
+          <p>The dashboard screenshot is the 3rd section on the landing page. Users must scroll past a hero and a calculator section before seeing the actual product. For a data-heavy tool, the product screenshot is the most persuasive element.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-high">High</span>
+          <span class="badge badge-pub">Public</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-04</span>
+        <div class="issue-body">
+          <h5>No trend/delta data on metric cards</h5>
+          <p>Dashboard metrics show static numbers with no context of change direction. A "+$2,400 equity since last month" delta or small trend arrow would dramatically increase the perceived value of checking the dashboard regularly. This is the core engagement driver missing from the product.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-high">High</span>
+          <span class="badge badge-app">In-App</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-05</span>
+        <div class="issue-body">
+          <h5>Uppercase tracking-wide text-muted heading style is overused</h5>
+          <p>Used as: landing page section headers, hero eyebrow, in-app section headers, chart titles. By the 5th use it reads as visual noise rather than emphasis. Reserve this for secondary structural labels only.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-medium">Medium</span>
+          <span class="badge badge-both">Both</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-06</span>
+        <div class="issue-body">
+          <h5>Sidebar navigation has no visual grouping</h5>
+          <p>9 nav items (+ admin) rendered as a flat list. Primary portfolio tools (Dashboard, Properties) share the same visual weight as utility items (Plans, Settings). Adding two or three group labels would dramatically improve scanability.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-medium">Medium</span>
+          <span class="badge badge-app">In-App</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-07</span>
+        <div class="issue-body">
+          <h5>Logo is a text string only — no brand mark</h5>
+          <p>"Veld" rendered in <code>text-lg font-semibold</code> in both the landing nav and app sidebar. There is a favicon.svg but it's not used as a sidebar logo mark. At the sidebar's 18px size, the text competes with nav labels. A small icon mark to the left would anchor the brand.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-medium">Medium</span>
+          <span class="badge badge-both">Both</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-08</span>
+        <div class="issue-body">
+          <h5>Section cadence on landing page is too uniform</h5>
+          <p>5 sections all share similar <code>bg-card/30</code> or <code>bg-card/50</code> backgrounds with border-top dividers. There's no visual rhythm or journey through the page — it reads as one continuous gray block.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-medium">Medium</span>
+          <span class="badge badge-pub">Public</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-09</span>
+        <div class="issue-body">
+          <h5>Feature bullets use invisible dots — not checkmarks</h5>
+          <p>Pricing card feature lists use <code>&lt;span class="h-1.5 w-1.5 rounded-full bg-border" /&gt;</code> — a tiny border-colored dot that is nearly invisible. Universal SaaS standard is checkmarks (✓) or checkmark icons in green/accent.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-medium">Medium</span>
+          <span class="badge badge-both">Both</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-10</span>
+        <div class="issue-body">
+          <h5>Landing nav contains Privacy and Terms links</h5>
+          <p>Primary nav real estate is wasted on legal/utility links (Privacy, Terms). These belong in the footer only. The primary nav should focus on conversion destinations: Calculators, Pricing, Changelog, Sign in, Sign up.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-low">Low</span>
+          <span class="badge badge-pub">Public</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-11</span>
+        <div class="issue-body">
+          <h5>Empty state on dashboard doesn't use the empty-properties.png asset</h5>
+          <p>The visual assets guide documents an empty-properties.png illustration specifically for this state. The dashboard zero-state shows only text and a button. The illustration would add personality at the most impressionable moment (first login).</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-low">Low</span>
+          <span class="badge badge-app">In-App</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-12</span>
+        <div class="issue-body">
+          <h5>Micro-animation and motion vocabulary is near-zero</h5>
+          <p>Only the drawer slide (200ms ease-out) and color transitions exist. Cards, rows, chart mounts, and number reveals all feel static. This is a quality-of-life gap compared to peer products but not a functional deficiency.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-low">Low</span>
+          <span class="badge badge-both">Both</span>
+        </div>
+      </li>
+
+      <li>
+        <span class="issue-idx">I-13</span>
+        <div class="issue-body">
+          <h5>Sidebar nav text is text-base (16px) — too large for sidebar</h5>
+          <p>Nav items use <code>text-base</code> with <code>px-4 py-2.5</code>. Most modern sidebars use 13-14px for nav items. At 16px with generous padding, the sidebar nav takes up significantly more vertical space than necessary, making the nav feel bulky when there are 9+ items.</p>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:.3rem;align-items:flex-end">
+          <span class="badge badge-low">Low</span>
+          <span class="badge badge-app">In-App</span>
+        </div>
+      </li>
+
+    </ul>
+  </div>
+
+  <!-- 8. RECOMMENDATIONS -->
+  <div class="section" id="recs">
+    <div class="section-title"><span class="num">08</span> Prioritized Recommendations</div>
+
+    <div class="rec-group">
+      <div class="rec-group-title">🔴 P0 — High Impact, Do First</div>
+
+      <div class="rec-item">
+        <div class="rec-num">1</div>
+        <div class="rec-body">
+          <h5>Introduce one brand accent hue</h5>
+          <p>Add a single non-black accent color as a new token — e.g., <code>--brand: #6366f1</code> (indigo) or <code>--brand: #0d9488</code> (teal, aligned with chart-2). Use it <em>only</em> for primary CTA buttons (Get started, Add property) while keeping all other accents black/white. This is one CSS variable and one Tailwind mapping but fundamentally changes brand presence.</p>
+          <div class="rec-tags">
+            <span class="badge badge-both">Both</span>
+            <span class="badge badge-high">High impact</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">2</div>
+        <div class="rec-body">
+          <h5>Add social proof section to landing page</h5>
+          <p>Add a testimonial or "trusted by" section between the hero and the calculator (or after the screenshot). Even 2–3 quotes from real users with role/context (e.g., "Small landlord, 3 properties in Ohio") is enough. If early-stage, use a "Join [X] investors" count, or a notable endorsement. Position it directly after the hero CTA where trust anxiety is highest.</p>
+          <div class="rec-tags">
+            <span class="badge badge-pub">Public</span>
+            <span class="badge badge-high">High impact</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">3</div>
+        <div class="rec-body">
+          <h5>Move product screenshot into (or near) the hero</h5>
+          <p>Restructure the landing hero to include the dashboard screenshot in the lower half of the fold, or just below the CTA buttons. A split-panel hero (copy left, screenshot right) is a proven pattern. Alternatively, use the screenshot as a full-bleed hero background with overlay text. The product needs to be visible before a user has decided to scroll.</p>
+          <div class="rec-tags">
+            <span class="badge badge-pub">Public</span>
+            <span class="badge badge-high">High impact</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">4</div>
+        <div class="rec-body">
+          <h5>Add trend indicators to dashboard metric cards</h5>
+          <p>For any metric that changes over time (equity, value, cash flow), show a delta: "+$1,200 this month" in muted text below the value, or a small arrow icon with the direction. This requires storing or computing a previous snapshot for comparison. Even showing "as of [date] estimate" with a trend direction label from the benchmark data would add significant perceived value.</p>
+          <div class="rec-tags">
+            <span class="badge badge-app">In-App</span>
+            <span class="badge badge-high">High impact</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rec-group">
+      <div class="rec-group-title">🟡 P1 — Medium Impact, Next Sprint</div>
+
+      <div class="rec-item">
+        <div class="rec-num">5</div>
+        <div class="rec-body">
+          <h5>Group sidebar navigation with section labels</h5>
+          <p>Introduce two or three group labels in the sidebar: <strong>Portfolio</strong> (Dashboard, Properties), <strong>Tools</strong> (Modeling, Mortgage, Calculators, Analyze deal, Deals), <strong>Account</strong> (Plans, Settings). Use the existing <code>text-xs font-semibold uppercase tracking-wide text-muted</code> pattern for these labels (this is a correct use of that pattern). Reduce nav item text to <code>text-sm</code>.</p>
+          <div class="rec-tags">
+            <span class="badge badge-app">In-App</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">6</div>
+        <div class="rec-body">
+          <h5>Add logo mark to sidebar and landing nav</h5>
+          <p>Use the <code>favicon.svg</code> already in <code>public/</code> as a small icon mark (16–20px) to the left of "Veld" in the sidebar header and landing nav. This immediately creates visual brand presence without any design work — the asset already exists.</p>
+          <div class="rec-tags">
+            <span class="badge badge-both">Both</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">7</div>
+        <div class="rec-body">
+          <h5>Replace pricing bullet dots with checkmarks</h5>
+          <p>Change the feature list bullets in <code>pricing-cards.tsx</code> from <code>&lt;span class="h-1.5 w-1.5 rounded-full bg-border" /&gt;</code> to a proper checkmark: either a Lucide <code>Check</code> icon at 12–14px in <code>text-positive</code>, or a simple ✓ character. Also apply this to any feature lists in marketing pages.</p>
+          <div class="rec-tags">
+            <span class="badge badge-both">Both</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">8</div>
+        <div class="rec-body">
+          <h5>Break the uniform section rhythm on the landing page</h5>
+          <p>Give sections distinct visual personalities: Hero (white background, generous padding), Calculator section (slightly darker subtle background, full-width treatment), Screenshot (full-width with minimal padding, let the screenshot breathe), Value props (white, well-spaced grid), Pricing CTA (dark/inverted background for contrast). The alternating light/dark section pattern is a proven marketing page structure.</p>
+          <div class="rec-tags">
+            <span class="badge badge-pub">Public</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">9</div>
+        <div class="rec-body">
+          <h5>Remove Privacy and Terms from primary landing nav</h5>
+          <p>These are already in the footer. Removing them from the primary nav frees space for a cleaner link hierarchy: Logo · Calculators · Pricing · Changelog · Sign in · [Get started →]. This also fixes the mobile drawer which currently has 7 links before the auth actions.</p>
+          <div class="rec-tags">
+            <span class="badge badge-pub">Public</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">10</div>
+        <div class="rec-body">
+          <h5>Render the empty-properties illustration on dashboard zero state</h5>
+          <p>The <code>empty-properties.png</code> asset already exists per the visual assets guide. Add it to the dashboard zero-state card above the welcome headline. It personalizes the first impression and adds visual warmth at a critical onboarding moment.</p>
+          <div class="rec-tags">
+            <span class="badge badge-app">In-App</span>
+            <span class="badge badge-medium">Medium</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="rec-group">
+      <div class="rec-group-title">🟢 P2 — Quality of Life, Backlog</div>
+
+      <div class="rec-item">
+        <div class="rec-num">11</div>
+        <div class="rec-body">
+          <h5>Reduce overuse of uppercase tracking-wide heading style</h5>
+          <p>Audit every instance of <code>text-sm font-semibold uppercase tracking-wide text-muted</code>. Reserve it strictly for: chart titles, in-app section labels within data cards, and table column headers. Elevate marketing section headers to real heading sizes (<code>text-xl</code> or <code>text-2xl</code>) with <code>font-semibold text-foreground</code>.</p>
+          <div class="rec-tags">
+            <span class="badge badge-both">Both</span>
+            <span class="badge badge-low">Polish</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">12</div>
+        <div class="rec-body">
+          <h5>Add subtle hover transitions to metric cards and list rows</h5>
+          <p>Add <code>transition-colors duration-150</code> and a very subtle <code>hover:shadow-sm</code> or <code>hover:border-border/80</code> to clickable metric cards. For property list rows, add <code>hover:bg-subtle transition-colors duration-100</code>. These micro-interactions cost zero performance and significantly improve the "alive" feeling of the UI.</p>
+          <div class="rec-tags">
+            <span class="badge badge-app">In-App</span>
+            <span class="badge badge-low">Polish</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">13</div>
+        <div class="rec-body">
+          <h5>Consider a Cmd+K command palette for navigation</h5>
+          <p>With 9 nav items and multiple sub-pages, a command palette would be a significant power-user upgrade. Implement with a keyboard shortcut that surfaces all nav destinations, recent properties, and quick actions (Add property, Analyze deal, New scenario). This is a differentiating feature that most RE tools don't have.</p>
+          <div class="rec-tags">
+            <span class="badge badge-app">In-App</span>
+            <span class="badge badge-low">Enhancement</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="rec-item">
+        <div class="rec-num">14</div>
+        <div class="rec-body">
+          <h5>Make the recommended pricing card more visually prominent</h5>
+          <p>When signed out, the Investor card gets a barely-visible <code>ring-accent/30</code> highlight. Increase contrast: use a bolder border, a background tint, or a "Most popular" badge in a more prominent position. The recommended plan should be immediately visually distinct, not subtly different.</p>
+          <div class="rec-tags">
+            <span class="badge badge-both">Both</span>
+            <span class="badge badge-low">Polish</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+  <hr />
+
+  <div style="font-size: 12px; color: var(--fg-muted); text-align: center; padding: 1rem 0;">
+    <strong>Veld Portfolio — Design Assessment</strong> · April 1, 2026 · Covers public marketing + in-app design · Based on codebase review + competitive research (Stessa, Rentastic, Landlord Studio, SaaSFrame, SaaSUI, Devian benchmarks)
+  </div>
+
+</div>
+</body>
+</html>

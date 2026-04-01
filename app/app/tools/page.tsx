@@ -52,6 +52,22 @@ export default async function ToolsHubPage() {
           </header>
 
           <CalculatorsHubCards variant="public" />
+
+          <p className="mt-10 text-center text-sm text-muted">
+            <Link href="/resources" className="font-medium text-foreground hover:underline">
+              Investor resources
+            </Link>
+            {" — DSCR, cap rate, cash-on-cash, BRRRR, metrics glossary. "}
+            Evaluating other tools? See{" "}
+            <Link href="/alternatives/stessa" className="font-medium text-foreground hover:underline">
+              Stessa alternative
+            </Link>{" "}
+            and{" "}
+            <Link href="/vs/spreadsheets" className="font-medium text-foreground hover:underline">
+              spreadsheets vs Veld
+            </Link>
+            .
+          </p>
         </div>
       </main>
       <Footer supportEmail={supportEmail} />

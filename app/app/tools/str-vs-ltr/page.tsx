@@ -84,6 +84,21 @@ export default async function StrVsLtrCalculatorPage() {
             <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
               Fix and flip
             </Link>
+            . State pages:{" "}
+            <Link
+              href="/tools/str-vs-ltr/florida"
+              className="font-medium text-foreground hover:underline"
+            >
+              Florida
+            </Link>
+            ,{" "}
+            <Link
+              href="/tools/str-vs-ltr/arizona"
+              className="font-medium text-foreground hover:underline"
+            >
+              Arizona
+            </Link>
+            .
           </p>
         </div>
       </main>

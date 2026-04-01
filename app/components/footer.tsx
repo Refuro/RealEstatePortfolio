@@ -28,6 +28,15 @@ export function Footer({ supportEmail }: FooterProps) {
         <Link href="/tools" className="hover:text-foreground">
           Calculators
         </Link>
+        <Link href="/alternatives" className="hover:text-foreground">
+          Alternatives
+        </Link>
+        <Link href="/vs" className="hover:text-foreground">
+          Compare
+        </Link>
+        <Link href="/resources" className="hover:text-foreground">
+          Resources
+        </Link>
         <CookiePreferencesButton />
       </div>
     </footer>

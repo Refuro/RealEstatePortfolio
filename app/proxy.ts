@@ -6,6 +6,8 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
  */
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/sitemap.xml",
+  "/robots.txt",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/privacy",
@@ -13,6 +15,9 @@ const isPublicRoute = createRouteMatcher([
   "/pricing",
   "/investment-property-calculator",
   "/tools(.*)", // hub, /tools/brrr, /tools/str-vs-ltr, /tools/fix-and-flip, …
+  "/alternatives(.*)", // hub + /alternatives/[slug] comparison pages
+  "/vs(.*)", // hub + /vs/[slug] spreadsheet / Excel comparison pages
+  "/resources(.*)", // hub + /resources/[slug] reference articles
   "/lp/investment-property-calculator",
   "/changelog",
   "/contact",

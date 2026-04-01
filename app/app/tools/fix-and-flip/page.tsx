@@ -83,6 +83,18 @@ export default async function FixAndFlipCalculatorPage() {
             >
               Investment property calculator
             </Link>
+            . State pages:{" "}
+            <Link
+              href="/tools/fix-and-flip/georgia"
+              className="font-medium text-foreground hover:underline"
+            >
+              Georgia
+            </Link>
+            ,{" "}
+            <Link href="/tools/fix-and-flip/ohio" className="font-medium text-foreground hover:underline">
+              Ohio
+            </Link>
+            .
           </p>
         </div>
       </main>

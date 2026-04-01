@@ -23,6 +23,8 @@ type PublicCalculatorProps = {
   showCta?: boolean;
   landingVariant?: string;
   surface?: "marketing" | "app";
+  /** State-typical monthly rent pre-fill from HUD FMR data. Overrides the generic default. */
+  initialMonthlyRent?: number;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -35,12 +37,13 @@ export function PublicCalculator({
   showCta = false,
   landingVariant,
   surface = "marketing",
+  initialMonthlyRent,
 }: PublicCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
   const isAppShell = surface === "app";
   const [purchasePrice, setPurchasePrice] = useState("300000");
-  const [monthlyRent, setMonthlyRent] = useState("2500");
+  const [monthlyRent, setMonthlyRent] = useState(String(initialMonthlyRent ?? 2500));
   const [monthlyExpenses, setMonthlyExpenses] = useState("700");
   const [downPaymentPercent, setDownPaymentPercent] = useState("20");
   const [interestRatePercent, setInterestRatePercent] = useState("7");

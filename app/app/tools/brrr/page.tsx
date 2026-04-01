@@ -80,6 +80,19 @@ export default async function BrrrCalculatorPage() {
             <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
               Fix and flip
             </Link>
+            . State pages:{" "}
+            <Link href="/tools/brrr/texas" className="font-medium text-foreground hover:underline">
+              Texas
+            </Link>
+            ,{" "}
+            <Link href="/tools/brrr/florida" className="font-medium text-foreground hover:underline">
+              Florida
+            </Link>
+            ,{" "}
+            <Link href="/tools/brrr/georgia" className="font-medium text-foreground hover:underline">
+              Georgia
+            </Link>
+            .
           </p>
         </div>
       </main>

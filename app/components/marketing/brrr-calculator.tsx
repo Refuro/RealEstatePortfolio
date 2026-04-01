@@ -23,6 +23,8 @@ type BrrrCalculatorProps = {
   landingVariant?: string;
   /** `app` = signed-in shell; marketing CTAs hidden in favor of workspace links. */
   surface?: "marketing" | "app";
+  /** State-typical monthly rent pre-fill from HUD FMR data. Overrides the generic default. */
+  initialMonthlyRent?: number;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -40,6 +42,7 @@ export function BrrrCalculator({
   showCta = false,
   landingVariant,
   surface = "marketing",
+  initialMonthlyRent,
 }: BrrrCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
@@ -54,7 +57,7 @@ export function BrrrCalculator({
   const [refiRate, setRefiRate] = useState("7");
   const [refiTermYears, setRefiTermYears] = useState("30");
   const [refiClosingPercent, setRefiClosingPercent] = useState("1");
-  const [monthlyRent, setMonthlyRent] = useState("2200");
+  const [monthlyRent, setMonthlyRent] = useState(String(initialMonthlyRent ?? 2200));
   const [monthlyExpenses, setMonthlyExpenses] = useState("650");
   const [vacancyPercent, setVacancyPercent] = useState("5");
 
