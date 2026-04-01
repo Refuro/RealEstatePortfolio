@@ -138,7 +138,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
           ref={menuButtonRef}
           type="button"
           onClick={() => (mobileMenuOpen ? closeMenu() : openMenu())}
-          className="flex size-10 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground md:hidden"
+          className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground md:hidden"
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
           aria-controls="landing-nav-drawer"
@@ -172,7 +172,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
           <button
             type="button"
             onClick={closeMenu}
-            className="flex size-10 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground"
+            className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground"
             aria-label="Close menu"
           >
             <X className="size-5" />

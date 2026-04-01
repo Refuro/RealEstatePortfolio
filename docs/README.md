@@ -3,7 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-03-31-audit-synthesis.md) — consolidated follow-ups from full audit 2026-03-31 (14 lanes)
+- [Latest audit synthesis](audits/synthesis/2026-04-01-audit-synthesis.md) — consolidated follow-ups (14 lanes)
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
@@ -32,12 +32,22 @@
 - [Paid ads campaign build sheet](launch/paid-ads-campaign-build-sheet.md) — campaign structure, copy seeds, keyword starters
 - [Paid ads monitoring runbook](launch/paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations
 - [Paid ads readout template](launch/paid-ads-test-readout-template.md) — results + week-3 decision template
+- [Archived paid-ads readouts (2026-03-30)](archive/launch/paid-ads-readouts/README.md) — historical campaign notes
 - [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes; [PostHog views setup](launch/posthog-views-setup.md) — dashboards and insights
 - [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
+
+## Internal (engineering)
+
+- [Billing matrix](internal/billing-matrix.md) — tiers, Stripe env vars, auxiliary billing routes
+- [`past_due` user path](internal/past-due-user-path.md) — subscription status → banner → portal
+- [Stripe webhook — production verification](internal/stripe-webhook-production-verification.md)
+- [Plan switches & multiple subscriptions (Stripe)](internal/stripe-subscription-switch-behavior.md)
+- [Billing Portal — plan change implementation plan](internal/billing-plan-change-portal-implementation-plan.md) — Portal for tier/interval changes; Checkout for Free→paid
 
 ## QA & regression
 
 - [QA index](qa/README.md)
+- [SEO release checklist](qa/seo-release-checklist.md) — sitemap, robots, canonical smoke
 - [Test infrastructure review](qa/test-infrastructure-review.md) — suite review, correctness, next coverage, Docker/E2E notes
 - [Testing hardening proposal](qa/testing-hardening-proposal.md) — phased plan (billing, APIs, coverage, optional E2E) for high confidence
 - [Mobile shell verification](qa/mobile-shell-verification.md) — manual QA + `MobileToolShell` tests (math still in `lib/` tests)

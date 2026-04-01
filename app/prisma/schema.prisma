@@ -166,3 +166,9 @@ model Subscription {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
+
+/// One row per Stripe webhook `event.id` after a successful PostHog server capture — prevents duplicate analytics on Stripe retries.
+model StripePosthogDedup {
+  eventId   String   @id
+  createdAt DateTime @default(now())
+}

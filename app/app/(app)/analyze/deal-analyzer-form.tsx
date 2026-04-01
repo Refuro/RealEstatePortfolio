@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { useRouter } from "next/navigation";
 import { MobileSectionCard } from "@/components/mobile-section-card";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
@@ -818,9 +819,12 @@ export function DealAnalyzerForm({
       {atLimit && !dealId && (
         <p className="text-sm text-muted">
           You&apos;ve reached your deal limit.{" "}
-          <Link href="/plans" className="font-medium text-foreground hover:underline">
+          <UpgradePlanLink
+            placement="deal_analyzer_header_deal_limit"
+            className="font-medium text-foreground hover:underline"
+          >
             Upgrade to save more deals
-          </Link>
+          </UpgradePlanLink>
           .
         </p>
       )}
@@ -1152,9 +1156,12 @@ export function DealAnalyzerForm({
             {atLimit && (
               <p className="text-sm text-muted">
                 You&apos;ve reached your deal limit.{" "}
-                <Link href="/plans" className="font-medium text-foreground hover:underline">
+                <UpgradePlanLink
+                  placement="deal_analyzer_actions_deal_limit"
+                  className="font-medium text-foreground hover:underline"
+                >
                   Upgrade to save more deals
-                </Link>
+                </UpgradePlanLink>
               </p>
             )}
             <div className="flex flex-wrap items-center gap-2">
@@ -1365,9 +1372,12 @@ export function DealAnalyzerForm({
             {(saveError.includes("Upgrade") || saveError.includes("limit")) && (
               <>
                 {" "}
-                <Link href="/plans" className="font-medium text-accent hover:underline">
+                <UpgradePlanLink
+                  placement="deal_analyzer_save_error_limit"
+                  className="font-medium text-accent hover:underline"
+                >
                   Upgrade plan
-                </Link>
+                </UpgradePlanLink>
               </>
             )}
           </p>

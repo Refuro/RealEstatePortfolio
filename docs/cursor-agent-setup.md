@@ -145,6 +145,6 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 
 **Other focused audits:** You can also run feature/UX, security, performance-cost, reliability-ops, data-integrity, business-valuation, growth-funnel, and agent-governance audits with the matching "run <lane> audit" phrase shown in `docs/audits/README.md`.
 
-**Full audit:** Say "run full audit" or "run all audits" to run all **12** audit lanes and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
+**Full audit:** Say "run full audit" or "run all audits" to run all **14** audit lanes (including Mobile experience and SEO) and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
 
 No API keys, no Cursor account config, and no duplicate files—just the repo and an executable hook script.

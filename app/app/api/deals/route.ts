@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import {
@@ -162,29 +163,37 @@ export async function POST(request: NextRequest) {
   const monthlyPayment = parseFloat(data.totalMonthlyPayment ?? "0");
   const cashInvested = data.cashInvested ? parseFloat(data.cashInvested) : null;
 
-  const deal = await prisma.savedDeal.create({
-    data: {
-      userId: user.id,
-      nickname: data.nickname?.trim() || null,
-      addressLine1: data.addressLine1,
-      addressLine2: data.addressLine2?.trim() || null,
-      city: data.city,
-      state: data.state,
-      zipCode: data.zipCode,
-      purchasePrice: purchasePrice ?? undefined,
-      currentEstimatedValue: currentValue ?? purchasePrice ?? undefined,
-      currentMonthlyRent: rent,
-      currentMonthlyExpenses: expenses,
-      totalMortgageBalance: mortgageBalance,
-      totalMonthlyPayment: monthlyPayment,
-      ownershipPercent: data.ownershipPercent ?? 100,
-      vacancyPercent: data.vacancyPercent ?? 5,
-      cashInvested: cashInvested ?? undefined,
-      notes: data.notes?.trim() || null,
-    },
-  });
+  try {
+    const deal = await prisma.savedDeal.create({
+      data: {
+        userId: user.id,
+        nickname: data.nickname?.trim() || null,
+        addressLine1: data.addressLine1,
+        addressLine2: data.addressLine2?.trim() || null,
+        city: data.city,
+        state: data.state,
+        zipCode: data.zipCode,
+        purchasePrice: purchasePrice ?? undefined,
+        currentEstimatedValue: currentValue ?? purchasePrice ?? undefined,
+        currentMonthlyRent: rent,
+        currentMonthlyExpenses: expenses,
+        totalMortgageBalance: mortgageBalance,
+        totalMonthlyPayment: monthlyPayment,
+        ownershipPercent: data.ownershipPercent ?? 100,
+        vacancyPercent: data.vacancyPercent ?? 5,
+        cashInvested: cashInvested ?? undefined,
+        notes: data.notes?.trim() || null,
+      },
+    });
 
-  await recordRateLimit(identifier, "deals:create");
+    await recordRateLimit(identifier, "deals:create");
 
-  return NextResponse.json(serializeDeal(deal));
+    return NextResponse.json(serializeDeal(deal));
+  } catch (err) {
+    console.error("Deal create error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Deal create failed"), {
+      tags: { route: "api/deals", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to create deal" }, { status: 500 });
+  }
 }

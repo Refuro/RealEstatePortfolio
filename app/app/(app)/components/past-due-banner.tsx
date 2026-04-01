@@ -12,6 +12,7 @@ export function PastDueBanner({
 }) {
   const [dismissed, setDismissed] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -26,13 +27,15 @@ export function PastDueBanner({
   };
 
   async function handleUpdatePayment() {
+    setPortalError(null);
     setLoading(true);
     try {
       const res = await fetch("/api/billing/portal", { method: "POST" });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to open portal");
       if (data.url) window.location.href = data.url;
-    } catch {
+    } catch (e) {
+      setPortalError(e instanceof Error ? e.message : "Could not open billing portal. Try again.");
       setLoading(false);
     }
   }
@@ -45,17 +48,24 @@ export function PastDueBanner({
       role="alert"
       className="relative flex items-start gap-3 rounded-lg border border-negative/30 bg-negative/10 px-4 py-3 text-foreground"
     >
-      <p className="flex-1 text-sm">
-        Payment issue — update your payment method to avoid losing access.{" "}
-        <button
-          type="button"
-          onClick={handleUpdatePayment}
-          disabled={loading}
-          className="font-medium text-accent hover:underline disabled:opacity-50"
-        >
-          {loading ? "Opening…" : "Update payment"}
-        </button>
-      </p>
+      <div className="flex-1 text-sm">
+        <p>
+          Payment issue — update your payment method to avoid losing access.{" "}
+          <button
+            type="button"
+            onClick={handleUpdatePayment}
+            disabled={loading}
+            className="font-medium text-accent hover:underline disabled:opacity-50"
+          >
+            {loading ? "Opening…" : "Update payment"}
+          </button>
+        </p>
+        {portalError ? (
+          <p className="mt-2 text-xs text-negative" role="status">
+            {portalError}
+          </p>
+        ) : null}
+      </div>
       <button
         type="button"
         onClick={handleDismiss}

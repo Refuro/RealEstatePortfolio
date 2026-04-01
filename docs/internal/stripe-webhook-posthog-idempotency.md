@@ -10,9 +10,7 @@ Webhook handlers use **Prisma upserts** for subscription and user tier rows. Rep
 
 Server-side product events (e.g. `subscription_activated`, `subscription_updated`) are emitted from `app/app/api/billing/webhook/route.ts` via `captureServerEvent`.
 
-Stripe may **retry** webhook deliveries with the same payload. We do **not** currently persist processed `event.id` values to skip duplicate PostHog sends. **Implication:** duplicate Stripe deliveries can produce **duplicate** analytics rows in PostHog for the same business event.
-
-**Mitigations (future):** Store processed Stripe `event.id` in DB or cache with TTL; or accept duplicate analytics for low volume and filter in PostHog.
+Stripe may **retry** webhook deliveries with the same payload. **Implemented:** `StripePosthogDedup` stores each Stripe `event.id` before a successful `captureServerEvent` (`lib/stripe-webhook-posthog.ts`). A retry for the same `event.id` skips PostHog capture; subscription DB sync still runs (upserts remain idempotent).
 
 ## Related
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { X } from "lucide-react";
 
 const STORAGE_KEY = "over-limit-banner-dismissed";
@@ -59,12 +59,12 @@ export function OverLimitBanner({
       <p className="flex-1 text-sm">
         You&apos;re over your plan limit ({propertyCount} properties, {dealCount} saved deals).{" "}
         {limitCopy}{" "}
-        <Link
-          href="/plans"
+        <UpgradePlanLink
+          placement="dashboard_over_limit_banner"
           className="font-medium text-accent hover:underline"
         >
           Upgrade to see all
-        </Link>
+        </UpgradePlanLink>
         , or remove some to stay within your plan.
       </p>
       <button

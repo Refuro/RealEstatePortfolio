@@ -82,21 +82,21 @@ export default async function TermsPage() {
             </p>
           </section>
 
-          <section>
+          <section id="subscriptions-and-payments">
             <h2 className="text-lg font-semibold">Subscriptions and Payments</h2>
             <p>
               Paid plans are billed through Stripe. You authorize us to charge your payment method (e.g., card) on a recurring basis according to your chosen plan. Prices are displayed in the app before checkout.
             </p>
           </section>
 
-          <section>
+          <section id="refunds">
             <h2 className="text-lg font-semibold">Refunds</h2>
             <p>
               Refund requests: contact support within 14 days of your first charge. Refunds are at our discretion. We do not refund partial months. For annual subscriptions, we may offer a prorated refund within 14 days of purchase if you contact support. Stripe processes refunds; we will initiate them when appropriate.
             </p>
           </section>
 
-          <section>
+          <section id="cancellation">
             <h2 className="text-lg font-semibold">Cancellation</h2>
             <p>
               You may cancel your subscription at any time from Settings. If you cancel, you retain access until the end of your current billing period. We do not refund unused time.

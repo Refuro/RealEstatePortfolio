@@ -1,13 +1,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import type { Metadata } from "next";
+import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
-import { PublicCalculator } from "@/components/marketing/public-calculator";
+const PublicCalculator = dynamic(() =>
+  import("@/components/marketing/public-calculator").then((m) => m.PublicCalculator),
+  { loading: () => <div className="min-h-[240px]" aria-hidden /> }
+);
 import {
   LayoutGrid,
   TrendingUp,
@@ -258,12 +262,15 @@ export default async function HomePage({
                 {PLAN_DEAL_LIMITS.pro} saved deals
               </span>
             </div>
-            <Link
+            <FunnelCtaLink
               href="/pricing"
+              placement="landing_pricing_preview"
+              ctaId="view_pricing"
+              landingVariant="home_default_v2"
               className="inline-flex rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
             >
               View pricing
-            </Link>
+            </FunnelCtaLink>
           </div>
         </section>
       </main>

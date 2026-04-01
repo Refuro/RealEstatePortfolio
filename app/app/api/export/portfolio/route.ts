@@ -79,6 +79,7 @@ export async function GET(request: NextRequest) {
     "mortgage balance (effective)",
     "mortgage balance (stored sum)",
     "balance as of (first lien)",
+    "mortgage start date (first lien)",
     "mortgage rate (first lien)",
     "mortgage term (first lien)",
     "monthly payment (all liens sum)",
@@ -127,6 +128,13 @@ export async function GET(request: NextRequest) {
           : new Date(firstMortgage.balanceAsOfDate)
         ).toISOString().slice(0, 10)
       : "";
+    const mortgageStartDate =
+      firstMortgage?.startDate != null
+        ? (firstMortgage.startDate instanceof Date
+            ? firstMortgage.startDate
+            : new Date(firstMortgage.startDate)
+          ).toISOString().slice(0, 10)
+        : "";
     const mortgageRate =
       firstMortgage != null
         ? Number(firstMortgage.interestRate) * 100
@@ -182,9 +190,10 @@ export async function GET(request: NextRequest) {
       escapeCsvCell(displayMode),
       escapeCsvCell(lienCount),
       escapeCsvCell(storedBalancesPipe),
-      escapeCsvCell(totalMortgageBalance || ""),
-      escapeCsvCell(mortgageBalanceStored || ""),
+      escapeCsvCell(lienCount === 0 ? "" : String(totalMortgageBalance)),
+      escapeCsvCell(lienCount === 0 ? "" : String(mortgageBalanceStored)),
       escapeCsvCell(balanceAsOf),
+      escapeCsvCell(mortgageStartDate),
       escapeCsvCell(mortgageRate ?? ""),
       escapeCsvCell(mortgageTerm ?? ""),
       escapeCsvCell(monthlyPaymentAll ?? ""),

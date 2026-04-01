@@ -3,9 +3,9 @@
 This readout preserves the original round-1 report and adds explicit go/no-go guidance after calculator + funnel updates.
 
 Related:
-- `docs/launch/paid-ads-readout-2026-03-30-round1.md`
-- `docs/launch/pre-live-telemetry-qa-2026-03-30.md`
-- `docs/launch/paid-ads-round2-search-ops-2026-03-30.md`
+- [`paid-ads-readout-2026-03-30-round1.md`](paid-ads-readout-2026-03-30-round1.md)
+- [`../../launch/pre-live-telemetry-qa-2026-03-30.md`](../../launch/pre-live-telemetry-qa-2026-03-30.md)
+- [`paid-ads-round2-search-ops-2026-03-30.md`](paid-ads-round2-search-ops-2026-03-30.md)
 
 ---
 

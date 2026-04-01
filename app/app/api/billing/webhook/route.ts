@@ -1,18 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import Stripe from "stripe";
-import { getStripe, getWebhookSecret, planTierFromPriceId } from "@/lib/stripe-config";
+import { getStripe, getWebhookSecret, planTierFromPriceId, billingIntervalFromPriceId } from "@/lib/stripe-config";
 import { prisma } from "@/lib/db";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import { captureServerEvent } from "@/lib/posthog-server";
+import { captureStripeWebhookAnalyticsOnce } from "@/lib/stripe-webhook-posthog";
 
 /**
  * Stripe webhook handler. Verifies signature with STRIPE_WEBHOOK_SECRET
  * per docs/security/security-notes.md. Syncs subscription state to DB.
  *
  * **Idempotency:** Stripe may retry the same `event.id`; Prisma upserts in `syncSubscriptionToDb`
- * are safe to replay. `captureServerEvent` (PostHog) does not dedupe by `event.id` — duplicate
- * deliveries can emit duplicate server-side analytics. See `docs/internal/stripe-webhook-posthog-idempotency.md`.
+ * are safe to replay. PostHog server captures are deduped by Stripe `event.id` via `StripePosthogDedup`.
+ * See `docs/internal/stripe-webhook-posthog-idempotency.md`.
  */
 export async function POST(request: NextRequest) {
   const signature = request.headers.get("stripe-signature");
@@ -54,10 +55,12 @@ export async function POST(request: NextRequest) {
         const priceId =
           typeof firstItem?.price === "string" ? firstItem.price : firstItem?.price?.id;
         const planTier = priceId ? planTierFromPriceId(priceId) : null;
-        await captureServerEvent(appUserId, AnalyticsEvents.SUBSCRIPTION_UPDATED, {
-          status: sub.status,
-          plan_tier: planTier ?? undefined,
-          cancel_at_period_end: sub.cancel_at_period_end ?? false,
+        await captureStripeWebhookAnalyticsOnce(event.id, async () => {
+          await captureServerEvent(appUserId, AnalyticsEvents.SUBSCRIPTION_UPDATED, {
+            status: sub.status,
+            plan_tier: planTier ?? undefined,
+            cancel_at_period_end: sub.cancel_at_period_end ?? false,
+          });
         });
       }
       break;
@@ -70,8 +73,10 @@ export async function POST(request: NextRequest) {
       });
       await setSubscriptionCanceled(sub.id);
       if (row?.userId) {
-        await captureServerEvent(row.userId, AnalyticsEvents.SUBSCRIPTION_CANCELED, {
-          stripe_subscription_id: sub.id,
+        await captureStripeWebhookAnalyticsOnce(event.id, async () => {
+          await captureServerEvent(row.userId, AnalyticsEvents.SUBSCRIPTION_CANCELED, {
+            stripe_subscription_id: sub.id,
+          });
         });
       }
       break;
@@ -87,14 +92,16 @@ export async function POST(request: NextRequest) {
         await syncSubscriptionToDb(subscription);
         const appUserId = session.metadata?.appUserId;
         if (typeof appUserId === "string" && appUserId.length > 0) {
-          await captureServerEvent(
-            appUserId,
-            AnalyticsEvents.SUBSCRIPTION_ACTIVATED,
-            {
-              plan: session.metadata?.plan ?? undefined,
-              billing_cycle: session.metadata?.billing_cycle ?? undefined,
-            }
-          );
+          await captureStripeWebhookAnalyticsOnce(event.id, async () => {
+            await captureServerEvent(
+              appUserId,
+              AnalyticsEvents.SUBSCRIPTION_ACTIVATED,
+              {
+                plan: session.metadata?.plan ?? undefined,
+                billing_cycle: session.metadata?.billing_cycle ?? undefined,
+              }
+            );
+          });
         }
       }
       break;
@@ -112,7 +119,10 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
   const priceId =
     typeof firstItem?.price === "string" ? firstItem.price : firstItem?.price?.id;
   const planTier = priceId ? planTierFromPriceId(priceId) : null;
-  const planName = planTier || "unknown";
+  const billingInterval = priceId ? billingIntervalFromPriceId(priceId) : null;
+  const planName = planTier
+    ? billingInterval ? `${planTier}_${billingInterval}` : planTier
+    : "unknown";
   const status = sub.status ?? "active";
   const periodEnd = firstItem?.current_period_end;
   const currentPeriodEnd = periodEnd

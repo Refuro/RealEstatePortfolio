@@ -118,6 +118,15 @@ export default function RootLayout({
         <head>
           <meta name="apple-mobile-web-app-title" content="Veld" />
           <link rel="preconnect" href="https://api.rentcast.io" />
+          {process.env.NEXT_PUBLIC_CLERK_PRECONNECT_ORIGIN ? (
+            <link
+              rel="preconnect"
+              href={process.env.NEXT_PUBLIC_CLERK_PRECONNECT_ORIGIN}
+              crossOrigin="anonymous"
+            />
+          ) : (
+            <link rel="dns-prefetch" href="https://clerk.accounts.dev" />
+          )}
           <link rel="dns-prefetch" href="https://js.stripe.com" />
           {process.env.NEXT_PUBLIC_POSTHOG_KEY ? (
             <link

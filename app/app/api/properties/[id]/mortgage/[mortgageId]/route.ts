@@ -146,7 +146,10 @@ export async function PATCH(
   if (data.balanceAsOfDate !== undefined) updatePayload.balanceAsOfDate = data.balanceAsOfDate;
 
   const mortgage = await prisma.mortgage.update({
-    where: { id: mortgageId },
+    where: {
+      id: mortgageId,
+      property: { userId: user.id },
+    },
     data: updatePayload,
   });
 
@@ -168,6 +171,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Mortgage not found" }, { status: 404 });
   }
 
-  await prisma.mortgage.delete({ where: { id: mortgageId } });
+  await prisma.mortgage.delete({
+    where: {
+      id: mortgageId,
+      property: { userId: user.id },
+    },
+  });
   return NextResponse.json({ success: true });
 }

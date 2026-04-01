@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { updatePropertySchema } from "@/lib/validations/property";
 import { serializePropertyForApi } from "@/lib/serialize/property-api";
 
@@ -37,6 +43,15 @@ export async function PATCH(
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "properties:patch");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const { id } = await params;
@@ -122,13 +137,23 @@ export async function PATCH(
     updatePayload.unitRents = Prisma.DbNull;
   }
 
-  const property = await prisma.property.update({
-    where: { id, userId: user.id },
-    data: updatePayload,
-    include: { mortgages: true },
-  });
+  try {
+    const property = await prisma.property.update({
+      where: { id, userId: user.id },
+      data: updatePayload,
+      include: { mortgages: true },
+    });
 
-  return NextResponse.json(serializePropertyForApi(property));
+    await recordRateLimit(identifier, "properties:patch");
+
+    return NextResponse.json(serializePropertyForApi(property));
+  } catch (err) {
+    console.error("Property patch error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Property patch failed"), {
+      tags: { route: "api/properties/[id]", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to update property" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
@@ -146,6 +171,14 @@ export async function DELETE(
     return NextResponse.json({ error: "Property not found" }, { status: 404 });
   }
 
-  await prisma.property.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  try {
+    await prisma.property.delete({ where: { id, userId: user.id } });
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Property delete error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Property delete failed"), {
+      tags: { route: "api/properties/[id]", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to delete property" }, { status: 500 });
+  }
 }

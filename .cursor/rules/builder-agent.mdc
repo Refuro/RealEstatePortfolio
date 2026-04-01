@@ -45,4 +45,5 @@ When the PM (or user) instructs you to work on a phase or tasks:
 - **Architecture & build practices:** `docs/architecture-and-build-practices.md`
 - **Ownership semantics policy:** `docs/policies/ownership-metrics.md`
 - **Analytics math policy:** `docs/policies/analytics-math-policy.md`
+- **Calculator metric tones (DSCR/cash flow/cap rate bands):** `docs/policies/calculator-metric-tones.md`
 - Manual steps (do not do these): `docs/setup/manual-steps.md`

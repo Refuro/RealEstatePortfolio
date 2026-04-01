@@ -36,6 +36,23 @@ describe("computeFixAndFlipResult", () => {
     expect(Number.isFinite(high.netProfit - low.netProfit)).toBe(true);
   });
 
+  it("extreme loss (>100% of cash in): annualized ROI stays null, not NaN", () => {
+    const r = computeFixAndFlipResult({
+      purchasePrice: 100_000,
+      rehabCost: 50_000,
+      holdMonths: 6,
+      downPaymentPercent: 20,
+      purchaseLoanRatePercent: 12,
+      arv: 0,
+      sellingCostsPercent: 0,
+      monthlyCarryingCosts: 5_000,
+    });
+    expect(r.netProfit).toBeLessThan(0);
+    expect(r.totalCashIn).toBeGreaterThan(0);
+    expect(r.netProfit / r.totalCashIn).toBeLessThanOrEqual(-1);
+    expect(r.annualizedRoiPercent).toBeNull();
+  });
+
   it("underwater: high costs yield negative net profit without NaN", () => {
     const r = computeFixAndFlipResult({
       purchasePrice: 200_000,

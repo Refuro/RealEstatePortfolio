@@ -1,7 +1,6 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import posthog from "posthog-js";
 
@@ -14,11 +13,10 @@ type MeResponse = {
 
 /**
  * Syncs PostHog person properties (plan tier, counts) from GET /api/me.
- * Refetches on navigation so upgrades / new properties update analytics.
+ * Runs on load and when the tab becomes visible again (avoids refetching on every route change).
  */
 export function PostHogPersonProperties(): null {
   const { user, isLoaded } = useUser();
-  const pathname = usePathname();
 
   useEffect(() => {
     if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) return;
@@ -43,10 +41,16 @@ export function PostHogPersonProperties(): null {
 
     void sync();
 
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") void sync();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
     return () => {
       cancelled = true;
+      document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [isLoaded, user?.id, pathname]);
+  }, [isLoaded, user?.id]);
 
   return null;
 }

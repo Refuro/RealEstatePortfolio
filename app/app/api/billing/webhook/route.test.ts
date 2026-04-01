@@ -20,6 +20,10 @@ const { prismaMock, captureServerEventMock } = vi.hoisted(() => {
       update: vi.fn().mockResolvedValue({}),
       findFirst: vi.fn(),
     },
+    stripePosthogDedup: {
+      create: vi.fn().mockResolvedValue({}),
+      delete: vi.fn().mockResolvedValue({}),
+    },
     $transaction: vi.fn(),
   };
   return { prismaMock, captureServerEventMock };
@@ -38,6 +42,8 @@ vi.mock("@/lib/stripe-config", () => ({
   getWebhookSecret: () => "whsec_test_secret",
   planTierFromPriceId: (priceId: string) =>
     priceId === "price_pro_test" ? "pro" : null,
+  billingIntervalFromPriceId: (priceId: string) =>
+    priceId === "price_pro_test" ? "monthly" : null,
 }));
 
 vi.mock("@sentry/nextjs", () => ({

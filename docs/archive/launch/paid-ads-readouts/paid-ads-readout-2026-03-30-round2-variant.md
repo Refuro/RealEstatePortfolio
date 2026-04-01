@@ -3,8 +3,8 @@
 Status: In progress (awaiting live run completion)
 
 Related:
-- `docs/launch/paid-ads-round2-search-ops-2026-03-30.md`
-- `docs/launch/paid-ads-monitoring-runbook.md`
+- [`paid-ads-round2-search-ops-2026-03-30.md`](paid-ads-round2-search-ops-2026-03-30.md)
+- [`../../launch/paid-ads-monitoring-runbook.md`](../../launch/paid-ads-monitoring-runbook.md)
 
 ---
 

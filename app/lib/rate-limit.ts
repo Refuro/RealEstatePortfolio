@@ -4,7 +4,12 @@ import { prisma } from "@/lib/db";
 /** Per-action limits (requests per hour). Documented in docs/security/security-notes.md and audits. */
 export const RATE_LIMITS: Record<string, number> = {
   "properties:create": 20,
+  "properties:patch": 60,
   "deals:create": 20,
+  "deals:patch": 60,
+  "admin:tier-patch": 30,
+  /** Anonymous CSP violation reports — per IP, rolling 1h. */
+  "csp-report:post": 240,
   "import:portfolio": 5,
   "export:portfolio": 15,
   "export:portfolio_summary": 15,

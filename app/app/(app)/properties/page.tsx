@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { getAppUser } from "@/lib/auth";
 import { BenchmarkRefreshButton } from "./benchmark-refresh-button";
 import { formatCurrency } from "@/lib/format-currency";
@@ -273,13 +274,13 @@ export default async function PropertiesPage({
             href="/modeling"
             className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
-            Open Modeling workspace
+            Modeling
           </Link>
           <Link
             href="/mortgage"
             className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
-            Open Mortgage workspace
+            Mortgage
           </Link>
         </div>
       </div>
@@ -305,9 +306,12 @@ export default async function PropertiesPage({
           {overLimit && (
             <p className="mb-4 text-sm text-muted">
               Showing {properties.length} of {totalCount} properties (plan limit).{" "}
-              <Link href="/plans" className="font-medium text-foreground hover:underline">
+              <UpgradePlanLink
+                placement="properties_list_over_limit"
+                className="font-medium text-foreground hover:underline"
+              >
                 Upgrade to see all
-              </Link>
+              </UpgradePlanLink>
             </p>
           )}
           {!singlePropertyMode && (

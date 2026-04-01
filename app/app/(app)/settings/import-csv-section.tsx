@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 
@@ -30,6 +30,13 @@ function formatRowLabel(row: ImportRow): string {
   if (row.nickname?.trim()) return row.nickname.trim();
   const parts = [row.addressLine1, row.city, row.state, row.zipCode].filter(Boolean);
   return parts.join(", ");
+}
+
+/** Avoid `Row N: Row N: …` when `message` already includes a row prefix from the parser. */
+function formatRowErrorPrefix(row: number, message: string): string {
+  if (row <= 0) return "";
+  if (/^\s*Row\s+\d+\s*:/i.test(message)) return "";
+  return `Row ${row}: `;
 }
 
 export function ImportCsvSection() {
@@ -237,7 +244,7 @@ export function ImportCsvSection() {
               <ul className="space-y-1 text-sm text-muted">
                 {requiresSelection.validationErrors.map((err, i) => (
                   <li key={i}>
-                    {err.row > 0 ? `Row ${err.row}: ` : ""}
+                    {formatRowErrorPrefix(err.row, err.message)}
                     {err.message}
                   </li>
                 ))}
@@ -274,12 +281,12 @@ export function ImportCsvSection() {
             >
               {loading ? "Importing…" : "Import selected"}
             </button>
-            <Link
-              href="/plans"
+            <UpgradePlanLink
+              placement="import_csv_selection_upgrade"
               className="text-base font-medium text-accent hover:underline"
             >
               Upgrade to import all
-            </Link>
+            </UpgradePlanLink>
           </div>
         </div>
       )}
@@ -294,15 +301,18 @@ export function ImportCsvSection() {
             <ul className="mt-2 space-y-1 text-sm text-muted">
               {result.errors.map((err, i) => (
                 <li key={i}>
-                  {err.row > 0 ? `Row ${err.row}: ` : ""}
+                  {formatRowErrorPrefix(err.row, err.message)}
                   {err.message}
                   {(result.code === "PLAN_LIMIT_REACHED" ||
                     err.message.toLowerCase().includes("limit")) && (
                     <>
                       {" "}
-                      <Link href="/plans" className="font-medium text-accent hover:underline">
+                      <UpgradePlanLink
+                        placement="import_csv_result_limit"
+                        className="font-medium text-accent hover:underline"
+                      >
                         Upgrade plan
-                      </Link>
+                      </UpgradePlanLink>
                     </>
                   )}
                 </li>
