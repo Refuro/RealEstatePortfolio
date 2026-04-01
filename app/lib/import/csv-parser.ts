@@ -282,6 +282,7 @@ export function parseRow(
       "mortgage balance",
       "mortgage balance (effective)",
       "mortgage balance (stored)",
+      "mortgage balance (stored sum)",
       "mortgageBalance"
     )
   );
@@ -308,7 +309,7 @@ export function parseRow(
     getCol(row, "monthly payment", "monthly payment (all liens sum)", "monthlyPayment")
   );
   const escrowAmountRaw = parseNum(
-    getCol(row, "escrow amount", "escrowAmount")
+    getCol(row, "escrow amount", "escrow amount (first lien)", "escrowAmount")
   );
   const escrowAmount =
     escrowAmountRaw != null && escrowAmountRaw >= 0 ? escrowAmountRaw : null;

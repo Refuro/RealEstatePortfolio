@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { mockFreeTierUser } from "@/lib/test/api-route-mocks";
+import { mockActiveUser, mockFreeTierUser } from "@/lib/test/api-route-mocks";
 
 const { getActiveAppUserMock } = vi.hoisted(() => {
   const getActiveAppUserMock = vi.fn();
@@ -37,11 +37,39 @@ vi.mock("@/lib/rate-limit", () => ({
   ),
 }));
 
+const MORTGAGE_HEADER =
+  "address,city,state,zipCode,purchase price,purchase date,value,rent,expenses,is rented,property type,units,vacancy %,mortgage balance,mortgage rate,mortgage term,monthly payment,balance as of,escrow amount";
+
 /** Minimal valid CSV row per `parseRow` (see `lib/import/csv-parser.ts`). */
 function minimalCsvOneRow() {
   return [
     "address,city,state,zipCode,purchase price,purchase date,value,rent,expenses,is rented,property type,units,vacancy %",
     "100 Main St,Austin,TX,78701,200000,2020-01-01,250000,2000,500,yes,single_family,1,5",
+  ].join("\n");
+}
+
+/** One row with mortgage where escrow >= monthly payment (invalid). */
+function csvMortgageEscrowTooHigh() {
+  return [
+    MORTGAGE_HEADER,
+    "100 Main St,Austin,TX,78701,200000,2020-01-01,250000,2000,500,yes,single_family,1,5,180000,6.5,30,1000,2024-01-01,1200",
+  ].join("\n");
+}
+
+/** One row with mortgage where P&I does not cover monthly interest (invalid). */
+function csvMortgagePiTooLow() {
+  return [
+    MORTGAGE_HEADER,
+    "100 Main St,Austin,TX,78701,200000,2020-01-01,250000,2000,500,yes,single_family,1,5,180000,6.5,30,800,2024-01-01,",
+  ].join("\n");
+}
+
+/** First data row invalid mortgage; second row has no mortgage (blanks). */
+function csvOneBadMortgageOneCleanRow() {
+  return [
+    MORTGAGE_HEADER,
+    "200 Main St,Austin,TX,78701,200000,2020-01-01,250000,2000,500,yes,single_family,1,5,180000,6.5,30,800,2024-01-01,",
+    "201 Oak St,Austin,TX,78701,200000,2020-01-01,250000,2000,500,yes,single_family,1,5,,,,,,",
   ].join("\n");
 }
 
@@ -126,6 +154,51 @@ describe("POST /api/import/portfolio", () => {
     expect(res.status).toBe(200);
     const data = await res.json();
     expect(data.imported).toBe(1);
+    expect(prismaMock.$transaction).toHaveBeenCalled();
+    expect(recordRateLimitMock).toHaveBeenCalled();
+  });
+
+  it("returns 200 with imported 0 and escrow error when escrow >= monthly payment", async () => {
+    prismaMock.property.count.mockResolvedValue(0);
+    const { POST } = await import("./route");
+    const res = await POST(formRequestWithFile(csvMortgageEscrowTooHigh()));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.imported).toBe(0);
+    expect(data.errors.some((e: { message: string }) =>
+      /Escrow amount must be less than monthly payment/i.test(e.message)
+    )).toBe(true);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("returns 200 with imported 0 and P&I error when payment does not cover interest", async () => {
+    prismaMock.property.count.mockResolvedValue(0);
+    const { POST } = await import("./route");
+    const res = await POST(formRequestWithFile(csvMortgagePiTooLow()));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.imported).toBe(0);
+    expect(
+      data.errors.some((e: { message: string }) =>
+        /P&I must cover the monthly interest/i.test(e.message)
+      )
+    ).toBe(true);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+  });
+
+  it("imports rows that pass mortgage checks and records row-level errors for failing rows", async () => {
+    getActiveAppUserMock.mockResolvedValue(mockActiveUser);
+    prismaMock.property.count.mockResolvedValue(0);
+    const { POST } = await import("./route");
+    const res = await POST(formRequestWithFile(csvOneBadMortgageOneCleanRow()));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.imported).toBe(1);
+    expect(
+      data.errors.some((e: { row: number; message: string }) =>
+        e.row === 2 && /P&I must cover the monthly interest/i.test(e.message)
+      )
+    ).toBe(true);
     expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(recordRateLimitMock).toHaveBeenCalled();
   });

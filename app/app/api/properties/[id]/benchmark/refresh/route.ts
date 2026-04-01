@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
@@ -62,7 +63,7 @@ export async function POST(
 
     const now = new Date();
     await prisma.property.update({
-      where: { id: propertyId },
+      where: { id: propertyId, userId: user.id },
       data: { marketRent: result.rent, marketRentAsOf: now },
     });
 
@@ -82,6 +83,10 @@ export async function POST(
   } catch (err) {
     // Quota: only successful upstream calls record RentCastApiCall (see try block).
     const message = err instanceof Error ? err.message : "Benchmark unavailable";
+    Sentry.captureException(err instanceof Error ? err : new Error(message), {
+      tags: { area: "rentcast", route: "benchmark/refresh" },
+      extra: { propertyId },
+    });
     return rentCastErrorResponse(message, 502);
   }
 }

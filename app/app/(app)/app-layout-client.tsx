@@ -11,6 +11,7 @@ import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
 import { OnboardingPanel } from "./onboarding-panel";
 import { Footer } from "@/components/footer";
+import * as Sentry from "@sentry/nextjs";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
 const BILLING_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 min
@@ -85,15 +86,30 @@ export function AppLayoutClient({
 
     let cancelled = false;
     fetch("/api/billing/sync")
-      .then((res) => res.json())
-      .then((data: { synced?: boolean; tier?: string }) => {
-        if (cancelled) return;
+      .then(async (res) => {
+        if (!res.ok) {
+          const bodyPreview = (await res.text()).slice(0, 300);
+          Sentry.captureException(new Error(`Billing sync failed: HTTP ${res.status}`), {
+            tags: { area: "billing-sync" },
+            extra: { status: res.status, bodyPreview },
+          });
+          return null;
+        }
+        return res.json() as Promise<{ synced?: boolean; tier?: string }>;
+      })
+      .then((data) => {
+        if (cancelled || data == null) return;
         sessionStorage.setItem(BILLING_SYNC_KEY, String(Date.now()));
         if (data.synced && data.tier === "free") {
           router.refresh();
         }
       })
-      .catch(() => {});
+      .catch((e: unknown) => {
+        if (cancelled) return;
+        Sentry.captureException(e instanceof Error ? e : new Error(String(e)), {
+          tags: { area: "billing-sync" },
+        });
+      });
     return () => {
       cancelled = true;
     };

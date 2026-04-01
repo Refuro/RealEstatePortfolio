@@ -1,7 +1,7 @@
 # Veld Portfolio — Investor-Style One-Pager
 
-**Date:** 2026-03-20  
-**Status:** Pre-launch assessment snapshot — product-complete for core investor workflows; **production** app, analytics, and ops checklist verified per [`../launch/launch-plan.md`](../launch/launch-plan.md) §6–7. Market traction and positioning evolve with **soft launch / growth** (same doc §5).
+**Date:** 2026-03-31 (revised)  
+**Status:** Internal snapshot for investors / acquirers — **not** a pitch deck. Product-complete for core investor workflows; **production** app with PostHog instrumentation, Sentry, and documented commercial ops ([`../internal/billing-matrix.md`](../internal/billing-matrix.md)). Market traction remains the open question. See also [`launch-plan.md`](launch-plan.md).
 
 ---
 
@@ -77,14 +77,15 @@ That is a real market position.
 - **Serious engineering foundation**: CI, lint, tests, Husky hooks, docs, audits
 - **Trust-oriented safeguards**: rate limits, auth boundary, Sentry, CSP report-only, `/api/health`
 - **Math rigor**: centralized metrics and amortization logic with meaningful test coverage
+- **Product analytics**: PostHog client + server events; funnel definitions documented ([`posthog-growth-funnel.md`](posthog-growth-funnel.md), [`analytics.md`](analytics.md))
+- **Commercial hygiene**: internal billing / Stripe / display-price matrix ([`../internal/billing-matrix.md`](../internal/billing-matrix.md))
 
-### What is still missing
+### What is still missing (honest gaps)
 
-- launch analytics / funnel instrumentation
-- stronger production monitoring and broad-launch ops
-- full CI build parity with production
-- more proof that onboarding converts cold users quickly
-- market validation: no live user base yet
+- **Proof at scale**: repeatable activation, paid conversion, and retention — analytics is wired, but **evidence** from a meaningful user cohort is still the gap
+- **Distribution**: still founder-led; no proven paid or organic engine at volume
+- **Ops at broad launch**: runbooks exist for slices of the product; full “always-on” launch ops can tighten further
+- **CI vs production**: occasional drift risk; not a blocker for controlled launch but worth closing over time
 
 ---
 
@@ -102,11 +103,11 @@ That is a real market position.
 
 ### Should be tightened before a full robust launch
 
-- product analytics events (`sign_up`, `property_created`, `deal_created`, `checkout_started`)
-- pricing and plans reconciliation across UI, Stripe, and docs
-- uptime monitoring on production
-- final metadata / Open Graph / launch surfaces polish
-- a clean golden-path demo and support workflow
+- **Interpret analytics**: events exist; cohort learning and funnel iteration are ongoing (see [`posthog-growth-funnel.md`](posthog-growth-funnel.md))
+- **Pricing discipline**: keep UI, Stripe, and env display amounts in lockstep ([`../internal/billing-matrix.md`](../internal/billing-matrix.md) checklist)
+- **Uptime / SLO**: Sentry is in place; formal uptime expectations and paging are still light for a broad launch
+- **Surface polish**: metadata / Open Graph / launch surfaces — iterate with growth
+- **Support playbook**: golden-path demo and first-response workflow as volume grows
 
 ---
 
@@ -164,7 +165,7 @@ What limits valuation today:
 
 - no user traction
 - no proven conversion or retention
-- launch and instrumentation still in progress
+- instrumentation exists; **traction and revenue proof** still in progress
 
 ---
 
@@ -172,10 +173,10 @@ What limits valuation today:
 
 If the goal is to build a durable SaaS rather than flip code, the next value-creation step is not more random feature work. It is:
 
-1. finish full-launch readiness items
-2. instrument the funnel
+1. close remaining launch-readiness gaps (ops, polish, pricing discipline)
+2. **use** the funnel (PostHog) to learn where activation and checkout break
 3. get the first cohort of real investors using it
-4. learn where trust, onboarding, and pricing break
+4. iterate trust, onboarding, and pricing with data
 
 The codebase is already strong enough that **execution on launch and user learning** will matter more than raw engineering output.
 

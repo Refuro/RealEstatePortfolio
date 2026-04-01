@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -95,6 +96,9 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     // Hourly quota counts only successful provider calls (recorded above).
     const message = err instanceof Error ? err.message : "Estimate unavailable";
+    Sentry.captureException(err instanceof Error ? err : new Error(message), {
+      tags: { area: "rentcast", route: "estimates/value" },
+    });
     return rentCastErrorResponse(message, 502);
   }
 }

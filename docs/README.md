@@ -3,7 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-03-30-audit-synthesis-4.md) — consolidated follow-ups from full audit Run 4
+- [Latest audit synthesis](audits/synthesis/2026-03-31-audit-synthesis.md) — consolidated follow-ups from full audit 2026-03-31 (14 lanes)
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
@@ -60,6 +60,7 @@
 - [Data integrity audit process](process/data-integrity-audit-process.md)
 - [Business/valuation audit process](process/business-valuation-audit-process.md)
 - [Growth funnel audit process](process/growth-funnel-audit-process.md)
+- [SEO audit process](process/seo-audit-process.md)
 - [Agent governance audit process](process/agent-governance-audit-process.md)
 - [Documentation audit process](process/documentation-audit-process.md)
 - [Legal & compliance audit process](process/legal-compliance-audit-process.md)
@@ -76,6 +77,7 @@
 - [Data integrity audits](audits/data-integrity/)
 - [Business/valuation audits](audits/business/)
 - [Growth funnel audits](audits/growth-funnel/)
+- [SEO audits](audits/seo/)
 - [Documentation audits](audits/documentation/)
 - [Legal/compliance audits](audits/legal-compliance/)
 - [Agent governance audits](audits/agent-governance/)

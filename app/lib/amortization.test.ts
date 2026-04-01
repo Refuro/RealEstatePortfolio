@@ -12,6 +12,7 @@ import {
   getPiForAmortization,
   getProjectedBalanceAsOf,
   getToleranceAwarePayoffProjection,
+  isNegativeAmortizingPayment,
   isWithinTermEndTolerance,
 } from "./amortization";
 
@@ -67,6 +68,44 @@ describe("generateAmortizationSchedule", () => {
       monthlyPayment: 400,
     });
     expect(schedule[0].date.startsWith("2024-06")).toBe(true);
+  });
+
+  it("returns empty schedule when P&I does not cover monthly interest", () => {
+    const schedule = generateAmortizationSchedule({
+      originalLoanAmount: 100_000,
+      annualInterestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 100,
+    });
+    expect(schedule).toEqual([]);
+  });
+
+  it("allows interest-only (payment equals monthly interest on first month)", () => {
+    const schedule = generateAmortizationSchedule({
+      originalLoanAmount: 100_000,
+      annualInterestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 100_000 * (0.06 / 12),
+    });
+    expect(schedule.length).toBe(360);
+    expect(schedule[0].principal).toBe(0);
+  });
+});
+
+describe("isNegativeAmortizingPayment", () => {
+  it("is true when P&I is strictly below monthly interest", () => {
+    expect(isNegativeAmortizingPayment(400, 100_000, 0.06)).toBe(true);
+  });
+
+  it("is false when P&I covers interest", () => {
+    expect(isNegativeAmortizingPayment(600, 100_000, 0.06)).toBe(false);
+  });
+
+  it("is false for interest-only at equality", () => {
+    const io = 100_000 * (0.06 / 12);
+    expect(isNegativeAmortizingPayment(io, 100_000, 0.06)).toBe(false);
   });
 });
 
@@ -220,6 +259,20 @@ describe("getPayoffProjection / tolerance helpers", () => {
         balanceAsOfDate: new Date("2030-05-01"),
       })
     ).toEqual({ payoffDate: null, remainingAtTermEnd: null });
+  });
+
+  it("returns no payoff and current balance when P&I is below monthly interest", () => {
+    const p = getPayoffProjection({
+      originalLoanAmount: 100_000,
+      currentBalance: 100_000,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 100,
+      balanceAsOfDate: new Date("2030-05-01"),
+    });
+    expect(p.payoffDate).toBeNull();
+    expect(p.remainingAtTermEnd).toBe(100_000);
   });
 
   it("getToleranceAwarePayoffProjection passes through when payoff exists", () => {

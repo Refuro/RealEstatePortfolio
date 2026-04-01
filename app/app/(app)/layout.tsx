@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -5,6 +6,11 @@ import { getPropertyLimit, getDealLimit, getEffectiveTier } from "@/lib/plans";
 import { buildOnboardingProgress } from "@/lib/onboarding";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
+
+/** Authenticated app shell: do not index app routes (supplements robots.txt + auth). */
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 /** Required for user-specific banner data (property/deal counts, subscription status) and getAppUser(). Child pages need request-time data. */
 export const dynamic = "force-dynamic";

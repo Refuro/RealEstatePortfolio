@@ -15,11 +15,14 @@ import {
   SlidersHorizontal,
 } from "lucide-react";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
+import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
 export const metadata: Metadata = {
-  title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+  title: {
+    absolute: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+  },
   description:
     "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
   alternates: { canonical: APP_URL + "/" },
@@ -244,13 +247,15 @@ export default async function HomePage({
             </p>
             <div className="mb-8 flex flex-wrap items-center justify-center gap-4 text-sm">
               <span className="rounded-md border border-border bg-card px-4 py-2 font-medium text-foreground">
-                Free $0 · 1 property
+                Free $0 · {PLAN_PROPERTY_LIMITS.free} property · {PLAN_DEAL_LIMITS.free} saved deals
               </span>
               <span className="rounded-md border border-border bg-card px-4 py-2 font-medium text-foreground">
-                Investor ${PRICING_DISPLAY.investorMonthly}/mo · 5 properties
+                Investor ${PRICING_DISPLAY.investorMonthly}/mo · {PLAN_PROPERTY_LIMITS.investor} properties ·{" "}
+                {PLAN_DEAL_LIMITS.investor} saved deals
               </span>
               <span className="rounded-md border border-border bg-card px-4 py-2 font-medium text-foreground">
-                Pro ${PRICING_DISPLAY.proMonthly}/mo · 20 properties
+                Pro ${PRICING_DISPLAY.proMonthly}/mo · {PLAN_PROPERTY_LIMITS.pro} properties ·{" "}
+                {PLAN_DEAL_LIMITS.pro} saved deals
               </span>
             </div>
             <Link

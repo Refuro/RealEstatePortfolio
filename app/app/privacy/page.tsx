@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
+import { SupportContactInstructions } from "@/components/legal/support-contact-instructions";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
@@ -38,14 +39,18 @@ export default async function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2026
+          Last updated: March 31, 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">
           <section>
             <h2 className="text-lg font-semibold">Overview</h2>
             <p>
-              Veld Portfolio (&quot;we,&quot; &quot;our,&quot; or &quot;us&quot;) is a portfolio analytics platform for real estate investors. This privacy policy explains what data we collect, how we use it, and your rights regarding your information. We are US-focused for now and do not target EU users specifically.
+              Veld Portfolio is a portfolio analytics platform for real estate investors, operated by
+              an individual doing business as Veld Portfolio (&quot;we,&quot; &quot;our,&quot; or
+              &quot;us&quot;). This privacy policy explains what data we collect, how we use it, and
+              your rights regarding your information. We are US-focused for now and do not target EU
+              users specifically.
             </p>
           </section>
 
@@ -65,10 +70,16 @@ export default async function PrivacyPage() {
                 <strong>RentCast</strong> — Rent and value estimates. When you use &quot;Estimate rent&quot; or &quot;Estimate value,&quot; we send property addresses to RentCast for market data. We do not share your identity with RentCast.
               </li>
               <li>
-                <strong>Vercel</strong> — Hosting. Our application runs on Vercel. Vercel may log requests and IP addresses for operational purposes.
+                <strong>Vercel</strong> — Hosting and optional web analytics. Our application runs on Vercel. Vercel may log requests and IP addresses for operational purposes. If you accept optional analytics in the cookie banner, we also enable Vercel Web Analytics in the browser (page views and visitors, similar to basic site analytics); until you accept, that script does not load.
               </li>
               <li>
                 <strong>Neon</strong> — Database. We store your portfolio data (properties, mortgages, deals) in a PostgreSQL database hosted by Neon. Data is encrypted in transit and at rest.
+              </li>
+              <li>
+                <strong>Resend</strong> — Transactional email. When you use our contact form or we send account-related emails, we send messages through Resend. Resend receives email addresses and message content needed to deliver the email; we use it only to send service and support communications, not for marketing lists unless you opt in separately.
+              </li>
+              <li>
+                <strong>Sentry</strong> — Error monitoring. When something fails in our servers or in your browser (when our client SDK is enabled), we may send error details to Sentry, including error type, stack traces, and request URLs. We configure Sentry to reduce sensitive data. Server-side error reporting is separate from the optional PostHog / Google analytics cookies described below.
               </li>
               <li>
                 <strong>PostHog</strong> — Product analytics (e.g. page views, signup events).{" "}
@@ -105,7 +116,7 @@ export default async function PrivacyPage() {
               <strong>Essential.</strong> Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in. These are required for the service and are not used for advertising analytics.
             </p>
             <p className="mt-4">
-              <strong>Optional (analytics and ads measurement).</strong> We may set a first-party cookie recording your choice (accept or reject optional tracking). If you accept, we load PostHog and, when configured, Google Ads measurement scripts as described above. If you reject, those scripts do not load. You can change your choice anytime via the cookie banner (footer or Settings).
+              <strong>Optional (analytics and ads measurement).</strong> We may set a first-party cookie recording your choice (accept or reject optional tracking). If you accept, we load PostHog, Vercel Web Analytics, and when configured, Google Ads measurement scripts as described above. If you reject, those scripts do not load. You can change your choice anytime via the cookie banner (footer or Settings).
             </p>
           </section>
 
@@ -126,7 +137,8 @@ export default async function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">Your Rights</h2>
             <p>
-              You can access, update, or delete your data through the app. You can export your portfolio data from Settings. You can deactivate your account (soft delete) or permanently delete it at any time. For requests we cannot fulfill in-app, contact us at the support email listed in the footer.
+              You can access, update, or delete your data through the app. You can export your portfolio data from Settings. You can deactivate your account (soft delete) or permanently delete it at any time. For requests we cannot fulfill in-app,{" "}
+              <SupportContactInstructions supportEmail={supportEmail} />
             </p>
           </section>
 
@@ -147,7 +159,8 @@ export default async function PrivacyPage() {
           <section>
             <h2 className="text-lg font-semibold">Contact</h2>
             <p>
-              For privacy-related questions, contact us at the support email in the app footer.
+              For privacy-related questions,{" "}
+              <SupportContactInstructions supportEmail={supportEmail} />
             </p>
           </section>
         </div>

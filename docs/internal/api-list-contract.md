@@ -11,6 +11,8 @@
 | **Dashboard / properties list UI** | Uses the same cap pattern in server components where applicable. |
 | **`GET /api/properties`** | Returns **all** properties for the authenticated user (full list). UI list views apply tier limits in the app layer where applicable. |
 | **`GET /api/deals`** | Returns **all** saved deals as a JSON **array** (no truncation). **HTTP headers:** `X-Veld-Deal-Count-Total` (equals array length), `X-Veld-Plan-Deal-Limit`, `X-Veld-Deals-Exceeds-Plan-Ui-Cap` (`true` when total deals exceed the plan limit for the tier — the Deals **page** may show only the latest N with messaging). |
+| **`GET /api/deals/[id]`** | Returns one deal (with embedded `metrics`) plus **`portfolioContext`**: portfolio snapshot (weighted cap, portfolio cash-on-cash, DSCR, total monthly cash flow, property counts) using the same rollup rules as **`GET /api/portfolio/summary`**, for compare-to-portfolio UI on Analyze. |
+| **`GET /api/export/portfolio-summary`** | Same aggregates as **`GET /api/portfolio/summary`**, with hourly **rate limiting** (`export:portfolio_summary`) for print/export flows. |
 
 ## Rationale
 

@@ -8,7 +8,7 @@ import { ContactForm } from "./contact-form";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
 
 export const metadata: Metadata = {
-  title: "Contact | Veld Portfolio",
+  title: "Contact",
   description: "Contact Veld Portfolio — send us a message or email us directly.",
   robots: { index: false, follow: true },
   alternates: { canonical: APP_URL + "/contact" },
@@ -41,6 +41,12 @@ export default async function ContactPage() {
             business days, excluding holidays). We provide product and account support only—
             not tax, legal, or investment advice.
           </p>
+          {!supportEmail?.trim() && (
+            <p className="mt-3 text-sm text-muted">
+              A public support email is not shown in every environment; this form is the reliable way
+              to reach us when no mailto appears in the footer.
+            </p>
+          )}
 
           <div className="mt-8">
             <ContactForm />

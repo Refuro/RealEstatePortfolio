@@ -123,7 +123,7 @@ export async function PATCH(
   }
 
   const property = await prisma.property.update({
-    where: { id },
+    where: { id, userId: user.id },
     data: updatePayload,
     include: { mortgages: true },
   });

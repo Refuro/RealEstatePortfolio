@@ -1,7 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { generateAmortizationSchedule, getPiForAmortization } from "@/lib/amortization";
+import {
+  generateAmortizationSchedule,
+  getPiForAmortization,
+  isNegativeAmortizingPayment,
+} from "@/lib/amortization";
 
 export async function GET(
   _request: NextRequest,
@@ -28,13 +32,24 @@ export async function GET(
     return NextResponse.json({ schedule: [] });
   }
 
+  const pi = getPiForAmortization(mortgage);
+  if (
+    isNegativeAmortizingPayment(
+      pi,
+      Number(mortgage.currentBalance),
+      Number(mortgage.interestRate)
+    )
+  ) {
+    return NextResponse.json({ schedule: [], negativeAmortization: true });
+  }
+
   const schedule = generateAmortizationSchedule({
     originalLoanAmount: Number(mortgage.originalLoanAmount),
     annualInterestRate: Number(mortgage.interestRate),
     termYears: mortgage.termYears,
     startDate: mortgage.startDate,
-    monthlyPayment: getPiForAmortization(mortgage),
+    monthlyPayment: pi,
   });
 
-  return NextResponse.json({ schedule });
+  return NextResponse.json({ schedule, negativeAmortization: false });
 }

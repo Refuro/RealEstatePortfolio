@@ -1,7 +1,7 @@
 # Security Audit
 
-**Version:** 2.0  
-**Last updated:** 2026-03-19  
+**Version:** 2.1  
+**Last updated:** 2026-03-31  
 **Last reviewed by:** PM + security review pass  
 **Review cadence:** Monthly + pre-launch gate  
 **Scope:** Real Estate Portfolio app — auth, API, data, integrations, and operational security posture.
@@ -21,15 +21,16 @@
 | **Secrets handling** | ✅ Strong | Server-only env vars for sensitive keys. |
 | **Webhook security** | ✅ Strong | Stripe webhook signature verification enforced. |
 | **Deleted account controls** | ✅ Strong | Deleted-user API blocking and restore flow in place. |
-| **Security headers** | ✅ Implemented | Standard anti-framing/content-sniffing/referrer/permissions headers added. |
-| **Rate limiting (Rent estimate)** | ✅ Implemented | Per-user hourly controls reduce abuse and external API cost risk. |
+| **Security headers** | ✅ Implemented | X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy; see §5 CSP. |
+| **CSP** | ✅ Implemented | Baseline CSP via `next.config.ts` — **Report-Only** by default; set `CSP_ENFORCEMENT=true` for enforced `Content-Security-Policy`. |
+| **Rate limiting (RentCast + exports + writes)** | ✅ Implemented | Shared hourly RentCast quota per tier (`lib/plans.ts`); DB-backed `ApiRateLimitEntry` for selected routes — see §6 and [security-notes.md](security-notes.md). |
 
 ### 1.2 Open gaps & recommendations (current)
 
 | Gap | Risk | Recommendation |
 |-----|------|----------------|
-| **Coverage gap for non-Rent endpoints** | Medium | Extend rate limits to additional sensitive write endpoints as needed. |
-| **No explicit CSP policy** | Medium | Add baseline CSP and tighten iteratively after telemetry review. |
+| **Coverage gap for additional endpoints** | Medium | Extend `RATE_LIMITS` in `lib/rate-limit.ts` to more write-heavy routes as abuse patterns emerge. |
+| **CSP enforcement vs Report-Only** | Low–Medium | Monitor `/api/csp-report` + Sentry before enabling `CSP_ENFORCEMENT=true` in production. |
 | **Security event/audit logging depth** | Medium | Add structured logging for admin-sensitive actions and failed auth-sensitive operations. |
 | **Operational security playbook** | Medium | Add incident response + secret-rotation runbook in docs. |
 | **Dependency/SCA cadence not explicit** | Low-Medium | Add recurring dependency risk scan check in reliability/security audit cadence. |
@@ -52,12 +53,12 @@ Before approving security-sensitive changes, verify:
 
 ### High priority
 
-1. Add baseline CSP policy with deployment-safe defaults.
+1. ~~Add baseline CSP policy with deployment-safe defaults.~~ **Done** — see §5; tune enforcement after report review.
 2. Add structured audit logging for admin export and high-risk account actions.
 
 ### Medium priority
 
-3. Expand targeted rate limits to additional write-heavy/sensitive endpoints.
+3. Expand targeted rate limits to additional write-heavy/sensitive endpoints (baseline in §6).
 4. Add incident response and key-rotation runbook to docs.
 
 ### Low priority
@@ -83,3 +84,51 @@ Security findings should be translated into implementation tasks in `docs/tasks.
 - [security-notes.md](security-notes.md) — ongoing security decisions and implementation notes
 - [architecture-and-build-practices.md](../architecture-and-build-practices.md) — required security practices
 - [manual-steps.md](../setup/manual-steps.md) — production keys, webhook setup, and manual ops steps
+
+---
+
+## 5. Content Security Policy (CSP) — `app/next.config.ts`
+
+Headers apply to `/:path*` via `async headers()`.
+
+| Setting | Behavior |
+|---------|----------|
+| **`CSP_ENFORCEMENT`** unset or not `true` | Browser receives **`Content-Security-Policy-Report-Only`** with the policy below (violations reported, not blocked). |
+| **`CSP_ENFORCEMENT=true`** | Browser receives **`Content-Security-Policy`** (enforced). |
+
+When `NEXT_PUBLIC_APP_URL` is set, the policy includes **`report-uri {baseUrl}/api/csp-report`** for violation reporting.
+
+**Policy string (concatenated in code; summarize here):**
+
+- `default-src 'self'`
+- `script-src` — `'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com`
+- `style-src` — `'self' 'unsafe-inline'`
+- `img-src` — `'self' data: https://img.clerk.com https:`
+- `font-src` — `'self' data:`
+- `connect-src` — `'self' https:`
+- `frame-src` — `'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com`
+- `worker-src` — `'self' blob:`
+- `frame-ancestors 'none'` · `base-uri 'self'` · `form-action 'self'`
+
+**Source of truth:** `app/next.config.ts` (`cspDirectives`, `cspValue`, `cspHeaders`).
+
+---
+
+## 6. API rate limits — `app/lib/rate-limit.ts`
+
+Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLimitEntry`**. If `RATE_LIMITS[action]` is undefined, the route is not limited by this helper.
+
+| Action key | Limit / hour |
+|------------|----------------|
+| `properties:create` | 20 |
+| `deals:create` | 20 |
+| `import:portfolio` | 5 |
+| `export:portfolio` | 15 |
+| `export:portfolio_summary` | 15 |
+| `account:delete` | 5 |
+| `account:delete-permanent` | 3 |
+| `billing:create-checkout` | 10 |
+
+**RentCast hourly quota** is **not** this table — it uses `RentCastApiCall` counts and `getRentCastHourlyLimit` / `RENTCAST_HOURLY_LIMITS` in `lib/plans.ts`. See [reference/rentcast-quota.md](../reference/rentcast-quota.md).
+
+**Source of truth:** `app/lib/rate-limit.ts` (`RATE_LIMITS`).

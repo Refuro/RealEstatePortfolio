@@ -16,7 +16,7 @@ Set in **Vercel** (production) and optionally in `app/.env` locally.
 
 If `NEXT_PUBLIC_POSTHOG_KEY` is **unset**, the app does not load PostHog (no console errors).
 
-**Dashboards / saved insights:** See [`docs/launch/posthog-views-setup.md`](posthog-views-setup.md).
+**Dashboards / saved insights:** See [`docs/launch/posthog-views-setup.md`](posthog-views-setup.md) (paid ads). **Core product funnel** (signup → property → plan view → checkout → subscribed): [`docs/launch/posthog-growth-funnel.md`](posthog-growth-funnel.md).
 
 ### Cookie consent
 
