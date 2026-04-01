@@ -2,19 +2,15 @@ import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
-import { prisma } from "@/lib/db";
-import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
+import { buildDashboardPortfolioPayload } from "@/lib/server/portfolio-summary-payload";
 import {
   BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
-import {
-  computePortfolioMetrics,
-  type PortfolioPropertyInput,
-} from "@/lib/metrics/portfolio-metrics";
+import { type PortfolioPropertyInput } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
@@ -32,23 +28,20 @@ export default async function DashboardPage({
   if (!user) return null;
   const { onboarding } = await searchParams;
 
-  const effectiveTier = getEffectiveTier(user);
-  const propertyLimit = getPropertyLimit(effectiveTier);
-  const properties = await prisma.property.findMany({
-    where: { userId: user.id },
-    include: { mortgages: true },
-    orderBy: { updatedAt: "desc" },
-    take: propertyLimit,
-  });
+  const {
+    metrics,
+    properties,
+    displayMode,
+    effectiveTier,
+  } = await buildDashboardPortfolioPayload(user);
 
-  type PropertyWithMortgages = (typeof properties)[number];
-  const portfolioInput = properties.map((p: PropertyWithMortgages) => {
+  const portfolioInput = properties.map((p) => {
     const totalMortgageBalance = p.mortgages.reduce(
-      (sum: number, m) => sum + getEffectiveBalance(m),
+      (sum, m) => sum + getEffectiveBalance(m),
       0
     );
     const totalMonthlyPayment = p.mortgages.reduce(
-      (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
+      (sum, m) => sum + Number(m.monthlyPayment),
       0
     );
     return {
@@ -64,9 +57,6 @@ export default async function DashboardPage({
       vacancyPercent: p.vacancyPercent ?? 5,
     };
   });
-
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
-  const metrics = computePortfolioMetrics(portfolioInput, displayMode);
   const singleProperty = metrics.propertyCount === 1 ? properties[0] : null;
   const propertyHref = singleProperty ? `/properties/${singleProperty.id}` : "/properties";
   const modelingHref = singleProperty
@@ -206,19 +196,19 @@ export default async function DashboardPage({
               href={propertyHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
-              {singleProperty ? "Open property" : "View properties"}
+              {singleProperty ? "Property" : "Properties"}
             </Link>
             <Link
               href={modelingHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
-              Open Modeling workspace
+              Modeling
             </Link>
             <Link
               href={mortgageHref}
               className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
-              Open Mortgage workspace
+              Mortgage
             </Link>
             <Link
               href="/export/portfolio-summary"
@@ -232,7 +222,7 @@ export default async function DashboardPage({
         <div className="mt-3 md:hidden">
           <WorkspaceNavMobile
             propertyHref={propertyHref}
-            propertyLabel={singleProperty ? "Open property" : "View properties"}
+            propertyLabel={singleProperty ? "Property" : "Properties"}
             modelingHref={modelingHref}
             mortgageHref={mortgageHref}
           />

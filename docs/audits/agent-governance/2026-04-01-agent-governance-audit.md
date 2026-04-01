@@ -2,10 +2,9 @@
 
 ## Executive summary
 
-- **Overall health is good.** All 17 rule files are present and wired correctly. The 14-lane audit system (including Mobile experience and SEO) is consistently represented across `docs/audits/README.md`, `full-audit-agent.mdc`, `docs/process/full-audit-synthesis.md`, `docs/process/command-integrity-check.md`, and `docs/setup/ai-process-workflow-setup.md`. The key High finding from the 2026-03-31 audit (`command-integrity-check.md` missing Mobile experience row) has been resolved.
-- **One Medium discrepancy remains:** `docs/cursor-agent-setup.md` line 148 still states "run all **12** audit lanes" in the Summary section, while the correct count is **14**. This is the only lane-count error still present across governance surfaces.
-- **Low-severity drift in governance process doc and task hygiene:** `docs/process/agent-governance-audit-process.md` continues to omit explicit mention of the 14-lane count (a Low finding carried over from the 2026-03-31 audit with no action taken). Several fully-completed task sections in `docs/tasks.md` have not been archived. Phase 0–5 language in the PM rule and workflow doc is now historical rather than operational, though both still correctly defer to `docs/tasks.md` for live work.
-- **Recommendation:** A single-pass doc update can close all open findings: correct the lane count in `cursor-agent-setup.md`, archive completed task sections, add a lane-count sentence to the governance process doc, and note the historical status of Phase 0–5 in the PM docs.
+- **Overall health is strong.** All 17 `.cursor/rules/*.mdc` files are present; the 14-lane full audit is consistently described in `docs/audits/README.md`, `.cursor/rules/full-audit-agent.mdc`, `docs/process/full-audit-synthesis.md` §6, `docs/process/command-integrity-check.md` (14-row mapping), `docs/setup/ai-process-workflow-setup.md`, `docs/process/agent-governance-audit-process.md` §1, and `docs/cursor-agent-setup.md` (Full audit bullet correctly states **14** lanes). Prior reports that flagged a **12** lane error in `docs/cursor-agent-setup.md` are **obsolete** for the current file (line 148).
+- **Top gaps:** (1) `docs/process/agent-governance-audit-process.md` §1 oversimplifies report folder paths (Mobile experience uses `docs/audits/feature/`, not a `mobile-experience/` folder). (2) `docs/cursor-agent-setup.md` “Other focused audits” line lists only a subset of lanes—mitigated because it points readers to `docs/audits/README.md`. (3) `docs/tasks.md` still contains large, fully completed task blocks that could be archived for clarity.
+- **Recommendation:** Tighten the governance process doc path sentence; optionally broaden or qualify the setup-guide “Other focused audits” sentence; continue periodic `command-integrity-check` when lanes change; archive completed `tasks.md` sections when the PM agrees.
 
 ---
 
@@ -13,148 +12,81 @@
 
 ### Critical
 
-*(none)*
+- *(none)*
 
 ### High
 
-*(none — the 2026-03-31 High finding about `command-integrity-check.md` missing Mobile experience has been resolved; the mapping table now includes all 14 lanes)*
+- *(none)*
 
 ### Medium
 
-- **`docs/cursor-agent-setup.md` Summary section still states "12" audit lanes** — Line 148 reads: "run all **12** audit lanes and produce a consolidated, deduplicated synthesis." The correct count is **14** (confirmed in `docs/audits/README.md`, `full-audit-agent.mdc`, `docs/process/full-audit-synthesis.md` §6, and `docs/setup/ai-process-workflow-setup.md`). The file correctly lists all 14 rule files in the "Step 1" checklist (lines 94–111) and correctly includes the SEO process doc in the reference table (lines 37, 71–72), so this is an isolated number error in the prose summary, not a structural gap. **Risk:** A developer onboarding from the Summary section receives a misleading lane count; the discrepancy could cause a partial workflow copy. **Evidence:** `docs/cursor-agent-setup.md` line 148; `docs/audits/README.md` §Running audits (14 lanes); `.cursor/rules/full-audit-agent.mdc` (14 lanes); `docs/process/full-audit-synthesis.md` §6 (14 lanes).
+- **`docs/process/agent-governance-audit-process.md` §1 implies a uniform `docs/audits/<lane>/` layout** — The sentence “Lane outputs live under `docs/audits/<lane>/`” does not mention the **Mobile experience** exception: reports are written to `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md` per `docs/process/mobile-experience-audit-process.md`, `docs/audits/README.md`, and `.cursor/rules/mobile-experience-audit-agent.mdc`. **Risk:** Someone following only the governance process doc could look in the wrong folder or add a misaligned lane rename. **Evidence:** `docs/process/agent-governance-audit-process.md` §1 (line 11); `docs/process/command-integrity-check.md` (Mobile experience row); `docs/audits/README.md` (Mobile experience row).
 
 ### Low
 
-- **`docs/process/agent-governance-audit-process.md` omits explicit 14-lane count and does not name SEO/Mobile experience lanes** — The §1 Scope reference list points to `docs/audits/README.md` (which is correct), but the process doc itself never states the total lane count or identifies SEO and Mobile experience by name. This is a carry-over Low finding from 2026-03-31 that has not been actioned. Operationally benign because the README is authoritative, but it reduces discoverability for anyone following only the governance process doc. **Evidence:** `docs/process/agent-governance-audit-process.md` §1; `docs/audits/README.md` (14 lanes including SEO, Mobile experience).
+- **`docs/cursor-agent-setup.md` “Other focused audits” is illustrative, not exhaustive** — The Summary lists feature/UX, security, performance-cost, reliability-ops, data-integrity, business-valuation, growth-funnel, and agent-governance, but not **SEO**, **Legal & Compliance**, **Documentation**, or **Mobile experience**. The same paragraph defers to `docs/audits/README.md` for exact phrases, which limits impact. **Risk:** Skimmers might miss optional single-lane triggers until they open the README. **Evidence:** `docs/cursor-agent-setup.md` (lines 146–147); `docs/audits/README.md` §Single-lane audits.
 
-- **PM rule and workflow doc retain Phase 0–5 framing that is now historical** — `pm-agent.mdc` §Responsibilities item 1 references "Phase 0 Foundation → Phase 5 Polishing" from `docs/reference/engineering-spec.md` §8, and `docs/process/pm-agent-workflow.md` §Phases explicitly lists Phase 0–5. The project has completed all original phases and is now in product-feature expansion (new calculators, mobile shell, post-audit remediation). The operational impact is low because both docs correctly defer to `docs/tasks.md` for live tasks, but the Phase 0–5 framework could mislead a new PM about current project stage. **Evidence:** `.cursor/rules/pm-agent.mdc` (item 1); `docs/process/pm-agent-workflow.md` §Phases; `docs/tasks.md` (active tasks are new calculators, mobile shell verification, audit remediation — no longer Phase 0–5 structure).
+- **`docs/policies/shell-risk-policy.md` vs `.cursor/hooks.json` — minor command wording drift** — Policy ALLOW lists `npm test`; the hook prompt bundles `npm run build/dev/lint/check/test`. Behavior is equivalent when a `test` script exists; wording differs slightly for manual parity checks. **Evidence:** `docs/policies/shell-risk-policy.md` §ALLOW; `.cursor/hooks.json` `beforeShellExecution` prompt.
 
-- **`docs/tasks.md` fully-completed sections not yet archived** — Two sections are fully checked (`[x]` on every item) and represent completed implementation work that has not been moved to `docs/tasks-archived.md`: (1) "Calculator & tools — metric color / semantic treatment" (all 5 items `[x]`) and (2) "New calculators — STR vs LTR and Fix-and-flip (Phases A → C)" (Phases A, B, and C all complete). Additionally, "Full audit remediation — 2026-03-31 synthesis" Phases 1–8 are all `[x]` complete but the section header is still in the active file (deferred items are explicitly noted and belong). Leaving completed work in the active task file adds noise and makes it harder for the builder to identify actionable items on first read. **Evidence:** `docs/tasks.md` §Calculator & tools (all [x]); §New calculators Phases A–C (all [x]); `docs/tasks-archived.md` (prior archive pattern established).
+- **PM workflow still centers Phase 0–5 from `docs/reference/engineering-spec.md` §8** — `pm-agent.mdc` and `docs/process/pm-agent-workflow.md` describe the original phased build; day-to-day work is largely **`docs/tasks.md`–driven** (roadmap, calculators, mobile shell, synthesis remediation). **Risk:** Low—both docs already use `tasks.md` as the operational queue. **Evidence:** `.cursor/rules/pm-agent.mdc`; `docs/process/pm-agent-workflow.md` §Phases; `docs/tasks.md` §Active tasks.
 
-- **`subagentStop` hook defaults to `.sh`; Windows follow-up may not fire without manual config** — `.cursor/hooks.json` invokes `.cursor/hooks/on-subagent-stop.sh`. On Windows hosts without Git Bash or WSL, the hook is silently skipped (no PM follow-up prompt after builder completes). Both `docs/cursor-agent-setup.md` and `docs/setup/ai-process-workflow-setup.md` document the PS1 workaround, so this is a workflow ergonomics gap, not an unaddressed governance risk. Carry-over Low from prior audits. **Evidence:** `.cursor/hooks.json` (command: `on-subagent-stop.sh`); `docs/cursor-agent-setup.md` §Windows note; `docs/setup/ai-process-workflow-setup.md` §Prerequisites.
+- **`subagentStop` defaults to `.cursor/hooks/on-subagent-stop.sh`** — On Windows without Git Bash/WSL, the hook may not run; `docs/cursor-agent-setup.md` and `docs/setup/ai-process-workflow-setup.md` document switching to `on-subagent-stop.ps1`. **Risk:** PM may not get automatic “review builder” follow-up until configured. **Evidence:** `.cursor/hooks.json`; `docs/cursor-agent-setup.md` §Step 2 / Windows.
 
-- **`beforeShellExecution` hook is prompt-based and probabilistic** — The gate depends on the model interpreting the inline policy prompt correctly. Shell-risk-policy.md and the hook prompt are aligned (ALLOW / DENY / ASK categories match), but model misclassification remains a residual risk. No structural fix is available within the current hook architecture; accepting this risk is reasonable. Carry-over Low from prior audits. **Evidence:** `.cursor/hooks.json` (`"type": "prompt"`); `docs/policies/shell-risk-policy.md`.
+- **`beforeShellExecution` is prompt-based** — Classification is model-dependent; written policy and hook text are aligned, but misclassification is a residual risk. **Evidence:** `.cursor/hooks.json` (`"type": "prompt"`); `docs/policies/shell-risk-policy.md`.
+
+- **Historical audit/synthesis files may still mention older lane counts (e.g. 12 or 13)** — Older `docs/audits/synthesis/2026-03-30-*.md` files are snapshots; they can confuse if mistaken for current policy. Current canonical sources are README + `full-audit-agent.mdc`. **Evidence:** grep hits under `docs/audits/synthesis/`; `docs/audits/README.md` §Full audit.
+
+- **`docs/tasks.md` hygiene — completed work remains in the active file** — Sections such as “Calculator & tools — metric color / semantic treatment” and “New calculators — STR vs LTR and Fix-and-flip” are fully checked off but not yet moved to `docs/tasks-archived.md`, increasing noise for builders scanning for open checkboxes. **Evidence:** `docs/tasks.md` (e.g. metric color block ~lines 61–98; calculators ~lines 100–241).
+
+- **`builder-agent.mdc` references omit `docs/policies/calculator-metric-tones.md`** — The policy exists and is used in tasks; the builder rule’s References list does not cite it (discoverable via tasks and `calculator-metric-tones` in architecture copy). **Evidence:** `.cursor/rules/builder-agent.mdc` §References; `docs/policies/calculator-metric-tones.md`.
 
 ---
 
 ## Evidence reviewed
 
-### Rule files (`.cursor/rules/*.mdc`) — all 17 present
+- **Rules:** All 17 files under `.cursor/rules/` (`pm-agent`, `builder-agent`, `full-audit-agent`, 14 `*-audit-agent.mdc` lane rules)—spot-checked `full-audit-agent.mdc`, `agent-governance-audit-agent.mdc`, `code-audit-agent.mdc`, `mobile-experience-audit-agent.mdc` for process paths and output locations.
+- **Hooks:** `.cursor/hooks.json` (`subagentStop`, `beforeShellExecution`); `.cursor/hooks/on-subagent-stop.sh` (follow-up JSON for completed subagents).
+- **Policies & process:** `docs/policies/shell-risk-policy.md`; `docs/process/command-integrity-check.md`; `docs/process/agent-governance-audit-process.md`; `docs/process/full-audit-synthesis.md`; `docs/process/audit-report-template.md`; `docs/process/pm-agent-workflow.md`.
+- **Setup & onboarding:** `docs/cursor-agent-setup.md`; `docs/setup/ai-process-workflow-setup.md`; `docs/audits/README.md`; `docs/audits/agent-governance/README.md`.
+- **Working files:** `docs/tasks.md` (structure, active vs completed blocks); no application source under `app/` modified for this audit.
 
-| Rule | Status |
-|------|--------|
-| `pm-agent.mdc` | Accurate; references `docs/tasks.md`, `engineering-spec.md`, `pm-review-checklist.md`, `manual-steps.md`, `roadmap.md`, `pm-agent-workflow.md` — all files confirmed present |
-| `builder-agent.mdc` | Accurate; references `docs/policies/design-spec.md`, `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`, `docs/architecture-and-build-practices.md`, `docs/reference/roadmap.md`, `docs/reference/engineering-spec.md` — all confirmed present |
-| `full-audit-agent.mdc` | Correct — states 14 lanes; lists all lanes including Mobile experience and SEO; references correct synthesis process |
-| `agent-governance-audit-agent.mdc` | Accurate; correct output path and process doc reference |
-| `code-audit-agent.mdc` | Accurate; correct process doc, output path, and subagent prompt |
-| `math-audit-agent.mdc` | Accurate; correct process doc (`math-logic-audit.md`), output path |
-| `feature-audit-agent.mdc` | Accurate; correct process doc and output path |
-| `mobile-experience-audit-agent.mdc` | Accurate; references both `mobile-experience-audit-process.md` and `docs/qa/mobile-experience-audit.md`; correct output path (`docs/audits/feature/`) |
-| `security-audit-agent.mdc` | Accurate; correct process doc and output path |
-| `performance-cost-audit-agent.mdc` | Accurate |
-| `reliability-ops-audit-agent.mdc` | Accurate |
-| `data-integrity-audit-agent.mdc` | Accurate |
-| `business-valuation-audit-agent.mdc` | Accurate |
-| `growth-funnel-audit-agent.mdc` | Accurate |
-| `seo-audit-agent.mdc` | Accurate; correct process doc and output path |
-| `documentation-audit-agent.mdc` | Accurate |
-| `legal-compliance-audit-agent.mdc` | Accurate; includes counsel-disclaimer reminder |
-
-### Hook/policy alignment
-
-| Surface | Status |
-|---------|--------|
-| `.cursor/hooks.json` | `beforeShellExecution` prompt categories (ALLOW/DENY/ASK) match `docs/policies/shell-risk-policy.md` exactly; `subagentStop` wired to `.sh` script |
-| `docs/policies/shell-risk-policy.md` | Aligned with hook prompt; no drift |
-| `docs/process/pm-agent-workflow.md` | Consistent with hook policy description |
-
-### Audit lane coverage
-
-| Document | Lane count stated | Accurate? |
-|----------|-------------------|-----------|
-| `docs/audits/README.md` | 14 | ✓ |
-| `full-audit-agent.mdc` | 14 | ✓ |
-| `docs/process/full-audit-synthesis.md` §6 | 14 | ✓ |
-| `docs/process/command-integrity-check.md` mapping table | 14 rows | ✓ (resolved from 2026-03-31 High finding) |
-| `docs/setup/ai-process-workflow-setup.md` | 14-lane (line 276) | ✓ |
-| `docs/cursor-agent-setup.md` reference table (§1) | 14 rule files listed | ✓ |
-| `docs/cursor-agent-setup.md` Summary prose (line 148) | **12** | ✗ — Medium finding |
-
-### Process doc completeness (`docs/process/`)
-
-All 14 lane process docs confirmed present:
-`code-audit-process.md`, `math-logic-audit.md`, `feature-ux-audit-process.md`, `mobile-experience-audit-process.md`, `security-audit-process.md`, `performance-cost-audit-process.md`, `reliability-ops-audit-process.md`, `data-integrity-audit-process.md`, `business-valuation-audit-process.md`, `growth-funnel-audit-process.md`, `seo-audit-process.md`, `documentation-audit-process.md`, `legal-compliance-audit-process.md`, `agent-governance-audit-process.md`.
-
-Supporting process docs also confirmed: `pm-review-checklist.md`, `pm-agent-workflow.md`, `full-audit-synthesis.md`, `audit-report-template.md`, `command-integrity-check.md`.
-
-### Builder policy doc references
-
-All policy docs referenced by `builder-agent.mdc` confirmed present: `docs/policies/design-spec.md`, `docs/policies/ownership-metrics.md`, `docs/policies/analytics-math-policy.md`. Additionally, `docs/policies/calculator-metric-tones.md` was added since the last major builder rule update and is documented directly in `docs/tasks.md` (task-level reference), but is not in `builder-agent.mdc`'s references section. This is a minor gap; the policy doc is discoverable through task descriptions.
-
-### `docs/tasks.md` hygiene
-
-- No stale tasks referencing incorrect phases (all active tasks are clearly scoped)
-- No duplicate entries observed
-- Completed tasks: sections for "Calculator & tools — metric color" and "New calculators (Phases A–C)" are fully checked but remain in the active file
-- Deferred items are clearly labeled and appropriate
-- Archive pointer to `docs/tasks-archived.md` is present and current
-
-### Prior audit resolution status (2026-03-31)
-
-| Prior finding | Severity | Resolution |
-|---------------|----------|------------|
-| `command-integrity-check.md` missing Mobile experience row | High | ✓ **Resolved** — row now present |
-| `cursor-agent-setup.md` docs table missing SEO row | Medium | ✓ **Resolved** — SEO process doc and audit folder row added |
-| `ai-process-workflow-setup.md` optional rules missing `mobile-experience-audit-agent.mdc` | Medium | ✓ **Resolved** — file now listed |
-| `agent-governance-audit-process.md` omits 14-lane count / SEO | Low | ✗ **Open** — carried forward as Low finding |
-| `subagentStop` `.sh` / Windows ergonomics | Low | ✗ **Open** (by design — documented workaround) |
-| Prompt-based `beforeShellExecution` is probabilistic | Low | ✗ **Open** (structural; accepted risk) |
+**Assumptions / limits:** Review did not re-execute `npm` or Cursor hooks; assessment is static consistency and path validation. Historical markdown under `docs/audits/synthesis/` was sampled via search, not fully re-read.
 
 ---
 
 ## Risk & impact assessment
 
-- **Medium risk (doc integrity):** The "12 lanes" count in `docs/cursor-agent-setup.md` is a factual error in the Summary section of a key onboarding document. If a developer or future PM uses only that blurb to orient to the audit system, they may plan for fewer audits than exist, or fail to copy the SEO and Mobile experience rule files when reproducing the workflow. The rest of the file is correct, limiting the exposure.
-- **Low risk (PM workflow staleness):** The Phase 0–5 framing in PM docs is historical; current active work is task-list driven, which both docs already support. Risk is primarily confusion for new contributors.
-- **Low risk (task hygiene):** Fully-completed sections in `docs/tasks.md` add noise but have no operational impact; the builder reads the task list before starting work and can identify checked vs unchecked items.
-- **No new lane gaps identified:** The four lanes added in prior cycles (SEO, Mobile experience, Documentation, Agent Governance) are all wired correctly. The product's new features (STR vs LTR calculator, Fix-and-flip, metric tones) are covered by existing audit lanes (Code, Math, Feature/UX, Mobile experience, SEO, Growth).
+- **Medium finding (folder path):** Mis-stating where Mobile experience reports live could cause missed files during lane renames or automation; fixing one sentence in the governance process doc is low cost.
+- **Low findings:** Mostly ergonomics, archival hygiene, and known limitations of prompt-based hooks. No evidence of missing audit rules or broken process-doc links for the current 14-lane set.
 
 ---
 
 ## Recommendations (prioritized)
 
-1. **Correct lane count in `docs/cursor-agent-setup.md`** — Change "run all **12** audit lanes" to "run all **14** audit lanes" in the Summary section (line 148). This is a one-word fix to the only remaining lane-count discrepancy across all governance surfaces.
-
-2. **Archive completed task sections in `docs/tasks.md`** — Move "Calculator & tools — metric color / semantic treatment" and "New calculators — STR vs LTR and Fix-and-flip (Phases A → C)" to `docs/tasks-archived.md` under a new `§ Tasks.md archive (2026-04-01)` heading, following the established archive pattern. Keep "Full audit remediation — 2026-03-31 synthesis" deferred items in the active file.
-
-3. **Add 14-lane sentence to `docs/process/agent-governance-audit-process.md`** — Under §1 Scope reference docs, add a note such as: "Full audits use **14** lanes per `docs/audits/README.md` (including SEO and Mobile experience)." This closes the carry-over Low finding from 2026-03-31.
-
-4. **Add historical context note to PM phase docs** — In `docs/process/pm-agent-workflow.md` §Phases and/or `pm-agent.mdc`, note that Phase 0–5 describes the original engineering-spec build order (now completed); current work flows from `docs/tasks.md` directly.
-
-5. **Consider adding `docs/policies/calculator-metric-tones.md` to `builder-agent.mdc` references** — If any future task involves calculator metric display, the builder should know to read this policy. Low urgency; can be added when the next calculator-related task is promoted.
+1. **Amend `docs/process/agent-governance-audit-process.md` §1** — After the lane list or path sentence, add an explicit exception: Mobile experience reports go to `docs/audits/feature/` (see `mobile-experience-audit-process.md`). Optionally mirror the footnote style used in `docs/audits/README.md`.
+2. **Tighten `docs/cursor-agent-setup.md` “Other focused audits”** — Either add “(not exhaustive—see `docs/audits/README.md` for SEO, Legal, Documentation, Mobile experience, …)” or replace the list with a single pointer to the README single-lane table.
+3. **Archive completed `docs/tasks.md` sections** when the PM confirms—e.g. fully checked calculator/metric and new-calculator blocks—into `docs/tasks-archived.md` with a dated section header, per existing archive practice.
+4. **Optional:** Add `docs/policies/calculator-metric-tones.md` to `builder-agent.mdc` References when calculator UI work is ongoing.
 
 ---
 
 ## Task candidates
 
-- [ ] Fix "12" → "14" in `docs/cursor-agent-setup.md` Summary/Full audit blurb.
-- [ ] Archive completed task sections (calculator metric tones, new calculators Phases A–C) to `docs/tasks-archived.md`.
-- [ ] Add 14-lane/SEO/Mobile sentence to `docs/process/agent-governance-audit-process.md` §1 reference docs.
+- [ ] Add Mobile experience report path exception to `docs/process/agent-governance-audit-process.md` §1.
+- [ ] Qualify or expand “Other focused audits” in `docs/cursor-agent-setup.md` so SEO, Legal, Documentation, and Mobile experience are not implied out of scope.
+- [ ] Archive fully completed sections from `docs/tasks.md` to `docs/tasks-archived.md` (PM-approved scope).
 
 ---
 
 ## Re-test checklist
 
-- [ ] Confirm `docs/cursor-agent-setup.md` Summary section says "14 audit lanes."
-- [ ] Confirm `docs/tasks.md` active sections are limited to open/deferred work.
-- [ ] Re-run governance audit after edits; confirm lane count is consistent across all 6 surfaces in the mapping table above.
-- [ ] Spot-check that every `*-audit-agent.mdc` still points to an existing `docs/process/*` file (no new renames).
-- [ ] `npm run check` only if code/config changes are made (not required for doc-only fixes).
+- [ ] Confirm `docs/process/agent-governance-audit-process.md` names `docs/audits/feature/` for Mobile experience reports.
+- [ ] Confirm setup guide onboarding text matches `docs/audits/README.md` intent for single-lane audits.
+- [ ] After any rule or hook edit, spot-check `docs/process/command-integrity-check.md` mapping and `npm run check` if `app/` changes accompany doc work.
 
 ---
 
 ## Next trigger and cadence
 
-- **Trigger:** After any change to `.cursor/rules/`, `.cursor/hooks.json`, lane additions/renames, or major PM/builder workflow updates; otherwise monthly per `docs/audits/README.md`.
-- **Recommended next run:** 2026-05-01 or next governance-affecting change, whichever is sooner.
+- **Trigger:** Changes to `.cursor/rules/`, `.cursor/hooks.json`, audit lane names or folders, or PM/builder workflow docs; otherwise monthly per `docs/audits/README.md`.
+- **Recommended next run:** 2026-05-01 or the next governance-affecting change, whichever is sooner.

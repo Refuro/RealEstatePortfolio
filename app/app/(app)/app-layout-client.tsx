@@ -74,12 +74,15 @@ export function AppLayoutClient({
   const closeDrawer = () => setDrawerOpen(false);
 
   useEffect(() => {
-    if (
-      !bannerProps?.stripeCustomerId ||
-      (bannerProps.subscriptionTier ?? "free").toLowerCase() === "free"
-    ) {
-      return;
+    // Only sync when a Stripe customer exists. Skip users who have never initiated billing.
+    if (!bannerProps?.stripeCustomerId) return;
+
+    // Portal redirects back with ?billing_return=1 — bypass the session-storage
+    // throttle so the tier updates immediately rather than waiting up to 5 minutes.
+    if (typeof window !== "undefined" && window.location.search.includes("billing_return=1")) {
+      sessionStorage.removeItem(BILLING_SYNC_KEY);
     }
+
     const last = sessionStorage.getItem(BILLING_SYNC_KEY);
     const lastTs = last ? parseInt(last, 10) : 0;
     if (Date.now() - lastTs < BILLING_SYNC_INTERVAL_MS) return;
@@ -100,7 +103,8 @@ export function AppLayoutClient({
       .then((data) => {
         if (cancelled || data == null) return;
         sessionStorage.setItem(BILLING_SYNC_KEY, String(Date.now()));
-        if (data.synced && data.tier === "free") {
+        // Refresh on any sync (upgrade free→paid, plan change, or downgrade to free).
+        if (data.synced) {
           router.refresh();
         }
       })

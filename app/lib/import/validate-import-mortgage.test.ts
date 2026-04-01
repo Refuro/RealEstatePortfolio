@@ -27,6 +27,7 @@ function baseRow(over: Partial<ImportRow> = {}): ImportRow {
     originalLoanAmount: null,
     mortgageRate: null,
     mortgageTerm: null,
+    mortgageStartDate: null,
     monthlyPayment: null,
     escrowAmount: null,
     lenderName: null,

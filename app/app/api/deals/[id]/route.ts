@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { updateDealSchema } from "@/lib/validations/deal";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import {
@@ -119,6 +125,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "deals:patch");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
+  }
+
   const { id } = await params;
   const existing = await getDealForUser(id, user.id);
   if (!existing) {
@@ -160,21 +175,40 @@ export async function PATCH(
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested ? parseFloat(data.cashInvested) : null;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
 
-  const deal = await prisma.savedDeal.update({
-    where: { id },
-    data: updatePayload,
-  });
+  try {
+    const deal = await prisma.savedDeal.update({
+      where: { id, userId: user.id },
+      data: updatePayload,
+    });
 
-  return NextResponse.json(serializeDeal(deal));
+    await recordRateLimit(identifier, "deals:patch");
+
+    return NextResponse.json(serializeDeal(deal));
+  } catch (err) {
+    console.error("Deal patch error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Deal patch failed"), {
+      tags: { route: "api/deals/[id]", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to update deal" }, { status: 500 });
+  }
 }
 
 export async function DELETE(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "deals:delete");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   const { id } = await params;
@@ -183,6 +217,15 @@ export async function DELETE(
     return NextResponse.json({ error: "Deal not found" }, { status: 404 });
   }
 
-  await prisma.savedDeal.delete({ where: { id } });
-  return NextResponse.json({ success: true });
+  try {
+    await prisma.savedDeal.delete({ where: { id, userId: user.id } });
+    await recordRateLimit(identifier, "deals:delete");
+    return NextResponse.json({ success: true });
+  } catch (err) {
+    console.error("Deal delete error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Deal delete failed"), {
+      tags: { route: "api/deals/[id]", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to delete deal" }, { status: 500 });
+  }
 }

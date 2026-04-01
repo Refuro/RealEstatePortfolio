@@ -11,3 +11,19 @@ These documents are archived because the work is complete or superseded. Kept fo
 - `proposals/benchmarking-proposal.md` — Implemented
 - `proposals/benchmarking-surfacing-proposal.md` — Implemented
 - `proposals/admin-membership-override-proposal.md` — Implemented
+
+## Proposals (archived 2026-04-01 — owner confirmed complete)
+
+Active proposals remaining in `docs/proposals/`: `refinance-payoff-proposal.md`, `test-hardening-phase-1-2-plan.md`, `testing-implementation-plan.md`.
+
+- `proposals/add-property-experience-overhaul.md`
+- `proposals/epic-a-discovery.md`
+- `proposals/epic-c-entry-qa.md`
+- `proposals/epic-d-entry-qa.md`
+- `proposals/epic-e-entry-qa.md`
+- `proposals/epic-f-overview-qa.md`
+- `proposals/epic-g-regression-matrix.md`
+
+## Launch — paid-ads readouts (archived)
+
+See [`launch/paid-ads-readouts/README.md`](launch/paid-ads-readouts/README.md).

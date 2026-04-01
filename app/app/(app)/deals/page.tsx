@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -92,9 +93,12 @@ export default async function DealsPage() {
       {overLimit && (
         <p className="mt-1 text-sm text-muted">
           Showing {deals.length} of {totalCount} saved deals (plan limit).{" "}
-          <Link href="/plans" className="font-medium text-foreground hover:underline">
+          <UpgradePlanLink
+            placement="deals_list_over_limit"
+            className="font-medium text-foreground hover:underline"
+          >
             Upgrade to see all
-          </Link>
+          </UpgradePlanLink>
         </p>
       )}
 

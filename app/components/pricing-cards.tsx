@@ -82,16 +82,45 @@ export function PricingCards({
   currentTier,
   className = "",
   showSignUp = false,
+  /** Same-origin path for Stripe Customer Portal `return_url` after plan changes. */
+  billingPortalReturnPath = "/plans",
+  /**
+   * When provided, initialises the billing cycle toggle to match the user's
+   * active subscription interval. Prevents a yearly subscriber from seeing
+   * monthly prices highlighted as "Current plan".
+   */
+  currentBillingCycle,
 }: {
   currentTier: string;
   className?: string;
   /** When true, show "Sign up" link instead of "Upgrade" (for unauthenticated visitors). */
   showSignUp?: boolean;
+  billingPortalReturnPath?: string;
+  currentBillingCycle?: "monthly" | "yearly" | null;
 }) {
-  const [billingCycle, setBillingCycle] = useState<BillingCycle>("monthly");
+  const [billingCycle, setBillingCycle] = useState<BillingCycle>(
+    currentBillingCycle ?? "monthly"
+  );
   const [loading, setLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const signedInMode = !showSignUp;
+
+  function getPortalErrorMessage(raw: string): string {
+    const msg = raw.toLowerCase();
+    if (msg.includes("unauthorized")) {
+      return "Please sign in again to manage billing.";
+    }
+    if (msg.includes("network") || msg.includes("fetch")) {
+      return "Network issue while opening billing. Check your connection and retry.";
+    }
+    if (msg.includes("no billing customer") || msg.includes("subscribe first")) {
+      return "No billing profile found yet. Choose a paid plan below to subscribe, or contact support.";
+    }
+    if (msg.includes("no portal url")) {
+      return "Billing portal did not return a redirect URL. Please try again.";
+    }
+    return "Couldn't open billing portal right now. Please retry in a moment.";
+  }
 
   function getCheckoutErrorMessage(raw: string): string {
     const msg = raw.toLowerCase();
@@ -104,13 +133,51 @@ export function PricingCards({
     if (msg.includes("no checkout url")) {
       return "Checkout session was created but no redirect URL was returned. Please try again.";
     }
+    if (msg.includes("already have a subscription")) {
+      return "You already have a subscription. Use Manage billing on this page or in Settings to change your plan.";
+    }
     if (msg.includes("stripe")) {
       return "Billing provider is temporarily unavailable. Please retry in a moment.";
     }
-    return "We couldn’t open checkout right now. Please try again.";
+    return "We couldn't open checkout right now. Please try again.";
   }
 
-  async function handleUpgrade(plan: "investor" | "pro") {
+  async function handleOpenBillingPortalForPlanChange(
+    targetPlan: "investor" | "pro",
+    targetBillingCycle?: BillingCycle,
+  ) {
+    setError(null);
+    // Use plan-specific loading key so each card button shows its own state.
+    setLoading("portal_" + targetPlan);
+    try {
+      const res = await fetch("/api/billing/portal", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          returnPath: billingPortalReturnPath,
+          targetPlan,
+          targetBillingCycle: targetBillingCycle ?? billingCycle,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to open portal");
+      if (data.url) {
+        captureClientEvent(AnalyticsEvents.BILLING_PORTAL_OPENED, {
+          placement: "pricing_cards",
+          intent: "plan_change",
+          target_plan: targetPlan,
+          target_billing_cycle: targetBillingCycle ?? billingCycle,
+        });
+        window.location.href = data.url;
+      } else throw new Error("No portal URL returned");
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : "Something went wrong";
+      setError(getPortalErrorMessage(raw));
+      setLoading(null);
+    }
+  }
+
+  async function handleCheckoutUpgrade(plan: "investor" | "pro") {
     setError(null);
     setLoading(plan);
     try {
@@ -136,6 +203,16 @@ export function PricingCards({
       setError(getCheckoutErrorMessage(raw));
       setLoading(null);
     }
+  }
+
+  function handlePaidOrFreeUpgrade(plan: "investor" | "pro") {
+    const tier = currentTier.toLowerCase();
+    const isPaidTier = tier === "investor" || tier === "pro";
+    if (isPaidTier) {
+      void handleOpenBillingPortalForPlanChange(plan);
+      return;
+    }
+    void handleCheckoutUpgrade(plan);
   }
 
   const investorSavings = getAnnualSavings("investor");
@@ -190,11 +267,27 @@ export function PricingCards({
       </div>
       <div className="mx-auto grid max-w-6xl gap-5 md:grid-cols-3">
       {PLANS.map((plan) => {
+        // Same tier as the user's active subscription.
+        const isSameTier = !!(currentTier && currentTier.toLowerCase() === plan.tier);
+
+        // "Current plan" = same tier AND the displayed billing cycle matches the
+        // user's active cycle (or we don't know their cycle yet — old DB rows).
         const isCurrent =
-          currentTier && currentTier.toLowerCase() === plan.tier;
+          isSameTier && (!currentBillingCycle || billingCycle === currentBillingCycle);
+
+        // Same tier, but viewing the other billing cycle in the toggle.
+        // Show a portal button to let them switch monthly ↔ annual.
+        const canSwitchCycle =
+          signedInMode &&
+          isSameTier &&
+          !!currentBillingCycle &&
+          billingCycle !== currentBillingCycle &&
+          plan.tier !== "free";
+
+        // Cross-tier upgrade (investor ↔ pro, or free → paid).
         const canUpgrade =
-          (plan.tier === "investor" || plan.tier === "pro") &&
-          !isCurrent;
+          (plan.tier === "investor" || plan.tier === "pro") && !isSameTier;
+
         const highlightInvestor = signedInMode && currentTier.toLowerCase() === "free" && plan.tier === "investor";
         const cardBorder = isCurrent
           ? "border-positive ring-1 ring-positive/60"
@@ -349,15 +442,25 @@ export function PricingCards({
               {canUpgrade && !showSignUp && (
                 <button
                   type="button"
-                  onClick={() => handleUpgrade(plan.tier as "investor" | "pro")}
+                  onClick={() =>
+                    handlePaidOrFreeUpgrade(plan.tier as "investor" | "pro")
+                  }
                   disabled={!!loading}
                   className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50 md:w-auto"
                 >
-                  {loading === plan.tier
-                    ? "Redirecting…"
-                    : plan.tier === "investor"
-                      ? "Choose Investor"
-                      : "Choose Pro"}
+                  {signedInMode &&
+                  (currentTier.toLowerCase() === "investor" ||
+                    currentTier.toLowerCase() === "pro")
+                    ? loading === "portal_" + plan.tier
+                      ? "Opening…"
+                      : plan.tier === "investor"
+                        ? "Switch to Investor"
+                        : "Switch to Pro"
+                    : loading === plan.tier
+                      ? "Redirecting…"
+                      : plan.tier === "investor"
+                        ? "Choose Investor"
+                        : "Choose Pro"}
                 </button>
               )}
               {isCurrent && plan.tier !== "free" && (
@@ -365,10 +468,36 @@ export function PricingCards({
                   Current plan
                 </span>
               )}
+              {canSwitchCycle && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    handleOpenBillingPortalForPlanChange(
+                      plan.tier as "investor" | "pro",
+                      billingCycle,
+                    )
+                  }
+                  disabled={!!loading}
+                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50 md:w-auto"
+                >
+                  {loading === "portal_" + plan.tier
+                    ? "Opening…"
+                    : billingCycle === "yearly"
+                      ? "Switch to annual"
+                      : "Switch to monthly"}
+                </button>
+              )}
             </div>
             {signedInMode && !isCurrent && canUpgrade && (
               <p className="mt-2 text-xs text-muted">
-                Upgrades open checkout in a new Stripe session.
+                {currentTier.toLowerCase() === "free"
+                  ? "Upgrades open checkout in a new Stripe session."
+                  : "Plan changes use Stripe's billing portal so you keep one subscription."}
+              </p>
+            )}
+            {signedInMode && canSwitchCycle && (
+              <p className="mt-2 text-xs text-muted">
+                Billing cycle changes use Stripe&apos;s billing portal. Your plan stays the same.
               </p>
             )}
           </div>

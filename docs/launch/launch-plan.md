@@ -48,7 +48,7 @@
 | [`pre-live-telemetry-qa-2026-03-30.md`](pre-live-telemetry-qa-2026-03-30.md) | Env checklist + browser QA before scaling paid spend |
 | [`paid-ads-monitoring-runbook.md`](paid-ads-monitoring-runbook.md) | Day-4 / day-7 / day-14 kill / iterate / scale |
 | [`paid-ads-campaign-build-sheet.md`](paid-ads-campaign-build-sheet.md) | Campaign structure, copy seeds, keywords |
-| [`paid-ads-readout-2026-03-30-round2-variant.md`](paid-ads-readout-2026-03-30-round2-variant.md) | Example readout (replace with latest readout as you add runs) |
+| [Archived 2026-03-30 readouts](../archive/launch/paid-ads-readouts/README.md) | Historical readouts; use [`paid-ads-test-readout-template.md`](paid-ads-test-readout-template.md) for new runs |
 
 ### 2.3 Technical snapshot (for launch comms / due diligence)
 
@@ -232,6 +232,8 @@ Use [`docs/launch/channel-posting-playbook.md`](channel-posting-playbook.md) for
 - [x] Analytics events defined in [`docs/launch/analytics.md`](analytics.md).  
 - [x] External uptime monitor configured (`/api/health`).  
 - [ ] Golden path demo recorded (signup -> add property -> dashboard -> deal analyzer).
+
+*Documentation pass (2026-04-01):* Billing/refund/cancellation deep links to Terms (`/terms#subscriptions-and-payments`, `#refunds`, `#cancellation`) added on public `/pricing` and in-app `/plans`. `past_due` path documented in [`docs/internal/past-due-user-path.md`](../internal/past-due-user-path.md). SEO spot-check list: [`docs/qa/seo-release-checklist.md`](../qa/seo-release-checklist.md). Remaining unchecked items require **owner verification in production** (env, health, support, demo).
 
 ---
 

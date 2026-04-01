@@ -1,10 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useSyncExternalStore } from "react";
+import { useState, useEffect, useSyncExternalStore } from "react";
 import { getPlanIntentForAnalytics } from "@/lib/plan-intent";
 
-const DISMISS_KEY = "veld_paid_intent_checkout_banner_dismissed";
+/** v2: localStorage + cooldown so dismiss isn’t only session-scoped. */
+const DISMISS_KEY = "veld_paid_intent_checkout_banner_v2";
+const DISMISS_COOLDOWN_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
 
 function useIsClient(): boolean {
   return useSyncExternalStore(
@@ -27,14 +29,27 @@ type PaidIntentCheckoutBannerProps = {
 export function PaidIntentCheckoutBanner({ effectiveTier }: PaidIntentCheckoutBannerProps) {
   const isClient = useIsClient();
   const [dismissed, setDismissed] = useState(false);
+  const [cooldownBlocks, setCooldownBlocks] = useState<boolean | null>(null);
 
-  if (!isClient || effectiveTier !== "free" || dismissed) return null;
+  useEffect(() => {
+    queueMicrotask(() => {
+      try {
+        const raw = localStorage.getItem(DISMISS_KEY);
+        if (raw) {
+          const until = Number.parseInt(raw, 10);
+          if (Number.isFinite(until) && Date.now() < until) {
+            setCooldownBlocks(true);
+            return;
+          }
+        }
+      } catch {
+        /* ignore */
+      }
+      setCooldownBlocks(false);
+    });
+  }, []);
 
-  try {
-    if (sessionStorage.getItem(DISMISS_KEY) === "1") return null;
-  } catch {
-    /* ignore */
-  }
+  if (!isClient || effectiveTier !== "free" || dismissed || cooldownBlocks !== false) return null;
 
   const { plan_intent } = getPlanIntentForAnalytics();
   if (plan_intent !== "investor" && plan_intent !== "pro") return null;
@@ -43,7 +58,7 @@ export function PaidIntentCheckoutBanner({ effectiveTier }: PaidIntentCheckoutBa
 
   const dismiss = () => {
     try {
-      sessionStorage.setItem(DISMISS_KEY, "1");
+      localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_COOLDOWN_MS));
     } catch {
       /* ignore */
     }

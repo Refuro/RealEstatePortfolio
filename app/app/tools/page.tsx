@@ -6,8 +6,9 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { CalculatorsHubCards } from "@/components/calculators/calculators-hub-cards";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "Free real estate calculators",

@@ -9,8 +9,9 @@ import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "Pricing",
@@ -74,9 +75,34 @@ export default async function PricingPage() {
             currentTier={user ? getEffectiveTier(user) : ""}
             className="mt-10"
             showSignUp={!user}
+            billingPortalReturnPath="/pricing"
           />
           <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-muted">
             Third-party rent and value estimates share one hourly pool per account by plan: Free 5, Investor 10, Pro 20 successful requests.
+          </p>
+          <p className="mx-auto mt-4 max-w-2xl text-center text-xs text-muted">
+            Paid plans renew until you cancel in Settings or the billing portal.{" "}
+            <Link
+              href="/terms#subscriptions-and-payments"
+              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+            >
+              Billing
+            </Link>
+            ,{" "}
+            <Link
+              href="/terms#refunds"
+              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+            >
+              refunds
+            </Link>
+            , and{" "}
+            <Link
+              href="/terms#cancellation"
+              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+            >
+              cancellation
+            </Link>{" "}
+            are covered in our Terms.
           </p>
 
           {!user && (

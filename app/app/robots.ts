@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+import { getAppOrigin } from "@/lib/app-url";
 
 export default function robots(): MetadataRoute.Robots {
+  const APP_URL = getAppOrigin();
   return {
     rules: {
       userAgent: "*",

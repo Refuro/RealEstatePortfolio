@@ -49,3 +49,15 @@
 - [ ] `NEXT_PUBLIC_POSTHOG_KEY` set in production (see [`docs/launch/analytics.md`](analytics.md) § env).
 - [ ] Complete a test signup → add property → open `/plans` → start checkout (test mode) → confirm events appear in **Activity** for your test user.
 - [ ] Saved insight exists and is named so others can find it (`Growth funnel — signup to subscribed`).
+- [ ] **High-intent marketing:** From the home page, click **View pricing** and confirm **`funnel_cta_clicked`** with `placement: landing_pricing_preview` (once per session per dedup key).
+- [ ] **Plan limit → upgrade:** Trigger a plan limit (e.g. property cap) and click an **Upgrade** link to `/plans`; confirm **`plan_limit_upgrade_cta_clicked`** with the expected `placement` (see `app/components/analytics/upgrade-plan-link.tsx`).
+
+---
+
+## Supplementary events (not core funnel steps)
+
+| Event | When |
+|-------|------|
+| `plan_limit_hit` | Server/API returns `PLAN_LIMIT_REACHED` — client fires from wizard, forms, import, deal analyzer (see `app/lib/analytics-events.ts`). |
+| `plan_limit_upgrade_cta_clicked` | User clicks a tracked **Upgrade** link toward `/plans` after hitting limits. |
+| `funnel_cta_clicked` | Tracked marketing CTAs (`FunnelCtaLink`), including **`landing_pricing_preview`** on `/`. |

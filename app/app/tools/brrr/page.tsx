@@ -6,8 +6,14 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { BrrrCalculator } from "@/components/marketing/brrr-calculator";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import {
+  CalculatorFaqJsonLd,
+  CalculatorFaqSection,
+} from "@/components/marketing/calculator-faq";
+import { BRRR_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
+import { getAppOrigin } from "@/lib/app-url";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "https://veldportfolio.com";
+const APP_URL = getAppOrigin();
 
 export const metadata: Metadata = {
   title: "BRRRR Calculator",
@@ -21,45 +27,6 @@ export const metadata: Metadata = {
   },
 };
 
-function FaqJsonLd() {
-  const payload = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: [
-      {
-        "@type": "Question",
-        name: "What is BRRRR in real estate investing?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat: acquire a property, improve it, lease it, refinance into a new loan often sized to after-repair value, and redeploy capital. This calculator models interest-only rehab financing and a cash-out refinance at your stated ARV and LTV.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "How is refinance cash-out estimated here?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "The model applies your refinance LTV to ARV to estimate a new loan amount, then pays off the acquisition loan balance. Proceeds are before closing costs and reserves—add those in your own underwriting.",
-        },
-      },
-      {
-        "@type": "Question",
-        name: "Will my lender approve these numbers?",
-        acceptedAnswer: {
-          "@type": "Answer",
-          text: "No. Outputs are educational; lenders use their own appraisal, DSCR, and underwriting rules. Confirm terms, reserves, taxes, and insurance with your lender before relying on any scenario.",
-        },
-      },
-    ],
-  };
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(payload) }}
-    />
-  );
-}
-
 export default async function BrrrCalculatorPage() {
   const { userId } = await auth();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
@@ -72,7 +39,7 @@ export default async function BrrrCalculatorPage() {
       <LandingNav userId={userId} landingVariant="brrr_calc_v1" />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
-          <FaqJsonLd />
+          <CalculatorFaqJsonLd items={BRRR_CALCULATOR_FAQ} />
           <nav className="text-sm text-muted">
             <Link href="/tools" className="hover:text-foreground hover:underline">
               Calculators
@@ -92,6 +59,8 @@ export default async function BrrrCalculatorPage() {
           <div className="mt-8">
             <BrrrCalculator showCta landingVariant="brrr_calc_v1" />
           </div>
+
+          <CalculatorFaqSection items={BRRR_CALCULATOR_FAQ} />
 
           <p className="mt-6 text-center text-sm text-muted">
             Assumptions: acquisition loan is interest-only until refi; refi pays off the acquisition loan

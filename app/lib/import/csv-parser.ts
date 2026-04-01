@@ -148,6 +148,8 @@ export type ImportRow = {
   originalLoanAmount: number | null;
   mortgageRate: number | null;
   mortgageTerm: number | null;
+  /** Loan amortization start; when null, import uses `purchaseDate` for mortgage `startDate`. */
+  mortgageStartDate: Date | null;
   monthlyPayment: number | null;
   escrowAmount: number | null;
   lenderName: string | null;
@@ -305,6 +307,22 @@ export function parseRow(
   const mortgageTerm = parseNum(
     getCol(row, "mortgage term", "mortgage term (first lien)", "mortgageTerm")
   );
+  const mortgageStartDateRaw = getCol(
+    row,
+    "mortgage start date",
+    "mortgage start date (first lien)",
+    "mortgageStartDate"
+  ).trim();
+  let mortgageStartDate: Date | null = null;
+  if (mortgageStartDateRaw) {
+    const parsedMs = parseDate(mortgageStartDateRaw);
+    if (!parsedMs) {
+      return {
+        error: `Row ${rowNum}: Invalid mortgage start date (use YYYY-MM-DD or MM/DD/YYYY).`,
+      };
+    }
+    mortgageStartDate = parsedMs;
+  }
   const monthlyPayment = parseNum(
     getCol(row, "monthly payment", "monthly payment (all liens sum)", "monthlyPayment")
   );
@@ -359,6 +377,7 @@ export function parseRow(
       mortgageRate,
       mortgageTerm:
         mortgageTerm != null && mortgageTerm >= 1 ? Math.round(mortgageTerm) : null,
+      mortgageStartDate,
       monthlyPayment:
         monthlyPayment != null && monthlyPayment >= 0 ? monthlyPayment : null,
       escrowAmount,

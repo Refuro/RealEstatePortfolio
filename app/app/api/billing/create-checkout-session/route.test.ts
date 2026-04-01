@@ -30,6 +30,9 @@ const { prismaMock } = vi.hoisted(() => ({
     user: {
       update: vi.fn().mockResolvedValue({}),
     },
+    subscription: {
+      findUnique: vi.fn().mockResolvedValue(null),
+    },
   },
 }));
 
@@ -84,6 +87,22 @@ describe("POST /api/billing/create-checkout-session", () => {
     const res = await POST(postJson({ plan: "investor", billingCycle: "monthly" }));
     expect(res.status).toBe(401);
     expect(sessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 409 when user already has an active subscription", async () => {
+    prismaMock.subscription.findUnique.mockResolvedValueOnce({
+      stripeSubscriptionId: "sub_123",
+      status: "active",
+    });
+    const { POST } = await import("./route");
+    const res = await POST(
+      postJson({ plan: "investor", billingCycle: "monthly" })
+    );
+    expect(res.status).toBe(409);
+    const data = await res.json();
+    expect(data.error).toMatch(/already have a subscription/i);
+    expect(sessionsCreate).not.toHaveBeenCalled();
+    prismaMock.subscription.findUnique.mockResolvedValue(null);
   });
 
   it("returns 400 when body fails Zod (invalid plan)", async () => {

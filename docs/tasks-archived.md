@@ -576,21 +576,21 @@ Tasks are grouped into batches. **Batch 1** is first.
 
 ## Active: Add-property experience overhaul *(complete — regression only)*
 
-*Full analysis, problems, principles, and **epics with acceptance criteria**: `docs/proposals/add-property-experience-overhaul.md`.*
+*Full analysis, problems, principles, and **epics with acceptance criteria**: `docs/archive/proposals/add-property-experience-overhaul.md`.*
 
 Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`), **property Detail** (**Overview** + **Details** tabs)—unify on shared primitives and consistent wayfinding; remove redundant edit patterns for the same data.
 
 **Status:** Epics **A–G** complete (2026-03). Ongoing regression: [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md).
 
 ### Epic A — IA & design freeze
-*Deliverables: [`docs/proposals/epic-a-discovery.md`](proposals/epic-a-discovery.md) — **A2 & A3 signed** (hybrid first-save; Details → `/edit`).*
+*Deliverables: [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) — **A2 & A3 signed** (hybrid first-save; Details → `/edit`).*
 - [x] **A1** Field inventory (wizard + edit + detail inline) → API mapping
 - [x] **A2** First-save vs enrich-later decision (written)
 - [x] **A3** Edit surface + what replaces Details triple inline (written)
 - [x] **A4** Visual references (moodboard/Figma) aligned with team
 
 ### Epic B — Shared property UI layer
-*Include optional **sqft** on the property record + RentCast **`squareFootage`** on estimates (see [`docs/proposals/epic-a-discovery.md`](proposals/epic-a-discovery.md) § Estimate fidelity).*
+*Include optional **sqft** on the property record + RentCast **`squareFootage`** on estimates (see [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) § Estimate fidelity).*
 - [x] **B1** Shared tokens (`components/property/property-form-field-classes.ts`) + **`PropertySquareFeetField`**; used on add wizard, `/edit`, Details facts. *Full Location/Economics/Notes section extraction → epics C–D.*
 - [x] **B2** **`squareFeet`** on `Property` + Zod + `POST`/`PATCH`/`GET` property APIs
 - [x] **B3** RentCast **`squareFootage`** in `lib/integrations/rentcast.ts` + `/api/estimates/rent` & `value`; clients pass sqft when set
@@ -598,17 +598,17 @@ Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`),
 ### Epic C — Add property (replace wizard)
 - [x] **C1** Sectioned single-page add flow (sticky jump nav + anchors); **`?from=`** deal prefill unchanged; **draft** restore scrolls to Review — implementation: `app/app/(app)/properties/add-property-wizard.tsx`
 - [x] **C2** Mortgage: explicit optional copy; **No, skip** remains non-blocking for create
-- [x] **C3** Entry-point QA checklist — [`epic-c-entry-qa.md`](proposals/epic-c-entry-qa.md) *(manual smoke when touching this flow)*
+- [x] **C3** Entry-point QA checklist — [`epic-c-entry-qa.md`](archive/proposals/epic-c-entry-qa.md) *(manual smoke when touching this flow)*
 
 ### Epic D — Edit property page
 - [x] **D1** Rebuild `/edit` on shared components — sectioned layout + sticky jump nav + `PROPERTY_EDIT_SECTION_NAV` in `lib/property-form-section-nav.ts`; `property-form.tsx` mirrors add flow sections (Location, Purchase & value, Income, Notes)
 - [x] **D2** PATCH parity + plan errors — `unitMix` + `squareFeet` in PATCH payload; Zod `details` surfaced on validation failure; `PLAN_LIMIT_REACHED` unchanged
-- [x] **D3** Wayfinding / hierarchy — edit page copy + link to property detail for mortgages/modeling; QA — [`epic-d-entry-qa.md`](proposals/epic-d-entry-qa.md)
+- [x] **D3** Wayfinding / hierarchy — edit page copy + link to property detail for mortgages/modeling; QA — [`epic-d-entry-qa.md`](archive/proposals/epic-d-entry-qa.md)
 
 ### Epic E — Property detail (Details tab)
 - [x] **E1** Replace/merge triple inline edit pattern (per A3) — Details is **read-only** summary + primary **Edit property** → `/edit`; no per-section Facts / Financial / Notes editors
 - [x] **E2** Unsaved changes UX — inline PATCH + discard flows removed from Details (no `window.confirm` for facts/financial/notes)
-- [x] **E3** Mortgage block styling parity — `MortgageSection` uses **`embedded`** inside the same `p-4` card as other blocks; typography/padding aligned; QA — [`epic-e-entry-qa.md`](proposals/epic-e-entry-qa.md)
+- [x] **E3** Mortgage block styling parity — `MortgageSection` uses **`embedded`** inside the same `p-4` card as other blocks; typography/padding aligned; QA — [`epic-e-entry-qa.md`](archive/proposals/epic-e-entry-qa.md)
 
 ### Epic F — Property Overview tab (`/properties/[id]` default tab)
 - [x] **F1** De-duplicate headline KPIs — `PropertyHero` is identity-only; **Performance at a glance** is the single KPI grid (`overview-tab-content.tsx`, `property-hero.tsx`)
@@ -616,7 +616,7 @@ Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`),
 - [x] **F3** Cross-tab wayfinding — **View full property data (Details tab)** + **Inputs at a glance** links to `?tab=details`
 - [x] **F4** **Inputs at a glance** (replaces “Verification”) — includes **rent** + mortgage snapshot + copy pointing to Details / Edit
 - [x] **F5** Data/benchmark **health strip** on Overview (same chips as Details via `property-health-strip.tsx`)
-- [x] **F6** QA checklist — [`epic-f-overview-qa.md`](proposals/epic-f-overview-qa.md)
+- [x] **F6** QA checklist — [`epic-f-overview-qa.md`](archive/proposals/epic-f-overview-qa.md)
 
 ### Epic G — QA & cleanup
 - [x] **G1** Regression matrix — [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md) (see also [`qa/README.md`](qa/README.md))
@@ -946,21 +946,21 @@ Tasks are grouped into batches. **Batch 1** is first.
 
 ## Active: Add-property experience overhaul *(complete — regression only)*
 
-*Full analysis, problems, principles, and **epics with acceptance criteria**: `docs/proposals/add-property-experience-overhaul.md`.*
+*Full analysis, problems, principles, and **epics with acceptance criteria**: `docs/archive/proposals/add-property-experience-overhaul.md`.*
 
 Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`), **property Detail** (**Overview** + **Details** tabs)—unify on shared primitives and consistent wayfinding; remove redundant edit patterns for the same data.
 
 **Status:** Epics **A–G** complete (2026-03). Ongoing regression: [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md).
 
 ### Epic A — IA & design freeze
-*Deliverables: [`docs/proposals/epic-a-discovery.md`](proposals/epic-a-discovery.md) — **A2 & A3 signed** (hybrid first-save; Details → `/edit`).*
+*Deliverables: [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) — **A2 & A3 signed** (hybrid first-save; Details → `/edit`).*
 - [x] **A1** Field inventory (wizard + edit + detail inline) → API mapping
 - [x] **A2** First-save vs enrich-later decision (written)
 - [x] **A3** Edit surface + what replaces Details triple inline (written)
 - [x] **A4** Visual references (moodboard/Figma) aligned with team
 
 ### Epic B — Shared property UI layer
-*Include optional **sqft** on the property record + RentCast **`squareFootage`** on estimates (see [`docs/proposals/epic-a-discovery.md`](proposals/epic-a-discovery.md) § Estimate fidelity).*
+*Include optional **sqft** on the property record + RentCast **`squareFootage`** on estimates (see [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) § Estimate fidelity).*
 - [x] **B1** Shared tokens (`components/property/property-form-field-classes.ts`) + **`PropertySquareFeetField`**; used on add wizard, `/edit`, Details facts. *Full Location/Economics/Notes section extraction → epics C–D.*
 - [x] **B2** **`squareFeet`** on `Property` + Zod + `POST`/`PATCH`/`GET` property APIs
 - [x] **B3** RentCast **`squareFootage`** in `lib/integrations/rentcast.ts` + `/api/estimates/rent` & `value`; clients pass sqft when set
@@ -968,17 +968,17 @@ Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`),
 ### Epic C — Add property (replace wizard)
 - [x] **C1** Sectioned single-page add flow (sticky jump nav + anchors); **`?from=`** deal prefill unchanged; **draft** restore scrolls to Review — implementation: `app/app/(app)/properties/add-property-wizard.tsx`
 - [x] **C2** Mortgage: explicit optional copy; **No, skip** remains non-blocking for create
-- [x] **C3** Entry-point QA checklist — [`epic-c-entry-qa.md`](proposals/epic-c-entry-qa.md) *(manual smoke when touching this flow)*
+- [x] **C3** Entry-point QA checklist — [`epic-c-entry-qa.md`](archive/proposals/epic-c-entry-qa.md) *(manual smoke when touching this flow)*
 
 ### Epic D — Edit property page
 - [x] **D1** Rebuild `/edit` on shared components — sectioned layout + sticky jump nav + `PROPERTY_EDIT_SECTION_NAV` in `lib/property-form-section-nav.ts`; `property-form.tsx` mirrors add flow sections (Location, Purchase & value, Income, Notes)
 - [x] **D2** PATCH parity + plan errors — `unitMix` + `squareFeet` in PATCH payload; Zod `details` surfaced on validation failure; `PLAN_LIMIT_REACHED` unchanged
-- [x] **D3** Wayfinding / hierarchy — edit page copy + link to property detail for mortgages/modeling; QA — [`epic-d-entry-qa.md`](proposals/epic-d-entry-qa.md)
+- [x] **D3** Wayfinding / hierarchy — edit page copy + link to property detail for mortgages/modeling; QA — [`epic-d-entry-qa.md`](archive/proposals/epic-d-entry-qa.md)
 
 ### Epic E — Property detail (Details tab)
 - [x] **E1** Replace/merge triple inline edit pattern (per A3) — Details is **read-only** summary + primary **Edit property** → `/edit`; no per-section Facts / Financial / Notes editors
 - [x] **E2** Unsaved changes UX — inline PATCH + discard flows removed from Details (no `window.confirm` for facts/financial/notes)
-- [x] **E3** Mortgage block styling parity — `MortgageSection` uses **`embedded`** inside the same `p-4` card as other blocks; typography/padding aligned; QA — [`epic-e-entry-qa.md`](proposals/epic-e-entry-qa.md)
+- [x] **E3** Mortgage block styling parity — `MortgageSection` uses **`embedded`** inside the same `p-4` card as other blocks; typography/padding aligned; QA — [`epic-e-entry-qa.md`](archive/proposals/epic-e-entry-qa.md)
 
 ### Epic F — Property Overview tab (`/properties/[id]` default tab)
 - [x] **F1** De-duplicate headline KPIs — `PropertyHero` is identity-only; **Performance at a glance** is the single KPI grid (`overview-tab-content.tsx`, `property-hero.tsx`)
@@ -986,7 +986,7 @@ Scope: **Add property** (wizard), **`/properties/[id]/edit`** (`property-form`),
 - [x] **F3** Cross-tab wayfinding — **View full property data (Details tab)** + **Inputs at a glance** links to `?tab=details`
 - [x] **F4** **Inputs at a glance** (replaces “Verification”) — includes **rent** + mortgage snapshot + copy pointing to Details / Edit
 - [x] **F5** Data/benchmark **health strip** on Overview (same chips as Details via `property-health-strip.tsx`)
-- [x] **F6** QA checklist — [`epic-f-overview-qa.md`](proposals/epic-f-overview-qa.md)
+- [x] **F6** QA checklist — [`epic-f-overview-qa.md`](archive/proposals/epic-f-overview-qa.md)
 
 ### Epic G — QA & cleanup
 - [x] **G1** Regression matrix — [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md) (see also [`qa/README.md`](qa/README.md))

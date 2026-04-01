@@ -11,6 +11,14 @@ import {
 import { getStripe, getPriceIdForPlan } from "@/lib/stripe-config";
 import { createCheckoutSessionSchema } from "@/lib/validations/checkout";
 
+/** Subscription statuses where a Stripe subscription already exists — do not create a second via Checkout. */
+const STATUS_BLOCKS_NEW_CHECKOUT = new Set([
+  "active",
+  "trialing",
+  "past_due",
+  "unpaid",
+]);
+
 export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
@@ -48,6 +56,22 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { error: `Price ID for plan '${plan}' is not configured` },
       { status: 500 }
+    );
+  }
+
+  const existingSub = await prisma.subscription.findUnique({
+    where: { userId: user.id },
+  });
+  if (
+    existingSub?.stripeSubscriptionId &&
+    STATUS_BLOCKS_NEW_CHECKOUT.has(existingSub.status)
+  ) {
+    return NextResponse.json(
+      {
+        error:
+          "You already have a subscription. Use Manage billing on Plans or Settings to change your plan.",
+      },
+      { status: 409 }
     );
   }
 

@@ -7,13 +7,17 @@ alwaysApply: false
 
 When the user says **"run code audit"**, **"code audit"**, or **"do a code audit"**:
 
+## Execution mode (required)
+
+Run in **Agent** mode with writes enabled—not Ask mode, not read-only subagents. The audit **must** create or update markdown under `docs/audits/`. **"No code changes"** means do not modify application or library source (for example under `app/`); it does **not** mean skip writing the report.
+
 ## What to do
 
-1. **Launch a subagent** (generalPurpose or explore) with a prompt that:
+1. **Launch a subagent** (generalPurpose or explore) with **read-only disabled** and a prompt that:
    - Instructs the agent to follow `docs/process/code-audit-process.md` in full
    - Tells the agent to audit the codebase under `app/` (lib, components, API routes, pages)
    - Requires the agent to output the report to `docs/audits/code/YYYY-MM-DD-code-audit.md` (use today's date in ISO format)
-   - States: **Audit only. Do not make code changes.** The user reviews the report and creates tasks from findings as needed.
+   - States: **Do not modify files under `app/`; must write the full report file.** The user reviews the report and creates tasks from findings as needed.
 
 2. **Single agent** — Use one subagent for the full audit, not multiple.
 
@@ -27,7 +31,7 @@ Perform a code audit following docs/process/code-audit-process.md.
 1. Read docs/process/code-audit-process.md, docs/policies/design-spec.md, docs/architecture-and-build-practices.md, and docs/security/security-notes.md.
 2. Systematically audit the codebase under app/ (lib, components, API routes, pages) across all dimensions in the process: design compliance, architecture compliance, efficiency, technical debt/corners, security, product mantra, performance.
 3. Write the report to docs/audits/code/YYYY-MM-DD-code-audit.md (use today's date).
-4. Do NOT make any code changes. Audit only. Document findings with file paths where helpful.
+4. Do NOT modify files under app/. Document findings with file paths where helpful.
 
 Return a brief summary of top findings when done.
 ```
