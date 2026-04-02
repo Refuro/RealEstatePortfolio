@@ -162,6 +162,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [hasDraft, setHasDraftState] = useState(false);
+  const hasDraftRef = useRef(false);
   const [draftData, setDraftData] = useState<DraftPayload | null>(null);
   const [savedAt, setSavedAt] = useState<string | null>(null);
   const [leaveModal, setLeaveModal] = useState<{ href: string } | null>(null);
@@ -175,6 +176,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   useModalFocus(!!restoreModal, () => setRestoreModal(null), restoreModalRef);
 
   const setHasDraft = useCallback((v: boolean) => {
+    hasDraftRef.current = v;
     setHasDraftState(v);
   }, []);
 
@@ -186,11 +188,13 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     saveDraftToStorage(payload);
     setDraftData(payload);
     setSavedAt(payload.savedAt);
+    hasDraftRef.current = true;
     setHasDraftState(true);
   }, []);
 
   const clearDraft = useCallback(() => {
     clearDraftFromStorage();
+    hasDraftRef.current = false;
     setDraftData(null);
     setSavedAt(null);
     setHasDraftState(false);
@@ -267,13 +271,13 @@ export function DraftProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
-      if (pathname === "/properties/new" && hasDraft) {
+      if (pathname === "/properties/new" && hasDraftRef.current) {
         e.preventDefault();
       }
     };
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [pathname, hasDraft]);
+  }, [pathname]);
 
   const registerWizardGetData = useCallback((getData: (() => WizardData) | null) => {
     wizardGetDataRef.current = getData;
