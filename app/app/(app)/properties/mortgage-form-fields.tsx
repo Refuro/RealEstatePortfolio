@@ -165,7 +165,7 @@ export function MortgageFormFields({
             className={inputClass}
           />
           <p className="mt-0.5 text-xs text-muted">
-            When the monthly payment was last confirmed (e.g. after escrow review)
+            Date your first P&I payment was due. For a mid-month closing, this is typically the 1st of the month two months after closing — e.g. a May 13 closing → July 1. Improves payoff projection accuracy.
           </p>
           {errors.paymentEffectiveDate && (
             <p className="mt-0.5 text-xs text-negative">{errors.paymentEffectiveDate}</p>

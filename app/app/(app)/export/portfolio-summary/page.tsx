@@ -106,7 +106,7 @@ export default function PortfolioSummaryPrintPage() {
 
           <dl className="mt-6 grid gap-4 sm:grid-cols-2">
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <dt className="text-xs font-medium text-muted">
                 Total market value
               </dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
@@ -114,19 +114,19 @@ export default function PortfolioSummaryPrintPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Total debt</dt>
+              <dt className="text-xs font-medium text-muted">Total debt</dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
                 {formatCurrency(data.totalDebt)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Total equity</dt>
+              <dt className="text-xs font-medium text-muted">Total equity</dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
                 {formatCurrency(data.totalEquity)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <dt className="text-xs font-medium text-muted">
                 Monthly cash flow
               </dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
@@ -134,13 +134,13 @@ export default function PortfolioSummaryPrintPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">NOI (annual)</dt>
+              <dt className="text-xs font-medium text-muted">NOI (annual)</dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
                 {formatCurrency(data.totalNoi)}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <dt className="text-xs font-medium text-muted">
                 Weighted cap rate
               </dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
@@ -150,13 +150,13 @@ export default function PortfolioSummaryPrintPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Portfolio LTV</dt>
+              <dt className="text-xs font-medium text-muted">Portfolio LTV</dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
                 {data.portfolioLtv != null ? `${(data.portfolioLtv * 100).toFixed(2)}%` : "—"}
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <dt className="text-xs font-medium text-muted">
                 Portfolio cash-on-cash
               </dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
@@ -166,7 +166,7 @@ export default function PortfolioSummaryPrintPage() {
               </dd>
             </div>
             <div>
-              <dt className="text-xs font-semibold uppercase tracking-wide text-muted">DSCR</dt>
+              <dt className="text-xs font-medium text-muted">DSCR</dt>
               <dd className="mt-1 text-lg font-semibold text-foreground">
                 {data.dscr != null ? data.dscr.toFixed(2) : "—"}
               </dd>

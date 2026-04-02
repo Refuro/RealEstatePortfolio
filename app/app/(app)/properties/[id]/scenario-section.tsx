@@ -107,7 +107,7 @@ export function ScenarioSection({
                 {formatCurrency(monthlyRent)}
                 {rentChange !== 0 && (
                   <span className="text-muted">
-                    {" → "}
+                    <span className="mx-1 text-muted/50" aria-hidden>→</span>
                     {formatCurrency(adjustedRent)}
                   </span>
                 )}
@@ -129,7 +129,7 @@ export function ScenarioSection({
                 {formatCurrency(estimatedValue)}
                 {valueChange !== 0 && (
                   <span className="text-muted">
-                    {" → "}
+                    <span className="mx-1 text-muted/50" aria-hidden>→</span>
                     {formatCurrency(adjustedValue)}
                   </span>
                 )}
@@ -151,7 +151,7 @@ export function ScenarioSection({
                 {formatCurrency(totalMonthlyPayment)}
                 {mortgageChange !== 0 && (
                   <span className="text-muted">
-                    {" → "}
+                    <span className="mx-1 text-muted/50" aria-hidden>→</span>
                     {formatCurrency(adjustedPayment)}
                   </span>
                 )}

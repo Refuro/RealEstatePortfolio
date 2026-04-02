@@ -8,8 +8,9 @@ const getStripe = vi.fn(() => ({
   subscriptions: { retrieve: vi.fn() },
 }));
 
-const { prismaMock, captureServerEventMock } = vi.hoisted(() => {
+const { prismaMock, captureServerEventMock, captureMessageMock } = vi.hoisted(() => {
   const captureServerEventMock = vi.fn().mockResolvedValue(undefined);
+  const captureMessageMock = vi.fn();
   const prismaMock = {
     subscription: {
       upsert: vi.fn().mockResolvedValue({}),
@@ -26,7 +27,7 @@ const { prismaMock, captureServerEventMock } = vi.hoisted(() => {
     },
     $transaction: vi.fn(),
   };
-  return { prismaMock, captureServerEventMock };
+  return { prismaMock, captureServerEventMock, captureMessageMock };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -47,7 +48,7 @@ vi.mock("@/lib/stripe-config", () => ({
 }));
 
 vi.mock("@sentry/nextjs", () => ({
-  captureMessage: vi.fn(),
+  captureMessage: captureMessageMock,
   captureException: vi.fn(),
 }));
 
@@ -88,6 +89,7 @@ function subscriptionUpdatedEvent() {
 describe("POST /api/billing/webhook", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    prismaMock.user.findFirst.mockResolvedValue(null);
     prismaMock.$transaction.mockImplementation(async (ops: unknown) => {
       const arr = ops as Promise<unknown>[];
       if (Array.isArray(arr)) {
@@ -146,6 +148,32 @@ describe("POST /api/billing/webhook", () => {
         status: "active",
         plan_tier: "pro",
         cancel_at_period_end: false,
+      })
+    );
+  });
+
+  it("prefers stripeCustomerId mapping when metadata appUserId mismatches", async () => {
+    prismaMock.user.findFirst.mockResolvedValue({ id: "user-from-customer" });
+    constructEvent.mockReturnValue(subscriptionUpdatedEvent());
+    const { POST } = await import("./route");
+
+    const res = await POST(postWebhook("{}", "sig_ok"));
+    expect(res.status).toBe(200);
+
+    expect(prismaMock.user.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: "user-from-customer" },
+      })
+    );
+    expect(captureServerEventMock).toHaveBeenCalledWith(
+      "user-from-customer",
+      AnalyticsEvents.SUBSCRIPTION_UPDATED,
+      expect.any(Object)
+    );
+    expect(captureMessageMock).toHaveBeenCalledWith(
+      expect.stringMatching(/metadata appUserId mismatch/i),
+      expect.objectContaining({
+        level: "warning",
       })
     );
   });

@@ -123,6 +123,8 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | `properties:create` | 20 |
 | `properties:patch` | 60 |
 | `properties:delete` | 60 |
+| `properties:mortgage-post` | 60 |
+| `properties:mortgage-patch` | 60 |
 | `properties:mortgage-delete` | 60 |
 | `deals:create` | 20 |
 | `deals:patch` | 60 |

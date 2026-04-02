@@ -47,9 +47,7 @@ export async function POST(request: NextRequest) {
     case "customer.subscription.updated": {
       const sub = event.data.object as Stripe.Subscription;
       await syncSubscriptionToDb(sub);
-      const appUserId =
-        (sub.metadata?.appUserId as string) ||
-        (await findUserIdByStripeCustomer(sub.customer as string));
+      const { appUserId } = await resolveAppUserIdForSubscription(sub);
       if (appUserId) {
         const firstItem = sub.items?.data?.[0];
         const priceId =
@@ -129,9 +127,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
     ? new Date(periodEnd * 1000)
     : null;
 
-  const appUserId =
-    (sub.metadata?.appUserId as string) ||
-    (await findUserIdByStripeCustomer(sub.customer as string));
+  const { appUserId, hasMetadataAppUserId } = await resolveAppUserIdForSubscription(sub);
 
   if (!appUserId) {
     const customerId =
@@ -144,7 +140,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
         extra: {
           subscriptionId: sub.id,
           customerId,
-          hasMetadataAppUserId: Boolean(sub.metadata?.appUserId),
+          hasMetadataAppUserId,
         },
       }
     );
@@ -205,4 +201,41 @@ async function findUserIdByStripeCustomer(
     where: { stripeCustomerId: customerId },
   });
   return user?.id ?? null;
+}
+
+async function resolveAppUserIdForSubscription(sub: Stripe.Subscription): Promise<{
+  appUserId: string | null;
+  hasMetadataAppUserId: boolean;
+}> {
+  const customerId =
+    typeof sub.customer === "string" ? sub.customer : sub.customer?.id ?? null;
+  const customerUserId = customerId
+    ? await findUserIdByStripeCustomer(customerId)
+    : null;
+  const metadataAppUserIdRaw = sub.metadata?.appUserId;
+  const metadataAppUserId =
+    typeof metadataAppUserIdRaw === "string" && metadataAppUserIdRaw.trim().length > 0
+      ? metadataAppUserIdRaw.trim()
+      : null;
+
+  if (customerUserId && metadataAppUserId && customerUserId !== metadataAppUserId) {
+    Sentry.captureMessage(
+      "Stripe webhook: metadata appUserId mismatch, using stripeCustomerId mapping",
+      {
+        level: "warning",
+        tags: { area: "billing", stripe_webhook: "subscription_user_mismatch" },
+        extra: {
+          subscriptionId: sub.id,
+          customerId,
+          customerUserId,
+          metadataAppUserId,
+        },
+      }
+    );
+  }
+
+  return {
+    appUserId: customerUserId ?? metadataAppUserId,
+    hasMetadataAppUserId: Boolean(metadataAppUserId),
+  };
 }

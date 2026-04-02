@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
+import { ChevronLeft } from "lucide-react";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { ContactForm } from "./contact-form";
@@ -31,9 +32,10 @@ export default async function ContactPage() {
         <div className="mx-auto max-w-3xl px-4 py-12">
           <Link
             href={userId ? "/dashboard" : "/"}
-            className="mb-8 inline-block text-sm text-muted hover:text-foreground"
+            className="mb-8 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
           >
-            ← {userId ? "Back to dashboard" : "Back to home"}
+            <ChevronLeft className="size-4" aria-hidden />
+            {userId ? "Back to dashboard" : "Back to home"}
           </Link>
           <h1 className="text-2xl font-semibold text-foreground">Contact us</h1>
           <p className="mt-2 text-base text-muted">

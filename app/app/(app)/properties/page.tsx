@@ -20,6 +20,7 @@ import {
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { Building2, Search } from "lucide-react";
 import { PropertiesFiltersMobile } from "./properties-filters-mobile";
 
 function BenchmarkLine({
@@ -286,17 +287,17 @@ export default async function PropertiesPage({
       </div>
 
       {properties.length === 0 ? (
-        <div className="rounded-lg border border-border bg-card p-8 text-center">
-          <h2 className="text-lg font-medium text-foreground">
-            No properties yet
-          </h2>
-          <p className="mt-2 text-base text-muted">
-            Add your first property to start tracking value, equity, cash flow,
-            and more.
-          </p>
+        <div className="mt-8 flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-16 text-center">
+          <Building2 className="size-10 text-muted/40" aria-hidden />
+          <div>
+            <p className="text-sm font-semibold text-foreground">No properties yet</p>
+            <p className="mt-1 text-sm text-muted">
+              Track equity, cash flow, and rent estimates across all your properties.
+            </p>
+          </div>
           <Link
             href="/properties/new"
-            className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            className="mt-1 inline-flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
           >
             Add your first property
           </Link>
@@ -318,7 +319,7 @@ export default async function PropertiesPage({
             <div className="mb-5 rounded-lg border border-border bg-card p-3">
               <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                  <p className="text-xs font-semibold text-muted">
                     Portfolio view
                   </p>
                   <p className="mt-1 text-sm text-foreground">
@@ -341,7 +342,7 @@ export default async function PropertiesPage({
                 sortOptions={SORT_OPTIONS}
               />
               <div className="hidden items-center gap-2 overflow-x-auto md:flex">
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Filter</span>
+                <span className="shrink-0 text-xs font-semibold text-muted">Filter</span>
                 {FILTER_OPTIONS.map((option) => {
                   const active = activeFilter === option.key;
                   return (
@@ -360,7 +361,7 @@ export default async function PropertiesPage({
                 })}
               </div>
               <div className="mt-2 hidden items-center gap-2 overflow-x-auto md:flex">
-                <span className="shrink-0 text-xs font-semibold uppercase tracking-wide text-muted">Sort</span>
+                <span className="shrink-0 text-xs font-semibold text-muted">Sort</span>
                 {SORT_OPTIONS.map((option) => {
                   const active = activeSort === option.key;
                   return (
@@ -405,20 +406,15 @@ export default async function PropertiesPage({
             </div>
           )}
           {!singlePropertyMode && visibleCards.length === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-8 text-center">
-              <h2 className="text-lg font-medium text-foreground">No properties match this view</h2>
-              <p className="mt-2 text-base text-muted">
-                Try changing filters to see more properties.
-              </p>
-              <Link
-                href={buildPropertiesHref("all", activeSort)}
-                className="mt-4 inline-block rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground hover:bg-subtle"
-              >
-                Clear filters
-              </Link>
+            <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-12 text-center">
+              <Search className="size-10 text-muted/40" aria-hidden />
+              <div>
+                <p className="text-sm font-semibold text-foreground">No matching properties</p>
+                <p className="mt-1 text-sm text-muted">Try adjusting your filters.</p>
+              </div>
             </div>
           ) : singlePropertyMode && visibleCards.length === 1 ? (
-            <div className="rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+            <div className="rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow duration-150 hover:shadow-md">
               {(() => {
                 const card = visibleCards[0];
                 const p = card.property;
@@ -448,19 +444,19 @@ export default async function PropertiesPage({
                       </div>
                     </div>
                     <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <div className="rounded-md border border-border/70 bg-background/50 px-3 py-2">
+                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
                         <dt className="text-xs font-medium text-muted">Value</dt>
                         <dd className="mt-1 text-lg font-semibold text-foreground">
                           {formatCurrency(Number(p.currentEstimatedValue))}
                         </dd>
                       </div>
-                      <div className="rounded-md border border-border/70 bg-background/50 px-3 py-2">
+                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
                         <dt className="text-xs font-medium text-muted">Equity</dt>
                         <dd className="mt-1 text-lg font-semibold text-foreground">
                           {formatCurrency(metrics.equity)}
                         </dd>
                       </div>
-                      <div className="rounded-md border border-border/70 bg-background/50 px-3 py-2">
+                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
                         <dt className="text-xs font-medium text-muted">Monthly cash flow</dt>
                         <dd
                           className={`mt-1 text-lg font-semibold ${
@@ -518,7 +514,7 @@ export default async function PropertiesPage({
                 const metrics = card.metrics;
                 return (
                   <li key={p.id} className="h-full">
-                    <div className="flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:bg-subtle/40">
+                    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="font-medium text-foreground">

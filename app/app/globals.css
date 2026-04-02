@@ -7,8 +7,8 @@
   --foreground: #0a0a0a;
   --foreground-muted: #71717a;
   --border: #e4e4e7;
-  --accent: #0a0a0a;
-  --accent-hover: #262626;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
   --accent-foreground: #ffffff;
   --positive: #059669;
   --negative: #dc2626;
@@ -19,6 +19,41 @@
   --chart-3: #10b981;
   --chart-4: #3b82f6;
   --chart-5: #06b6d4;
+  /* Brand accent tints for badges and icon backgrounds */
+  --accent-subtle: #eef2ff;
+  --accent-subtle-foreground: #4338ca;
+
+  /* Motion tokens */
+  --duration-fast: 150ms;
+  --duration-base: 200ms;
+  --duration-slow: 300ms;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Global focus ring — keyboard/AT navigation only, no mouse ring */
+/* color-mix() is required here because --accent is a hex value, not HSL components */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 2px;
+}
+
+/* Remove redundant outlines already replaced by :focus-visible above */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Input, select, textarea: hover affordance and smooth focus transition */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+select,
+textarea {
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover:not(:focus),
+select:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--border), var(--foreground) 22%);
 }
 
 /* System preference: dark when user hasn't set explicit theme */
@@ -30,9 +65,9 @@
     --foreground: #fafafa;
     --foreground-muted: #a1a1aa;
     --border: #27272a;
-    --accent: #fafafa;
-    --accent-hover: #e4e4e7;
-    --accent-foreground: #0a0a0a;
+    --accent: #818cf8;
+    --accent-hover: #a5b4fc;
+    --accent-foreground: #1e1b4b;
     --positive: #34d399;
     --negative: #f87171;
     --warning: #fbbf24;
@@ -41,6 +76,8 @@
     --chart-3: #34d399;
     --chart-4: #60a5fa;
     --chart-5: #22d3ee;
+    --accent-subtle: #1e1b4b;
+    --accent-subtle-foreground: #a5b4fc;
   }
 }
 
@@ -52,8 +89,8 @@
   --foreground: #0a0a0a;
   --foreground-muted: #71717a;
   --border: #e4e4e7;
-  --accent: #0a0a0a;
-  --accent-hover: #262626;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
   --accent-foreground: #ffffff;
   --positive: #059669;
   --negative: #dc2626;
@@ -63,6 +100,9 @@
   --chart-3: #10b981;
   --chart-4: #3b82f6;
   --chart-5: #06b6d4;
+  /* Brand accent tints for badges and icon backgrounds */
+  --accent-subtle: #eef2ff;
+  --accent-subtle-foreground: #4338ca;
 }
 
 /* Explicit dark mode (override system) */
@@ -73,9 +113,9 @@
   --foreground: #fafafa;
   --foreground-muted: #a1a1aa;
   --border: #27272a;
-  --accent: #fafafa;
-  --accent-hover: #e4e4e7;
-  --accent-foreground: #0a0a0a;
+  --accent: #818cf8;
+  --accent-hover: #a5b4fc;
+  --accent-foreground: #1e1b4b;
   --positive: #34d399;
   --negative: #f87171;
   --warning: #fbbf24;
@@ -84,6 +124,8 @@
   --chart-3: #34d399;
   --chart-4: #60a5fa;
   --chart-5: #22d3ee;
+  --accent-subtle: #1e1b4b;
+  --accent-subtle-foreground: #a5b4fc;
 }
 
 @theme inline {
@@ -105,6 +147,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-subtle-foreground: var(--accent-subtle-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
@@ -113,6 +157,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Date inputs: improve calendar icon visibility (Option A) */

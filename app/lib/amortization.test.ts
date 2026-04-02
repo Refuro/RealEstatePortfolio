@@ -9,11 +9,13 @@ import {
   getPayoffProjection,
   getPaymentStartLagMonths,
   getPayoffYearsWithExtra,
+  getPayoffYearsWithExtraWithTolerance,
   getPiForAmortization,
   getProjectedBalanceAsOf,
   getToleranceAwarePayoffProjection,
   isNegativeAmortizingPayment,
   isWithinTermEndTolerance,
+  projectStoredBalanceForward,
 } from "./amortization";
 
 describe("generateAmortizationSchedule", () => {
@@ -172,6 +174,93 @@ describe("getProjectedBalanceAsOf", () => {
   });
 });
 
+describe("projectStoredBalanceForward", () => {
+  it("applies one month of amortization correctly", () => {
+    // balance: 88_888, rate: 0.06/12 = 0.005, payment: 600 (no escrow)
+    // interest = 88_888 * 0.005 = 444.44
+    // principal = 600 - 444.44 = 155.56
+    // result = 88_888 - 155.56 = 88_732.44
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 88_888,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 600,
+    };
+    const result = projectStoredBalanceForward(
+      88_888,
+      new Date(2025, 4, 1), // May 2025
+      m,
+      new Date(2025, 5, 1)  // June 2025
+    );
+    expect(result).toBeCloseTo(88_732.44, 1);
+  });
+
+  it("applies multiple months of amortization", () => {
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 88_888,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 600,
+    };
+    const oneMonth = projectStoredBalanceForward(
+      88_888,
+      new Date(2025, 4, 1),
+      m,
+      new Date(2025, 5, 1)
+    );
+    const twoMonths = projectStoredBalanceForward(
+      88_888,
+      new Date(2025, 4, 1),
+      m,
+      new Date(2025, 6, 1) // July 2025
+    );
+    // Two months must reduce balance more than one month
+    expect(twoMonths).toBeLessThan(oneMonth);
+    expect(twoMonths).toBeGreaterThan(0);
+  });
+
+  it("returns stored balance unchanged when fromDate equals toDate (same month)", () => {
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 88_888,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 600,
+    };
+    const result = projectStoredBalanceForward(
+      88_888,
+      new Date(2025, 5, 1),
+      m,
+      new Date(2025, 5, 15) // same month, different day
+    );
+    expect(result).toBe(88_888);
+  });
+
+  it("short-circuits when P&I does not cover monthly interest", () => {
+    // payment too low to cover interest → negative amortization → bail, return starting balance
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 100_000,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 100, // way below monthly interest of 500
+    };
+    const result = projectStoredBalanceForward(
+      100_000,
+      new Date(2025, 0, 1),
+      m,
+      new Date(2025, 3, 1) // 3 months later
+    );
+    expect(result).toBe(100_000);
+  });
+});
+
 describe("getEffectiveBalance / getBalanceSource", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -181,7 +270,8 @@ describe("getEffectiveBalance / getBalanceSource", () => {
     vi.useRealTimers();
   });
 
-  it("uses stored balance when balance-as-of is within 6 months", () => {
+  it("returns stored balance when balanceAsOfDate is in the current month", () => {
+    // June 15 system time, June 1 balanceAsOfDate — same month → return verbatim
     const m = {
       originalLoanAmount: 100_000,
       currentBalance: 88_888,
@@ -189,10 +279,26 @@ describe("getEffectiveBalance / getBalanceSource", () => {
       termYears: 30,
       startDate: new Date("2020-01-01"),
       monthlyPayment: 600,
-      balanceAsOfDate: new Date("2025-05-01"),
+      balanceAsOfDate: new Date(2025, 5, 1), // local June 1 2025
     };
     expect(getEffectiveBalance(m)).toBe(88_888);
     expect(getBalanceSource(m)).toBe("stored");
+  });
+
+  it("projects stored balance forward when balanceAsOfDate is in a prior month within 6 months", () => {
+    // System time: 2025-06-15. Statement: May 1. One month gap.
+    // interest = 88_888 * 0.005 = 444.44; principal = 155.56; result ≈ 88_732.44
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: 88_888,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 600,
+      balanceAsOfDate: new Date(2025, 4, 1), // local May 1 2025
+    };
+    expect(getEffectiveBalance(m)).toBeCloseTo(88_732.44, 1);
+    expect(getBalanceSource(m)).toBe("stored_projected");
   });
 
   it("falls back to current balance when projection is unavailable", () => {
@@ -211,7 +317,7 @@ describe("getEffectiveBalance / getBalanceSource", () => {
 });
 
 describe("getPaymentStartLagMonths", () => {
-  it("returns 0 without paymentEffectiveDate", () => {
+  it("auto-infers 1-month lag for first-of-month closing when paymentEffectiveDate is absent", () => {
     expect(
       getPaymentStartLagMonths({
         originalLoanAmount: 100_000,
@@ -221,7 +327,35 @@ describe("getPaymentStartLagMonths", () => {
         startDate: new Date("2020-01-01"),
         monthlyPayment: 600,
       })
-    ).toBe(0);
+    ).toBe(1);
+  });
+
+  it("auto-infers 2-month lag for mid-month closing when paymentEffectiveDate is absent", () => {
+    expect(
+      getPaymentStartLagMonths({
+        originalLoanAmount: 297_000,
+        currentBalance: 288_417,
+        interestRate: 0.0625,
+        termYears: 30,
+        startDate: new Date("2023-05-13"),
+        monthlyPayment: 2648.08,
+      })
+    ).toBe(2);
+  });
+
+  it("uses explicit paymentEffectiveDate when provided, ignoring auto-inference", () => {
+    // Use local-midnight Date constructors (not ISO strings) to avoid UTC-to-local day shifts.
+    expect(
+      getPaymentStartLagMonths({
+        originalLoanAmount: 100_000,
+        currentBalance: 90_000,
+        interestRate: 0.06,
+        termYears: 30,
+        startDate: new Date(2020, 0, 13),           // local Jan 13
+        monthlyPayment: 600,
+        paymentEffectiveDate: new Date(2020, 2, 1), // local March 1 → 2 months after Jan
+      })
+    ).toBe(2);
   });
 
   it("caps lag by maxLagMonths", () => {
@@ -303,6 +437,56 @@ describe("getPayoffProjection / tolerance helpers", () => {
   });
 });
 
+/** Regression: Westport Property mortgage — mid-month closing shows payoff correctly without paymentEffectiveDate */
+describe("mid-month closing payoff projection (Westport regression)", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-04-01T12:00:00.000Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const westport = {
+    originalLoanAmount: 297_000,
+    currentBalance: 288_417,
+    interestRate: 0.0625,
+    termYears: 30,
+    startDate: new Date("2023-05-13"),
+    monthlyPayment: 2648.08,
+    balanceAsOfDate: new Date("2026-03-17"),
+    escrowIncluded: true,
+    escrowAmount: 813,
+  };
+
+  it("auto-infers 2-month lag for May 13 closing", () => {
+    expect(getPaymentStartLagMonths(westport)).toBe(2);
+  });
+
+  it("P&I is positive and above monthly interest — not negative amortizing", () => {
+    const pi = getPiForAmortization(westport);
+    expect(pi).toBeCloseTo(1835.08, 1);
+    expect(isNegativeAmortizingPayment(pi, 288_417, 0.0625)).toBe(false);
+  });
+
+  it("getToleranceAwarePayoffProjection resolves payoff date without paymentEffectiveDate", () => {
+    const projection = getToleranceAwarePayoffProjection(westport);
+    expect(projection.payoffDate).not.toBeNull();
+    expect(projection.toleranceApplied).toBe(true);
+    // Payoff date should be within the tolerance window of the 30-year term end (May 2053)
+    const payoffYear = projection.payoffDate!.getFullYear();
+    expect(payoffYear).toBeGreaterThanOrEqual(2053);
+    expect(payoffYear).toBeLessThanOrEqual(2054);
+  });
+
+  it("getToleranceAwarePayoffProjection also resolves with explicit paymentEffectiveDate set", () => {
+    const withExplicit = { ...westport, paymentEffectiveDate: new Date("2023-07-01") };
+    const projection = getToleranceAwarePayoffProjection(withExplicit);
+    expect(projection.payoffDate).not.toBeNull();
+    expect(projection.toleranceApplied).toBe(true);
+  });
+});
+
 /** Canonical (strict) vs tolerance-aware UI — see docs/policies/analytics-math-policy.md §3.7 */
 describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra (strict canonical)", () => {
   beforeEach(() => {
@@ -347,6 +531,24 @@ describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra (strict canon
       expect(Number.isInteger(years)).toBe(true);
       expect(years).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it("includes payment-start lag in payoff-years cap near term end", () => {
+    vi.setSystemTime(new Date("2050-01-15T12:00:00.000Z"));
+    const mortgage = {
+      originalLoanAmount: 100_000,
+      currentBalance: 100,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date(2020, 0, 15), // mid-month => inferred lag of 2 months
+      monthlyPayment: 60,
+      balanceAsOfDate: new Date(2050, 0, 1),
+    };
+
+    expect(getPaymentStartLagMonths(mortgage)).toBe(2);
+    // Regression: before lag-inclusive cap, this returned null at term end.
+    expect(getPayoffYearsWithExtra(mortgage, 0)).toBe(0);
+    expect(getPayoffYearsWithExtraWithTolerance(mortgage, 0)).toBe(0);
   });
 });
 

@@ -38,6 +38,22 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ## Active tasks
 
+### Audit synthesis — Ship phase (2026-04-03 full audit)
+
+*Source:* [`docs/audits/synthesis/2026-04-03-audit-synthesis.md`](audits/synthesis/2026-04-03-audit-synthesis.md) **Ship** triage. *Promoted 2026-04-03.*
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Security: Stripe webhook user resolution precedence** | `syncSubscriptionToDb` resolves app user by Stripe customer mapping first, validates metadata `appUserId` mismatch via warning telemetry, and prevents wrong-user subscription/tier update writes. Add test coverage for mismatch case in `app/app/api/billing/webhook/route.test.ts`. |
+| 2 | **Growth: onboarding PATCH failure UX** | `OnboardingPanel` displays user-visible error when onboarding PATCH fails, does not silently swallow errors, and keeps retry path available. Busy state resets reliably on both success and failure. |
+| 3 | **Math: payoff-years lag consistency** | `getPayoffYearsWithExtra` and `getPayoffYearsWithExtraWithTolerance` include payment-start lag in remaining-term cap to align with strict payoff projection helpers. Add regression test(s) in `app/lib/amortization.test.ts` for near-term-end lag case. |
+
+- [x] **Ship 4-03 #1** — Stripe webhook user resolution precedence + mismatch warning
+- [x] **Ship 4-03 #2** — Onboarding PATCH failure UX + retry-safe behavior
+- [x] **Ship 4-03 #3** — Payoff-years lag consistency + regression tests
+
+---
+
 ### Audit synthesis — Ship phase (2026-04-01 full audit)
 
 *Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md) **Ship** triage. *Completed by builder 2026-04-01.*
@@ -59,6 +75,23 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 - [x] **Ship 5** — Verified PATCH `where` includes `userId`
 - [x] **Ship 6** — Multi-mortgage doc + import notice
 - [x] **Ship 7** — Documentation link sweep
+
+---
+
+### Audit synthesis — Ship run **-2** (tablet / `md`–`lg` calculator gap)
+
+*Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis-2.md`](audits/synthesis/2026-04-01-audit-synthesis-2.md) **Ship** item 1 (expanded to all calculator surfaces). *Completed by builder 2026-04-01.*
+
+**Problem:** Marketing calculators used `md:hidden` for `MobileToolShell` but `hidden lg:grid` for the desktop two-column layout, so **768px ≤ width &lt; 1024px** showed **no** inputs or results (public `/tools/*`, `/investment-property-calculator`, and signed-in `/calculators/*` — same components).
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Align breakpoints** | Desktop grid uses **`md:grid` / `md:grid-cols-12`** and column spans use **`md:col-span-*`** so the desktop layout appears at the same breakpoint where `md:hidden` hides the mobile shell (≥768px). |
+| 2 | **Coverage** | Applies to all four marketing calculator components: `public-calculator.tsx`, `brrr-calculator.tsx`, `str-ltr-calculator.tsx`, `fix-and-flip-calculator.tsx` (covers both `/tools/...` and `/calculators/...` pages that embed them). |
+| 3 | **Verification** | At **768px** and **900px** (or any width in 768–1023), each calculator shows full inputs + results; at **&lt;768px** mobile shell still works; at **≥1024px** desktop layout unchanged. |
+
+- [x] **Ship -2 #1** — Tablet breakpoint fix (`md` desktop grid + spans)
+- [x] **Ship -2 #2** — Mortgage `POST` / `PATCH` rate limits (`properties:mortgage-post`, `properties:mortgage-patch`, 60/hr; `security-audit.md` §6)
 
 ---
 

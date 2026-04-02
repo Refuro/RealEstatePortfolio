@@ -46,7 +46,7 @@ function DealPortfolioCompareBlock({
   if (empty) {
     return (
       <MobileSectionCard className="space-y-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+        <h3 className="text-sm font-semibold text-foreground">
           Compared to your portfolio
         </h3>
         <p className="text-sm text-muted">
@@ -65,7 +65,7 @@ function DealPortfolioCompareBlock({
   return (
     <MobileSectionCard className="space-y-3">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+        <h3 className="text-sm font-semibold text-foreground">
           Compared to your portfolio
         </h3>
         <p className="mt-1 text-xs text-muted">
@@ -77,7 +77,7 @@ function DealPortfolioCompareBlock({
       <div className="overflow-x-auto">
         <table className="w-full min-w-[280px] text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-[11px] uppercase tracking-wide text-muted">
+            <tr className="border-b border-border text-left text-[11px] text-muted">
               <th className="py-2 pr-2 font-medium">Metric</th>
               <th className="py-2 pr-2 font-medium">This deal</th>
               <th className="py-2 font-medium">Portfolio</th>
@@ -1404,7 +1404,10 @@ export function DealAnalyzerForm({
 
       {/* Mobile sticky results bar */}
       {!needsInputGuidance && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 pt-2.5 pb-[max(0.625rem,env(safe-area-inset-bottom,0px))] md:hidden">
+        <div
+          className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 pt-2.5 md:hidden"
+          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
+        >
           <div className="flex items-center justify-between gap-3 text-sm">
             <div className="min-w-0">
               <p className="text-[11px] text-muted">Cash flow</p>

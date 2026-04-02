@@ -20,7 +20,13 @@ export type CashFlowDatum = {
   propertyId: string;
 };
 
-export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
+export function CashFlowChart({
+  data,
+  embedded,
+}: {
+  data: CashFlowDatum[];
+  embedded?: boolean;
+}) {
   const isEmpty = data.length === 0;
   const allZero = data.length > 0 && data.every((d) => d.monthlyCashFlow === 0);
 
@@ -37,6 +43,7 @@ export function CashFlowChart({ data }: { data: CashFlowDatum[] }) {
       title="Monthly cash flow by property"
       isEmpty={isEmpty}
       emptyMessage="Add properties with rent, expenses, and mortgage to see cash flow."
+      embedded={embedded}
     >
       {!isEmpty && (
         <ResponsiveContainer width="100%" height="100%">

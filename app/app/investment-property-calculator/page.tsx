@@ -71,7 +71,36 @@ export default async function InvestmentPropertyCalculatorPage() {
             <Link href="/sign-up?intent=free" className="font-medium text-foreground hover:underline">
               create a free account
             </Link>{" "}
-            (calculator inputs are not transferred automatically).
+            (calculator inputs are not transferred automatically). Comparing products? See the{" "}
+            <Link href="/alternatives/stessa" className="font-medium text-foreground hover:underline">
+              Stessa alternative
+            </Link>{" "}
+            page or{" "}
+            <Link href="/vs/spreadsheets" className="font-medium text-foreground hover:underline">
+              spreadsheets vs Veld
+            </Link>
+            . State pages:{" "}
+            <Link
+              href="/tools/investment-property/texas"
+              className="font-medium text-foreground hover:underline"
+            >
+              Texas
+            </Link>
+            ,{" "}
+            <Link
+              href="/tools/investment-property/florida"
+              className="font-medium text-foreground hover:underline"
+            >
+              Florida
+            </Link>
+            ,{" "}
+            <Link
+              href="/tools/investment-property/california"
+              className="font-medium text-foreground hover:underline"
+            >
+              California
+            </Link>
+            .
           </p>
         </div>
       </main>

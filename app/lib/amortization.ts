@@ -163,6 +163,31 @@ export function getProjectedBalanceAsOf(
 }
 
 /**
+ * Project a stored statement balance forward month-by-month from fromDate to toDate.
+ * Uses getPiForAmortization for the P&I and short-circuits on negative amortization.
+ */
+export function projectStoredBalanceForward(
+  storedBalance: number,
+  fromDate: Date,
+  mortgage: MortgageRecord,
+  toDate: Date
+): number {
+  const pi = getPiForAmortization(mortgage);
+  const monthlyRate = Number(mortgage.interestRate) / 12;
+  const fromNorm = new Date(fromDate.getFullYear(), fromDate.getMonth(), 1);
+  const toNorm = new Date(toDate.getFullYear(), toDate.getMonth(), 1);
+  let balance = storedBalance;
+  let current = new Date(fromNorm);
+  while (current < toNorm && balance > 0) {
+    current = new Date(current.getFullYear(), current.getMonth() + 1, 1);
+    const interest = balance * monthlyRate;
+    if (pi <= interest) break; // negative amortization — bail out
+    balance = Math.max(0, balance - Math.min(pi - interest, balance));
+  }
+  return Math.max(0, balance);
+}
+
+/**
  * Get effective balance for a mortgage: stored if balanceAsOfDate is within 6 months,
  * else projected from amortization. Falls back to currentBalance if projection returns 0.
  */
@@ -177,7 +202,14 @@ export function getEffectiveBalance(mortgage: MortgageRecord): number {
   sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
   if (balanceAsOf && balanceAsOf >= sixMonthsAgo) {
-    return currentBalance;
+    const fromNorm = new Date(balanceAsOf.getFullYear(), balanceAsOf.getMonth(), 1);
+    const toNorm = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (fromNorm < toNorm) {
+      // Statement is from a prior month — project it forward to today's month
+      const projected = projectStoredBalanceForward(currentBalance, balanceAsOf, mortgage, today);
+      return projected > 0 ? projected : currentBalance;
+    }
+    return currentBalance; // same calendar month — balance is current
   }
 
   const input: AmortizationInput = {
@@ -193,9 +225,14 @@ export function getEffectiveBalance(mortgage: MortgageRecord): number {
 }
 
 /**
- * Returns 'stored' when balanceAsOfDate exists and is within 6 months; else 'projected'.
+ * Returns the source tier for the effective balance:
+ * - 'stored': balanceAsOfDate is in the current calendar month (directly from statement)
+ * - 'stored_projected': balanceAsOfDate is in a prior month but within 6 months (stepped forward)
+ * - 'projected': balanceAsOfDate is older than 6 months or absent (projected from original loan)
  */
-export function getBalanceSource(mortgage: MortgageRecord): "stored" | "projected" {
+export function getBalanceSource(
+  mortgage: MortgageRecord
+): "stored" | "stored_projected" | "projected" {
   const balanceAsOf = mortgage.balanceAsOfDate
     ? new Date(mortgage.balanceAsOfDate)
     : null;
@@ -205,6 +242,9 @@ export function getBalanceSource(mortgage: MortgageRecord): "stored" | "projecte
   sixMonthsAgo.setDate(sixMonthsAgo.getDate() - 180);
 
   if (balanceAsOf && balanceAsOf >= sixMonthsAgo) {
+    const fromNorm = new Date(balanceAsOf.getFullYear(), balanceAsOf.getMonth(), 1);
+    const toNorm = new Date(today.getFullYear(), today.getMonth(), 1);
+    if (fromNorm < toNorm) return "stored_projected";
     return "stored";
   }
   return "projected";
@@ -244,15 +284,23 @@ export function getPaymentStartLagMonths(
   options?: PayoffToleranceOptions
 ): number {
   const { maxLagMonths } = mergeToleranceOptions(options);
-  if (!mortgage.paymentEffectiveDate) return 0;
-  const start = new Date(mortgage.startDate);
-  const effective = new Date(mortgage.paymentEffectiveDate);
-  const startNorm = new Date(start.getFullYear(), start.getMonth(), 1);
-  const effectiveNorm = new Date(effective.getFullYear(), effective.getMonth(), 1);
-  const months =
-    (effectiveNorm.getFullYear() - startNorm.getFullYear()) * 12 +
-    (effectiveNorm.getMonth() - startNorm.getMonth());
-  return Math.min(maxLagMonths, Math.max(0, months));
+  if (mortgage.paymentEffectiveDate) {
+    const start = new Date(mortgage.startDate);
+    const effective = new Date(mortgage.paymentEffectiveDate);
+    const startNorm = new Date(start.getFullYear(), start.getMonth(), 1);
+    const effectiveNorm = new Date(effective.getFullYear(), effective.getMonth(), 1);
+    const months =
+      (effectiveNorm.getFullYear() - startNorm.getFullYear()) * 12 +
+      (effectiveNorm.getMonth() - startNorm.getMonth());
+    return Math.min(maxLagMonths, Math.max(0, months));
+  }
+  // Auto-infer from closing date: mortgages that close mid-month collect prorated
+  // interest at closing and have a first payment due 2 months after the start month.
+  // First-of-month closings have a first payment due 1 month after the start month.
+  // Use getUTCDate() because startDate strings (e.g. "2023-05-13") are parsed as UTC midnight,
+  // and getDate() would shift the day in negative-offset timezones.
+  const startDay = new Date(mortgage.startDate).getUTCDate();
+  return Math.min(maxLagMonths, startDay > 1 ? 2 : 1);
 }
 
 export function getToleranceResidualThreshold(
@@ -325,7 +373,8 @@ export function getPayoffProjection(mortgage: MortgageRecord): PayoffProjection 
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
   const totalTermMonths = termYears * 12;
-  const remainingMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+  const lagMonths = getPaymentStartLagMonths(mortgage);
+  const remainingMonths = Math.max(0, totalTermMonths - monthsSinceStartDate + lagMonths);
 
   let runningBalance = balance;
   let periodStart = new Date(startOfCurrentMonth.getFullYear(), startOfCurrentMonth.getMonth() + 1, 1);
@@ -409,7 +458,8 @@ export function getMonthsToPayoffWithExtraStrict(
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
   const totalTermMonths = termYears * 12;
-  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+  const lagMonthsStrict = getPaymentStartLagMonths(mortgage);
+  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate + lagMonthsStrict);
   const cap = Math.min(maxMonths, remainingTermMonths);
 
   let runningBalance = balance;
@@ -458,7 +508,8 @@ export function getMonthsToPayoffWithExtraWithTolerance(
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
   const totalTermMonths = termYears * 12;
-  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate);
+  const lagMonthsTol = getPaymentStartLagMonths(mortgage, options);
+  const remainingTermMonths = Math.max(0, totalTermMonths - monthsSinceStartDate + lagMonthsTol);
   const cap = Math.min(maxMonths, remainingTermMonths);
 
   let runningBalance = balance;
@@ -597,7 +648,8 @@ export function getPayoffYearsWithExtra(
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
-  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+  const lagMonths = getPaymentStartLagMonths(mortgage);
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart + lagMonths);
 
   const months = getMonthsToPayoffWithExtraStrict(
     mortgage,
@@ -631,7 +683,8 @@ export function getPayoffYearsWithExtraWithTolerance(
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
-  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+  const lagMonths = getPaymentStartLagMonths(mortgage, options);
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart + lagMonths);
 
   const months = getMonthsToPayoffWithExtraWithTolerance(
     mortgage,

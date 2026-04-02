@@ -16,30 +16,31 @@ export function WorkspaceNavMobile({
   mortgageHref,
 }: WorkspaceNavMobileProps) {
   return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+    <div className="rounded-xl border border-border bg-card/70 p-2 shadow-sm">
+      <p className="px-1 text-xs font-medium text-muted">Quick workspace links</p>
+      <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         <Link
           href={propertyHref}
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
+          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
         >
           {propertyLabel}
         </Link>
         <Link
           href={modelingHref}
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
+          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
         >
           Modeling
         </Link>
         <Link
           href={mortgageHref}
-          className="rounded-xl border border-border bg-background px-3 py-2.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
+          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
         >
           Mortgage
         </Link>
       </div>
       <Link
         href="/export/portfolio-summary"
-        className="flex min-h-11 w-full items-center justify-center rounded-xl border border-border bg-background px-3 py-2.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
+        className="mt-1 inline-flex min-h-11 items-center px-1 text-sm font-medium text-foreground underline decoration-border underline-offset-4 hover:text-accent"
       >
         Print portfolio summary
       </Link>

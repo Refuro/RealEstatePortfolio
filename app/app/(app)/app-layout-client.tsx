@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -11,6 +12,7 @@ import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
 import { OnboardingPanel } from "./onboarding-panel";
 import { Footer } from "@/components/footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import * as Sentry from "@sentry/nextjs";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
@@ -182,7 +184,18 @@ export function AppLayoutClient({
         >
           <Menu size={24} />
         </button>
-        <div onClick={closeDrawer} className="min-w-0 flex-1">
+        <div
+          onClick={closeDrawer}
+          className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
+        >
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <div className="flex size-11 shrink-0 items-center justify-center">
@@ -193,6 +206,14 @@ export function AppLayoutClient({
       {/* Desktop sidebar - hidden on < md */}
       <aside className="hidden md:flex w-56 xl:w-64 2xl:w-72 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <AppNav
@@ -232,10 +253,19 @@ export function AppLayoutClient({
         }`}
       >
         <div className="flex h-14 items-center gap-2 border-b border-border px-4" onClick={closeDrawer}>
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <AppNav
           onClose={closeDrawer}
+          onOpenMobileMenu={() => setDrawerOpen(true)}
           showAdmin={showAdmin}
           propertyCount={bannerProps?.propertyCount ?? 0}
         />
@@ -249,7 +279,7 @@ export function AppLayoutClient({
 
       {/* Main content + footer */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
+        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
           <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
             {bannerProps && (
               <>
@@ -267,10 +297,12 @@ export function AppLayoutClient({
             {children}
           </div>
         </main>
-        <div className="app-safe-area-bottom">
+        {/* Footer: desktop only — mobile has the bottom nav bar instead */}
+        <div className="hidden md:block">
           <Footer supportEmail={supportEmail} />
         </div>
       </div>
+      <MobileBottomNav />
     </div>
     </DraftProvider>
   );
