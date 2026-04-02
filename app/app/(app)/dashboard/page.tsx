@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { Building2 } from "lucide-react";
 import { getAppUser } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
@@ -100,14 +100,7 @@ export default async function DashboardPage({
         <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
         <div>
           <div className="rounded-lg border border-border bg-card p-8 text-center shadow-sm">
-            <Image
-              src="/empty-properties.png"
-              alt=""
-              width={96}
-              height={96}
-              className="mx-auto mb-4 size-24 object-contain opacity-80"
-              aria-hidden
-            />
+            <Building2 className="mx-auto mb-4 size-12 text-muted/40" aria-hidden />
             <h1 className="text-2xl font-semibold text-foreground">
               Welcome to Veld
             </h1>
@@ -118,7 +111,7 @@ export default async function DashboardPage({
             <div className="mt-6 flex justify-center">
               <Link
                 href="/properties/new"
-                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
               >
                 Add your first property
               </Link>

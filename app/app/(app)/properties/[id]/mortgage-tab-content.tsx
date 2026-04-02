@@ -337,7 +337,7 @@ export function MortgageTabContent({
   if (mortgageData.length === 0) {
     return (
       <div className="rounded-lg border border-border bg-card p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+        <h2 className="text-sm font-semibold text-foreground">
           Mortgage simulator
         </h2>
         <p className="mt-3 text-sm text-muted">
@@ -362,12 +362,12 @@ export function MortgageTabContent({
     <div
       className={
         isMortgageWorkspace
-          ? "h-full rounded-xl border border-border/70 bg-card p-4 shadow-sm xl:min-h-[340px]"
+          ? "h-full rounded-xl border border-border bg-card p-4 shadow-sm xl:min-h-[340px]"
           : "rounded-lg border border-border bg-card p-4"
       }
     >
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+        <h3 className="text-sm font-semibold text-foreground">
           Simulation controls
         </h3>
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
@@ -416,7 +416,7 @@ export function MortgageTabContent({
 
       <div className="space-y-3">
         <div className="rounded-md bg-background/45 p-3">
-          <p className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-muted">
+          <p className="mb-2 text-[11px] font-medium text-muted">
             Mortgage and payment
           </p>
           <div className="grid gap-2.5 sm:grid-cols-2">
@@ -443,7 +443,7 @@ export function MortgageTabContent({
                 </select>
               </label>
             ) : (
-              <div className="rounded-md border border-border/70 bg-subtle/35 px-3 py-2.5 sm:col-span-2">
+              <div className="rounded-md border border-border bg-subtle/40 px-3 py-2.5 sm:col-span-2">
                 <p className="text-[11px] text-muted">Selected mortgage</p>
                 <p className="mt-1 text-base font-semibold text-foreground">
                   {selectedMortgage
@@ -472,7 +472,7 @@ export function MortgageTabContent({
               />
             </label>
 
-            <div className="rounded-md border border-border/70 bg-subtle/35 px-3 py-2.5">
+            <div className="rounded-md border border-border bg-subtle/40 px-3 py-2.5">
               <p className="text-[11px] text-muted">Base P&I</p>
               <p className="mt-1 text-base font-semibold text-foreground">
                 {normalizedMortgage
@@ -484,7 +484,7 @@ export function MortgageTabContent({
         </div>
 
         <div className="rounded-md bg-background/45 p-3">
-          <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-muted">
+          <p className="mb-1 text-[11px] font-medium text-muted">
             Pay off earlier
           </p>
           {baselineProjection?.toleranceApplied && (
@@ -623,7 +623,7 @@ export function MortgageTabContent({
     <div
       className={
         isMortgageWorkspace
-          ? "flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm"
+          ? "flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm"
           : "rounded-lg border border-border bg-card p-4"
       }
     >
@@ -840,7 +840,7 @@ export function MortgageTabContent({
     <div className="space-y-3">
       <MobileSectionCard className="space-y-4">
         <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-foreground">
             Payoff strategy
           </h3>
           <div className="flex flex-wrap items-center gap-2 text-xs">
@@ -868,7 +868,7 @@ export function MortgageTabContent({
         </div>
 
         <MobileSectionCard tone="subtle" className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+          <p className="text-[11px] font-medium text-muted">
             Mortgage and payment
           </p>
           {mortgageData.length > 1 ? (
@@ -931,7 +931,7 @@ export function MortgageTabContent({
         </MobileSectionCard>
 
         <MobileSectionCard tone="subtle" className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+          <p className="text-[11px] font-medium text-muted">
             Pay off earlier
           </p>
           {hasAnyPayoffTarget ? (

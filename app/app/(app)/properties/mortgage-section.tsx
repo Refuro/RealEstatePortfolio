@@ -74,7 +74,7 @@ export function MortgageSection({
         className={`flex items-center gap-2 ${embedded ? "justify-end" : "justify-between"}`}
       >
         {!embedded && (
-          <h2 className="mb-0 text-xs font-semibold uppercase tracking-wide text-muted">
+          <h2 className="mb-0 text-xs font-semibold text-muted">
             Mortgages
           </h2>
         )}

@@ -58,7 +58,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
       {userId && (
         <Link
           href="/dashboard"
-          className="text-muted hover:text-foreground"
+          className="text-muted transition-colors duration-150 hover:text-foreground"
           onClick={() => setMobileMenuOpen(false)}
         >
           Dashboard
@@ -66,21 +66,21 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
       )}
       <Link
         href="/tools"
-        className="text-muted hover:text-foreground"
+        className="text-muted transition-colors duration-150 hover:text-foreground"
         onClick={() => setMobileMenuOpen(false)}
       >
         Calculators
       </Link>
       <Link
         href="/pricing"
-        className="text-muted hover:text-foreground"
+        className="text-muted transition-colors duration-150 hover:text-foreground"
         onClick={() => setMobileMenuOpen(false)}
       >
         Pricing
       </Link>
       <Link
         href="/changelog"
-        className="text-muted hover:text-foreground"
+        className="text-muted transition-colors duration-150 hover:text-foreground"
         onClick={() => setMobileMenuOpen(false)}
       >
         Changelog
@@ -89,7 +89,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
         <>
           <Link
             href="/sign-in"
-            className="text-muted hover:text-foreground"
+            className="text-muted transition-colors duration-150 hover:text-foreground"
             onClick={() => setMobileMenuOpen(false)}
           >
             Sign in

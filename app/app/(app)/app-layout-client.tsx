@@ -12,6 +12,7 @@ import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
 import { OnboardingPanel } from "./onboarding-panel";
 import { Footer } from "@/components/footer";
+import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import * as Sentry from "@sentry/nextjs";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
@@ -264,6 +265,7 @@ export function AppLayoutClient({
         </div>
         <AppNav
           onClose={closeDrawer}
+          onOpenMobileMenu={() => setDrawerOpen(true)}
           showAdmin={showAdmin}
           propertyCount={bannerProps?.propertyCount ?? 0}
         />
@@ -277,7 +279,7 @@ export function AppLayoutClient({
 
       {/* Main content + footer */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
+        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
           <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
             {bannerProps && (
               <>
@@ -295,10 +297,12 @@ export function AppLayoutClient({
             {children}
           </div>
         </main>
-        <div className="app-safe-area-bottom">
+        {/* Footer: desktop only — mobile has the bottom nav bar instead */}
+        <div className="hidden md:block">
           <Footer supportEmail={supportEmail} />
         </div>
       </div>
+      <MobileBottomNav />
     </div>
     </DraftProvider>
   );

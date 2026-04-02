@@ -31,6 +31,31 @@
   --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Global focus ring — keyboard/AT navigation only, no mouse ring */
+/* color-mix() is required here because --accent is a hex value, not HSL components */
+:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
+  outline-offset: 2px;
+}
+
+/* Remove redundant outlines already replaced by :focus-visible above */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Input, select, textarea: hover affordance and smooth focus transition */
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+select,
+textarea {
+  transition: border-color 150ms, box-shadow 150ms;
+}
+
+input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):hover:not(:focus),
+select:hover:not(:focus),
+textarea:hover:not(:focus) {
+  border-color: color-mix(in srgb, var(--border), var(--foreground) 22%);
+}
+
 /* System preference: dark when user hasn't set explicit theme */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {

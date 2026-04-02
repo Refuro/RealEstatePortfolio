@@ -104,6 +104,135 @@ export default async function PricingPage() {
             are covered in our Terms.
           </p>
 
+          {/* Feature comparison — desktop table */}
+          <section className="mt-12 hidden md:block">
+            <h2 className="mb-6 text-center text-base font-semibold text-foreground">
+              Compare plans
+            </h2>
+            <div className="overflow-hidden rounded-xl border border-border">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-subtle">
+                    <th className="px-4 py-3 text-left font-medium text-muted">Feature</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted">Free</th>
+                    <th className="px-4 py-3 text-center font-medium text-muted">Investor</th>
+                    <th className="px-4 py-3 text-center font-medium text-foreground">Pro</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(
+                    [
+                      ["Properties tracked", "1", "5", "20"],
+                      ["Saved deals", "5", "20", "50"],
+                      ["Rent &amp; value estimates", true, true, true],
+                      ["Estimate pool (per hour)", "5/hr", "10/hr", "20/hr"],
+                      ["Deal analyzer", true, true, true],
+                      ["Scenario modeling", true, true, true],
+                      ["Mortgage simulator", true, true, true],
+                      ["Portfolio charts", true, true, true],
+                    ] as [string, string | boolean, string | boolean, string | boolean][]
+                  ).map(([feature, free, investor, pro], i) => (
+                    <tr
+                      key={i}
+                      className={`border-b border-border last:border-0 ${i % 2 !== 0 ? "bg-subtle/30" : ""}`}
+                    >
+                      <td
+                        className="px-4 py-3 text-foreground"
+                        dangerouslySetInnerHTML={{ __html: feature }}
+                      />
+                      {([free, investor, pro] as (string | boolean)[]).map((val, j) => (
+                        <td key={j} className="px-4 py-3 text-center">
+                          {val === true ? (
+                            <span className="font-semibold text-positive">✓</span>
+                          ) : val === false ? (
+                            <span className="text-muted/40">—</span>
+                          ) : (
+                            <span className={j === 2 ? "font-medium text-foreground" : "text-foreground"}>
+                              {val as string}
+                            </span>
+                          )}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* Feature comparison — mobile accordion */}
+          <section className="mt-8 md:hidden">
+            <details className="rounded-xl border border-border">
+              <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-muted">
+                Compare all features
+              </summary>
+              <div className="divide-y divide-border px-4 pb-4">
+                {[
+                  ["Properties tracked", "1", "5", "20"],
+                  ["Saved deals", "5", "20", "50"],
+                  ["Rent & value estimates", "✓", "✓", "✓"],
+                  ["Deal analyzer", "✓", "✓", "✓"],
+                  ["Scenario modeling", "✓", "✓", "✓"],
+                  ["Mortgage simulator", "✓", "✓", "✓"],
+                  ["Portfolio charts", "✓", "✓", "✓"],
+                ].map(([feature, free, investor, pro], i) => (
+                  <div
+                    key={i}
+                    className="flex items-center justify-between gap-4 py-2.5 text-sm"
+                  >
+                    <span className="text-foreground">{feature}</span>
+                    <div className="flex shrink-0 gap-4 text-xs text-muted">
+                      <span>
+                        Free: <span className="font-medium text-foreground">{free}</span>
+                      </span>
+                      <span>
+                        Inv: <span className="font-medium text-foreground">{investor}</span>
+                      </span>
+                      <span>
+                        Pro: <span className="font-medium text-foreground">{pro}</span>
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </details>
+          </section>
+
+          {/* Pricing FAQ */}
+          <section className="mt-10">
+            <h2 className="mb-4 text-base font-semibold text-foreground">Common questions</h2>
+            <div className="space-y-2">
+              {[
+                {
+                  q: "Does the Free plan require a credit card?",
+                  a: "No. The Free plan is completely free with no card required. You only need a card when upgrading to Investor or Pro.",
+                },
+                {
+                  q: "Can I switch plans later?",
+                  a: "Yes. All your data — properties, deals, and settings — carries over automatically when you upgrade or downgrade.",
+                },
+                {
+                  q: "What happens when I reach my property limit?",
+                  a: "You can view all your existing properties but cannot add new ones until you upgrade or remove a property.",
+                },
+                {
+                  q: "Can I cancel anytime?",
+                  a: "Yes. Cancel anytime from Settings or the billing portal. Your plan reverts to Free at the end of the billing period and your data stays intact.",
+                },
+              ].map(({ q, a }, i) => (
+                <details
+                  key={i}
+                  className="rounded-xl border border-border bg-card"
+                >
+                  <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-foreground transition-colors duration-150 hover:text-foreground/80">
+                    {q}
+                  </summary>
+                  <p className="px-5 pb-4 text-sm text-muted">{a}</p>
+                </details>
+              ))}
+            </div>
+          </section>
+
           {!user && (
             <section className="mt-12">
               <h2 className="mb-6 text-center text-xl font-semibold text-foreground">

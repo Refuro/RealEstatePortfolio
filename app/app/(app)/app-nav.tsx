@@ -1,6 +1,6 @@
 "use client";
 
-import type { ComponentType } from "react";
+import { useEffect, type ComponentType } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useDraft } from "./draft-context";
@@ -38,6 +38,7 @@ const accountNav = [
 
 interface AppNavProps {
   onClose?: () => void;
+  onOpenMobileMenu?: () => void;
   showAdmin?: boolean;
   propertyCount?: number;
 }
@@ -111,6 +112,7 @@ function NavGroup({
 
 export function AppNav({
   onClose,
+  onOpenMobileMenu,
   showAdmin,
   propertyCount = 0,
 }: AppNavProps) {
@@ -122,6 +124,13 @@ export function AppNav({
   const adminItems = showAdmin
     ? [{ href: "/admin", label: "Admin", icon: Shield }]
     : [];
+
+  useEffect(() => {
+    if (!onOpenMobileMenu) return;
+    const handler = () => onOpenMobileMenu();
+    document.addEventListener("open-mobile-menu", handler);
+    return () => document.removeEventListener("open-mobile-menu", handler);
+  }, [onOpenMobileMenu]);
 
   return (
     <nav className="flex flex-1 flex-col gap-0 overflow-y-auto py-2">

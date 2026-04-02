@@ -38,6 +38,22 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ## Active tasks
 
+### Audit synthesis — Ship phase (2026-04-03 full audit)
+
+*Source:* [`docs/audits/synthesis/2026-04-03-audit-synthesis.md`](audits/synthesis/2026-04-03-audit-synthesis.md) **Ship** triage. *Promoted 2026-04-03.*
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Security: Stripe webhook user resolution precedence** | `syncSubscriptionToDb` resolves app user by Stripe customer mapping first, validates metadata `appUserId` mismatch via warning telemetry, and prevents wrong-user subscription/tier update writes. Add test coverage for mismatch case in `app/app/api/billing/webhook/route.test.ts`. |
+| 2 | **Growth: onboarding PATCH failure UX** | `OnboardingPanel` displays user-visible error when onboarding PATCH fails, does not silently swallow errors, and keeps retry path available. Busy state resets reliably on both success and failure. |
+| 3 | **Math: payoff-years lag consistency** | `getPayoffYearsWithExtra` and `getPayoffYearsWithExtraWithTolerance` include payment-start lag in remaining-term cap to align with strict payoff projection helpers. Add regression test(s) in `app/lib/amortization.test.ts` for near-term-end lag case. |
+
+- [x] **Ship 4-03 #1** — Stripe webhook user resolution precedence + mismatch warning
+- [x] **Ship 4-03 #2** — Onboarding PATCH failure UX + retry-safe behavior
+- [x] **Ship 4-03 #3** — Payoff-years lag consistency + regression tests
+
+---
+
 ### Audit synthesis — Ship phase (2026-04-01 full audit)
 
 *Source:* [`docs/audits/synthesis/2026-04-01-audit-synthesis.md`](audits/synthesis/2026-04-01-audit-synthesis.md) **Ship** triage. *Completed by builder 2026-04-01.*

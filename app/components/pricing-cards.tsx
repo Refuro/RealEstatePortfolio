@@ -244,12 +244,14 @@ export function PricingCards({
                 : "text-muted hover:bg-subtle hover:text-foreground"
             } flex-1 md:flex-none`}
           >
-            <span>Annual billing</span>
-            {billingCycle !== "yearly" && (
-              <span className="ml-1 rounded-full bg-positive/15 px-1.5 py-0.5 text-[10px] font-semibold text-positive">
-                Save
-              </span>
-            )}
+            <span className="inline-flex items-center gap-1.5">
+              Annual billing
+              {billingCycle !== "yearly" && (
+                <span className="rounded-full bg-positive/15 px-1.5 py-0.5 text-[10px] font-semibold text-positive">
+                  Save
+                </span>
+              )}
+            </span>
           </button>
         </div>
         <p className="mt-2 text-center text-sm text-muted">
@@ -313,7 +315,7 @@ export function PricingCards({
         return (
           <div
             key={plan.tier}
-            className={`rounded-xl border bg-card/95 p-4 shadow-sm md:p-5 ${cardBorder}`}
+            className={`flex flex-col rounded-xl border bg-card/95 p-4 shadow-sm md:p-5 ${cardBorder}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -409,7 +411,7 @@ export function PricingCards({
                 </ul>
               </MobileCollapsible>
             </div>
-            <div className="mt-5">
+            <div className="mt-auto pt-5">
               {plan.tier === "free" && !showSignUp && isCurrent && (
                 <span className="inline-flex w-full items-center justify-center rounded-md bg-subtle px-3 py-2 text-sm text-muted md:w-auto">
                   Current plan

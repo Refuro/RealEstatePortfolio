@@ -9,6 +9,7 @@ import {
   getPayoffProjection,
   getPaymentStartLagMonths,
   getPayoffYearsWithExtra,
+  getPayoffYearsWithExtraWithTolerance,
   getPiForAmortization,
   getProjectedBalanceAsOf,
   getToleranceAwarePayoffProjection,
@@ -530,6 +531,24 @@ describe("getExtraPaymentForYearsEarlier / getPayoffYearsWithExtra (strict canon
       expect(Number.isInteger(years)).toBe(true);
       expect(years).toBeGreaterThanOrEqual(0);
     }
+  });
+
+  it("includes payment-start lag in payoff-years cap near term end", () => {
+    vi.setSystemTime(new Date("2050-01-15T12:00:00.000Z"));
+    const mortgage = {
+      originalLoanAmount: 100_000,
+      currentBalance: 100,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date(2020, 0, 15), // mid-month => inferred lag of 2 months
+      monthlyPayment: 60,
+      balanceAsOfDate: new Date(2050, 0, 1),
+    };
+
+    expect(getPaymentStartLagMonths(mortgage)).toBe(2);
+    // Regression: before lag-inclusive cap, this returned null at term end.
+    expect(getPayoffYearsWithExtra(mortgage, 0)).toBe(0);
+    expect(getPayoffYearsWithExtraWithTolerance(mortgage, 0)).toBe(0);
   });
 });
 

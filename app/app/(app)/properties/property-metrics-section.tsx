@@ -19,8 +19,8 @@ type Metrics = {
 
 export function PropertyMetricsSection({ metrics }: { metrics: Metrics }) {
   return (
-    <section className="rounded-xl border border-border/70 bg-card p-4 shadow-sm">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+    <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+      <h2 className="text-sm font-semibold text-muted mb-4">
         Investment metrics
       </h2>
       <dl className="flex flex-wrap gap-x-6 gap-y-3">

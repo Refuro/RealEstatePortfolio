@@ -33,7 +33,7 @@ export function PropertiesFiltersMobile({
   return (
     <div className="grid gap-3 md:hidden">
       <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <span className="text-xs font-semibold text-muted">
           Filter
         </span>
         <select
@@ -50,7 +50,7 @@ export function PropertiesFiltersMobile({
       </label>
 
       <label className="grid gap-1.5">
-        <span className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <span className="text-xs font-semibold text-muted">
           Sort
         </span>
         <select

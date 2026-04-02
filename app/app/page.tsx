@@ -178,11 +178,10 @@ export default async function HomePage({
                   )}
                 </div>
                 {!userId && (
-                  <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-                    <span className="rounded-full border border-border/70 px-3 py-1">No card required for Free</span>
-                    <span className="rounded-full border border-border/70 px-3 py-1">Start in about 60 seconds</span>
-                    <span className="rounded-full border border-border/70 px-3 py-1">Cancel anytime</span>
-                  </div>
+                  <p className="text-sm text-muted">
+                    Free plan - <span className="font-medium text-foreground">no card required</span>.
+                    Your first property in about 60 seconds.
+                  </p>
                 )}
               </div>
 
@@ -216,18 +215,18 @@ export default async function HomePage({
           <div className="mx-auto max-w-4xl">
             <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-8">
               <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground">&ldquo;Finally replaced my spreadsheet.&rdquo;</span>
-                {" "}— Small landlord, 4 properties
+                Built for small landlords managing{" "}
+                <span className="font-medium text-foreground">1-10 properties</span>
               </p>
               <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
               <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground">&ldquo;The deal analyzer alone is worth it.&rdquo;</span>
-                {" "}— First-time investor
+                Replaces your{" "}
+                <span className="font-medium text-foreground">portfolio spreadsheet</span> in
+                about 5 minutes
               </p>
               <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
               <p className="text-sm text-muted">
-                <span className="font-semibold text-foreground">&ldquo;Clear numbers without the chaos.&rdquo;</span>
-                {" "}— Portfolio of 8 rentals
+                Free plan with <span className="font-medium text-foreground">no card required</span>
               </p>
             </div>
           </div>
@@ -263,6 +262,11 @@ export default async function HomePage({
         {/* Value props */}
         <section className="border-b border-border px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-5xl">
+            <div className="mb-3 flex justify-center sm:justify-start">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                Why Veld
+              </span>
+            </div>
             <h2 className="mb-2 text-2xl font-semibold text-foreground">
               Everything your portfolio needs
             </h2>
@@ -291,6 +295,11 @@ export default async function HomePage({
         {/* How it works */}
         <section className="border-b border-border bg-card/40 px-4 py-12 sm:py-16">
           <div className="mx-auto max-w-5xl">
+            <div className="mb-3 flex justify-center sm:justify-start">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                How it works
+              </span>
+            </div>
             <h2 className="mb-2 text-2xl font-semibold text-foreground">How it works</h2>
             <p className="mb-10 text-base text-muted">Set up your portfolio in minutes. No learning curve.</p>
             <div className="grid grid-cols-1 gap-8 md:grid-cols-3">

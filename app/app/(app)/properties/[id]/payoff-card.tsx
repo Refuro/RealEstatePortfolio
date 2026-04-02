@@ -193,7 +193,7 @@ export function PayoffCard({ mortgages }: { mortgages: MortgageForPayoff[] }) {
   if (mortgages.length === 0) {
     return (
       <section className="rounded-lg border border-border bg-card p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+        <h2 className="text-sm font-semibold text-muted mb-4">
           Payoff & refinance
         </h2>
         <p className="text-sm text-muted">
@@ -205,7 +205,7 @@ export function PayoffCard({ mortgages }: { mortgages: MortgageForPayoff[] }) {
 
   return (
     <section className="rounded-lg border border-border bg-card p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+      <h2 className="text-sm font-semibold text-muted mb-4">
         Payoff & refinance
       </h2>
       <ul className="space-y-4">

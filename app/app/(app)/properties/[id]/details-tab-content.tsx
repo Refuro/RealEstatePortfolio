@@ -69,7 +69,7 @@ export function DetailsTabContent({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+        <h2 className="text-sm font-semibold text-muted">
           Data & settings
         </h2>
         <p className="mt-1 max-w-xl text-sm text-muted">

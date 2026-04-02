@@ -861,7 +861,7 @@ function StepMortgage({
 
       {addMortgage === true && (
         <div className="mt-6 rounded-md border border-border bg-subtle/50 p-4">
-          <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="mb-3 text-sm font-semibold text-muted">
             Mortgage details
           </h3>
           <MortgageFormFields
@@ -888,7 +888,7 @@ function StepReview({ data }: { data: WizardData }) {
     <div className="space-y-6">
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-muted">
             Address & basics
           </h3>
           <a
@@ -923,7 +923,7 @@ function StepReview({ data }: { data: WizardData }) {
 
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-muted">
             Purchase
           </h3>
           <a
@@ -963,7 +963,7 @@ function StepReview({ data }: { data: WizardData }) {
 
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-muted">
             Income & expenses
           </h3>
           <a
@@ -1011,7 +1011,7 @@ function StepReview({ data }: { data: WizardData }) {
 
       <div className="rounded-lg border border-border bg-card p-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-muted">
             Mortgage
           </h3>
           <a
@@ -1439,7 +1439,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
         aria-label="Add property sections"
         className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
       >
-        <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
+        <p className="mb-2 text-xs font-medium text-muted">Jump to</p>
         <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
           {ADD_SECTION_NAV.map((s) => (
             <li key={s.id} className="shrink-0">

@@ -19,7 +19,7 @@ export default function AppFixAndFlipCalculatorPage() {
       </nav>
 
       <header className="mt-6">
-        <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculator</p>
+        <p className="text-sm font-medium text-muted">Calculator</p>
         <h1 className="mt-2 text-2xl font-semibold text-foreground md:text-3xl">
           Fix and flip calculator
         </h1>

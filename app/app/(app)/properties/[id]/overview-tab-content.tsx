@@ -41,7 +41,7 @@ export function OverviewTabContent({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">Overview</h2>
+        <h2 className="text-sm font-semibold text-foreground">Overview</h2>
         <p className="mt-1 max-w-xl text-sm text-muted">
           Performance and input snapshot. Use the Details tab for a full ledger, or{" "}
           <Link href={`/properties/${propertyId}/edit`} className="font-medium text-accent hover:underline">
@@ -203,7 +203,7 @@ export function OverviewTabContent({
           </div>
           <MobileCollapsible label="Supporting metrics">
             <div className="mt-3 rounded-md border border-border bg-subtle/20 px-3 py-3">
-            <p className="hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">Supporting metrics</p>
+            <p className="hidden text-xs font-medium text-muted md:block">Supporting metrics</p>
             <div className="mt-0 grid grid-cols-2 gap-3 md:mt-3 lg:grid-cols-4">
               <div>
                 <p className="text-xs font-medium text-muted">NOI</p>

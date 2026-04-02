@@ -3,7 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-04-02-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-04-02)
+- [Latest audit synthesis](audits/synthesis/2026-04-03-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-04-03, parallel agents)
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)

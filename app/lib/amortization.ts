@@ -648,7 +648,8 @@ export function getPayoffYearsWithExtra(
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
-  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+  const lagMonths = getPaymentStartLagMonths(mortgage);
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart + lagMonths);
 
   const months = getMonthsToPayoffWithExtraStrict(
     mortgage,
@@ -682,7 +683,8 @@ export function getPayoffYearsWithExtraWithTolerance(
     (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
       (startOfCurrentMonth.getMonth() - startNorm.getMonth())
   );
-  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart);
+  const lagMonths = getPaymentStartLagMonths(mortgage, options);
+  const remainingTermMonths = Math.max(0, termYears * 12 - monthsSinceStart + lagMonths);
 
   const months = getMonthsToPayoffWithExtraWithTolerance(
     mortgage,
