@@ -23,6 +23,8 @@ type PublicCalculatorProps = {
   showCta?: boolean;
   landingVariant?: string;
   surface?: "marketing" | "app";
+  /** State-typical monthly rent pre-fill from HUD FMR data. Overrides the generic default. */
+  initialMonthlyRent?: number;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -35,12 +37,13 @@ export function PublicCalculator({
   showCta = false,
   landingVariant,
   surface = "marketing",
+  initialMonthlyRent,
 }: PublicCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
   const isAppShell = surface === "app";
   const [purchasePrice, setPurchasePrice] = useState("300000");
-  const [monthlyRent, setMonthlyRent] = useState("2500");
+  const [monthlyRent, setMonthlyRent] = useState(String(initialMonthlyRent ?? 2500));
   const [monthlyExpenses, setMonthlyExpenses] = useState("700");
   const [downPaymentPercent, setDownPaymentPercent] = useState("20");
   const [interestRatePercent, setInterestRatePercent] = useState("7");
@@ -532,9 +535,9 @@ export function PublicCalculator({
         </MobileToolShell>
       </div>
 
-      <div className="hidden gap-5 lg:grid lg:grid-cols-12">
-        <div className={compact ? "lg:col-span-7" : "lg:col-span-8"}>{inputsContent}</div>
-        <div className={compact ? "lg:col-span-5" : "lg:col-span-4"}>{resultsContent}</div>
+      <div className="hidden gap-5 md:grid md:grid-cols-12">
+        <div className={compact ? "md:col-span-7" : "md:col-span-8"}>{inputsContent}</div>
+        <div className={compact ? "md:col-span-5" : "md:col-span-4"}>{resultsContent}</div>
       </div>
     </section>
   );

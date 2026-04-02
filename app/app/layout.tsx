@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { Geist, Geist_Mono } from "next/font/google";
 import { PostHogGate } from "@/components/analytics/posthog-provider";
@@ -21,6 +21,12 @@ const geistMono = Geist_Mono({
 });
 
 const APP_URL = getAppOrigin();
+
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  width: "device-width",
+  initialScale: 1,
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(APP_URL),
@@ -114,7 +120,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#6366f1",
+          colorPrimaryForeground: "#ffffff",
+          borderRadius: "0.5rem",
+        },
+        elements: {
+          formButtonPrimary: "bg-accent hover:bg-accent-hover text-accent-foreground",
+        },
+      }}
+    >
       <html lang="en">
         <head>
           <meta name="apple-mobile-web-app-title" content="Veld" />

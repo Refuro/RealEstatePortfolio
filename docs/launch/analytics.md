@@ -66,6 +66,12 @@ Stable names live in `app/lib/analytics-events.ts`. **Existing** names are uncha
 | `clerk_user_id` | string | Clerk user id |
 | `plan_intent` | string | `free` \| `investor` \| `pro` \| `undecided` |
 | `plan_intent_source` | string | `url` \| `pricing_card` \| `landing_cta` \| `unknown` |
+| `utm_source` | string | Optional — from `localStorage` if the user hit a URL with UTM params within TTL (see below). |
+| `utm_medium` | string | Optional — e.g. `community` for Reddit/BP shared links per [`seo-phase-5-6-runbook.md`](seo-phase-5-6-runbook.md). |
+| `utm_campaign` | string | Optional |
+| `utm_content` | string | Optional |
+
+**UTM flow:** `PlanIntentUrlSync` calls `syncUtmFromSearchParams` on marketing pages (`app/lib/utm-attribution.ts`). Stored **30 days**; merged onto `user_signed_up` via `getUtmForAnalytics()` in `posthog-signup-once.tsx`. User must land with UTMs in the URL before sign-up (same browser).
 
 **Sample payload:**
 
@@ -73,7 +79,10 @@ Stable names live in `app/lib/analytics-events.ts`. **Existing** names are uncha
 {
   "clerk_user_id": "user_2abc…",
   "plan_intent": "investor",
-  "plan_intent_source": "url"
+  "plan_intent_source": "url",
+  "utm_source": "reddit",
+  "utm_medium": "community",
+  "utm_campaign": "organic_re_investing"
 }
 ```
 

@@ -11,9 +11,9 @@ import { formatCurrency } from "@/lib/format-currency";
 
 function ChartLoadingPlaceholder() {
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <div className="h-4 w-24 animate-pulse rounded bg-muted" />
-      <div className="mt-4 flex h-[240px] items-center justify-center rounded border border-dashed border-border bg-subtle/50 text-sm text-muted">
+    <div className="animate-pulse space-y-3">
+      <div className="h-4 w-24 rounded-md bg-subtle" />
+      <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border bg-subtle/50 text-sm text-muted">
         Loading charts…
       </div>
     </div>
@@ -149,9 +149,9 @@ export function DashboardCharts({
   if (isSingleProperty && singleProperty && debtVsValueFirst) {
     return (
       <div className="mt-8">
-        <div className="rounded-lg border border-border bg-card p-5">
+        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-base font-semibold uppercase tracking-wide text-muted">
+            <h3 className="text-sm font-semibold text-foreground">
               Property at a glance
             </h3>
             {singlePropertyId && (
@@ -301,38 +301,40 @@ export function DashboardCharts({
   // Multi-property: Tabbed portfolio chart workspace to reduce scroll.
   const activeChartPanel =
     activeChart === "equity" ? (
-      <EquityChart data={data.equity} />
+      <EquityChart data={data.equity} embedded />
     ) : activeChart === "debt_vs_value" ? (
-      <DebtVsValueChart data={data.debtVsValue} />
+      <DebtVsValueChart data={data.debtVsValue} embedded />
     ) : (
-      <CashFlowChart data={data.cashFlow} />
+      <CashFlowChart data={data.cashFlow} embedded />
     );
 
   return (
-    <div className="mt-8 space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-base font-semibold uppercase tracking-wide text-muted">
-          Portfolio charts
-        </h2>
-        <div className="flex flex-wrap gap-2">
-          <ChartTabButton
-            label="Equity"
-            active={activeChart === "equity"}
-            onClick={() => setActiveChart("equity")}
-          />
-          <ChartTabButton
-            label="Debt vs value"
-            active={activeChart === "debt_vs_value"}
-            onClick={() => setActiveChart("debt_vs_value")}
-          />
-          <ChartTabButton
-            label="Cash flow"
-            active={activeChart === "cash_flow"}
-            onClick={() => setActiveChart("cash_flow")}
-          />
+    <div className="mt-8">
+      <div className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
+          <h2 className="text-sm font-semibold text-foreground">
+            Portfolio charts
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <ChartTabButton
+              label="Equity"
+              active={activeChart === "equity"}
+              onClick={() => setActiveChart("equity")}
+            />
+            <ChartTabButton
+              label="Debt vs value"
+              active={activeChart === "debt_vs_value"}
+              onClick={() => setActiveChart("debt_vs_value")}
+            />
+            <ChartTabButton
+              label="Cash flow"
+              active={activeChart === "cash_flow"}
+              onClick={() => setActiveChart("cash_flow")}
+            />
+          </div>
         </div>
+        <div className="p-5">{activeChartPanel}</div>
       </div>
-      <div>{activeChartPanel}</div>
     </div>
   );
 }
@@ -350,7 +352,7 @@ function ChartTabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-colors ${
+      className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
         active
           ? "border-accent/50 bg-accent/15 text-foreground"
           : "border-border bg-transparent text-muted hover:bg-subtle hover:text-foreground"

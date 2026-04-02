@@ -80,6 +80,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "properties:mortgage-patch");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
+  }
+
   const { mortgageId } = await params;
   const existing = await getMortgageForUser(mortgageId, user.id);
   if (!existing) {
@@ -158,6 +167,7 @@ export async function PATCH(
     data: updatePayload,
   });
 
+  await recordRateLimit(identifier, "properties:mortgage-patch");
   return NextResponse.json(serializeMortgage(mortgage));
 }
 

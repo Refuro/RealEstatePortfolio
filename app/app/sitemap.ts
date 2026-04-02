@@ -1,8 +1,19 @@
 import type { MetadataRoute } from "next";
+import { CALCULATOR_LOCATION_SLUGS } from "@/lib/marketing/calculator-location-pages";
+import { LOCATION_DATA_US_STATES } from "@/lib/marketing/location-data";
+import { getResourceSlugs } from "@/lib/marketing/resource-data";
 import { getAppOrigin } from "@/lib/app-url";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const APP_URL = getAppOrigin();
+  const toolLocationPages: MetadataRoute.Sitemap = LOCATION_DATA_US_STATES.flatMap((loc) =>
+    CALCULATOR_LOCATION_SLUGS.map((calculator) => ({
+      url: `${APP_URL}/tools/${calculator}/${loc.slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    }))
+  );
   return [
     { url: APP_URL, lastModified: new Date(), changeFrequency: "weekly", priority: 1 },
     {
@@ -35,6 +46,61 @@ export default function sitemap(): MetadataRoute.Sitemap {
       changeFrequency: "weekly",
       priority: 0.8,
     },
+    ...toolLocationPages,
+    {
+      url: `${APP_URL}/alternatives`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${APP_URL}/alternatives/stessa`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${APP_URL}/alternatives/rentastic`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${APP_URL}/alternatives/cozy`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${APP_URL}/vs`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    {
+      url: `${APP_URL}/vs/spreadsheets`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${APP_URL}/vs/excel-rental-property`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.85,
+    },
+    {
+      url: `${APP_URL}/resources`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.8,
+    },
+    ...getResourceSlugs().map((slug) => ({
+      url: `${APP_URL}/resources/${slug}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.8,
+    })),
     { url: `${APP_URL}/pricing`, lastModified: new Date(), changeFrequency: "monthly", priority: 0.9 },
     {
       url: `${APP_URL}/changelog`,

@@ -20,7 +20,13 @@ export type DebtValueDatum = {
   propertyId: string;
 };
 
-export function DebtVsValueChart({ data }: { data: DebtValueDatum[] }) {
+export function DebtVsValueChart({
+  data,
+  embedded,
+}: {
+  data: DebtValueDatum[];
+  embedded?: boolean;
+}) {
   const isEmpty = data.length === 0;
 
   return (
@@ -28,6 +34,7 @@ export function DebtVsValueChart({ data }: { data: DebtValueDatum[] }) {
       title="Debt vs value by property"
       isEmpty={isEmpty}
       emptyMessage="Add properties to see debt and value."
+      embedded={embedded}
     >
       {!isEmpty && (
         <ResponsiveContainer width="100%" height="100%">

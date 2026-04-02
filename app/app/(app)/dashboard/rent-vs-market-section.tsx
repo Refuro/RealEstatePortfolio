@@ -125,8 +125,8 @@ export function RentVsMarketSection({
 
   if (ordered.length === 0) {
     return (
-      <div className="mt-6 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+      <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <h2 className="text-sm font-semibold text-foreground">
           Rent vs. market
         </h2>
         <p className="mt-2 text-sm text-muted">
@@ -142,10 +142,10 @@ export function RentVsMarketSection({
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+    <section className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h2 className="text-sm font-semibold text-foreground">
             Rent vs. market
           </h2>
           <RentCastQuotaHint refreshKey={rentCastQuotaTick} className="mt-1" />
@@ -193,7 +193,7 @@ export function RentVsMarketSection({
             return (
               <li
                 key={p.id}
-                className="rounded-lg border border-border/70 bg-background/50 px-3 py-2"
+                className="rounded-lg border border-border bg-subtle/40 px-3 py-2 transition-colors duration-150 hover:bg-subtle/70"
               >
                 <Link
                   href={`/properties/${p.id}`}
@@ -240,7 +240,7 @@ export function RentVsMarketSection({
           return (
             <li
               key={p.id}
-              className="rounded-lg border border-border/70 bg-background/50 px-3 py-2"
+              className="rounded-lg border border-border bg-subtle/40 px-3 py-2 transition-colors duration-150 hover:bg-subtle/70"
             >
               <Link
                 href={`/properties/${p.id}`}

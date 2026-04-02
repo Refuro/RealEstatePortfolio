@@ -248,7 +248,7 @@ export default async function AdminPage() {
       </div>
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+        <h2 className="text-sm font-medium text-muted mb-4">
           Recent signups (last 10)
         </h2>
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -279,7 +279,7 @@ export default async function AdminPage() {
 
       {rentCastByUser.length > 0 && (
         <section className="mt-8">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+          <h2 className="text-sm font-medium text-muted mb-4">
             RentCast calls by user
           </h2>
           <div className="overflow-x-auto rounded-lg border border-border bg-card">
@@ -312,7 +312,7 @@ export default async function AdminPage() {
       )}
 
       <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+        <h2 className="text-sm font-medium text-muted mb-4">
           Users (recent 50)
         </h2>
         <div className="overflow-x-auto rounded-lg border border-border bg-card">

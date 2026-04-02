@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -29,9 +30,10 @@ export default async function AmortizationPage({
       <div className="mb-6">
         <Link
           href={`/properties/${id}`}
-          className="text-sm text-muted hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
         >
-          ← Property
+          <ChevronLeft className="size-4" aria-hidden />
+          Property
         </Link>
       </div>
       <h1 className="text-2xl font-semibold text-foreground">{displayName}</h1>

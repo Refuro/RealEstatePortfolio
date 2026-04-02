@@ -22,6 +22,8 @@ type StrLtrCalculatorProps = {
   showCta?: boolean;
   landingVariant?: string;
   surface?: "marketing" | "app";
+  /** State-typical LTR monthly rent pre-fill from HUD FMR data. STR nightly rate is left at default (too city-specific to generalize by state). */
+  initialLtrRent?: number;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -55,6 +57,7 @@ export function StrLtrCalculator({
   showCta = false,
   landingVariant,
   surface = "marketing",
+  initialLtrRent,
 }: StrLtrCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
@@ -66,7 +69,9 @@ export function StrLtrCalculator({
   );
   const [platformFeePercent, setPlatformFeePercent] = useState(DEFAULTS.platformFeePercent);
   const [monthlyStrExpenses, setMonthlyStrExpenses] = useState(DEFAULTS.monthlyStrExpenses);
-  const [monthlyLtrRent, setMonthlyLtrRent] = useState(DEFAULTS.monthlyLtrRent);
+  const [monthlyLtrRent, setMonthlyLtrRent] = useState(
+    initialLtrRent != null ? String(initialLtrRent) : DEFAULTS.monthlyLtrRent
+  );
   const [monthlyLtrVacancyPercent, setMonthlyLtrVacancyPercent] = useState(
     DEFAULTS.monthlyLtrVacancyPercent
   );
@@ -732,9 +737,9 @@ export function StrLtrCalculator({
         </MobileToolShell>
       </div>
 
-      <div className={`hidden gap-5 lg:grid lg:grid-cols-12 ${compact ? "" : ""}`}>
-        <div className={compact ? "lg:col-span-7" : "lg:col-span-8"}>{inputsContent}</div>
-        <div className={compact ? "lg:col-span-5" : "lg:col-span-4"}>{resultsContent}</div>
+      <div className={`hidden gap-5 md:grid md:grid-cols-12 ${compact ? "" : ""}`}>
+        <div className={compact ? "md:col-span-7" : "md:col-span-8"}>{inputsContent}</div>
+        <div className={compact ? "md:col-span-5" : "md:col-span-4"}>{resultsContent}</div>
       </div>
     </section>
   );

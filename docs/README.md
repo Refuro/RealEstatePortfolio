@@ -3,7 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-04-01-audit-synthesis.md) — consolidated follow-ups (14 lanes)
+- [Latest audit synthesis](audits/synthesis/2026-04-03-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-04-03, parallel agents)
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
@@ -14,7 +14,8 @@
 - [Product overview](reference/product-overview.md)
 - [MVP spec](reference/mvp-spec.md)
 - [Engineering spec](reference/engineering-spec.md)
-- [Design spec](policies/design-spec.md)
+- [Design spec](policies/design-spec.md) — **current** UI tokens and patterns for shipped code
+- [Design brief 2026](design/design-brief-2026.md) — **future** visual/marketing overhaul (not yet implemented; does not replace design-spec until PM kicks off migration)
 - [Architecture & build practices](architecture-and-build-practices.md)
 
 ## Policies (canonical)
@@ -28,6 +29,7 @@
 - [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
 - [Pre-live telemetry QA (paid relaunch)](launch/pre-live-telemetry-qa-2026-03-30.md) — env + browser checks before scaling paid spend
 - [Channel posting playbook](launch/channel-posting-playbook.md) — rule-safe templates, moderation scripts, UTM naming
+- [SEO Phase 5 & 6 runbook](launch/seo-phase-5-6-runbook.md) — community UTM links, PostHog checks, monthly Search Console routine (from [`seo-growth-plan.md`](launch/seo-growth-plan.md))
 - [Paid ads test plan](launch/paid-ads-test-plan.md) — 14-day paid experiment, budget tiers, decision gates
 - [Paid ads campaign build sheet](launch/paid-ads-campaign-build-sheet.md) — campaign structure, copy seeds, keyword starters
 - [Paid ads monitoring runbook](launch/paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations

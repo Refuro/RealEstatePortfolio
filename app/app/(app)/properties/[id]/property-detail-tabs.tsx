@@ -62,7 +62,7 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
     <div ref={scrollRef}>
       {/* Tab nav: horizontal scroll on mobile, or Jump to dropdown */}
       <nav
-        className="mt-4 flex items-center border-b border-border"
+        className="sticky top-14 z-10 mt-4 flex items-center border-b border-border bg-background md:top-0"
         aria-label="Property sections"
       >
         {/* Desktop: horizontal tabs */}
@@ -72,7 +72,7 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
                 activeTab === id
                   ? "border-accent text-foreground"
                   : "border-transparent text-muted hover:border-border hover:text-foreground"
@@ -90,7 +90,7 @@ export function PropertyDetailTabs(props: PropertyDetailTabsProps) {
               key={id}
               type="button"
               onClick={() => setTab(id)}
-              className={`shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-colors ${
+              className={`shrink-0 whitespace-nowrap border-b-2 px-4 py-3 text-sm font-medium transition-all duration-200 ${
                 activeTab === id
                   ? "border-accent text-foreground"
                   : "border-transparent text-muted hover:border-border hover:text-foreground"

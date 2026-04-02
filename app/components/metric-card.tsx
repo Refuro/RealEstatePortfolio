@@ -5,6 +5,10 @@ type MetricCardProps = {
   cashFlow?: number;
   compact?: boolean;
   tone?: "positive" | "warning" | "negative";
+  /** Optional: raw delta number to determine color direction. */
+  delta?: number | null;
+  /** Optional: formatted string shown below the value (e.g., "+$1,200 this month"). */
+  deltaLabel?: string | null;
 };
 
 const toneClass: Record<"positive" | "warning" | "negative", string> = {
@@ -20,6 +24,8 @@ export function MetricCard({
   cashFlow,
   compact = false,
   tone,
+  delta,
+  deltaLabel,
 }: MetricCardProps) {
   const sizeClass = compact ? "text-base md:text-lg" : "text-2xl";
   const valueClassName = tone
@@ -34,9 +40,18 @@ export function MetricCard({
           ? "text-sm md:text-base font-medium text-foreground"
           : "text-lg font-medium text-foreground";
 
+  const deltaColorClass =
+    delta === undefined || delta === null
+      ? "text-muted"
+      : delta > 0
+        ? "text-positive"
+        : delta < 0
+          ? "text-negative"
+          : "text-muted";
+
   return (
     <div
-      className={`min-w-0 rounded-lg border border-border bg-card ${
+      className={`min-w-0 rounded-lg border border-border bg-card shadow-sm ${
         compact ? "p-3" : "p-5"
       }`}
     >
@@ -46,6 +61,9 @@ export function MetricCard({
         {label}
       </dt>
       <dd className={`mt-1 truncate ${valueClassName}`}>{value}</dd>
+      {deltaLabel && (
+        <p className={`mt-0.5 text-xs ${deltaColorClass}`}>{deltaLabel}</p>
+      )}
     </div>
   );
 }

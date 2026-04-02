@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Building2 } from "lucide-react";
 import { getAppUser } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
@@ -98,7 +99,8 @@ export default async function DashboardPage({
       <>
         <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
         <div>
-          <div className="rounded-lg border border-border bg-card p-8 text-center">
+          <div className="rounded-lg border border-border bg-card p-8 text-center shadow-sm">
+            <Building2 className="mx-auto mb-4 size-12 text-muted/40" aria-hidden />
             <h1 className="text-2xl font-semibold text-foreground">
               Welcome to Veld
             </h1>
@@ -109,7 +111,7 @@ export default async function DashboardPage({
             <div className="mt-6 flex justify-center">
               <Link
                 href="/properties/new"
-                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
               >
                 Add your first property
               </Link>
@@ -180,46 +182,50 @@ export default async function DashboardPage({
           </div>
         </div>
       )}
-      <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-3 shadow-sm md:p-4">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <p className="text-sm text-muted">
-              Portfolio summary across {metrics.propertyCount} propert{metrics.propertyCount === 1 ? "y" : "ies"}.
-            </p>
-            <div className="mt-1">
-              <MetricHelpLink />
-            </div>
-          </div>
-          {/* Desktop: individual workspace buttons */}
-          <div className="hidden flex-wrap gap-2 md:flex">
-            <Link
-              href={propertyHref}
-              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              {singleProperty ? "Property" : "Properties"}
-            </Link>
-            <Link
-              href={modelingHref}
-              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Modeling
-            </Link>
-            <Link
-              href={mortgageHref}
-              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Mortgage
-            </Link>
-            <Link
-              href="/export/portfolio-summary"
-              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Print portfolio summary
-            </Link>
-          </div>
+      <div className="mt-4 space-y-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Link
+            href="/properties/new"
+            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+          >
+            Add property
+          </Link>
+          <Link
+            href="/analyze"
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            Analyze a deal
+          </Link>
         </div>
-        {/* Mobile: compact workspace dropdown */}
-        <div className="mt-3 md:hidden">
+        {/* Desktop workspace links */}
+        <div className="hidden flex-wrap gap-2 md:flex">
+          <Link
+            href={propertyHref}
+            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            {singleProperty ? "Property" : "Properties"}
+          </Link>
+          <Link
+            href={modelingHref}
+            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            Modeling
+          </Link>
+          <Link
+            href={mortgageHref}
+            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            Mortgage
+          </Link>
+          <Link
+            href="/export/portfolio-summary"
+            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            Print summary
+          </Link>
+        </div>
+        {/* Mobile workspace dropdown */}
+        <div className="md:hidden">
           <WorkspaceNavMobile
             propertyHref={propertyHref}
             propertyLabel={singleProperty ? "Property" : "Properties"}
@@ -227,23 +233,10 @@ export default async function DashboardPage({
             mortgageHref={mortgageHref}
           />
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <Link
-            href="/properties/new"
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add property
-          </Link>
-          <Link
-            href="/analyze"
-            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-          >
-            Analyze a deal
-          </Link>
-        </div>
       </div>
 
-      <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+      <div className="mt-4 rounded-xl bg-subtle/30 p-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
         <MetricCard
           label={metrics.propertyCount > 1 ? "Total property value" : "Property value"}
           value={formatCurrency(metrics.totalMarketValue)}
@@ -281,9 +274,11 @@ export default async function DashboardPage({
           />
         </div>
       </div>
+      </div>
 
       <MobileCollapsible label="More metrics">
-        <div className="mt-3 grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="mt-3 rounded-xl bg-subtle/30 p-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
           <div className="md:hidden">
             <MetricCard
               label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
@@ -347,7 +342,11 @@ export default async function DashboardPage({
             />
           )}
         </div>
+        </div>
       </MobileCollapsible>
+      <div className="mt-2">
+        <MetricHelpLink />
+      </div>
 
       {metrics.propertyCount > 1 && (
         <RentVsMarketSection
@@ -414,7 +413,7 @@ export default async function DashboardPage({
       />
 
       {metrics.propertyCount === 1 && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 shadow-sm">
           <div>
             <p className="text-sm font-medium text-foreground">
               Ready to compare performance side by side?

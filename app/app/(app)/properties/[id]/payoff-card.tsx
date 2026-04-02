@@ -28,13 +28,16 @@ export type MortgageForPayoff = {
   escrowIncluded?: boolean;
   escrowAmount?: string | null;
   effectiveBalance?: number;
-  balanceSource?: "stored" | "projected";
+  balanceSource?: "stored" | "stored_projected" | "projected";
   payoffProjection?: PayoffProjection;
 };
 
 function getBalanceSourceCopy(m: MortgageForPayoff): string {
   if (m.balanceSource === "stored" && m.balanceAsOfDate) {
     return `Based on stored balance as of ${new Date(m.balanceAsOfDate).toLocaleDateString()}.`;
+  }
+  if (m.balanceSource === "stored_projected" && m.balanceAsOfDate) {
+    return `Based on statement balance from ${new Date(m.balanceAsOfDate).toLocaleDateString()}, stepped forward to today.`;
   }
   return "Using projected balance from amortization.";
 }
@@ -190,7 +193,7 @@ export function PayoffCard({ mortgages }: { mortgages: MortgageForPayoff[] }) {
   if (mortgages.length === 0) {
     return (
       <section className="rounded-lg border border-border bg-card p-6">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+        <h2 className="text-sm font-semibold text-muted mb-4">
           Payoff & refinance
         </h2>
         <p className="text-sm text-muted">
@@ -202,7 +205,7 @@ export function PayoffCard({ mortgages }: { mortgages: MortgageForPayoff[] }) {
 
   return (
     <section className="rounded-lg border border-border bg-card p-6">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">
+      <h2 className="text-sm font-semibold text-muted mb-4">
         Payoff & refinance
       </h2>
       <ul className="space-y-4">

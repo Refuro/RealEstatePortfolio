@@ -15,7 +15,7 @@ export type MortgageForTabs = {
   lenderName: string | null;
   loanType: string | null;
   effectiveBalance?: number;
-  balanceSource?: "stored" | "projected";
+  balanceSource?: "stored" | "stored_projected" | "projected";
   payoffProjection?: { payoffDate: string | null; remainingAtTermEnd: number | null };
 };
 

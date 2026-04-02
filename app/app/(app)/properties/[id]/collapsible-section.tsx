@@ -52,7 +52,7 @@ export function CollapsibleSection({
         className="flex w-full items-center justify-between p-6 text-left"
       >
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h2 className="text-sm font-semibold text-muted">
             {title}
           </h2>
           {headerAction && (

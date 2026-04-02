@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { notFound } from "next/navigation";
+import { ChevronLeft } from "lucide-react";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getPropertyTotalRent } from "@/lib/property-utils";
@@ -122,9 +123,10 @@ export default async function PropertyDetailPage({
       <div className="mb-6 flex items-center justify-between">
         <Link
           href="/properties"
-          className="text-base text-muted hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
         >
-          ← Properties
+          <ChevronLeft className="size-4" aria-hidden />
+          Properties
         </Link>
         <PropertyActions propertyId={property.id} />
       </div>

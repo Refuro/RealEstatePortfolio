@@ -37,37 +37,37 @@ export default async function SettingsPage() {
       </p>
 
       <section className="mt-6 grid gap-3 md:hidden">
-        <div className="rounded-2xl border border-border/70 bg-card/95 p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+        <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+          <p className="text-sm font-medium text-muted">
             Account snapshot
           </p>
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <div className="rounded-xl border border-border bg-subtle/40 px-3 py-2">
+              <p className="text-[11px] font-medium text-muted">
                 Plan
               </p>
               <p className="mt-1 text-sm font-medium capitalize text-foreground">
                 {effectiveTier}
               </p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <div className="rounded-xl border border-border bg-subtle/40 px-3 py-2">
+              <p className="text-[11px] font-medium text-muted">
                 Email
               </p>
               <p className="mt-1 truncate text-sm font-medium text-foreground">
                 {user.email || "—"}
               </p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <div className="rounded-xl border border-border bg-subtle/40 px-3 py-2">
+              <p className="text-[11px] font-medium text-muted">
                 Properties
               </p>
               <p className="mt-1 text-sm font-medium text-foreground">
                 {propertyCount} / {limit}
               </p>
             </div>
-            <div className="rounded-xl border border-border/70 bg-background/50 px-3 py-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+            <div className="rounded-xl border border-border bg-subtle/40 px-3 py-2">
+              <p className="text-[11px] font-medium text-muted">
                 Saved deals
               </p>
               <p className="mt-1 text-sm font-medium text-foreground">
@@ -92,30 +92,24 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted mb-4">Privacy</h2>
+      <section className="mt-6">
+        <p className="mb-3 text-sm font-medium text-muted">Privacy</p>
         <CookiePreferencesSection />
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Appearance</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
+      <div className="mt-6 rounded-xl border border-border bg-card shadow-sm">
+        <div className="px-6 py-5">
+          <p className="mb-3 text-sm font-medium text-muted">Appearance</p>
           <ThemeToggle />
         </div>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Portfolio display</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div className="border-t border-border px-6 py-5">
+          <p className="mb-3 text-sm font-medium text-muted">Portfolio display</p>
           <OwnershipDisplayToggle
             initialMode={((user as { ownershipDisplayMode?: string | null }).ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability"}
           />
         </div>
-      </section>
-
-      <section className="mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Profile</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div className="border-t border-border px-6 py-5">
+          <p className="mb-3 text-sm font-medium text-muted">Profile</p>
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             {(user.firstName || user.lastName) && (
               <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
@@ -131,11 +125,11 @@ export default async function SettingsPage() {
             </div>
           </dl>
         </div>
-      </section>
+      </div>
 
-      <section className="mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Plan & billing</h2>
-        <div className="rounded-lg border border-border bg-card p-6">
+      <section className="mt-6">
+        <p className="mb-3 text-sm font-medium text-muted">Plan & billing</p>
+        <div className="rounded-xl border border-border bg-card px-6 py-5 shadow-sm">
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
               <dt className="text-sm font-medium text-muted">Current plan</dt>
@@ -200,9 +194,9 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section id="export" className="mt-8 scroll-mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Export your data</h2>
-        <div className="space-y-6 rounded-lg border border-border bg-card p-6">
+      <section id="export" className="mt-6 scroll-mt-8">
+        <p className="mb-3 text-sm font-medium text-muted">Your data</p>
+        <div className="space-y-6 rounded-xl border border-border bg-card px-6 py-5 shadow-sm">
           <p className="text-base text-muted">
             Download your properties and metrics as a CSV file.
           </p>
@@ -213,9 +207,9 @@ export default async function SettingsPage() {
         </div>
       </section>
 
-      <section className="mt-8">
-        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-muted">Delete account</h2>
-        <div className="rounded-lg border border-negative/20 bg-card p-6 md:border-border">
+      <section className="mt-6">
+        <p className="mb-3 text-sm font-medium text-muted">Delete account</p>
+        <div className="rounded-xl border border-negative/20 bg-card px-6 py-5 shadow-sm">
           <DeleteAccountSection />
         </div>
       </section>

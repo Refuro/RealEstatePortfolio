@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
 import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 
@@ -76,18 +77,18 @@ export function ModelingWorkspace({
   const mobileHeader = selectedProperty ? (
     <div className="space-y-3">
       <div>
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+        <p className="text-xs font-medium text-muted">
           Active property
         </p>
         <p className="mt-1 text-sm font-medium text-foreground">{selectedPropertyLabel}</p>
       </div>
-      <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+      <label className="block text-xs font-medium text-muted">
         Property
         <select
           value={selectedProperty.id}
           onChange={(e) => setSelectedPropertyId(e.target.value)}
           disabled={properties.length <= 1}
-          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {properties.map((property) => (
             <option key={property.id} value={property.id}>
@@ -96,11 +97,12 @@ export function ModelingWorkspace({
           ))}
         </select>
       </label>
-      <div className="flex flex-wrap gap-2 text-sm">
+      <div className="mt-1">
         <Link
           href={`/properties/${selectedProperty.id}`}
-          className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+          className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
         >
+          <ChevronRight className="size-3.5" aria-hidden />
           Open property detail
         </Link>
       </div>
@@ -135,28 +137,18 @@ export function ModelingWorkspace({
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Modeling</h1>
-      <div className="mt-4 hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="mt-1 text-sm text-muted">
-              Run scenario assumptions in a global workspace.
-            </p>
-            {selectedProperty && properties.length <= 1 && (
-              <p className="mt-2 text-sm text-muted">
-                Active property:{" "}
-                <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
-                  {selectedPropertyLabel}
-                </span>
-              </p>
-            )}
-          </div>
-          <label className="w-full text-xs font-medium uppercase tracking-wide text-muted lg:w-80">
+      <div className="mt-4 hidden md:block">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <p className="text-sm text-muted">
+            Run scenario assumptions in a global workspace.
+          </p>
+          <label className="block w-full text-xs font-medium text-muted lg:w-80">
             Property
             <select
               value={selectedProperty?.id ?? ""}
               onChange={(e) => setSelectedPropertyId(e.target.value)}
               disabled={properties.length <= 1}
-              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {properties.map((property) => (
                 <option key={property.id} value={property.id}>
@@ -167,11 +159,12 @@ export function ModelingWorkspace({
           </label>
         </div>
         {selectedProperty && (
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
             <Link
               href={`/properties/${selectedProperty.id}`}
-              className="text-muted hover:text-foreground hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
             >
+              <ChevronRight className="size-3.5" aria-hidden />
               Open property detail
             </Link>
           </div>

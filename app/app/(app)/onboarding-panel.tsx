@@ -37,6 +37,7 @@ export function OnboardingPanel({
   const { user, isLoaded } = useUser();
   const [progress, setProgress] = useState(initialProgress);
   const [busy, setBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const showWelcomeModal = !progress.welcomeSeenAt && !progress.dismissedAt;
 
@@ -55,21 +56,29 @@ export function OnboardingPanel({
   async function handleWelcome(startNow: boolean) {
     if (busy) return;
     setBusy(true);
-    const next = await patchOnboarding("mark_welcome_seen");
-    if (next) {
+    setErrorMessage(null);
+    try {
+      const next = await patchOnboarding("mark_welcome_seen");
+      if (!next) {
+        setErrorMessage("We couldn't save your onboarding step. Please try again.");
+        return;
+      }
+
       if (!startNow) {
         const dismissed = await patchOnboarding("dismiss_modal");
-        if (dismissed) {
-          setProgress(dismissed);
-          if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_maybe_later")) {
-            markFiredOnboardingStep(user.id, "welcome_maybe_later");
-            const pi = getPlanIntentForAnalytics();
-            captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
-              step: "welcome_maybe_later",
-              plan_intent: pi.plan_intent,
-              plan_intent_source: pi.plan_intent_source,
-            });
-          }
+        if (!dismissed) {
+          setErrorMessage("We couldn't dismiss the welcome modal. Please try again.");
+          return;
+        }
+        setProgress(dismissed);
+        if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_maybe_later")) {
+          markFiredOnboardingStep(user.id, "welcome_maybe_later");
+          const pi = getPlanIntentForAnalytics();
+          captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+            step: "welcome_maybe_later",
+            plan_intent: pi.plan_intent,
+            plan_intent_source: pi.plan_intent_source,
+          });
         }
         router.refresh();
       } else {
@@ -85,8 +94,11 @@ export function OnboardingPanel({
         }
         router.push("/properties/new");
       }
+    } catch {
+      setErrorMessage("Something went wrong while saving onboarding. Please try again.");
+    } finally {
+      setBusy(false);
     }
-    setBusy(false);
   }
 
   return (
@@ -97,7 +109,7 @@ export function OnboardingPanel({
             <div className="pointer-events-none absolute -top-24 right-[-12%] h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-28 left-[-14%] h-60 w-60 rounded-full bg-primary/15 blur-3xl" />
             <div className="relative">
-              <p className="inline-flex rounded-full border border-border/80 bg-background/60 px-3 py-1 text-xs font-medium uppercase tracking-wide text-muted">
+              <p className="inline-flex rounded-full border border-border/80 bg-background/60 px-3 py-1 text-xs font-medium text-muted">
                 Welcome
               </p>
               <h2 className="mt-4 text-2xl font-semibold leading-tight text-foreground">
@@ -114,6 +126,11 @@ export function OnboardingPanel({
               </div>
 
               <p className="mt-4 text-xs text-muted">Typical setup time: about 2 minutes.</p>
+              {errorMessage ? (
+                <p className="mt-3 text-sm text-negative" role="status" aria-live="polite">
+                  {errorMessage}
+                </p>
+              ) : null}
             </div>
 
             <div className="relative mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-end">

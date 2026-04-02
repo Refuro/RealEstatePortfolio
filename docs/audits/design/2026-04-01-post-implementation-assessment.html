@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veld Portfolio — Post-Implementation Design Assessment 2026-04-01</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --bg-subtle: #f4f4f5;
+      --card: #ffffff;
+      --border: #e4e4e7;
+      --fg: #0a0a0a;
+      --fg-muted: #71717a;
+      --accent: #6366f1;
+      --accent-subtle: #eef2ff;
+      --positive: #059669;
+      --negative: #dc2626;
+      --warning: #d97706;
+      --info: #0ea5e9;
+      --radius: 10px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .page-wrap { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem 4rem; }
+
+    .report-header {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .report-header .meta {
+      font-size: 12px; color: var(--fg-muted);
+      text-transform: uppercase; letter-spacing: .08em; font-weight: 500; margin-bottom: .5rem;
+    }
+    .report-header h1 { font-size: 1.75rem; font-weight: 700; letter-spacing: -.02em; }
+    .report-header .subtitle { color: var(--fg-muted); margin-top: .4rem; font-size: .9rem; }
+    .tag-row { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1rem; }
+    .tag {
+      display: inline-flex; align-items: center; gap: 5px;
+      border: 1px solid var(--border); border-radius: 99px;
+      padding: 3px 10px; font-size: 11.5px; color: var(--fg-muted); background: var(--card);
+    }
+    .tag .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+    /* TOC */
+    .toc { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; margin-bottom: 2rem; }
+    .toc h2 { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-muted); margin-bottom: .75rem; }
+    .toc ol { padding-left: 1.2rem; }
+    .toc li { padding: .2rem 0; font-size: .875rem; }
+    .toc a { color: var(--fg); }
+    .toc a:hover { color: var(--accent); }
+
+    /* Sections */
+    .section { margin-bottom: 3rem; }
+    .section-label {
+      font-size: .7rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .1em; color: var(--fg-muted); margin-bottom: .5rem;
+    }
+    h2.section-title { font-size: 1.25rem; font-weight: 700; margin-bottom: 1rem; }
+    h3 { font-size: 1rem; font-weight: 600; margin: 1.25rem 0 .5rem; }
+    p { margin-bottom: .75rem; color: var(--fg); }
+    p.muted { color: var(--fg-muted); }
+
+    /* Score card */
+    .score-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1.25rem 0; }
+    .score-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+    }
+    .score-card .area { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--fg-muted); }
+    .score-card .scores { display: flex; align-items: baseline; gap: .5rem; margin-top: .5rem; }
+    .score-card .before { font-size: 1.5rem; font-weight: 700; color: var(--fg-muted); }
+    .score-card .arrow { font-size: .9rem; color: var(--fg-muted); }
+    .score-card .after { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .score-card .note { font-size: .75rem; color: var(--fg-muted); margin-top: .25rem; }
+
+    /* Before/After comparison row */
+    .compare-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 1rem; margin: 1rem 0;
+    }
+    @media (max-width: 600px) { .compare-row { grid-template-columns: 1fr; } }
+    .compare-box {
+      border-radius: var(--radius); padding: 1rem 1.25rem;
+      border: 1px solid var(--border);
+    }
+    .compare-box.before { background: #fff8f8; border-color: #fecaca; }
+    .compare-box.after  { background: #f0fdf4; border-color: #bbf7d0; }
+    .compare-box .label {
+      font-size: .7rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .08em; margin-bottom: .5rem;
+    }
+    .compare-box.before .label { color: var(--negative); }
+    .compare-box.after  .label { color: var(--positive); }
+    .compare-box ul { padding-left: 1.1rem; }
+    .compare-box li { font-size: .85rem; padding: .2rem 0; }
+
+    /* Callout */
+    .callout {
+      border-radius: var(--radius); padding: .875rem 1.1rem;
+      margin: 1rem 0; display: flex; gap: .75rem; align-items: flex-start;
+    }
+    .callout.info    { background: #eff6ff; border: 1px solid #bfdbfe; }
+    .callout.warning { background: #fffbeb; border: 1px solid #fde68a; }
+    .callout.positive{ background: #f0fdf4; border: 1px solid #bbf7d0; }
+    .callout.neutral { background: var(--card); border: 1px solid var(--border); }
+    .callout .icon { font-size: 1rem; flex-shrink: 0; line-height: 1.6; }
+    .callout p { margin: 0; font-size: .875rem; }
+
+    /* Issue / Remaining list */
+    .issue-list { list-style: none; padding: 0; margin: 1rem 0; }
+    .issue-list li {
+      display: flex; gap: .75rem; align-items: flex-start;
+      padding: .6rem 0; border-bottom: 1px solid var(--border); font-size: .875rem;
+    }
+    .issue-list li:last-child { border-bottom: none; }
+    .pill {
+      flex-shrink: 0; border-radius: 99px; padding: 2px 8px;
+      font-size: .7rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em;
+    }
+    .pill.high   { background: #fef2f2; color: var(--negative); border: 1px solid #fecaca; }
+    .pill.med    { background: #fffbeb; color: var(--warning);  border: 1px solid #fde68a; }
+    .pill.low    { background: var(--accent-subtle); color: var(--accent); border: 1px solid #c7d2fe; }
+    .pill.done   { background: #f0fdf4; color: var(--positive); border: 1px solid #bbf7d0; }
+
+    /* Overall verdict */
+    .verdict-bar {
+      background: linear-gradient(135deg, #eef2ff 0%, #f0fdf4 100%);
+      border: 1px solid #c7d2fe; border-radius: var(--radius);
+      padding: 1.5rem; margin: 1.5rem 0;
+    }
+    .verdict-bar .grade { font-size: 3rem; font-weight: 800; color: var(--accent); line-height: 1; }
+    .verdict-bar .grade-label { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--fg-muted); margin-top: .25rem; }
+    .verdict-bar .summary { margin-top: .75rem; font-size: .9rem; }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 2rem 0; }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <!-- Header -->
+  <div class="report-header">
+    <div class="meta">Post-Implementation Design Assessment · Veld Portfolio</div>
+    <h1>Design Overhaul — How Did We Do?</h1>
+    <div class="subtitle">A review of the full design overhaul across all six implementation stages, compared against the original audit findings.</div>
+    <div class="tag-row">
+      <span class="tag"><span class="dot" style="background:#6366f1"></span> Stages 1–6 Complete</span>
+      <span class="tag"><span class="dot" style="background:#059669"></span> Marketing Site</span>
+      <span class="tag"><span class="dot" style="background:#059669"></span> In-App Product</span>
+      <span class="tag"><span class="dot" style="background:#d97706"></span> Remaining Gaps Identified</span>
+      <span class="tag">April 1 2026</span>
+    </div>
+  </div>
+
+  <!-- TOC -->
+  <div class="toc">
+    <h2>Contents</h2>
+    <ol>
+      <li><a href="#executive-summary">1. Executive Summary</a></li>
+      <li><a href="#scores">2. Before / After Scores by Area</a></li>
+      <li><a href="#landing">3. Landing Page</a></li>
+      <li><a href="#pricing">4. Pricing Page</a></li>
+      <li><a href="#in-app-nav">5. In-App Navigation</a></li>
+      <li><a href="#dashboard">6. Dashboard</a></li>
+      <li><a href="#properties">7. Properties &amp; Property Detail</a></li>
+      <li><a href="#settings">8. Settings</a></li>
+      <li><a href="#public-pages">9. Supporting Public Pages</a></li>
+      <li><a href="#system">10. Design System Consistency</a></li>
+      <li><a href="#untouched">11. Pages Not Yet Addressed</a></li>
+      <li><a href="#remaining">12. Prioritised Remaining Gaps</a></li>
+      <li><a href="#verdict">13. Overall Verdict</a></li>
+    </ol>
+  </div>
+
+  <!-- 1. Executive Summary -->
+  <div class="section" id="executive-summary">
+    <div class="section-label">Section 1</div>
+    <h2 class="section-title">Executive Summary</h2>
+    <p>The overhaul successfully addressed the three core problems identified in the original assessment: <strong>no brand color identity</strong>, <strong>a card-heavy layout that created visual noise</strong>, and <strong>a marketing site that felt generic and unconvincing</strong>. The indigo accent system is live and cohesive. The card proliferation in Settings and property detail tabs has been resolved through panel consolidation. The landing page has been fundamentally rebuilt.</p>
+    <p>The product reads demonstrably more modern on both the marketing side and in-app. The design system has been documented and is enforceable. Key gaps remain — primarily in workspaces not yet touched (Modeling, Mortgage, Plans billing page) and in the lack of micro-interaction polish — but these are refinement-level concerns, not structural ones.</p>
+    <div class="callout positive">
+      <div class="icon">✅</div>
+      <p><strong>Net result:</strong> The site moved from a functional-but-dated internal tool aesthetic to a modern, consistent SaaS product. The gap between the product's quality and how the marketing site presented it has been closed.</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- 2. Scores -->
+  <div class="section" id="scores">
+    <div class="section-label">Section 2</div>
+    <h2 class="section-title">Before / After Scores by Area</h2>
+    <p class="muted">Scores are subjective assessments out of 10 relative to SaaS industry standards for a product at this stage and price point.</p>
+    <div class="score-grid">
+      <div class="score-card">
+        <div class="area">Brand Identity</div>
+        <div class="scores">
+          <span class="before">3</span>
+          <span class="arrow">→</span>
+          <span class="after">8</span>
+        </div>
+        <div class="note">Near-black accent → indigo system with subtle tints</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Landing Page</div>
+        <div class="scores">
+          <span class="before">4</span>
+          <span class="arrow">→</span>
+          <span class="after">7.5</span>
+        </div>
+        <div class="note">Text-only hero → asymmetric screenshot hero + proof strip</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Pricing Page</div>
+        <div class="scores">
+          <span class="before">5</span>
+          <span class="arrow">→</span>
+          <span class="after">7.5</span>
+        </div>
+        <div class="note">Checkmarks, tier ring emphasis, trust pills, screenshots</div>
+      </div>
+      <div class="score-card">
+        <div class="area">In-App Navigation</div>
+        <div class="scores">
+          <span class="before">5.5</span>
+          <span class="arrow">→</span>
+          <span class="after">8</span>
+        </div>
+        <div class="note">Grouped sections, active accent bar, CTA button</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Dashboard</div>
+        <div class="scores">
+          <span class="before">5</span>
+          <span class="arrow">→</span>
+          <span class="after">7</span>
+        </div>
+        <div class="note">Action strip clean, metric container, empty state art</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Settings</div>
+        <div class="scores">
+          <span class="before">4</span>
+          <span class="arrow">→</span>
+          <span class="after">8</span>
+        </div>
+        <div class="note">6 cards → 4 consolidated panels; biggest visual improvement</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Property Detail</div>
+        <div class="scores">
+          <span class="before">5</span>
+          <span class="arrow">→</span>
+          <span class="after">7</span>
+        </div>
+        <div class="note">Tab content panels consolidated; back nav improved</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Design System</div>
+        <div class="scores">
+          <span class="before">4</span>
+          <span class="arrow">→</span>
+          <span class="after">8</span>
+        </div>
+        <div class="note">Documented, token-based, surface hierarchy defined</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Mobile Experience</div>
+        <div class="scores">
+          <span class="before">6</span>
+          <span class="arrow">→</span>
+          <span class="after">7</span>
+        </div>
+        <div class="note">Dashboard workspace area improved; still has room</div>
+      </div>
+      <div class="score-card">
+        <div class="area">Untouched Workspaces</div>
+        <div class="scores">
+          <span class="before">5</span>
+          <span class="arrow">→</span>
+          <span class="after">5</span>
+        </div>
+        <div class="note">Modeling, Mortgage, Plans/billing unchanged</div>
+      </div>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- 3. Landing Page -->
+  <div class="section" id="landing">
+    <div class="section-label">Section 3</div>
+    <h2 class="section-title">Landing Page</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>Text-only hero, no product screenshot</li>
+          <li>Generic value props with no visual anchors</li>
+          <li>No "how it works" sequence</li>
+          <li>Pricing teaser was a plain text link</li>
+          <li>No social proof or trust signals</li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>Asymmetric 60/40 hero with product screenshot on lg+</li>
+          <li>Social proof strip with user/review count signals</li>
+          <li>Value props have brand-tinted icon containers</li>
+          <li>"How it works" 3-step numbered sequence</li>
+          <li>Elevated calculator section mid-page</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's Working Well</h3>
+    <p>The hero is now doing the job a SaaS hero should do: showing the product immediately rather than asking the visitor to imagine it. The social proof strip creates credibility at a point in the funnel where visitors are deciding whether to read further. The "How it works" section answers the most common visitor question ("What do I actually do with this?") without requiring them to sign up first.</p>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill med">Medium</span>
+        <div>The social proof numbers (user count, review count) are placeholder. They should be replaced with real data or removed entirely — fabricated social proof erodes trust if a visitor investigates.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The hero screenshot is a static asset that now shows the pre-overhaul design. It should be retaken to reflect the new indigo accent system and panel layouts.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The calculator CTA section mid-page is elevated but uses the same visual weight as the surrounding sections. A subtle background differentiation (e.g. <code>bg-accent/5</code> section) would better signal it as a tool, not just content.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 4. Pricing -->
+  <div class="section" id="pricing">
+    <div class="section-label">Section 4</div>
+    <h2 class="section-title">Pricing Page</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>Plain circular bullet points instead of checkmarks</li>
+          <li>No visual hierarchy between tiers</li>
+          <li>Annual toggle had indigo + green badge clash when selected</li>
+          <li>Fine print split across two orphaned paragraphs</li>
+          <li>No trust signals below the header</li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>Lucide Check icons for feature lists</li>
+          <li>Recommended tier has indigo ring + tinted background</li>
+          <li>Annual toggle badge hidden when already selected (fixed today)</li>
+          <li>Fine print consolidated into one paragraph; link style softened</li>
+          <li>Trust pill chips below header; screenshot gallery below cards</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's Working Well</h3>
+    <p>The tier hierarchy is now clear. A visitor scanning the pricing page at a glance knows which plan is recommended without reading all the copy. The screenshots below the cards give unauthenticated visitors the same evidence as the landing page. The FAQ section with hover-reveal answers reduces pre-purchase friction.</p>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill low">Low</span>
+        <div>When annual billing is selected, the annual price displays in <code>text-positive</code> (green). This is semantic (savings = positive), but the same green is used for "Current plan" badges and check icons on the same page. A single green carrying three distinct meanings can feel slightly confused. Consider using the accent color for the selected annual price instead.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The "See it in action" screenshots section still shows the older dashboard design. Should be refreshed when new screenshots are available.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 5. In-App Nav -->
+  <div class="section" id="in-app-nav">
+    <div class="section-label">Section 5</div>
+    <h2 class="section-title">In-App Navigation</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>Flat ungrouped list of nav items</li>
+          <li>"Add property" was a ghost link at the bottom</li>
+          <li>Active state was just a subtle background change</li>
+          <li>No visual section separation</li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>Three groups: Portfolio / Tools / Account with labels</li>
+          <li>"Add property" is an accent-tinted button with Plus icon</li>
+          <li>Active state has left accent bar (indigo border-l-2)</li>
+          <li>Font size tightened for more compact feel</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's Working Well</h3>
+    <p>The grouping now makes the nav scannable in under a second. A user knows where to find analytics tools vs. account settings without reading every link. The "Add property" button calling visual attention to itself at the bottom aligns with the primary user action.</p>
+
+    <div class="callout info">
+      <div class="icon">ℹ️</div>
+      <p>Looking at the desktop screenshot at 1920×1080, the sidebar reads well. The indigo active bar on "Dashboard" is the clearest active-state indicator the app has had. The section labels (PORTFOLIO, TOOLS, ACCOUNT) at <code>text-xs uppercase</code> are appropriately muted.</p>
+    </div>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill low">Low</span>
+        <div>The sidebar logo mark at 20×20px is on the small side for 1920px wide displays. The Veld wordmark next to it compensates, but a 24×24px mark would feel more intentional at larger viewports.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The "Deals" nav item sits under Tools, which is semantically accurate but may feel unexpected to users who think of deals as part of their portfolio tracking, not tooling. Worth monitoring with user feedback.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 6. Dashboard -->
+  <div class="section" id="dashboard">
+    <div class="section-label">Section 6</div>
+    <h2 class="section-title">Dashboard</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>Action area was a card with the same visual weight as metric cards</li>
+          <li>No visual grouping on primary metric row</li>
+          <li>Empty state had no illustration, just text</li>
+          <li>Single-property upsell was plain and unbranded</li>
+          <li>Mobile: workspace links were heavy full-width stacked buttons</li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>Action strip is a plain flex row — no card wrapper</li>
+          <li>Primary metric grid sits in a subtle <code>bg-subtle/30</code> container</li>
+          <li>Empty state has illustration + progressive disclosure for other options</li>
+          <li>Upsell card is accent-tinted (indigo border/bg)</li>
+          <li>Mobile: workspace links are chip-style in a contained quiet panel</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's Working Well</h3>
+    <p>The desktop view (as seen in the provided 1920×1080 screenshot) reads significantly cleaner. The primary metrics, "More metrics," Rent vs Market, and Portfolio charts sections each have distinct visual weight and spacing. The action buttons at the top are now clearly a utility strip, not content.</p>
+    <p>The metric grouping container does what it was designed to do: it tells the eye "these five things belong together" without adding a border or shadow that would make it feel like another card.</p>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill med">Medium</span>
+        <div>The secondary metric row (LTV, NOI, Cash-on-cash, Annual rent, DSCR) — visible via "More metrics" expansion on mobile and always visible on desktop — does not have the same subtle grouping container as the primary metrics. On desktop they render as raw individual cards without a container, creating a visual inconsistency between the two rows.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div>At 1920×1080, the main content area is constrained to a medium width by the sidebar, leaving noticeable white space on the right. This is intentional for readability, but could be addressed with a slightly wider max-width or a two-column layout for the metrics + Rent vs. Market section on very wide screens.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The "Portfolio charts" section header and chart tab buttons are slightly disconnected from the chart panel visually. Wrapping the tab bar and the chart in a single panel (with the tab bar as a header strip inside it) would reinforce that they're one interactive widget, not two separate elements.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The Rent vs. Market section retains a <code>bg-card rounded-xl border</code> panel but the "RENT VS. MARKET" label inside is still uppercase-muted. This is one of the few remaining places where the old uppercase section title pattern persists in a prominent spot.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 7. Properties -->
+  <div class="section" id="properties">
+    <div class="section-label">Section 7</div>
+    <h2 class="section-title">Properties &amp; Property Detail</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>Property cards had no hover feedback</li>
+          <li>Tab content had multiple sibling cards per tab</li>
+          <li>Back navigation was plain arrow text</li>
+          <li>Property hero address block used <code>bg-card</code></li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>Cards have <code>hover:shadow-md transition-shadow</code></li>
+          <li>Tab content consolidated into single panels with internal dividers</li>
+          <li>Back link uses ChevronLeft icon, styled consistently with contact page</li>
+          <li>Property hero uses <code>bg-subtle</code> for de-emphasis</li>
+        </ul>
+      </div>
+    </div>
+
+    <h3>What's Working Well</h3>
+    <p>The tab content consolidation is one of the most impactful changes in the whole overhaul. Moving from 3–4 separate cards per tab to a single panel with internal dividers removes the repetitive card borders that made the page feel like an accordion of boxes. The content reads as one coherent object now.</p>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill low">Low</span>
+        <div>The property list page at very small property counts (1–2 properties) renders a large single-card view that is spacious but possibly over-padded compared to the tighter multi-property grid view. The card sizes feel inconsistent between these two states.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 8. Settings -->
+  <div class="section" id="settings">
+    <div class="section-label">Section 8</div>
+    <h2 class="section-title">Settings</h2>
+
+    <div class="compare-row">
+      <div class="compare-box before">
+        <div class="label">Before</div>
+        <ul>
+          <li>6 separate cards with equal visual weight</li>
+          <li><code>&lt;h2&gt;</code> headings that functioned as labels inside cards</li>
+          <li>Delete account used <code>md:border-border</code>, hiding danger styling on desktop</li>
+          <li>No visual difference between primary and secondary sections</li>
+        </ul>
+      </div>
+      <div class="compare-box after">
+        <div class="label">After</div>
+        <ul>
+          <li>4 panels: Account preferences (3-in-1), Plan & billing, Your data, Delete account</li>
+          <li>Internal <code>&lt;p&gt;</code> labels with dividers replace <code>&lt;h2&gt;</code> section headings</li>
+          <li>Delete account has persistent <code>border-negative/20</code> on all breakpoints</li>
+          <li>Danger zone is visually separated from operational settings</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="callout positive">
+      <div class="icon">✅</div>
+      <p>Settings is the clearest win in the overhaul. The page went from visually noisy (six equal-weight boxes) to structured (four purposeful panels). This is exactly what the Surface Hierarchy system was designed to solve.</p>
+    </div>
+  </div>
+
+  <hr />
+
+  <!-- 9. Supporting Public Pages -->
+  <div class="section" id="public-pages">
+    <div class="section-label">Section 9</div>
+    <h2 class="section-title">Supporting Public Pages</h2>
+
+    <h3>Changelog</h3>
+    <p>The timeline treatment (vertical rail, accent dots, date chips) transformed what was a plain bulleted list into something that actually looks like a product changelog. It signals active development and gives each release a clear visual anchor. This is a high-value, low-effort improvement.</p>
+
+    <h3>Contact</h3>
+    <p>Minor but correct: the back navigation now uses the ChevronLeft icon and matches the property detail back-link pattern. Consistency in micro-navigation patterns is easy to overlook and easy to spot when it's wrong.</p>
+
+    <h3>Footer</h3>
+    <p>Reorganised from a flat list into two rows: product/navigation links and legal/support links. This is a cleaner structure and aligns the footer with how SaaS footers typically organize themselves. The copyright anchor on the left at wider viewports is a good visual separation.</p>
+
+    <h3>Remaining Concerns</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill low">Low</span>
+        <div>The <code>/tools</code> (public calculators hub) and individual calculator pages (<code>/tools/deal-analyzer</code>, etc.) have not been assessed in this overhaul. These are public-facing pages that unauthenticated users see and should eventually receive the same polish as the pricing and landing pages.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 10. Design System -->
+  <div class="section" id="system">
+    <div class="section-label">Section 10</div>
+    <h2 class="section-title">Design System Consistency</h2>
+
+    <p>This is where the overhaul achieves something more durable than aesthetic changes: it establishes an enforceable, documented design language for the first time.</p>
+
+    <h3>What's in Place</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Token layer</strong> — CSS variables for accent (indigo), accent-subtle, accent-hover, plus all existing semantic tokens. Tailwind <code>@theme inline</code> mappings are consistent.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Surface Hierarchy</strong> — Three formal levels (Page / Panel / Inset) documented in both the design brief and the implementation guide with exact Tailwind class strings.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Typography roles</strong> — Section titles are no longer the old uppercase-muted pattern in any of the touched pages. Level 1 (page title), Level 2 (section nav), Level 3 (panel internal label) roles are clear.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Shadow system</strong> — <code>shadow-sm</code> consistently applied to Raised surfaces (cards, panels). Elevated (<code>shadow-md</code>) is reserved for hover states. Floating (<code>shadow-lg</code>) is reserved for modals and dropdowns.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Radius system</strong> — <code>rounded-xl</code> for panels, <code>rounded-lg</code> for nested insets, <code>rounded-md</code> for buttons and badges. Nested radius principle applied consistently.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>Clerk appearance</strong> — Sign-in / sign-up flows now use the indigo primary color, matching the app's brand instead of Clerk's default blue.</div>
+      </li>
+      <li>
+        <span class="pill done">Done</span>
+        <div><strong>design-spec.md updated</strong> — The legacy spec file now references the new design brief for superseded sections and the accent table has been updated to indigo values.</div>
+      </li>
+    </ul>
+
+    <h3>Remaining Gaps in the System</h3>
+    <ul class="issue-list">
+      <li>
+        <span class="pill med">Medium</span>
+        <div>The <strong>animation/transition layer</strong> is almost entirely absent. Page transitions, skeleton loading states, and micro-interactions are currently handled ad-hoc (or not at all). A small animation token set (<code>duration-150</code>, <code>duration-200</code>, <code>ease-out</code>) and a defined use policy would prevent future inconsistency as new features are built.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The <strong>empty-state pattern</strong> has been applied to Dashboard (empty-properties.png) and Deals (empty-deals.png) but is not yet documented as a formal pattern in the design brief. Other zero-states (no deals saved, no modeling runs) may be plain text only.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div>The <strong>form input style</strong> is not explicitly reviewed or updated in this overhaul. Given the indigo accent, focus rings (<code>ring-accent/20</code>) on inputs may not have been uniformly updated across all form pages (Add property, mortgage inputs, deal analyzer).</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 11. Untouched Pages -->
+  <div class="section" id="untouched">
+    <div class="section-label">Section 11</div>
+    <h2 class="section-title">Pages Not Yet Addressed</h2>
+    <p>The following in-app pages were outside the scope of this overhaul and still reflect the pre-overhaul design language. They function correctly but will feel slightly inconsistent when a user navigates to them from the updated pages.</p>
+
+    <ul class="issue-list">
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Modeling workspace</strong> (<code>/modeling</code>) — scenario projections, charts, and assumption inputs. This is a high-value page for paid users and likely has the same card-heavy structure as the old property detail page did.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Mortgage workspace</strong> (<code>/mortgage</code>) — payoff modeling and projection charts. Frequently linked from the dashboard workspace strip. Pre-overhaul header, card, and section patterns.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Plans &amp; billing</strong> (<code>/plans</code>) — where signed-in users actually manage subscriptions. This is the in-app counterpart to the pricing page and should receive the same tier emphasis and panel treatment.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div><strong>Public calculator pages</strong> (<code>/tools/*</code>) — individual calculator tools accessible without an account. These are SEO-valuable pages that potential users see before signing up.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div><strong>Admin page</strong> (<code>/admin</code>) — internal only, lowest priority.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 12. Remaining Gaps -->
+  <div class="section" id="remaining">
+    <div class="section-label">Section 12</div>
+    <h2 class="section-title">Prioritised Remaining Gaps</h2>
+    <p>In priority order for the next design sprint:</p>
+
+    <ul class="issue-list">
+      <li>
+        <span class="pill high">High</span>
+        <div><strong>Update hero/pricing screenshots</strong> to show the new design. The product now looks better than the screenshots that represent it on the marketing site.</div>
+      </li>
+      <li>
+        <span class="pill high">High</span>
+        <div><strong>Replace or remove placeholder social proof numbers</strong> on the landing page. Real numbers when available; no numbers is better than fabricated ones.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Apply secondary metric grouping container</strong> on the dashboard. The primary 5-metric row has a subtle container; the secondary row (always-visible on desktop) should match it.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Modeling workspace overhaul</strong> — apply Surface Hierarchy, update section titles, panel consolidation where applicable.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Mortgage workspace overhaul</strong> — same as Modeling, same approach.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Plans &amp; billing page</strong> — apply the same tier emphasis and panel layout as the pricing page.</div>
+      </li>
+      <li>
+        <span class="pill med">Medium</span>
+        <div><strong>Wrap Portfolio charts in a single panel</strong> — the chart tab bar and chart panel should be one surface, not two adjacent elements.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div><strong>Define and document animation tokens</strong> — <code>duration-150/200</code>, <code>ease-out</code> defaults; add to design brief Section 2 as a new subsection.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div><strong>Verify input focus rings</strong> across form pages (Add/Edit property, deal analyzer, mortgage inputs) for indigo <code>ring-accent/20</code> consistency.</div>
+      </li>
+      <li>
+        <span class="pill low">Low</span>
+        <div><strong>Update Rent vs. Market section title</strong> from uppercase-muted to the new <code>text-sm font-semibold text-foreground</code> pattern.</div>
+      </li>
+    </ul>
+  </div>
+
+  <hr />
+
+  <!-- 13. Verdict -->
+  <div class="section" id="verdict">
+    <div class="section-label">Section 13</div>
+    <h2 class="section-title">Overall Verdict</h2>
+
+    <div class="verdict-bar">
+      <div class="grade">7.5 / 10</div>
+      <div class="grade-label">Post-implementation overall score</div>
+      <div class="summary">Up from approximately <strong>4.5 / 10</strong> pre-overhaul. The product is now competitive with similarly-priced SaaS tools in the real estate analytics space. The gap between the quality of the underlying data and the quality of the presentation has been substantially closed.</div>
+    </div>
+
+    <h3>What Made the Biggest Difference</h3>
+    <p>In order of visual impact:</p>
+    <ol style="padding-left:1.2rem; margin-bottom: .75rem;">
+      <li style="padding: .25rem 0; font-size:.875rem"><strong>Indigo accent system</strong> — gave the product a distinct, ownable color identity it did not have before. Every CTA, active state, and icon accent now reads as intentional.</li>
+      <li style="padding: .25rem 0; font-size:.875rem"><strong>Landing page rebuild</strong> — the marketing site went from "this could be any SaaS tool" to "this is specifically a real estate portfolio product, here's what it looks like."</li>
+      <li style="padding: .25rem 0; font-size:.875rem"><strong>Settings and property detail panel consolidation</strong> — removed the most egregious examples of card overuse. These pages now feel like a product, not a form builder.</li>
+      <li style="padding: .25rem 0; font-size:.875rem"><strong>Navigation grouping and active state</strong> — the sidebar went from a flat link list to a structured navigation. Users can now orient themselves instantly.</li>
+    </ol>
+
+    <h3>The Honest Gaps</h3>
+    <p>The product still lacks the micro-interaction polish that differentiates a 7.5 from a 9. There are no page transition animations, skeleton loading states are minimal, and the form input layer hasn't been audited. The Modeling and Mortgage workspaces — which paid users spend the most time in — still have the pre-overhaul aesthetic. These are the next frontier.</p>
+
+    <div class="callout neutral">
+      <div class="icon">📋</div>
+      <p>For the next sprint, the single highest-ROI action is <strong>updating the product screenshots</strong> on the landing page and pricing page. The marketing site now promises a modern product, but the screenshots still show the old one. That disconnect is the most visible remaining issue for new visitors.</p>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

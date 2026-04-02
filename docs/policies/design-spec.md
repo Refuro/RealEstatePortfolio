@@ -5,6 +5,7 @@
 **Last reviewed by:** PM + builder workflow  
 **Review cadence:** Quarterly or before major UX overhaul  
 **Status:** Active — all UI work must align with this spec.
+**Superseded sections:** Sections 2 (Typography), 3 (Color Palette), and 9 (What to avoid) are superseded by `docs/design/design-brief-2026.md`. All other sections remain in effect. For new UI work, consult the design brief first, then this spec for patterns not covered there.
 
 ---
 
@@ -63,8 +64,9 @@ Define semantic tokens in `globals.css` and use them consistently.
 | `--foreground` | `#0a0a0a` | `#fafafa` | Primary text |
 | `--foreground-muted` | `#71717a` | `#a1a1aa` | Labels, secondary text |
 | `--border` | `#e4e4e7` | `#27272a` | Borders, dividers |
-| `--accent` | `#0a0a0a` | `#fafafa` | Primary buttons, links |
-| `--accent-hover` | `#262626` | `#e4e4e7` | Button hover |
+| `--accent` | `#6366f1` | `#818cf8` | Primary buttons, links, active indicators |
+| `--accent-hover` | `#4f46e5` | `#a5b4fc` | Button hover states |
+| `--accent-subtle` | `#eef2ff` | `#1e1b4b` | Badge backgrounds, icon tints |
 | `--positive` | `#059669` | `#34d399` | Positive cash flow, gains |
 | `--negative` | `#dc2626` | `#f87171` | Negative cash flow, losses |
 | `--chart-1` … `--chart-5` | Defined palette | Same | Chart series colors |

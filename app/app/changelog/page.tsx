@@ -58,13 +58,17 @@ export default async function ChangelogPage() {
             releases and improvements.
           </p>
 
-          <ol className="mt-10 space-y-10">
+          <ol className="relative mt-10 space-y-10 border-l-2 border-border pl-6">
             {CHANGELOG_ENTRIES.map((entry) => (
-              <li key={`${entry.date}-${entry.title}`}>
+              <li key={`${entry.date}-${entry.title}`} className="relative">
+                <span
+                  className="absolute -left-[1.9375rem] top-1.5 size-3 rounded-full bg-accent ring-2 ring-background"
+                  aria-hidden="true"
+                />
                 <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                   <time
                     dateTime={entry.date}
-                    className="text-sm font-medium text-muted"
+                    className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-xs font-medium text-muted shadow-sm"
                   >
                     {entry.date}
                   </time>
