@@ -1,3 +1,5 @@
+> ⚠️ **SUPERSEDED** — This document is a historical record. The canonical design reference is [`docs/design/design-spec-2026.md`](./design-spec-2026.md). Do not use this document as active guidance.
+
 # Veld Portfolio — Design Brief 2026 Phase 3
 
 **Version:** 1.0  
