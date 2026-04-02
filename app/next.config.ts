@@ -15,7 +15,7 @@ const cspDirectives =
     "https://*.clerk.accounts.dev https://clerk.veldportfolio.com " +
     "https://challenges.cloudflare.com " +
     "https://va.vercel-scripts.com https://vitals.vercel-insights.com https://vercel.live " +
-    "https://www.googletagmanager.com " +
+    "https://www.googletagmanager.com https://googleads.g.doubleclick.net " +
     "https://us-assets.i.posthog.com " +
     "https://connect.facebook.net; " +
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
