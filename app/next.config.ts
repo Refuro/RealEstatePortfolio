@@ -11,12 +11,18 @@ const reportUri = baseUrl ? `${baseUrl}/api/csp-report` : "";
 // See https://clerk.com/docs/security/clerk-csp — if you use a custom Clerk Frontend API domain, add it to script-src/connect-src/frame-src.
 const cspDirectives =
   "default-src 'self'; " +
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://vercel.live; " +
-  "style-src 'self' 'unsafe-inline'; " +
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' " +
+    "https://*.clerk.accounts.dev https://clerk.veldportfolio.com " +
+    "https://challenges.cloudflare.com " +
+    "https://va.vercel-scripts.com https://vitals.vercel-insights.com https://vercel.live " +
+    "https://www.googletagmanager.com " +
+    "https://us-assets.i.posthog.com " +
+    "https://connect.facebook.net; " +
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
   "img-src 'self' data: https://img.clerk.com https:; " +
-  "font-src 'self' data:; " +
+  "font-src 'self' data: https://fonts.gstatic.com; " +
   "connect-src 'self' https:; " +
-  "frame-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com; " +
+  "frame-src 'self' https://*.clerk.accounts.dev https://clerk.veldportfolio.com https://challenges.cloudflare.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com; " +
   "worker-src 'self' blob:; " +
   "frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
 
