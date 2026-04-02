@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { UserButton } from "@clerk/nextjs";
@@ -182,7 +183,18 @@ export function AppLayoutClient({
         >
           <Menu size={24} />
         </button>
-        <div onClick={closeDrawer} className="min-w-0 flex-1">
+        <div
+          onClick={closeDrawer}
+          className="flex min-w-0 flex-1 items-center justify-center gap-2 md:justify-start"
+        >
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <div className="flex size-11 shrink-0 items-center justify-center">
@@ -193,6 +205,14 @@ export function AppLayoutClient({
       {/* Desktop sidebar - hidden on < md */}
       <aside className="hidden md:flex w-56 xl:w-64 2xl:w-72 flex-col border-r border-border bg-card sticky top-0 h-screen overflow-y-auto">
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <AppNav
@@ -232,6 +252,14 @@ export function AppLayoutClient({
         }`}
       >
         <div className="flex h-14 items-center gap-2 border-b border-border px-4" onClick={closeDrawer}>
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           <LogoLink />
         </div>
         <AppNav

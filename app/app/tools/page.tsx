@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
@@ -34,19 +35,23 @@ export default async function ToolsHubPage() {
       <LandingNav userId={userId} landingVariant="tools_hub_v1" />
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-3xl">
-          <header>
-            <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculators</p>
-            <h1 className="mt-2 text-2xl font-semibold text-foreground">Free real estate calculators</h1>
-            <p className="mt-3 text-base text-muted">
-              Quick, transparent math you can share. Open any calculator below—no account required for
-              core estimates. Sign in to save analyses in the full deal workspace.
+          <header className="rounded-xl border border-accent/10 bg-accent/5 px-6 py-8 text-center">
+            <h1 className="text-2xl font-semibold text-foreground">
+              Free real estate calculators
+            </h1>
+            <p className="mx-auto mt-3 max-w-xl text-base text-muted">
+              Quick, transparent math you can share. No account required for core estimates.
+              Sign in to save analyses in the full deal workspace.
             </p>
             {userId && (
               <p className="mt-3 text-sm text-muted">
-                <Link href="/calculators" className="font-medium text-foreground hover:underline">
-                  Continue in app (sidebar)
-                </Link>{" "}
-                for the same calculators inside your workspace.
+                <Link
+                  href="/calculators"
+                  className="inline-flex items-center gap-1 font-medium text-accent transition-colors hover:text-accent-hover"
+                >
+                  Continue in app
+                  <ChevronRight className="size-3.5" aria-hidden />
+                </Link>
               </p>
             )}
           </header>

@@ -13,7 +13,7 @@ export function PropertyHero({ nickname, address }: PropertyHeroProps) {
     return null;
   }
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
+    <div className="rounded-lg border border-border bg-subtle p-4">
       <p className="text-sm text-muted">{address}</p>
     </div>
   );

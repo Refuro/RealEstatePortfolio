@@ -111,7 +111,7 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
           {filtered.map((d) => (
             <li
               key={d.id}
-              className="rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:bg-subtle/40"
+              className="rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40"
             >
               <Link href={`/analyze?deal=${d.id}`} className="block">
                 <div className="font-medium text-foreground">

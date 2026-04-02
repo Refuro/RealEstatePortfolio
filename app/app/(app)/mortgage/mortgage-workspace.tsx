@@ -3,6 +3,7 @@
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
 
@@ -77,7 +78,7 @@ export function MortgageWorkspace({
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+          <p className="text-xs font-medium text-muted">
             Active property
           </p>
           <p className="mt-1 text-sm font-medium text-foreground">{selectedPropertyLabel}</p>
@@ -86,7 +87,7 @@ export function MortgageWorkspace({
           {totalMortgages} {totalMortgages === 1 ? "mortgage" : "mortgages"}
         </span>
       </div>
-      <label className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
+      <label className="block text-xs font-medium text-muted">
         Mortgage context
         <select
           value={selectedProperty.id}
@@ -96,7 +97,7 @@ export function MortgageWorkspace({
             syncMortgageWorkspaceQuery(nextPropertyId, null);
           }}
           disabled={properties.length <= 1}
-          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
         >
           {properties.map((property) => (
             <option key={property.id} value={property.id}>
@@ -106,17 +107,19 @@ export function MortgageWorkspace({
         </select>
       </label>
       {selectedProperty.mortgages.length > 0 && (
-        <div className="flex flex-wrap gap-2 text-sm">
+        <div className="flex flex-wrap gap-x-4 gap-y-1">
           <Link
             href={`/properties/${selectedProperty.id}`}
-            className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+            className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
           >
+            <ChevronRight className="size-3.5" aria-hidden />
             Open property detail
           </Link>
           <Link
             href={`/properties/${selectedProperty.id}?tab=details#mortgages`}
-            className="rounded-xl border border-border bg-background px-3 py-2 font-medium text-foreground hover:bg-subtle"
+            className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
           >
+            <ChevronRight className="size-3.5" aria-hidden />
             Edit mortgage details
           </Link>
         </div>
@@ -152,29 +155,19 @@ export function MortgageWorkspace({
   return (
     <div>
       <h1 className="text-2xl font-semibold text-foreground">Mortgage</h1>
-      <div className="mt-4 hidden rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm md:block">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+      <div className="mt-4 hidden md:block">
+        <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="mt-1 text-sm text-muted">
+            <p className="text-sm text-muted">
               Run mortgage payoff simulations in a global workspace.
             </p>
             {selectedProperty && (
-              <p className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-                {properties.length <= 1 && (
-                  <>
-                    <span>Active property:</span>
-                    <span className="rounded-full border border-border/70 bg-background/60 px-2.5 py-0.5 font-medium text-foreground">
-                      {selectedPropertyLabel}
-                    </span>
-                  </>
-                )}
-                <span className="rounded-full border border-border/60 bg-background/50 px-2 py-0.5 text-xs text-muted">
+              <span className="mt-1.5 inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted shadow-sm">
                   {totalMortgages} {totalMortgages === 1 ? "mortgage" : "mortgages"}
-                </span>
-              </p>
+              </span>
             )}
           </div>
-          <label className="w-full text-xs font-medium uppercase tracking-wide text-muted lg:w-80">
+          <label className="block w-full text-xs font-medium text-muted lg:w-80">
             Property
             <select
               value={selectedProperty?.id ?? ""}
@@ -184,7 +177,7 @@ export function MortgageWorkspace({
                 syncMortgageWorkspaceQuery(nextPropertyId, null);
               }}
               disabled={properties.length <= 1}
-              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm normal-case tracking-normal text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
             >
               {properties.map((property) => (
                 <option key={property.id} value={property.id}>
@@ -193,25 +186,26 @@ export function MortgageWorkspace({
               ))}
             </select>
             {properties.length <= 1 && (
-              <span className="mt-1 block text-xs normal-case tracking-normal text-muted">
+              <span className="mt-1 block text-xs text-muted">
                 Add more properties to switch context here.
               </span>
             )}
           </label>
         </div>
         {selectedProperty && selectedProperty.mortgages.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-sm">
+          <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
             <Link
               href={`/properties/${selectedProperty.id}`}
-              className="text-muted hover:text-foreground hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
             >
+              <ChevronRight className="size-3.5" aria-hidden />
               Open property detail
             </Link>
-            <span className="text-muted">•</span>
             <Link
               href={`/properties/${selectedProperty.id}?tab=details#mortgages`}
-              className="text-muted hover:text-foreground hover:underline"
+              className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
             >
+              <ChevronRight className="size-3.5" aria-hidden />
               Edit mortgage details
             </Link>
           </div>

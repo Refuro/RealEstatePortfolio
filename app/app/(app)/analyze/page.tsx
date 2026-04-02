@@ -24,21 +24,17 @@ export default async function AnalyzePage({
 
   return (
     <div>
-      <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
-        <div>
-          <h1 className="text-2xl font-semibold text-foreground">Analyze deal</h1>
-          <p className="mt-1 text-sm text-muted">
-            Enter deal assumptions, review investment outcomes, and save for comparison.
-          </p>
-          <p className="mt-3 text-sm text-muted">
-            <Link href="/deals" className="font-medium text-accent hover:underline">
-              View saved deals
-            </Link>{" "}
-            to compare or edit analyses you&apos;ve already stored.
-          </p>
-        </div>
-      </div>
-      <div className="mt-8">
+      <h1 className="text-2xl font-semibold text-foreground">Analyze deal</h1>
+      <p className="mt-1 text-sm text-muted">
+        Enter deal assumptions, review investment outcomes, and save for comparison.
+      </p>
+      <p className="mt-2 text-sm text-muted">
+        <Link href="/deals" className="font-medium text-accent hover:underline">
+          View saved deals
+        </Link>{" "}
+        to compare or edit analyses you&apos;ve already stored.
+      </p>
+      <div className="mt-6">
         <DealAnalyzerForm
           key={dealId ?? "new"}
           dealId={dealId}

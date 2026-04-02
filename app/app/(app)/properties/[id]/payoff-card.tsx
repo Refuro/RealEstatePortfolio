@@ -28,13 +28,16 @@ export type MortgageForPayoff = {
   escrowIncluded?: boolean;
   escrowAmount?: string | null;
   effectiveBalance?: number;
-  balanceSource?: "stored" | "projected";
+  balanceSource?: "stored" | "stored_projected" | "projected";
   payoffProjection?: PayoffProjection;
 };
 
 function getBalanceSourceCopy(m: MortgageForPayoff): string {
   if (m.balanceSource === "stored" && m.balanceAsOfDate) {
     return `Based on stored balance as of ${new Date(m.balanceAsOfDate).toLocaleDateString()}.`;
+  }
+  if (m.balanceSource === "stored_projected" && m.balanceAsOfDate) {
+    return `Based on statement balance from ${new Date(m.balanceAsOfDate).toLocaleDateString()}, stepped forward to today.`;
   }
   return "Using projected balance from amortization.";
 }

@@ -73,89 +73,89 @@ export function OverviewTabContent({
         </section>
       )}
 
-      <section className="rounded-lg border border-border bg-card p-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">Inputs at a glance</h3>
-        <p className="mt-1 text-xs text-muted">
-          Condensed from your saved property and mortgage records. For the full breakdown, use{" "}
-          <Link href={detailsTabHref} className="font-medium text-accent hover:underline">
-            Details
-          </Link>{" "}
-          or{" "}
-          <Link
-            href={`/properties/${propertyId}/edit`}
-            className="font-medium text-accent hover:underline"
-          >
-            Edit property
-          </Link>
-          .
-        </p>
-        <div className="mt-3 grid gap-3 md:grid-cols-2">
-          <div className="rounded-md bg-subtle/30 px-3 py-2">
-            <p className="text-xs text-muted">Property &amp; income inputs</p>
-            <p className="mt-0.5 text-sm font-medium text-foreground">
-              {formatCurrency(property.purchasePrice)} purchase · {formatCurrency(totalRent)}/mo rent ·{" "}
-              {formatCurrency(property.currentMonthlyExpenses)}/mo expenses
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              {ownershipLabel} ownership · {vacancyLabel} vacancy
-            </p>
-            <p className="text-sm font-medium text-foreground">
-              {property.isRented ? "Currently rented" : "Not currently rented"}
-            </p>
-          </div>
-          <div className="rounded-md bg-subtle/30 px-3 py-2">
-            <p className="text-xs text-muted">Mortgage inputs</p>
-            {!hasMortgage ? (
-              <>
-                <p className="mt-0.5 text-sm font-medium text-foreground">No mortgage on file</p>
-                <p className="mt-1">
-                  <Link
-                    href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
-                    className="text-sm font-medium text-accent hover:underline"
-                  >
-                    Add mortgage details
-                  </Link>
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="mt-0.5 text-sm font-medium text-foreground">
-                  {formatCurrency(
-                    primaryMortgage?.effectiveBalance ?? Number(primaryMortgage?.currentBalance ?? 0)
-                  )}{" "}
-                  · {(Number(primaryMortgage?.interestRate ?? 0) * 100).toFixed(2)}% ·{" "}
-                  {primaryMortgage?.termYears ?? 0} years
-                </p>
-                <p className="text-sm font-medium text-foreground">
-                  {formatCurrency(Number(primaryMortgage?.monthlyPayment ?? 0))}/mo payment
-                </p>
-                <p className="mt-1">
-                  <Link
-                    href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
-                    className="text-sm font-medium text-accent hover:underline"
-                  >
-                    Edit mortgage
-                  </Link>
-                </p>
-              </>
-            )}
+      <section className="rounded-xl border border-border bg-card shadow-sm">
+        <div className="p-4">
+          <h3 className="text-sm font-semibold text-foreground">Inputs at a glance</h3>
+          <p className="mt-1 text-xs text-muted">
+            Condensed from your saved property and mortgage records. For the full breakdown, use{" "}
+            <Link href={detailsTabHref} className="font-medium text-accent hover:underline">
+              Details
+            </Link>{" "}
+            or{" "}
+            <Link
+              href={`/properties/${propertyId}/edit`}
+              className="font-medium text-accent hover:underline"
+            >
+              Edit property
+            </Link>
+            .
+          </p>
+          <div className="mt-3 grid gap-3 md:grid-cols-2">
+            <div className="rounded-md bg-subtle/30 px-3 py-2">
+              <p className="text-xs text-muted">Property &amp; income inputs</p>
+              <p className="mt-0.5 text-sm font-medium text-foreground">
+                {formatCurrency(property.purchasePrice)} purchase · {formatCurrency(totalRent)}/mo rent ·{" "}
+                {formatCurrency(property.currentMonthlyExpenses)}/mo expenses
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {ownershipLabel} ownership · {vacancyLabel} vacancy
+              </p>
+              <p className="text-sm font-medium text-foreground">
+                {property.isRented ? "Currently rented" : "Not currently rented"}
+              </p>
+            </div>
+            <div className="rounded-md bg-subtle/30 px-3 py-2">
+              <p className="text-xs text-muted">Mortgage inputs</p>
+              {!hasMortgage ? (
+                <>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">No mortgage on file</p>
+                  <p className="mt-1">
+                    <Link
+                      href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
+                      className="text-sm font-medium text-accent hover:underline"
+                    >
+                      Add mortgage details
+                    </Link>
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="mt-0.5 text-sm font-medium text-foreground">
+                    {formatCurrency(
+                      primaryMortgage?.effectiveBalance ?? Number(primaryMortgage?.currentBalance ?? 0)
+                    )}{" "}
+                    · {(Number(primaryMortgage?.interestRate ?? 0) * 100).toFixed(2)}% ·{" "}
+                    {primaryMortgage?.termYears ?? 0} years
+                  </p>
+                  <p className="text-sm font-medium text-foreground">
+                    {formatCurrency(Number(primaryMortgage?.monthlyPayment ?? 0))}/mo payment
+                  </p>
+                  <p className="mt-1">
+                    <Link
+                      href={`/mortgage?propertyId=${encodeURIComponent(propertyId)}`}
+                      className="text-sm font-medium text-accent hover:underline"
+                    >
+                      Edit mortgage
+                    </Link>
+                  </p>
+                </>
+              )}
+            </div>
           </div>
         </div>
-      </section>
-
-      <section className="rounded-lg border border-border bg-card p-4">
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-            Performance at a glance
-          </h3>
-          <Link
-            href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
-            className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-          >
-            Open Modeling workspace
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className="border-t border-border p-4">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-foreground">
+              Performance at a glance
+            </h3>
+            <Link
+              href={`/modeling?propertyId=${encodeURIComponent(propertyId)}`}
+              className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Modeling workspace
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <div className="rounded-md bg-subtle/30 p-3">
             <p className="text-xs font-medium text-muted">Monthly cash flow</p>
             <p
@@ -200,9 +200,9 @@ export function OverviewTabContent({
               {metrics.ltv != null ? `${(metrics.ltv * 100).toFixed(1)}%` : "—"}
             </p>
           </div>
-        </div>
-        <MobileCollapsible label="Supporting metrics">
-          <div className="mt-3 rounded-md border border-border bg-subtle/20 px-3 py-3">
+          </div>
+          <MobileCollapsible label="Supporting metrics">
+            <div className="mt-3 rounded-md border border-border bg-subtle/20 px-3 py-3">
             <p className="hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">Supporting metrics</p>
             <div className="mt-0 grid grid-cols-2 gap-3 md:mt-3 lg:grid-cols-4">
               <div>
@@ -230,8 +230,9 @@ export function OverviewTabContent({
                 </p>
               </div>
             </div>
-          </div>
-        </MobileCollapsible>
+            </div>
+          </MobileCollapsible>
+        </div>
       </section>
     </div>
   );

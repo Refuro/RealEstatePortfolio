@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Check } from "lucide-react";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { PRICING_DISPLAY, getAnnualSavings } from "@/lib/pricing-display";
@@ -244,9 +245,11 @@ export function PricingCards({
             } flex-1 md:flex-none`}
           >
             <span>Annual billing</span>
-            <span className="ml-1 rounded-full bg-positive/15 px-1.5 py-0.5 text-[10px] font-semibold text-positive">
-              Save
-            </span>
+            {billingCycle !== "yearly" && (
+              <span className="ml-1 rounded-full bg-positive/15 px-1.5 py-0.5 text-[10px] font-semibold text-positive">
+                Save
+              </span>
+            )}
           </button>
         </div>
         <p className="mt-2 text-center text-sm text-muted">
@@ -292,7 +295,7 @@ export function PricingCards({
         const cardBorder = isCurrent
           ? "border-positive ring-1 ring-positive/60"
           : highlightInvestor
-            ? "border-accent/60 ring-1 ring-accent/30"
+            ? "border-accent/50 ring-2 ring-accent/25 bg-accent/5"
             : "border-border";
         const annualSavingsForPlan =
           plan.tier === "investor"
@@ -328,8 +331,8 @@ export function PricingCards({
                 </span>
               )}
               {highlightInvestor && (
-                <span className="rounded-md bg-accent/10 px-2 py-0.5 text-xs font-medium text-foreground">
-                  Recommended next
+                <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                  Recommended
                 </span>
               )}
             </div>
@@ -342,12 +345,12 @@ export function PricingCards({
               </span>
             </div>
             {plan.tier === "free" && (
-              <p className="mt-3 text-xl font-semibold text-foreground">
+              <p className="mt-3 text-xl font-semibold tabular-nums text-foreground">
                 $0<span className="ml-0.5 text-base font-medium text-muted">/mo</span>
               </p>
             )}
             {plan.tier === "investor" && (
-              <p className="mt-3 text-xl font-semibold text-foreground">
+              <p className="mt-3 text-xl font-semibold tabular-nums text-foreground">
                 <span className={billingCycle === "yearly" ? "text-positive" : ""}>
                   $
                   {billingCycle === "monthly"
@@ -360,7 +363,7 @@ export function PricingCards({
               </p>
             )}
             {plan.tier === "pro" && (
-              <p className="mt-3 text-xl font-semibold text-foreground">
+              <p className="mt-3 text-xl font-semibold tabular-nums text-foreground">
                 <span className={billingCycle === "yearly" ? "text-positive" : ""}>
                   $
                   {billingCycle === "monthly"
@@ -389,7 +392,7 @@ export function PricingCards({
             <ul className="mt-4 hidden space-y-1.5 text-sm text-muted md:block">
               {(showSignUp ? plan.publicFeatures : plan.features).map((feature) => (
                 <li key={feature} className="flex items-start gap-2">
-                  <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-border" />
+                  <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden="true" />
                   <span>{feature}</span>
                 </li>
               ))}
@@ -399,7 +402,7 @@ export function PricingCards({
                 <ul className="space-y-1.5 text-sm text-muted">
                   {(showSignUp ? plan.publicFeatures : plan.features).map((feature) => (
                     <li key={feature} className="flex items-start gap-2">
-                      <span className="mt-1 inline-block h-1.5 w-1.5 rounded-full bg-border" />
+                      <Check className="mt-0.5 size-3.5 shrink-0 text-positive" aria-hidden="true" />
                       <span>{feature}</span>
                     </li>
                   ))}

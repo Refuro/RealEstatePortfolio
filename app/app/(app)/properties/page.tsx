@@ -418,7 +418,7 @@ export default async function PropertiesPage({
               </Link>
             </div>
           ) : singlePropertyMode && visibleCards.length === 1 ? (
-            <div className="rounded-xl border border-border/70 bg-card p-5 shadow-sm">
+            <div className="rounded-xl border border-border/70 bg-card p-5 shadow-sm transition-shadow duration-150 hover:shadow-md">
               {(() => {
                 const card = visibleCards[0];
                 const p = card.property;
@@ -518,7 +518,7 @@ export default async function PropertiesPage({
                 const metrics = card.metrics;
                 return (
                   <li key={p.id} className="h-full">
-                    <div className="flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm transition hover:bg-subtle/40">
+                    <div className="flex h-full flex-col rounded-xl border border-border/70 bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="font-medium text-foreground">

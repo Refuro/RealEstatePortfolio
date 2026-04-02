@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
@@ -78,20 +79,6 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
         Pricing
       </Link>
       <Link
-        href="/privacy"
-        className="text-muted hover:text-foreground"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        Privacy
-      </Link>
-      <Link
-        href="/terms"
-        className="text-muted hover:text-foreground"
-        onClick={() => setMobileMenuOpen(false)}
-      >
-        Terms
-      </Link>
-      <Link
         href="/changelog"
         className="text-muted hover:text-foreground"
         onClick={() => setMobileMenuOpen(false)}
@@ -126,7 +113,15 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
   return (
     <nav className="border-b border-border">
       <div className="flex items-center justify-between px-4 py-3">
-        <Link href="/" className="text-lg font-semibold text-foreground">
+        <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-foreground">
+          <Image
+            src="/favicon.svg"
+            width={20}
+            height={20}
+            className="size-5 shrink-0 object-contain"
+            alt=""
+            aria-hidden
+          />
           Veld
         </Link>
 

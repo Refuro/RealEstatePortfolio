@@ -1580,6 +1580,41 @@ In `app/app/(app)/properties/[id]/property-detail-tabs.tsx`, find the tab button
 
 The exact implementation depends on the current tab component code. Read `property-detail-tabs.tsx` to find the tab button class strings and update accordingly.
 
+**Change 3 — Tab content card consolidation (Surface Hierarchy, Design Brief 2.9):**
+
+Within each tab's content area, sequential sub-sections (e.g., mortgage summary and tax/insurance details within the "Details" tab) are chapters in the property's document, not discrete objects. If they currently render as separate sibling card containers, consolidate them.
+
+**Read the tab content components first.** The property detail likely has multiple components rendered by `property-detail-tabs.tsx` (e.g., `PropertyOverviewTab`, `PropertyDetailsTab`, `PropertyMortgageTab`, `PropertyProjectionsTab`). For each tab:
+
+1. Identify sibling `<div className="rounded-lg border border-border bg-card p-4/p-5/p-6">` containers that a user would scroll past as part of the same task (reading one property's details).
+2. If two or more such siblings exist within the same tab, consolidate them using the Panel-with-dividers pattern from Part 2.9:
+
+```tsx
+{/* OLD: two sibling cards */}
+<div className="rounded-lg border border-border bg-card p-5">
+  <h3>Section A</h3>
+  {/* ... */}
+</div>
+<div className="mt-4 rounded-lg border border-border bg-card p-5">
+  <h3>Section B</h3>
+  {/* ... */}
+</div>
+
+{/* NEW: one panel with internal divider */}
+<div className="rounded-xl border border-border bg-card shadow-sm">
+  <div className="px-5 py-4">
+    <h3 className="text-sm font-semibold text-foreground">Section A</h3>
+    {/* ... */}
+  </div>
+  <div className="border-t border-border px-5 py-4">
+    <h3 className="text-sm font-semibold text-foreground">Section B</h3>
+    {/* ... */}
+  </div>
+</div>
+```
+
+NOTE: If a tab has only a single card container for its content, leave it as-is (it is already a single Panel). Only consolidate when there are multiple sibling cards that logically belong to the same section. The property detail files were not read during the drafting of this guide — read them before applying this change. Do not apply it blindly; the goal is reduction of sibling card count, not flattening of legitimately distinct sections.
+
 ### 3.8 Dashboard Charts — `app/app/(app)/dashboard/dashboard-charts.tsx`
 
 **Change 1 — Chart loading placeholder shadow:**
@@ -1696,7 +1731,7 @@ NEW:
 
 **Reference:** Design Brief, Section 6.11 and Section 2.9.
 
-This is the most substantial single-file change for the in-app card-heavy problem. The current file has five separate `rounded-lg border border-border bg-card p-6` card containers (Appearance, Portfolio display, Profile, Plan & billing, Export). This change consolidates them into four logically grouped Panels.
+This is the most substantial single-file change for the in-app card-heavy problem. The current file has five separate `rounded-lg border border-border bg-card p-6` card containers (Appearance, Portfolio display, Profile, Plan & billing, Export) plus a sixth danger-zone card for Delete account — six total. This change consolidates all six into four logically grouped Panels.
 
 **Read the full file before starting.** The current file is ~224 lines and should be read in full to understand the complete structure and all component prop signatures before making changes.
 

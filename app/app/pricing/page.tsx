@@ -59,13 +59,13 @@ export default async function PricingPage() {
             )}
             {!user && (
               <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted">
-                <span className="rounded-full border border-border/70 px-3 py-1">
+                <span className="rounded-full border border-border bg-card px-3 py-1 shadow-sm">
                   Secure billing via Stripe
                 </span>
-                <span className="rounded-full border border-border/70 px-3 py-1">
+                <span className="rounded-full border border-border bg-card px-3 py-1 shadow-sm">
                   No card required for Free
                 </span>
-                <span className="rounded-full border border-border/70 px-3 py-1">
+                <span className="rounded-full border border-border bg-card px-3 py-1 shadow-sm">
                   Cancel anytime
                 </span>
               </div>
@@ -78,27 +78,26 @@ export default async function PricingPage() {
             billingPortalReturnPath="/pricing"
           />
           <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-muted">
-            Third-party rent and value estimates share one hourly pool per account by plan: Free 5, Investor 10, Pro 20 successful requests.
-          </p>
-          <p className="mx-auto mt-4 max-w-2xl text-center text-xs text-muted">
-            Paid plans renew until you cancel in Settings or the billing portal.{" "}
+            Third-party rent and value estimates share one hourly pool per account by plan: Free 5,
+            Investor 10, Pro 20 successful requests. Paid plans renew until you cancel in Settings
+            or the billing portal.{" "}
             <Link
               href="/terms#subscriptions-and-payments"
-              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-foreground"
             >
               Billing
             </Link>
             ,{" "}
             <Link
               href="/terms#refunds"
-              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-foreground"
             >
               refunds
             </Link>
             , and{" "}
             <Link
               href="/terms#cancellation"
-              className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+              className="underline underline-offset-2 hover:text-foreground"
             >
               cancellation
             </Link>{" "}
@@ -107,8 +106,8 @@ export default async function PricingPage() {
 
           {!user && (
             <section className="mt-12">
-              <h2 className="mb-6 text-center text-sm font-semibold uppercase tracking-wide text-muted">
-                See what you get
+              <h2 className="mb-6 text-center text-xl font-semibold text-foreground">
+                See it in action
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
                 <Image
@@ -153,7 +152,7 @@ export default async function PricingPage() {
                     deals, and model scenarios right away.
                   </p>
                   <div className="mt-6 space-y-2">
-                    <details className="group rounded-lg border border-border/70 p-3">
+                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
                       <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
                         Do I need a credit card to start?
                       </summary>
@@ -161,7 +160,7 @@ export default async function PricingPage() {
                         No. Free accounts start without a credit card.
                       </p>
                     </details>
-                    <details className="group rounded-lg border border-border/70 p-3">
+                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
                       <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
                         What changes between monthly and annual billing?
                       </summary>
@@ -170,7 +169,7 @@ export default async function PricingPage() {
                         total cost.
                       </p>
                     </details>
-                    <details className="group rounded-lg border border-border/70 p-3">
+                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
                       <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
                         Can I cancel or upgrade later?
                       </summary>

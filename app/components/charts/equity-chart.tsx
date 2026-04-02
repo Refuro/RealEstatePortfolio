@@ -27,7 +27,13 @@ const CHART_COLORS = [
   "var(--chart-5)",
 ];
 
-export function EquityChart({ data }: { data: EquityDatum[] }) {
+export function EquityChart({
+  data,
+  embedded,
+}: {
+  data: EquityDatum[];
+  embedded?: boolean;
+}) {
   const isEmpty = data.length === 0 || data.every((d) => d.equity === 0);
 
   return (
@@ -35,6 +41,7 @@ export function EquityChart({ data }: { data: EquityDatum[] }) {
       title="Portfolio equity by property"
       isEmpty={isEmpty}
       emptyMessage="Add properties with values and mortgages to see equity."
+      embedded={embedded}
     >
       {!isEmpty && (
         <ResponsiveContainer width="100%" height="100%">

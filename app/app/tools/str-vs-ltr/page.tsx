@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
@@ -12,6 +13,7 @@ import {
 } from "@/components/marketing/calculator-faq";
 import { STR_VS_LTR_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
 import { getAppOrigin } from "@/lib/app-url";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 
 const APP_URL = getAppOrigin();
 
@@ -41,16 +43,15 @@ export default async function StrVsLtrCalculatorPage() {
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={STR_VS_LTR_CALCULATOR_FAQ} />
-          <nav className="text-sm text-muted">
-            <Link href="/tools" className="hover:text-foreground hover:underline">
+          <nav className="flex items-center gap-1.5 text-sm text-muted" aria-label="Breadcrumb">
+            <Link href="/tools" className="transition-colors duration-150 hover:text-foreground">
               Calculators
             </Link>
-            <span className="mx-2">/</span>
+            <ChevronRight className="size-3.5 text-muted/50" aria-hidden />
             <span className="text-foreground">STR vs LTR</span>
           </nav>
           <header className="mt-4 text-center">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculator</p>
-            <h1 className="mt-2 text-2xl font-semibold text-foreground md:text-3xl">
+            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
               STR vs LTR calculator
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
@@ -64,6 +65,34 @@ export default async function StrVsLtrCalculatorPage() {
           </div>
 
           <CalculatorFaqSection items={STR_VS_LTR_CALCULATOR_FAQ} />
+
+          {!userId && (
+            <div className="mt-10 rounded-xl border border-accent/20 bg-accent/5 p-6 text-center">
+              <p className="text-base font-semibold text-foreground">
+                Ready to track this property?
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Save your analysis, model scenarios, and benchmark rent in one place.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <FunnelCtaLink
+                  href="/sign-up?intent=free"
+                  placement="calculator_footer"
+                  ctaId="create_free_account"
+                  planIntent="free"
+                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
+                >
+                  Start free
+                </FunnelCtaLink>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
+                >
+                  See plans
+                </Link>
+              </div>
+            </div>
+          )}
 
           <p className="mt-6 text-center text-sm text-muted">
             <Link href="/tools" className="font-medium text-foreground hover:underline">

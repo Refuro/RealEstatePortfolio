@@ -35,7 +35,7 @@ type Mortgage = {
   lenderName: string | null;
   loanType: string | null;
   effectiveBalance?: number;
-  balanceSource?: "stored" | "projected";
+  balanceSource?: "stored" | "stored_projected" | "projected";
   payoffProjection?: PayoffProjection;
 };
 
@@ -160,13 +160,17 @@ export function MortgageSection({
               <dl className="grid grid-cols-1 gap-x-4 gap-y-3 sm:grid-cols-2">
                 <div>
                   <dt className="text-sm font-medium text-muted">
-                    {m.balanceSource === "stored" ? "Balance" : "Estimated balance"}
+                    {m.balanceSource === "stored" ? "Balance" : "Est. balance"}
                   </dt>
                   <dd className="text-sm font-medium text-foreground">
                     ${(m.effectiveBalance ?? Number(m.currentBalance)).toLocaleString()}
                     {m.balanceSource === "stored" && m.balanceAsOfDate ? (
                       <span className="ml-1 text-xs text-muted font-normal">
                         (as of {new Date(m.balanceAsOfDate).toLocaleDateString()})
+                      </span>
+                    ) : m.balanceSource === "stored_projected" && m.balanceAsOfDate ? (
+                      <span className="ml-1 block text-xs text-muted font-normal">
+                        (est. from {new Date(m.balanceAsOfDate).toLocaleDateString()})
                       </span>
                     ) : m.balanceSource === "projected" ? (
                       <span className="ml-1 block text-xs text-muted font-normal">

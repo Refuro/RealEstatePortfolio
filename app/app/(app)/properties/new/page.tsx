@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 import { AddPropertyWizard } from "../add-property-wizard";
 
 export default async function NewPropertyPage({
@@ -13,9 +14,10 @@ export default async function NewPropertyPage({
       <div className="mb-6 flex items-center gap-4">
         <Link
           href="/properties"
-          className="text-sm text-muted hover:text-foreground"
+          className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
         >
-          ← Properties
+          <ChevronLeft className="size-4" aria-hidden />
+          Properties
         </Link>
       </div>
       <h1 className="text-2xl font-semibold text-foreground">Add property</h1>

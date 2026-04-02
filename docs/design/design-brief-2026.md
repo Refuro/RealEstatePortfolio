@@ -115,8 +115,8 @@ The current design uses the `text-sm font-semibold uppercase tracking-wide text-
 
 **Level 2 — Section Heading**
 - Tailwind: `text-xl font-semibold text-foreground` (in-app), `text-2xl font-semibold text-foreground` (marketing)
-- Used for: major named sections within a page (e.g., "Plan & billing" in settings, "See what you get" on pricing)
-- Never used for: data group labels inside metric grids, chart titles
+- Used for: major named sections within a page (e.g., "See what you get" on pricing, "How it works" on the landing page, a full billing page section heading). These are navigational landmarks — content areas a user might think of as destinations.
+- Never used for: data group labels inside metric grids, chart titles, section category labels inside a settings Panel (those are Level 4)
 
 **Level 3 — Subsection / Card Title**
 - Tailwind: `text-base font-semibold text-foreground`
@@ -715,7 +715,7 @@ The settings page is the most literal example of the card overuse problem in the
 
 Applying Section 2.9: settings sections are chapters in a document, not discrete objects. The correct model is four logically grouped Panels with internal `border-t border-border` dividers.
 
-**New panel structure (5 separate cards → 4 grouped Panels):**
+**New panel structure (6 separate cards → 4 grouped Panels):**
 
 **Panel A — Account preferences**
 Consolidates: Appearance + Portfolio display + Profile.

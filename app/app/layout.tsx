@@ -114,7 +114,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "#6366f1",
+          colorPrimaryForeground: "#ffffff",
+          borderRadius: "0.5rem",
+        },
+        elements: {
+          formButtonPrimary: "bg-accent hover:bg-accent-hover text-accent-foreground",
+        },
+      }}
+    >
       <html lang="en">
         <head>
           <meta name="apple-mobile-web-app-title" content="Veld" />

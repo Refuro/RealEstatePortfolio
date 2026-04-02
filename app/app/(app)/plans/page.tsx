@@ -45,30 +45,30 @@ export default async function PlansPage() {
         Pick the cap that fits your portfolio.
       </p>
       {user && (
-        <div className="mt-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+              <p className="text-xs font-medium text-muted">
                 Plan context
               </p>
               <div className="mt-2 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap">
-                <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm">
                   Plan: <span className="font-medium capitalize text-foreground">{effectiveTier}</span>
                 </span>
-                <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm">
                   Properties:{" "}
                   <span className="font-medium text-foreground">
                     {propertyCount}/{propertyLimit}
                   </span>
                 </span>
-                <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                <span className="rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm">
                   Saved deals:{" "}
                   <span className="font-medium text-foreground">
                     {dealCount}/{dealLimit}
                   </span>
                 </span>
                 {subscription?.status && (
-                  <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                  <span className="rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm">
                     Billing:{" "}
                     <span className="font-medium capitalize text-foreground">
                       {subscription.status.replaceAll("_", " ")}
@@ -76,13 +76,13 @@ export default async function PlansPage() {
                   </span>
                 )}
                 {billingInterval && (
-                  <span className="rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+                  <span className="rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm">
                     Cycle:{" "}
                     <span className="font-medium capitalize text-foreground">{billingInterval}</span>
                   </span>
                 )}
                 {periodEndLabel && (
-                  <span className="col-span-2 rounded-md border border-border/70 bg-background/45 px-2.5 py-1 text-muted sm:col-span-1">
+                  <span className="col-span-2 rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm sm:col-span-1">
                     Renews:{" "}
                     <span className="font-medium text-foreground">{periodEndLabel}</span>
                   </span>
@@ -108,22 +108,22 @@ export default async function PlansPage() {
         billingPortalReturnPath="/plans"
         currentBillingCycle={billingInterval}
       />
-      <p className="mx-auto mt-8 max-w-2xl text-center text-sm text-muted">
+      <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-muted">
         Subscriptions renew until you cancel. See our Terms:{" "}
         <Link
           href="/terms#subscriptions-and-payments"
-          className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+          className="underline underline-offset-2 hover:text-foreground"
         >
           Subscriptions and Payments
         </Link>
         ,{" "}
-        <Link href="/terms#refunds" className="font-medium text-foreground underline underline-offset-2 hover:text-accent">
+        <Link href="/terms#refunds" className="underline underline-offset-2 hover:text-foreground">
           Refunds
         </Link>
         , and{" "}
         <Link
           href="/terms#cancellation"
-          className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+          className="underline underline-offset-2 hover:text-foreground"
         >
           Cancellation
         </Link>

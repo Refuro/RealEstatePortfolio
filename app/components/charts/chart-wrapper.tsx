@@ -10,6 +10,8 @@ type ChartWrapperProps = {
   isEmpty: boolean;
   emptyMessage?: string;
   children: React.ReactNode;
+  /** When true, no card chrome — parent supplies the panel (e.g. dashboard portfolio charts). */
+  embedded?: boolean;
 };
 
 export function ChartWrapper({
@@ -17,10 +19,21 @@ export function ChartWrapper({
   isEmpty,
   emptyMessage = "No data to display",
   children,
+  embedded = false,
 }: ChartWrapperProps) {
   return (
-    <div className="rounded-lg border border-border bg-card p-5">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+    <div
+      className={
+        embedded ? "" : "rounded-lg border border-border bg-card p-5"
+      }
+    >
+      <h3
+        className={
+          embedded
+            ? "text-sm font-semibold text-foreground"
+            : "text-sm font-semibold uppercase tracking-wide text-muted"
+        }
+      >
         {title}
       </h3>
       {isEmpty ? (

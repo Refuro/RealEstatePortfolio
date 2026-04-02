@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -104,6 +105,14 @@ export default async function DealsPage() {
 
       {dealsWithMetrics.length === 0 ? (
         <div className="mt-8 rounded-xl border border-border/70 bg-card/95 p-8 text-center shadow-sm">
+          <Image
+            src="/empty-deals.png"
+            alt=""
+            width={96}
+            height={96}
+            className="mx-auto mb-4 size-24 object-contain opacity-80"
+            aria-hidden
+          />
           <h2 className="text-lg font-medium text-foreground">
             No saved deals yet
           </h2>
