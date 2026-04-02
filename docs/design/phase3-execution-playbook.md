@@ -1,3 +1,5 @@
+> ✅ **COMPLETED** — All Phase 3 sessions (A1–A4, B1–B6) have been executed. This document is a historical execution record. For the current design system, see [`docs/design/design-spec-2026.md`](./design-spec-2026.md).
+
 # Phase 3 Execution Playbook
 
 > **What this is:** A session-by-session checklist for running the Phase 3 design work.  

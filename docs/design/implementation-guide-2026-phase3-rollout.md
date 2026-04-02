@@ -1,3 +1,5 @@
+> ⚠️ **COMPLETED / SUPERSEDED** — All changes in this guide have been applied to the codebase. This document is a historical record of the Phase 3 pattern rollout. For the current design system, see [`docs/design/design-spec-2026.md`](./design-spec-2026.md).
+
 # Veld Portfolio — Implementation Guide 2026 Phase 3 — Pattern Rollout
 
 **Version:** 1.0  

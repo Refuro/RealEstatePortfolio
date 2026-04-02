@@ -1,3 +1,5 @@
+> ⚠️ **COMPLETED / SUPERSEDED** — All changes in this guide have been applied to the codebase. This document is a historical record of what was implemented in Phase 2. For the current design system, see [`docs/design/design-spec-2026.md`](./design-spec-2026.md).
+
 # Veld Portfolio — Implementation Guide 2026 Phase 2
 
 **Version:** 1.0  
