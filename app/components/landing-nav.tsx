@@ -116,8 +116,8 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
   );
 
   return (
-    <nav className="border-b border-border">
-      <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3">
+    <nav className="w-full border-b border-border bg-background">
+      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Image
             src="/favicon.svg"
