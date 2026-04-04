@@ -48,7 +48,7 @@ export default async function PricingPage() {
             <p className="reveal-up reveal-up-d1 mx-auto mt-3 max-w-2xl text-base text-muted md:text-lg">
               {user
                 ? "Choose a plan based on how many properties you track."
-                : "Simple pricing for serious portfolio tracking. Start free, then scale as your portfolio grows."}
+                : "Start free. Upgrade when you need more properties or deals."}
             </p>
             {user && (
               <p className="reveal-up reveal-up-d2 mx-auto mt-4 max-w-2xl text-center text-sm text-muted">
@@ -289,11 +289,10 @@ export default async function PricingPage() {
               <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr] md:items-center">
                 <div>
                   <h2 className="text-2xl font-semibold text-foreground">
-                    Start free and make your first property decision with confidence.
+                    Start free. Your first property in under a minute.
                   </h2>
                   <p className="mt-2 text-sm text-muted">
-                    Create your account in under a minute. Track properties, analyze
-                    deals, and model scenarios right away.
+                    Track properties, analyze deals, and model scenarios from day one.
                   </p>
                   <div className="mt-6 space-y-2">
                     <details className="group rounded-lg border border-border p-3 transition-colors duration-150 hover:bg-subtle">

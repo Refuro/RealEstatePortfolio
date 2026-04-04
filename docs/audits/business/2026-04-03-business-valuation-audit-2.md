@@ -21,13 +21,13 @@
 
 - **Pricing page: mobile “Compare all features” omits hourly estimate row** — Desktop table lists **Estimate pool (per hour)** (`5/hr`, `10/hr`, `20/hr`); the mobile accordion omits that row while listing properties, deals, and feature flags. **Same visitor** can see **different commercial detail** by breakpoint — minor trust and support-load risk (“I didn’t see the limit on my phone”). — `app/app/pricing/page.tsx` (desktop rows ~133–137 vs mobile ~180–188).
 
-- **Premium pricing plan — execution risk to conversion** — The open-ended polish plan correctly targets **flagship SaaS** feel and preserves analytics wiring in its prompt. **Business risk** is indirect: **layout shift**, **heavy client motion**, or **hydration flash** could **hurt** conversion and Core Web Vitals; **mitigation** is already in the plan (`prefers-reduced-motion`, stability). — `docs/plans/2026-04-03-pricing-page-premium-plan.md`
+- **Premium pricing plan — execution risk to conversion** — The open-ended polish plan correctly targets **flagship SaaS** feel and preserves analytics wiring in its prompt. **Business risk** is indirect: **layout shift**, **heavy client motion**, or **hydration flash** could **hurt** conversion and Core Web Vitals; **mitigation** is already in the plan (`prefers-reduced-motion`, stability). — `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`
 
-- **Embedded mockups plan — fidelity and maintenance** — Replacing PNGs with DOM mockups improves **sharpness and “real product” perception** (supports valuation narrative). **Risks:** mockups **drifting** from production UI over time, **duplicate** layout to maintain, and **implementation bugs** (scale wrapper, `Date.now()`-style nondeterminism) undermining trust if the preview looks “off.” The plan’s acceptance criteria and bundle-size note address this. — `docs/plans/2026-04-03-embedded-mockups-plan.md`; current `app/app/pricing/page.tsx` already imports mockup components.
+- **Embedded mockups plan — fidelity and maintenance** — Replacing PNGs with DOM mockups improves **sharpness and “real product” perception** (supports valuation narrative). **Risks:** mockups **drifting** from production UI over time, **duplicate** layout to maintain, and **implementation bugs** (scale wrapper, `Date.now()`-style nondeterminism) undermining trust if the preview looks “off.” The plan’s acceptance criteria and bundle-size note address this. — `docs/archive/plans/2026-04-03-embedded-mockups-plan.md`; current `app/app/pricing/page.tsx` already imports mockup components.
 
 ### Low
 
-- **Landing plan item 4 vs embedded mockups** — Item 4 still references **capturing a new `ScreenDashboard.png`**; the embedded mockup plan **removes** reliance on that asset. Sequencing should avoid **double work** (screenshot capture vs DOM mockup). — `docs/plans/2026-04-03-landing-mobile-cta-plan.md` § Item 4; `docs/plans/2026-04-03-embedded-mockups-plan.md`
+- **Landing plan item 4 vs embedded mockups** — Item 4 still references **capturing a new `ScreenDashboard.png`**; the embedded mockup plan **removes** reliance on that asset. Sequencing should avoid **double work** (screenshot capture vs DOM mockup). — `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md` § Item 4; `docs/archive/plans/2026-04-03-embedded-mockups-plan.md`
 
 - **No `TODO` / `FIXME` in application TS/TSX** — Grep across `app/**/*.ts(x)` found **no** `TODO`/`FIXME`/`XXX` markers; **business-critical** debt is not surfaced this way (does not rule out other comment styles or docs-only debt).
 
@@ -38,7 +38,7 @@
 - **Process:** `docs/process/business-valuation-audit-process.md`, `docs/process/audit-report-template.md`
 - **Prior same-day audit:** `docs/audits/business/2026-04-03-business-valuation-audit.md`
 - **Reference:** `docs/launch/investor-style-one-pager.md`, `docs/internal/billing-matrix.md`, `docs/launch/posthog-growth-funnel.md`, `docs/launch/analytics.md`, `docs/reference/roadmap.md`
-- **Plans (2026-04-03):** `docs/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/plans/2026-04-03-embedded-mockups-plan.md`, `docs/plans/2026-04-03-landing-mobile-cta-plan.md`
+- **Plans (2026-04-03):** `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/archive/plans/2026-04-03-embedded-mockups-plan.md`, `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md`
 - **Code (read-only):** `app/lib/plans.ts`, `app/lib/pricing-display.ts`, `app/components/pricing-cards.tsx`, `app/app/page.tsx`, `app/app/pricing/page.tsx`, `app/components/analytics/posthog-signup-once.tsx`, `app/components/marketing/funnel-cta-link.tsx`, `app/.env.example`
 - **Grep:** `SUPPORT_EMAIL`, `LANDING_VARIANT` / `landingVariant`, `TODO`/`FIXME` in `app/`
 
@@ -46,7 +46,7 @@
 
 ## Impact assessment — today’s plans
 
-### `docs/plans/2026-04-03-pricing-page-premium-plan.md` (premium polish & motion)
+### `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md` (premium polish & motion)
 
 | Lens | Assessment |
 |------|------------|
@@ -54,7 +54,7 @@
 | **Commercial / pricing risk** | **Low** if copy and `PricingCards` / Stripe flows stay unchanged. **Medium** if implementation introduces **CLS**, confusing toggles, or extra loud CTAs (plan explicitly defers to skills). |
 | **Valuation** | Improves **perceived quality** for diligence; secondary to **MRR evidence** (`investor-style-one-pager.md` §5). |
 
-### `docs/plans/2026-04-03-embedded-mockups-plan.md` (replace PNGs)
+### `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` (replace PNGs)
 
 | Lens | Assessment |
 |------|------------|
@@ -62,7 +62,7 @@
 | **Risks** | **Mock drift** from live app; **bundle** and **complexity** (mitigated by deleting large PNGs per plan). |
 | **Valuation** | Supports **replacement-cost / quality** story; still needs **usage and revenue** for business multiple. |
 
-### `docs/plans/2026-04-03-landing-mobile-cta-plan.md` (mobile & CTA)
+### `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md` (mobile & CTA)
 
 | Item | Business impact (concise) |
 |------|----------------------------|

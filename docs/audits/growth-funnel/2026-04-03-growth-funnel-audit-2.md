@@ -5,7 +5,7 @@
 - **Landing page funnel instrumentation (plan Items 3, 7, 8, 9) is implemented:** The home page (`home_v4`) includes a signed-out calculator-section sign-up line with `FunnelCtaLink` + `planIntent="free"`, a tracked bottom secondary link (“Compare Veld vs spreadsheets”), differentiated bottom primary copy (“Create your free account”) with `ctaId="create_free_account"`, and a pricing-preview inline sign-up (“or sign up free”). `PlanIntentUrlSync` remains behind `Suspense` at the top of `/`.
 - **Activation trust gap from Run 1 is addressed in code:** Welcome modal onboarding now sets user-visible error copy when `PATCH /api/onboarding` does not succeed, with `busy`/`disabled` handling—no longer a silent failure mode for the primary flows.
 - **Run 1 “Schedule” items largely remain:** Deals **at-limit** upgrade is still a plain `<Link href="/plans">` (no `UpgradePlanLink` / `plan_limit_upgrade_cta_clicked`). **`/sign-in` still does not mount `PlanIntentUrlSync`.** Public **investment-property-calculator** body sign-up, **competitor/alternative** primary CTAs and secondary pricing links, **`PaidIntentCheckoutBanner` “View plans”**, and **nav “Sign in”** are still weak or missing relative to the `funnel_cta_clicked` / `planIntent` patterns used elsewhere.
-- **Pricing premium plan** (`docs/plans/2026-04-03-pricing-page-premium-plan.md`) is an open-ended design/motion brief—no substitute for a follow-up audit after implementation; conversion wiring on `/pricing` should stay aligned with `veld-landing-cta` and existing `checkout_started` behavior when that work ships.
+- **Pricing premium plan** (`docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`) is an open-ended design/motion brief—no substitute for a follow-up audit after implementation; conversion wiring on `/pricing` should stay aligned with `veld-landing-cta` and existing `checkout_started` behavior when that work ships.
 
 ## Severity-ranked findings
 
@@ -43,7 +43,7 @@
 
 - Process: `docs/process/growth-funnel-audit-process.md`, `docs/process/audit-report-template.md`
 - Prior run: `docs/audits/growth-funnel/2026-04-03-growth-funnel-audit.md`
-- Plans: `docs/plans/2026-04-03-landing-mobile-cta-plan.md` (Items 3, 7, 8, 9), `docs/plans/2026-04-03-pricing-page-premium-plan.md`
+- Plans: `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md` (Items 3, 7, 8, 9), `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`
 - Funnel docs: `docs/launch/posthog-growth-funnel.md`, `docs/launch/analytics.md`
 - Events: `app/lib/analytics-events.ts`
 - Surfaces audited: `app/app/page.tsx`, `app/app/(app)/deals/page.tsx`, `app/app/sign-in/[[...sign-in]]/page.tsx`, `app/app/investment-property-calculator/page.tsx`, `app/components/marketing/competitor-alternative-page.tsx`, `app/components/growth/paid-intent-checkout-banner.tsx`, `app/components/landing-nav.tsx`, `app/components/analytics/upgrade-plan-link.tsx`, `app/app/(app)/onboarding-panel.tsx`

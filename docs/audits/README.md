@@ -2,6 +2,8 @@
 
 Periodic AI-run audits of the product and codebase. Each lane has a process doc and a report folder.
 
+**Historical note:** Dated files under each lane folder (for example `2026-04-04-*.md`) are **point-in-time artifacts** from the run that created them. When a later audit supersedes findings, add a new dated report rather than editing or deleting older files; synthesis docs in [`synthesis/`](synthesis/) consolidate cross-lane follow-ups.
+
 | Type | Process | Reports |
 |------|---------|---------|
 | **Code** | [code-audit-process.md](../process/code-audit-process.md) | [code/](code/) |

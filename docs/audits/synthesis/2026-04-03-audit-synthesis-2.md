@@ -22,9 +22,9 @@ Fourteen parallel agent lanes — second pass of 2026-04-03, run after three maj
 | AI Agent Governance | [`../agent-governance/2026-04-03-agent-governance-audit-2.md`](../agent-governance/2026-04-03-agent-governance-audit-2.md) |
 
 **Context:** Three significant plans were executed between run 1 and run 2:
-- `docs/plans/2026-04-03-embedded-mockups-plan.md` — Implemented. PNGs deleted; `DashboardMockup`, `MortgageMockup`, `DealAnalyzerMockup` + `MockupFrame` live.
-- `docs/plans/2026-04-03-landing-mobile-cta-plan.md` — Implemented (all 10 items).
-- `docs/plans/2026-04-03-pricing-page-premium-plan.md` — Queued, not yet implemented.
+- `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` — Implemented. PNGs deleted; `DashboardMockup`, `MortgageMockup`, `DealAnalyzerMockup` + `MockupFrame` live.
+- `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md` — Implemented (all 10 items).
+- `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md` — Queued, not yet implemented.
 
 ---
 

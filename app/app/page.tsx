@@ -87,7 +87,7 @@ const VALUE_PROPS = [
   {
     title: "Underwrite a deal in minutes",
     description:
-      "Enter purchase price, rent, and expenses. Get cash flow, cap rate, DSCR, and cash-on-cash return instantly before you commit.",
+      "Enter purchase price, rent, and expenses. Get cash flow, cap rate, DSCR, and cash-on-cash return instantly.",
     icon: Calculator,
   },
   {
@@ -140,9 +140,9 @@ const VELD_DOES_NOT = [
 
 const CALCULATOR_LINKS = [
   { label: "Deal analyzer", href: "/investment-property-calculator" },
-  { label: "BRRRR calculator", href: "/brrrr-calculator" },
-  { label: "Fix and flip calculator", href: "/fix-and-flip-calculator" },
-  { label: "STR vs LTR calculator", href: "/str-ltr-calculator" },
+  { label: "BRRRR calculator", href: "/tools/brrr" },
+  { label: "Fix and flip calculator", href: "/tools/fix-and-flip" },
+  { label: "STR vs LTR calculator", href: "/tools/str-vs-ltr" },
 ];
 
 export default async function HomePage({
@@ -335,8 +335,7 @@ export default async function HomePage({
                 Track your portfolio and{" "}
                 <span className="font-medium text-foreground">
                   analyze new deals
-                </span>{" "}
-                in one place
+                </span>
               </p>
               <span
                 className="hidden h-4 w-px bg-border sm:block"
@@ -524,10 +523,9 @@ export default async function HomePage({
                 Built for one job, done well
               </h2>
               <p className="mb-8 max-w-2xl text-base text-muted">
-                Veld is portfolio analytics and deal underwriting — and
-                explicitly not a full property management platform. It works
-                alongside whatever banking, PM, or accounting tools you already
-                use.
+                Veld is portfolio analytics and deal underwriting—not a full
+                property management platform. It works alongside your existing
+                banking, PM, or accounting tools.
               </p>
               <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
                 <div className="rounded-xl border border-border bg-card p-6 shadow-sm">

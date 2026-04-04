@@ -94,6 +94,7 @@ export function PublicCalculator({
           <input
             id="calc-purchase-price"
             type="number"
+            inputMode="decimal"
             min={0}
             step={1000}
             className={inputClass}
@@ -108,6 +109,7 @@ export function PublicCalculator({
           <input
             id="calc-rent"
             type="number"
+            inputMode="decimal"
             min={0}
             step={50}
             className={inputClass}
@@ -122,6 +124,7 @@ export function PublicCalculator({
           <input
             id="calc-expenses"
             type="number"
+            inputMode="decimal"
             min={0}
             step={50}
             className={inputClass}
@@ -136,6 +139,7 @@ export function PublicCalculator({
           <input
             id="calc-down"
             type="number"
+            inputMode="decimal"
             min={0}
             max={100}
             step={1}
@@ -151,6 +155,7 @@ export function PublicCalculator({
           <input
             id="calc-rate"
             type="number"
+            inputMode="decimal"
             min={0}
             max={50}
             step={0.1}
@@ -166,6 +171,7 @@ export function PublicCalculator({
           <input
             id="calc-term"
             type="number"
+            inputMode="numeric"
             min={1}
             max={40}
             step={1}
@@ -181,6 +187,7 @@ export function PublicCalculator({
           <input
             id="calc-vacancy"
             type="number"
+            inputMode="decimal"
             min={0}
             max={100}
             step={1}
@@ -321,6 +328,7 @@ export function PublicCalculator({
             <input
               id="calc-purchase-price-mobile"
               type="number"
+              inputMode="decimal"
               min={0}
               step={1000}
               className={inputClass}
@@ -335,6 +343,7 @@ export function PublicCalculator({
             <input
               id="calc-rent-mobile"
               type="number"
+              inputMode="decimal"
               min={0}
               step={50}
               className={inputClass}
@@ -349,6 +358,7 @@ export function PublicCalculator({
             <input
               id="calc-expenses-mobile"
               type="number"
+              inputMode="decimal"
               min={0}
               step={50}
               className={inputClass}
@@ -368,6 +378,7 @@ export function PublicCalculator({
                 <input
                   id="calc-down-mobile"
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   max={100}
                   step={1}
@@ -383,6 +394,7 @@ export function PublicCalculator({
                 <input
                   id="calc-rate-mobile"
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   max={50}
                   step={0.1}
@@ -398,6 +410,7 @@ export function PublicCalculator({
                 <input
                   id="calc-term-mobile"
                   type="number"
+                  inputMode="numeric"
                   min={1}
                   max={40}
                   step={1}
@@ -413,6 +426,7 @@ export function PublicCalculator({
                 <input
                   id="calc-vacancy-mobile"
                   type="number"
+                  inputMode="decimal"
                   min={0}
                   max={100}
                   step={1}

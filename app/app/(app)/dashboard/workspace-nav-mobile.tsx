@@ -21,19 +21,19 @@ export function WorkspaceNavMobile({
       <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
         <Link
           href={propertyHref}
-          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+          className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-subtle"
         >
           {propertyLabel}
         </Link>
         <Link
           href={modelingHref}
-          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+          className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-subtle"
         >
           Modeling
         </Link>
         <Link
           href={mortgageHref}
-          className="shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+          className="inline-flex min-h-[44px] shrink-0 items-center rounded-full border border-border bg-background px-3 text-sm font-medium text-foreground hover:bg-subtle"
         >
           Mortgage
         </Link>

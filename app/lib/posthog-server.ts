@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { PostHog } from "posthog-node";
 
 /**
@@ -33,5 +34,6 @@ export async function captureServerEvent(
         message: err instanceof Error ? err.message : String(err),
       })
     );
+    Sentry.captureException(err, { extra: { action: "posthog_capture_error", event } });
   }
 }

@@ -6,5 +6,6 @@ export const PROPERTY_EDIT_SECTION_NAV = [
   { id: "section-location", label: "Location & profile" },
   { id: "section-economics", label: "Purchase & value" },
   { id: "section-income", label: "Income & expenses" },
+  { id: "section-mortgage", label: "Mortgage" },
   { id: "section-notes", label: "Notes" },
 ] as const;

@@ -50,9 +50,10 @@ balance = max(0, balance - principal)
 - P&I = monthlyPayment - escrowAmount when escrowIncluded and escrowAmount > 0; clamp to ≥ 0.01
 
 **`getEffectiveBalance`:**
-- If balanceAsOfDate exists and is within 6 months of today → return currentBalance
-- Else → project from amortization; if projected = 0, fall back to currentBalance
-- Staleness: 6 months = 180 days
+- (Tier 1) If balanceAsOfDate is in the same calendar month as today → return currentBalance as-is
+- (Tier 2) If balanceAsOfDate is a prior month but within 180 days → project stored balance forward via `projectStoredBalanceForward`
+- (Tier 3) If balanceAsOfDate is older than 180 days or absent → project from original amortization start; if projected result = 0, fall back to currentBalance
+- Staleness threshold: 180 days (≈ 6 months)
 
 **`getBalanceSource`:**
 - Same staleness logic as getEffectiveBalance: "stored" if within 6 months, else "projected"

@@ -1437,7 +1437,7 @@ export function AddPropertyWizard({ dealId }: { dealId?: string }) {
     <form onSubmit={handleFormSubmit} className="rounded-lg border border-border bg-card p-6">
       <nav
         aria-label="Add property sections"
-        className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
+        className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card px-6 py-3"
       >
         <p className="mb-2 text-xs font-medium text-muted">Jump to</p>
         <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
