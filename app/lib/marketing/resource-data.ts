@@ -100,7 +100,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
         id: "veld",
         title: "How Veld uses DSCR",
         paragraphs: [
-          "Veld’s calculators and property views show DSCR using the assumptions you enter—rent, expenses, and financing—so you can compare scenarios consistently. We do not replace a lender’s underwriting model; we surface educational math so you can align questions with your loan officer.",
+          "Veld’s calculators and property views show DSCR from your inputs so you can compare scenarios. These aren’t a lender’s underwriting model—use them to prepare questions for your loan officer.",
         ],
       },
     ],
@@ -123,7 +123,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
       {
         question: "Where can I estimate DSCR quickly?",
         answer:
-          "Use Veld’s free investment property calculator on this site, then save more detailed work in Analyze with an account if you choose to sign up.",
+          "Use Veld’s free investment property calculator on this site. Create a free account to save work in Analyze.",
       },
     ],
     calculatorEmbed: "public",
@@ -184,7 +184,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
         id: "limits",
         title: "Limits of cap rate",
         paragraphs: [
-          "Cap rate does not include mortgage payments, closing costs, or your tax situation. For levered returns, pair cap rate with cash-on-cash return and DSCR. " + disclaimer,
+          "Cap rate does not include mortgage payments, closing costs, or your tax situation. For levered returns, pair cap rate with cash-on-cash return and DSCR.",
         ],
       },
     ],
@@ -202,7 +202,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
       {
         question: "Does Veld show cap rate?",
         answer:
-          "Yes—where applicable—in calculators and property views based on the inputs and policies documented in the product. Treat outputs as estimates.",
+          "Yes, where applicable, in calculators and property views based on inputs and policies documented in the product. Treat outputs as estimates.",
       },
     ],
     calculatorEmbed: "public",
@@ -367,7 +367,7 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
         id: "next",
         title: "Where to go next",
         paragraphs: [
-          "Open the dedicated explainers for DSCR, cap rate, and cash-on-cash, then try the free calculators on Veld. " + disclaimer,
+          "Open the dedicated explainers for DSCR, cap rate, and cash-on-cash, then try the free calculators on Veld.",
         ],
       },
     ],

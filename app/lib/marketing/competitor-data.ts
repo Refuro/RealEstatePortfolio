@@ -30,7 +30,7 @@ const stessa: CompetitorPageConfig = {
     "Compare Veld Portfolio to Stessa for rental portfolio analytics, deal analysis, and modeling—without replacing your accounting stack.",
   h1: "Stessa alternative for rental property investors",
   lede:
-    "Most investors searching for a Stessa alternative want stronger deal underwriting or projections without replacing their accounting setup. Veld focuses on portfolio analytics, a dedicated deal workspace, and long-term modeling—and is upfront about what it does not do (no bank sync, no rent collection).",
+    "Most investors looking at Stessa alternatives want stronger deal underwriting or projections without replacing their accounting stack. Veld focuses on portfolio analytics, a dedicated deal workspace, and long-term modeling. No bank sync, no rent collection.",
   fitFor: [
     "Investors who want deal underwriting alongside portfolio tracking",
     "Small portfolios (1–20 properties) that don't need full accounting or bank sync",
@@ -39,15 +39,15 @@ const stessa: CompetitorPageConfig = {
   differentiators: [
     {
       title: "Deal analyzer workspace",
-      body: "Run a full acquisition analysis before you buy, save it, and when you close promote it directly to your portfolio with assumptions intact—no re-entering data.",
+      body: "Run the numbers before you buy, save the analysis, and promote it to your portfolio when you close. Assumptions and data carry over.",
     },
     {
       title: "Modeling and mortgage clarity",
-      body: "See how a property performs over 5, 10, or 20 years with rent growth, expense changes, and an optional sale. Amortization and payoff are tracked per loan, not buried in aggregate totals.",
+      body: "Amortization and payoff tracked per loan; projections cover rent growth, expense changes, and an optional sale over 5–20 years.",
     },
     {
       title: "CSV migration",
-      body: "Import your existing properties from a spreadsheet in minutes using the documented CSV format. No manual re-entry of every address and mortgage.",
+      body: "Import existing properties via the documented CSV format. No re-entering every address and mortgage.",
     },
   ],
   features: [
@@ -61,7 +61,7 @@ const stessa: CompetitorPageConfig = {
     {
       question: "Is Veld a drop-in replacement for Stessa?",
       answer:
-        "Not exactly. Products differ in scope and roadmap. Veld emphasizes portfolio analytics, deal analysis, and modeling for investors evaluating and holding rentals. Compare features against your own workflow before switching.",
+        "Not exactly. Veld focuses on analytics, deal underwriting, and modeling; Stessa leans into accounting and bank sync. Try both against your workflow.",
     },
     {
       question: "Can I import my portfolio data?",
@@ -71,12 +71,12 @@ const stessa: CompetitorPageConfig = {
     {
       question: "Does Veld offer rent collection or bank sync?",
       answer:
-        "No. Veld is focused on analytics and underwriting—not rent collection, banking, or full general-ledger accounting. Use it alongside whatever banking or PM tools you already use.",
+        "No. Veld is focused on analytics and underwriting—not rent collection, banking, or full general-ledger accounting. Use it alongside your existing banking or PM tools.",
     },
     {
       question: "How do I try Veld without a card?",
       answer:
-        "The Free tier includes a limited number of properties so you can run the core loop—add a property, review metrics, and try Analyze for deals—before upgrading.",
+        "The Free tier lets you add a property, review metrics, and try Analyze for deals before upgrading.",
     },
   ],
   landingVariant: "alt_stessa_v1",
@@ -91,9 +91,9 @@ const rentastic: CompetitorPageConfig = {
     "See how Veld Portfolio compares for rental analytics, deal analysis, and portfolio modeling when you are evaluating Rentastic alternatives.",
   h1: "Rentastic alternative for rental property investors",
   lede:
-    "Investors evaluating Rentastic typically want clearer deal math or longer-term projections on the properties they own. Veld centers on portfolio analytics, a full deal workspace, and scenario modeling—without overstating what it covers.",
+    "Most investors looking at Rentastic want better deal math or longer-term projections. Veld focuses on portfolio analytics, a full deal workspace, and scenario modeling.",
   fitFor: [
-    "Investors who want to underwrite deals and track the resulting portfolio in one place",
+    "Investors who want to underwrite deals and track the resulting portfolio",
     "Landlords who want rent-vs-market benchmarks alongside their core metrics",
     "Investors who need mortgage amortization and hold-period projections",
   ],
@@ -103,12 +103,12 @@ const rentastic: CompetitorPageConfig = {
       body: "Analyze a deal, save it, compare multiple options side by side, and when you buy, convert it to a portfolio property with one click—assumptions carry over.",
     },
     {
-      title: "Benchmarks and metrics in one place",
-      body: "See whether your rent is above or below market using RentCast estimates that sit right next to your entered assumptions, so you can spot gaps without switching tabs.",
+      title: "Rent benchmarks alongside your assumptions",
+      body: "RentCast estimates sit next to your entered assumptions so you can spot rent gaps immediately.",
     },
     {
       title: "Transparent limits by plan",
-      body: "Free, Investor, and Pro tiers list exact property and deal limits on the Pricing page upfront—no surprises when you hit a wall or need to upgrade.",
+      body: "Free, Investor, and Pro tiers list exact property and deal limits on the Pricing page—no surprises.",
     },
   ],
   features: [
@@ -122,7 +122,7 @@ const rentastic: CompetitorPageConfig = {
     {
       question: "How is Veld different from Rentastic?",
       answer:
-        "Both products aim to help landlords track performance. Veld leans into deal underwriting, scenario modeling, and calculator surfaces for acquisition work—verify which workflows you need and compare side by side.",
+        "Both track performance. Veld adds deal underwriting, scenario modeling, and acquisition calculators that Rentastic doesn't have.",
     },
     {
       question: "Can I import from a spreadsheet?",
@@ -147,7 +147,7 @@ const cozy: CompetitorPageConfig = {
     "Landlords moving off Cozy can use Veld for portfolio analytics and deal analysis—focused on numbers, not rent collection.",
   h1: "Cozy alternative focused on analytics and deals",
   lede:
-    "Cozy was acquired and its path changed; many landlords who used it for tracking are still looking for a home for their numbers. Veld doesn't replace rent collection—it focuses on the investor side: portfolio metrics, deal underwriting, and projections you can pair with whatever payment tool you already use.",
+    "Cozy was acquired and its direction changed; many landlords are still looking for a replacement analytics layer. Veld doesn't replace rent collection—it covers portfolio metrics, deal underwriting, and projections alongside whatever payment tool you use.",
   fitFor: [
     "Former Cozy users who need a dedicated analytics and portfolio metrics layer",
     "Landlords who want cap rate, DSCR, and cash flow tracked per property",
@@ -155,12 +155,12 @@ const cozy: CompetitorPageConfig = {
   ],
   differentiators: [
     {
-      title: "Purpose-built for investor metrics",
-      body: "Cap rate, DSCR, cash flow, equity, and LTV are first-class—calculated consistently, visible at portfolio level and per property, not something you have to derive yourself.",
+      title: "Investor metrics, calculated consistently",
+      body: "Cap rate, DSCR, cash flow, equity, and LTV are calculated consistently at both portfolio and property level.",
     },
     {
       title: "Deal analyzer for the next acquisition",
-      body: "Run the numbers on a property before you buy, save the analysis, and revisit it later. Convert to a portfolio entry when you close.",
+      body: "Save the analysis before you buy and promote it to your portfolio when you close—assumptions carry over.",
     },
     {
       title: "No pretend feature parity",
@@ -177,7 +177,7 @@ const cozy: CompetitorPageConfig = {
     {
       question: "Does Veld include rent collection like Cozy?",
       answer:
-        "No. Veld does not process rent payments. Use a payments or property-management product for collections and use Veld for analytics and underwriting.",
+        "No. Veld doesn't handle rent payments. Use a PM or payments product for collections; use Veld for analytics and underwriting.",
     },
     {
       question: "Can I track my rentals after moving data?",
@@ -202,7 +202,7 @@ const spreadsheets: CompetitorPageConfig = {
     "Replace fragile spreadsheets with a structured portfolio and deal workspace—Veld keeps metrics consistent and importable.",
   h1: "Spreadsheet alternative for rental property investors",
   lede:
-    "Spreadsheets are flexible but brittle: broken formulas, version chaos, and no shared model across deals and owned properties. Veld gives you a single place for portfolio metrics, saved deal analyses, and documented CSV import so you can migrate deliberately.",
+    "Spreadsheets are flexible but brittle: broken formulas, version chaos, and no shared model across deals and owned properties. Veld keeps portfolio metrics and deal analyses in a structured workspace, with CSV import for migration.",
   differentiators: [
     {
       title: "One source of truth",
@@ -228,7 +228,7 @@ const spreadsheets: CompetitorPageConfig = {
     {
       question: "Do I have to abandon Excel completely?",
       answer:
-        "No. Many investors export for ad-hoc analysis or share with a CPA. Veld is the system of record for portfolio and deal math inside the product.",
+        "No. Many investors export for ad-hoc analysis or share with a CPA. Veld is the system of record for portfolio and deal math.",
     },
     {
       question: "How do I migrate from a workbook?",
@@ -253,11 +253,11 @@ const excelRentalProperty: CompetitorPageConfig = {
     "Move from Excel rental trackers to Veld for consistent metrics, deal analysis, and portfolio reporting without formula sprawl.",
   h1: "Excel rental property tracker alternative",
   lede:
-    "Excel works until it doesn't—too many versions, hidden errors, and no standard way to compare a new deal to what you already own. Veld is built for rental investors who want structured metrics, a deal workspace, and imports that match a published CSV contract.",
+    "Excel works until it doesn't—too many versions, hidden errors, and no standard way to compare a new deal to what you already own. Veld gives rental investors structured metrics, a deal workspace, and CSV imports with a documented format.",
   differentiators: [
     {
       title: "Investor metrics without formula maintenance",
-      body: "Key outputs stay aligned with the same underlying model as the rest of the app.",
+      body: "Cap rate, DSCR, and cash flow use consistent definitions across the app. No formula drift when you update assumptions.",
     },
     {
       title: "Analyze then own",
@@ -265,7 +265,7 @@ const excelRentalProperty: CompetitorPageConfig = {
     },
     {
       title: "Built-in calculators for quick checks",
-      body: "Public and in-app calculators share patterns with your portfolio so language stays consistent.",
+      body: "BRRRR, fix-and-flip, STR vs LTR, and investment property calculators are built in. No separate tools.",
     },
   ],
   features: [

@@ -24,7 +24,7 @@
 
 ### Low
 
-- **DashboardMockup: Annual rent = NOI = $55,290 implies zero portfolio expenses** — `docs/plans/2026-04-03-embedded-mockups-plan.md` "Metric row 2". Annual rent and NOI are identical values. Per `ownership-metrics.md` §2, `NOI = (R − E) × 12 × s` and `Annual rent = R × 12 × s`; equality holds only when `E = 0`. An informed visitor comparing both cards will conclude there are no expenses, which undermines credibility. No code fix required (mockup is presentational); curate the numbers so that NOI < Annual rent by a plausible expense delta before implementation.
+- **DashboardMockup: Annual rent = NOI = $55,290 implies zero portfolio expenses** — `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` "Metric row 2". Annual rent and NOI are identical values. Per `ownership-metrics.md` §2, `NOI = (R − E) × 12 × s` and `Annual rent = R × 12 × s`; equality holds only when `E = 0`. An informed visitor comparing both cards will conclude there are no expenses, which undermines credibility. No code fix required (mockup is presentational); curate the numbers so that NOI < Annual rent by a plausible expense delta before implementation.
 
 - **`StrLtrSideResult.annualGrossIncome` has different semantic bases per side** — `app/lib/str-ltr-calculator.ts` lines 142–155. For STR the field is pre-platform-fee gross bookings (`annualGrossStrBookings`); for LTR it is vacancy-adjusted effective annual rent (`ltrMetrics.grossAnnualRent`). The type-level JSDoc comment documents this difference correctly, but any UI that labels both sides with a shared "Annual gross income" heading without qualification will silently misrepresent the LTR figure as pre-vacancy rather than post-vacancy. Low risk today (no UI component yet uses this calc); worth a UI-layer annotation before shipping the STR/LTR calculator page.
 
@@ -186,7 +186,7 @@ Assumptions from plan: purchase = value = $450,000, rent = $4,200, expenses = $4
 
 ### Plans (new surface)
 
-- `docs/plans/2026-04-03-embedded-mockups-plan.md` — hardcoded values for `DashboardMockup` (lines 57–65), `MortgageMockup` (lines 69–77), `DealAnalyzerMockup` (lines 80–93)
+- `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` — hardcoded values for `DashboardMockup` (lines 57–65), `MortgageMockup` (lines 69–77), `DealAnalyzerMockup` (lines 80–93)
 
 ### Implementation
 
@@ -254,4 +254,4 @@ Assumptions from plan: purchase = value = $450,000, rent = $4,200, expenses = $4
 ## Changelog (audit scope)
 
 - **2026-04-03 AM:** Math & Logic lane — scope: `app/lib/amortization.ts`, `app/lib/metrics/*`, `app/lib/benchmark-utils.ts`. Found payoff-years lag cap FAIL (medium).
-- **2026-04-03 PM (this run):** Re-verified payoff lag fix; audited `app/lib/str-ltr-calculator.ts`, `app/lib/fix-and-flip-calculator.ts`, `app/lib/calculator-metric-tones.ts`; verified hardcoded numbers in `docs/plans/2026-04-03-embedded-mockups-plan.md` (DashboardMockup, MortgageMockup, DealAnalyzerMockup). New Low finding: DashboardMockup NOI = Annual rent implies zero expenses.
+- **2026-04-03 PM (this run):** Re-verified payoff lag fix; audited `app/lib/str-ltr-calculator.ts`, `app/lib/fix-and-flip-calculator.ts`, `app/lib/calculator-metric-tones.ts`; verified hardcoded numbers in `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` (DashboardMockup, MortgageMockup, DealAnalyzerMockup). New Low finding: DashboardMockup NOI = Annual rent implies zero expenses.

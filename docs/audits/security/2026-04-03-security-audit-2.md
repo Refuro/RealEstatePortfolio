@@ -34,7 +34,7 @@
 
 - **CSP documentation in `security-audit.md` §5 is stale** — The current `app/next.config.ts` `script-src` includes several additions not reflected in the §5 policy table: `https://clerk.veldportfolio.com` (custom Clerk domain), `https://www.googletagmanager.com`, `https://googleads.g.doubleclick.net`, `https://us-assets.i.posthog.com` (PostHog), and `https://connect.facebook.net` (Facebook Pixel); `style-src` now includes `https://fonts.googleapis.com`; `font-src` includes `https://fonts.gstatic.com`; `frame-src` includes `https://clerk.veldportfolio.com`. All additions appear intentional (tracking integrations noted in `security-notes.md` under Google Ads). The stale doc creates a maintenance gap: future reviewers comparing code to docs will find unexplained divergence. — **Evidence:** `app/next.config.ts` (`cspDirectives`); `docs/security/security-audit.md` §5 (last updated 2026-03-31, pre-dates these additions); `docs/security/security-notes.md` (Google Ads entry mentions `gtag.js` but CSP section does not enumerate all new domains).
 
-- **`localPatterns` in `next.config.ts` cleanup pending** — `images.localPatterns: [{ pathname: "**", search: "" }]` is still present. The embedded-mockups plan (2026-04-03-embedded-mockups-plan.md) notes this entry should be removed when the screenshot PNGs are deleted. Until then it is a configuration debt item, not a security vulnerability. — **Evidence:** `app/next.config.ts` line 55; `docs/plans/2026-04-03-embedded-mockups-plan.md` (Cleanup section).
+- **`localPatterns` in `next.config.ts` cleanup pending** — `images.localPatterns: [{ pathname: "**", search: "" }]` is still present. The embedded-mockups plan (2026-04-03-embedded-mockups-plan.md) notes this entry should be removed when the screenshot PNGs are deleted. Until then it is a configuration debt item, not a security vulnerability. — **Evidence:** `app/next.config.ts` line 55; `docs/archive/plans/2026-04-03-embedded-mockups-plan.md` (Cleanup section).
 
 - **CSP remains Report-Only** — Carried from morning. No change; enforcement is gated on `CSP_ENFORCEMENT=true`. — **Evidence:** `app/next.config.ts` (`enforceCsp`, `cspHeaders`).
 
@@ -48,7 +48,7 @@
 |------|-----------------|
 | Process & policy | `docs/process/security-audit-process.md`, `docs/process/audit-report-template.md`, `docs/security/security-notes.md`, `docs/security/security-audit.md` |
 | Morning audit | `docs/audits/security/2026-04-03-security-audit.md` |
-| New plans (today) | `docs/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/plans/2026-04-03-embedded-mockups-plan.md`, `docs/plans/2026-04-03-landing-mobile-cta-plan.md` |
+| New plans (today) | `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/archive/plans/2026-04-03-embedded-mockups-plan.md`, `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md` |
 | Webhook fix verification | `app/app/api/billing/webhook/route.ts` — `resolveAppUserIdForSubscription` and `syncSubscriptionToDb` (full read) |
 | Billing routes | `app/app/api/billing/sync/route.ts` (full read), `app/app/api/billing/portal/route.ts` (full read) |
 | Admin layout | `app/app/(app)/admin/layout.tsx` (full read) |

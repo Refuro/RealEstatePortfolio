@@ -12,6 +12,8 @@ import {
   getPayoffYearsWithExtraWithTolerance,
   getPiForAmortization,
   getProjectedBalanceAsOf,
+  getRefinanceProjection,
+  getStandardMonthlyPayment,
   getToleranceAwarePayoffProjection,
   isNegativeAmortizingPayment,
   isWithinTermEndTolerance,
@@ -587,6 +589,200 @@ describe("hybrid payoff contract: strict core vs tolerance UI", () => {
     };
     expect(getMonthsToPayoffWithExtraStrict(m, 0, 15)).toBeNull();
     expect(getMonthsToPayoffWithExtraWithTolerance(m, 0, 15)).toBe(15);
+  });
+});
+
+describe("getStandardMonthlyPayment", () => {
+  it("happy path: 30yr 6% on 200k ≈ $1,199.10", () => {
+    expect(getStandardMonthlyPayment(200_000, 0.06, 30)).toBeCloseTo(1199.1, 1);
+  });
+
+  it("zero annual rate divides principal by months", () => {
+    expect(getStandardMonthlyPayment(120_000, 0, 10)).toBe(1000);
+  });
+
+  it("returns 0 for non-positive principal", () => {
+    expect(getStandardMonthlyPayment(0, 0.06, 30)).toBe(0);
+    expect(getStandardMonthlyPayment(-10_000, 0.06, 30)).toBe(0);
+  });
+
+  it("returns 0 for non-positive term years", () => {
+    expect(getStandardMonthlyPayment(100_000, 0.06, 0)).toBe(0);
+  });
+
+  it("returns 0 for negative annual rate", () => {
+    expect(getStandardMonthlyPayment(100_000, -0.01, 30)).toBe(0);
+  });
+
+  it("short term: 5yr 5% on 50k ≈ $943.56", () => {
+    expect(getStandardMonthlyPayment(50_000, 0.05, 5)).toBeCloseTo(943.56, 1);
+  });
+});
+
+describe("getRefinanceProjection", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-01-15T12:00:00.000Z"));
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const happyPathMortgage = {
+    originalLoanAmount: 400_000,
+    currentBalance: "280000",
+    interestRate: 0.065,
+    termYears: 30,
+    startDate: new Date("2020-01-01"),
+    monthlyPayment: 1776,
+    balanceAsOfDate: new Date(2026, 0, 1),
+  };
+
+  it("happy path: lower rate shows savings, break-even, and positive interest delta", () => {
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 0.055,
+      newTermYears: 30,
+      closingCosts: 4000,
+    });
+    expect(r.effectiveBalance).toBe(280_000);
+    expect(r.newMonthlyPayment).toBeLessThan(r.currentMonthlyPi);
+    expect(r.monthlySavings).toBeGreaterThan(0);
+    expect(r.breakEvenMonths).toBe(
+      Math.ceil(4000 / r.monthlySavings),
+    );
+    expect(r.totalInterestNew).toBeLessThan(r.remainingInterestCurrent);
+    expect(r.totalInterestSaved).toBeGreaterThan(0);
+    expect(r.isNewLoanNegativeAmortizing).toBe(false);
+  });
+
+  it("higher new rate: monthly savings negative, no break-even date", () => {
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 0.08,
+      newTermYears: 30,
+      closingCosts: 4000,
+    });
+    expect(r.monthlySavings).toBeLessThan(0);
+    expect(r.breakEvenMonths).toBeNull();
+    expect(r.breakEvenDate).toBeNull();
+  });
+
+  it("zero closing costs: no break-even fields", () => {
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 0.055,
+      newTermYears: 30,
+      closingCosts: 0,
+    });
+    expect(r.breakEvenMonths).toBeNull();
+    expect(r.breakEvenDate).toBeNull();
+    expect(r.monthlySavings).toBeGreaterThan(0);
+    expect(r.totalInterestSaved).toBeGreaterThan(0);
+  });
+
+  it("undefined closing costs behaves like zero for break-even", () => {
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 0.055,
+      newTermYears: 30,
+    });
+    expect(r.breakEvenMonths).toBeNull();
+    expect(r.breakEvenDate).toBeNull();
+  });
+
+  it("zero new rate: payment is principal / months, no NaN", () => {
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 0,
+      newTermYears: 15,
+    });
+    const expectedPi = 280_000 / (15 * 12);
+    expect(r.newMonthlyPayment).toBeCloseTo(expectedPi, 1);
+    expect(Number.isFinite(r.totalInterestNew)).toBe(true);
+    expect(Number.isFinite(r.totalInterestSaved)).toBe(true);
+  });
+
+  it("zero effective balance: all zeros, not negative-amortizing", () => {
+    const r = getRefinanceProjection(
+      {
+        originalLoanAmount: 100_000,
+        currentBalance: 0,
+        interestRate: 0.06,
+        termYears: 30,
+        startDate: new Date("2020-01-01"),
+        monthlyPayment: 600,
+        balanceAsOfDate: new Date(2026, 0, 1),
+      },
+      { newAnnualRate: 0.055, newTermYears: 30 },
+    );
+    expect(r.effectiveBalance).toBe(0);
+    expect(r.currentMonthlyPi).toBe(0);
+    expect(r.newMonthlyPayment).toBe(0);
+    expect(r.monthlySavings).toBe(0);
+    expect(r.remainingInterestCurrent).toBe(0);
+    expect(r.totalInterestNew).toBe(0);
+    expect(r.totalInterestSaved).toBe(0);
+    expect(r.breakEvenMonths).toBeNull();
+    expect(r.isNewLoanNegativeAmortizing).toBe(false);
+  });
+
+  it("negative-amortizing new loan: flag set, interest delta zero, no break-even", () => {
+    // 100% annual rate: rounded P&I can sit strictly below monthly interest (rounding edge).
+    const r = getRefinanceProjection(happyPathMortgage, {
+      newAnnualRate: 1.0,
+      newTermYears: 30,
+    });
+    expect(r.isNewLoanNegativeAmortizing).toBe(true);
+    expect(r.totalInterestSaved).toBe(0);
+    expect(r.breakEvenMonths).toBeNull();
+  });
+
+  it("near payoff: remainingCurrentMonths under 24 and small remaining interest", () => {
+    vi.setSystemTime(new Date("2049-08-01T12:00:00.000Z"));
+    const m = {
+      originalLoanAmount: 100_000,
+      currentBalance: "5000",
+      interestRate: 0.065,
+      termYears: 30,
+      startDate: new Date("2020-01-01"),
+      monthlyPayment: 500,
+      balanceAsOfDate: new Date(2049, 7, 1),
+    };
+    const r = getRefinanceProjection(m, {
+      newAnnualRate: 0.055,
+      newTermYears: 30,
+    });
+    expect(r.remainingCurrentMonths).toBeLessThan(24);
+    expect(r.remainingInterestCurrent).toBeLessThan(5000);
+  });
+
+  it("lag cap parity with payoff projection formula", () => {
+    vi.setSystemTime(new Date("2050-01-15T12:00:00.000Z"));
+    const mortgage = {
+      originalLoanAmount: 100_000,
+      currentBalance: 100,
+      interestRate: 0.06,
+      termYears: 30,
+      startDate: new Date(2020, 0, 15),
+      monthlyPayment: 60,
+      balanceAsOfDate: new Date(2050, 0, 1),
+    };
+    const startDate = new Date(mortgage.startDate);
+    const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+    const today = new Date();
+    const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthsSinceStartDate = Math.max(
+      0,
+      (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+        (startOfCurrentMonth.getMonth() - startNorm.getMonth()),
+    );
+    const lagMonths = getPaymentStartLagMonths(mortgage);
+    const expectedRemaining = Math.max(
+      0,
+      mortgage.termYears * 12 - monthsSinceStartDate + lagMonths,
+    );
+    const r = getRefinanceProjection(mortgage, {
+      newAnnualRate: 0.055,
+      newTermYears: 30,
+    });
+    expect(expectedRemaining).toBeGreaterThan(0);
+    expect(r.remainingCurrentMonths).toBe(expectedRemaining);
   });
 });
 

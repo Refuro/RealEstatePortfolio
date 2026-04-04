@@ -52,8 +52,7 @@ export default async function InvestmentPropertyCalculatorPage() {
               Investment property calculator
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
-              Estimate rental property performance on this page. With a free account, save deals in
-              Analyze and track owned properties in your portfolio.
+              Estimate rental property performance. With a free account, save deals in Analyze and track your portfolio.
             </p>
           </header>
 

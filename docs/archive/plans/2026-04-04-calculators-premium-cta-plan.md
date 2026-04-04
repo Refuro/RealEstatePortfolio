@@ -4,7 +4,7 @@
 **Status:** Ready to execute  
 **Primary goal:** Bring **public calculator surfaces** (ad and SEO landing pages) to the same quality bar as the **pricing** and **landing** revamps: clear conversion paths, premium layout, tasteful CSS-first motion—without breaking the free-tool value proposition.
 
-**Related plans:** `docs/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/plans/2026-04-02-landing-app-improvement-plan.md`, `docs/plans/2026-04-03-landing-mobile-cta-plan.md`
+**Related plans:** `docs/archive/plans/2026-04-03-pricing-page-premium-plan.md`, `docs/archive/plans/2026-04-02-landing-app-improvement-plan.md`, `docs/archive/plans/2026-04-03-landing-mobile-cta-plan.md`
 
 ---
 
@@ -205,7 +205,7 @@ A short **audit table** (markdown in PR description is fine):
 Use as the **user message** to the implementing AI (adjust paths if your clone differs).
 
 ```
-You are executing docs/plans/2026-04-04-calculators-premium-cta-plan.md for Veld Portfolio.
+You are executing docs/archive/plans/2026-04-04-calculators-premium-cta-plan.md for Veld Portfolio.
 
 Follow the plan phases in order: Phase 0 → Phase 1 (CTA audit) → Phase 2 (layout/system) → Phase 3 (motion) → Phase 4 (verification).
 
@@ -220,7 +220,7 @@ Constraints:
 - Design tokens only; fix veld-ui anti-patterns on touched lines.
 - prefers-reduced-motion respected; CSS-first motion; no new deps unless unavoidable.
 - Do not change calculator math libs unless fixing a real bug.
-- Do not edit docs/plans/2026-04-04-calculators-premium-cta-plan.md unless the user asks.
+- Do not edit docs/archive/plans/2026-04-04-calculators-premium-cta-plan.md unless the user asks.
 
 Deliver:
 1) Phase 1 audit table (routes × CTAs × issues).

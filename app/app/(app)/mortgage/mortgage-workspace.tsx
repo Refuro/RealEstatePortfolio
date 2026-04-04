@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
 
 const MortgageTabContent = dynamic(
@@ -57,6 +57,8 @@ export function MortgageWorkspace({
   initialSelectedMortgageId?: string;
 }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const mortgageIdFromUrl = searchParams.get("mortgageId");
   const [selectedPropertyId, setSelectedPropertyId] = useState(
     initialSelectedPropertyId &&
       properties.some((property) => property.id === initialSelectedPropertyId)
@@ -121,6 +123,17 @@ export function MortgageWorkspace({
           >
             <ChevronRight className="size-3.5" aria-hidden />
             Edit mortgage details
+          </Link>
+          <Link
+            href={
+              mortgageIdFromUrl
+                ? `/refinance?propertyId=${encodeURIComponent(selectedProperty.id)}&mortgageId=${encodeURIComponent(mortgageIdFromUrl)}`
+                : `/refinance?propertyId=${encodeURIComponent(selectedProperty.id)}`
+            }
+            className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
+          >
+            <ChevronRight className="size-3.5" aria-hidden />
+            Refinance comparison
           </Link>
         </div>
       )}
@@ -207,6 +220,17 @@ export function MortgageWorkspace({
             >
               <ChevronRight className="size-3.5" aria-hidden />
               Edit mortgage details
+            </Link>
+            <Link
+              href={
+                mortgageIdFromUrl
+                  ? `/refinance?propertyId=${encodeURIComponent(selectedProperty.id)}&mortgageId=${encodeURIComponent(mortgageIdFromUrl)}`
+                  : `/refinance?propertyId=${encodeURIComponent(selectedProperty.id)}`
+              }
+              className="inline-flex items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
+            >
+              <ChevronRight className="size-3.5" aria-hidden />
+              Refinance comparison
             </Link>
           </div>
         )}

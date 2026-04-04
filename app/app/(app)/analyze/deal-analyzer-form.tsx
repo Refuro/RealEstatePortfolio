@@ -726,7 +726,7 @@ export function DealAnalyzerForm({
                       key={`mobile-rent-${preset}`}
                       type="button"
                       onClick={() => setRentStressPercent(preset)}
-                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                      className={`inline-flex min-h-[44px] items-center justify-center rounded-md border px-2.5 text-xs transition ${
                         active
                           ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
@@ -750,7 +750,7 @@ export function DealAnalyzerForm({
                       key={`mobile-exp-${preset}`}
                       type="button"
                       onClick={() => setExpenseStressPercent(preset)}
-                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                      className={`inline-flex min-h-[44px] items-center justify-center rounded-md border px-2.5 text-xs transition ${
                         active
                           ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
@@ -1258,7 +1258,7 @@ export function DealAnalyzerForm({
                       key={`rent-${preset}`}
                       type="button"
                       onClick={() => setRentStressPercent(preset)}
-                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                      className={`inline-flex min-h-[44px] items-center justify-center rounded-md border px-2.5 text-xs transition ${
                         active
                           ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
@@ -1282,7 +1282,7 @@ export function DealAnalyzerForm({
                       key={`exp-${preset}`}
                       type="button"
                       onClick={() => setExpenseStressPercent(preset)}
-                      className={`rounded-md border px-2.5 py-1 text-xs transition ${
+                      className={`inline-flex min-h-[44px] items-center justify-center rounded-md border px-2.5 text-xs transition ${
                         active
                           ? "border-accent/50 bg-subtle text-foreground"
                           : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"

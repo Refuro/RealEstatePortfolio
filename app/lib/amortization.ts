@@ -262,6 +262,36 @@ export type PayoffToleranceOptions = {
   maxLagMonths?: number;
 };
 
+/**
+ * Inputs for refinance what-if projection. **`newAnnualRate` is a decimal (e.g. 0.055 for 5.5%).
+ * Divide user percentage input by 100 before passing.**
+ */
+export type RefinanceInput = {
+  newAnnualRate: number;
+  newTermYears: number;
+  closingCosts?: number;
+};
+
+/**
+ * Result of comparing remaining interest on the current loan vs total interest on a hypothetical
+ * new loan from the effective balance. **`totalInterestSaved` is `remainingInterestCurrent − totalInterestNew`
+ * (interest only; closing costs are not included in this figure).**
+ */
+export type RefinanceProjection = {
+  effectiveBalance: number;
+  currentMonthlyPi: number;
+  newMonthlyPayment: number;
+  monthlySavings: number;
+  remainingInterestCurrent: number;
+  totalInterestNew: number;
+  totalInterestSaved: number;
+  breakEvenMonths: number | null;
+  breakEvenDate: Date | null;
+  remainingCurrentMonths: number;
+  balanceSource: "stored" | "stored_projected" | "projected";
+  isNewLoanNegativeAmortizing: boolean;
+};
+
 export type ToleranceAwarePayoffProjection = PayoffProjection & {
   toleranceApplied: boolean;
 };
@@ -694,4 +724,173 @@ export function getPayoffYearsWithExtraWithTolerance(
   );
   if (months == null) return null;
   return Math.round(months / 12);
+}
+
+/**
+ * Standard fixed-rate P&I (principal and interest) monthly payment.
+ * **`annualRate` is a decimal (e.g. 0.06 for 6%).**
+ */
+export function getStandardMonthlyPayment(
+  principal: number,
+  annualRate: number,
+  termYears: number
+): number {
+  if (principal <= 0 || termYears <= 0 || annualRate < 0) {
+    return 0;
+  }
+  if (annualRate === 0) {
+    return Math.round((principal / (termYears * 12)) * 100) / 100;
+  }
+  const r = annualRate / 12;
+  const n = termYears * 12;
+  const factor = Math.pow(1 + r, n);
+  const payment = (principal * r * factor) / (factor - 1);
+  return Math.round(payment * 100) / 100;
+}
+
+/**
+ * Compare remaining interest on the current loan (from effective balance) to total interest on a
+ * hypothetical new loan. Uses {@link getEffectiveBalance}, {@link getPiForAmortization}, and
+ * {@link isNegativeAmortizingPayment} with **`newAnnualRate`** (not the original rate) for the
+ * negative-amortization check.
+ */
+export function getRefinanceProjection(
+  mortgage: MortgageRecord,
+  input: RefinanceInput
+): RefinanceProjection {
+  const balanceSource = getBalanceSource(mortgage);
+  const effectiveBalance = getEffectiveBalance(mortgage);
+
+  if (effectiveBalance <= 0) {
+    return {
+      effectiveBalance: 0,
+      currentMonthlyPi: 0,
+      newMonthlyPayment: 0,
+      monthlySavings: 0,
+      remainingInterestCurrent: 0,
+      totalInterestNew: 0,
+      totalInterestSaved: 0,
+      breakEvenMonths: null,
+      breakEvenDate: null,
+      remainingCurrentMonths: 0,
+      balanceSource,
+      isNewLoanNegativeAmortizing: false,
+    };
+  }
+
+  const currentMonthlyPi = getPiForAmortization(mortgage);
+  const newMonthlyPayment = getStandardMonthlyPayment(
+    effectiveBalance,
+    input.newAnnualRate,
+    input.newTermYears
+  );
+
+  const termYears = mortgage.termYears;
+  const startDate = new Date(mortgage.startDate);
+  const startNorm = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+  const today = new Date();
+  const startOfCurrentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+  const monthsSinceStartDate = Math.max(
+    0,
+    (startOfCurrentMonth.getFullYear() - startNorm.getFullYear()) * 12 +
+      (startOfCurrentMonth.getMonth() - startNorm.getMonth())
+  );
+  const totalTermMonths = termYears * 12;
+  const lagMonths = getPaymentStartLagMonths(mortgage);
+  const remainingCurrentMonths = Math.max(
+    0,
+    totalTermMonths - monthsSinceStartDate + lagMonths
+  );
+
+  if (
+    isNegativeAmortizingPayment(
+      newMonthlyPayment,
+      effectiveBalance,
+      input.newAnnualRate
+    )
+  ) {
+    return {
+      effectiveBalance,
+      currentMonthlyPi,
+      newMonthlyPayment,
+      monthlySavings: currentMonthlyPi - newMonthlyPayment,
+      remainingInterestCurrent: 0,
+      totalInterestNew: 0,
+      totalInterestSaved: 0,
+      breakEvenMonths: null,
+      breakEvenDate: null,
+      remainingCurrentMonths,
+      balanceSource,
+      isNewLoanNegativeAmortizing: true,
+    };
+  }
+
+  const monthlyRate = Number(mortgage.interestRate) / 12;
+  const payment = currentMonthlyPi;
+
+  let remainingInterestCurrent = 0;
+  let runningBalance = effectiveBalance;
+  for (let i = 0; i < remainingCurrentMonths && runningBalance > 0; i++) {
+    const interest = runningBalance * monthlyRate;
+    if (payment + AMORTIZATION_COMPARISON_EPSILON < interest) {
+      break;
+    }
+    remainingInterestCurrent += interest;
+    let principal = payment - interest;
+    if (principal >= runningBalance) {
+      principal = runningBalance;
+    }
+    principal = Math.max(0, principal);
+    runningBalance = Math.max(0, runningBalance - principal);
+  }
+  remainingInterestCurrent = Math.round(remainingInterestCurrent * 100) / 100;
+
+  const newMonthlyRate = input.newAnnualRate / 12;
+  const newTermMonths = input.newTermYears * 12;
+  let totalInterestNew = 0;
+  runningBalance = effectiveBalance;
+  for (let i = 0; i < newTermMonths && runningBalance > 0; i++) {
+    const interest = runningBalance * newMonthlyRate;
+    totalInterestNew += interest;
+    let principal = newMonthlyPayment - interest;
+    if (principal + AMORTIZATION_COMPARISON_EPSILON < 0) {
+      break;
+    }
+    if (principal >= runningBalance) {
+      principal = runningBalance;
+    }
+    principal = Math.max(0, principal);
+    runningBalance = Math.max(0, runningBalance - principal);
+  }
+  totalInterestNew = Math.round(totalInterestNew * 100) / 100;
+
+  const monthlySavings = currentMonthlyPi - newMonthlyPayment;
+  const totalInterestSaved = remainingInterestCurrent - totalInterestNew;
+
+  const closing = input.closingCosts ?? 0;
+  let breakEvenMonths: number | null = null;
+  let breakEvenDate: Date | null = null;
+  if (closing > 0 && monthlySavings > 0) {
+    breakEvenMonths = Math.ceil(closing / monthlySavings);
+    breakEvenDate = new Date(
+      today.getFullYear(),
+      today.getMonth() + breakEvenMonths,
+      1
+    );
+  }
+
+  return {
+    effectiveBalance,
+    currentMonthlyPi,
+    newMonthlyPayment,
+    monthlySavings,
+    remainingInterestCurrent,
+    totalInterestNew,
+    totalInterestSaved,
+    breakEvenMonths,
+    breakEvenDate,
+    remainingCurrentMonths,
+    balanceSource,
+    isNewLoanNegativeAmortizing: false,
+  };
 }
