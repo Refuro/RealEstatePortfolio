@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     template: "%s | Veld Portfolio",
   },
   description:
-    "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+    "Know if your rentals are actually performing. Track equity, cash flow, rent vs market, and evaluate new deals — built for small landlords.",
   icons: {
     icon: [
       { url: "/favicon-96x96.png?v=2", sizes: "96x96", type: "image/png" },
@@ -49,14 +49,14 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
     description:
-      "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
+      "Know if your rentals are actually performing. Track equity, cash flow, rent vs market, and evaluate new deals.",
     type: "website",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Veld Portfolio — Portfolio analytics for real estate investors",
+        alt: "Veld Portfolio — Know if your rentals are actually performing",
       },
     ],
   },
@@ -64,13 +64,13 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
     description:
-      "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
+      "Know if your rentals are actually performing. Track equity, cash flow, rent vs market, and evaluate new deals.",
     images: [
       {
         url: "/og-image.png",
         width: 1200,
         height: 630,
-        alt: "Veld Portfolio — Portfolio analytics for real estate investors",
+        alt: "Veld Portfolio — Know if your rentals are actually performing",
       },
     ],
   },
