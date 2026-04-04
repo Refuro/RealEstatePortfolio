@@ -56,6 +56,31 @@ function isBrowserExtensionUri(value: string | null): boolean {
   );
 }
 
+/** Some browsers send `source-file` as the literal string `chrome-extension` without a URL. */
+function isExtensionSourceFileLabel(value: string | null): boolean {
+  if (!value) return false;
+  const s = value.trim().toLowerCase();
+  return (
+    s === "chrome-extension" ||
+    s === "moz-extension" ||
+    s === "safari-extension" ||
+    s === "safari-web-extension"
+  );
+}
+
+/**
+ * We do not load `apis.google.com/js/client.js` (gapi). Violations are almost always from
+ * extensions or injected scripts; widening CSP for this would not match our threat model.
+ */
+function isBlockedGoogleApisClientNoise(blockedUri: string | null): boolean {
+  if (!blockedUri) return false;
+  try {
+    return new URL(blockedUri).hostname === "apis.google.com";
+  } catch {
+    return false;
+  }
+}
+
 function normalizeDocumentPath(value: string | null): string {
   if (!value) return "unknown";
   try {
@@ -128,7 +153,13 @@ export function parseCspReportPayload(payload: unknown): NormalizedCspReport | n
 }
 
 export function isIgnorableCspReport(report: NormalizedCspReport): boolean {
-  return isBrowserExtensionUri(report.blockedUri) || isBrowserExtensionUri(report.documentUri);
+  return (
+    isBrowserExtensionUri(report.blockedUri) ||
+    isBrowserExtensionUri(report.documentUri) ||
+    isExtensionSourceFileLabel(report.sourceFile) ||
+    isBrowserExtensionUri(report.sourceFile) ||
+    isBlockedGoogleApisClientNoise(report.blockedUri)
+  );
 }
 
 export function getCspSampleRate(report: NormalizedCspReport): number {

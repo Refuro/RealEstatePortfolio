@@ -59,7 +59,7 @@ export async function CalculatorLocationPage({
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={userId} landingVariant={variant} />
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={faqItems} />
 
@@ -81,11 +81,14 @@ export async function CalculatorLocationPage({
             <span className="shrink-0 text-foreground">{location.name}</span>
           </nav>
 
-          <header className="mt-4 text-center">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted">
-              Calculator · {location.name}
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold text-foreground md:text-3xl">
+          <header className="hero-animate mt-4 text-center">
+            <div className="mb-3 flex flex-wrap items-center justify-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                Calculator
+              </span>
+              <span className="text-sm font-medium text-muted">{location.name}</span>
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
               {def.h1Short} — {location.name}
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-sm text-muted md:text-base">
@@ -98,7 +101,7 @@ export async function CalculatorLocationPage({
             </p>
           </header>
 
-          <div className="mt-8">
+          <div className="reveal-up reveal-up-d1 mt-8">
             {calculator === "brrr" && (
               <BrrrCalculator
                 showCta
@@ -121,6 +124,7 @@ export async function CalculatorLocationPage({
                 showCta
                 landingVariant={variant}
                 initialMonthlyRent={location.avgMonthlyRent}
+                funnelPlacement="investment_property_location_inline"
               />
             )}
           </div>
@@ -135,8 +139,8 @@ export async function CalculatorLocationPage({
               label={`Real estate investing in ${location.name}`}
               defaultOpen={false}
             >
-              <div className="rounded-lg border border-default bg-card p-6">
-                <p className="text-sm font-semibold uppercase tracking-wide text-muted">
+              <div className="rounded-lg bg-subtle/40 p-5 md:p-6">
+                <p className="text-xs font-medium text-muted">
                   Real estate investing in {location.name}
                 </p>
                 <p className="mt-3 text-sm leading-relaxed text-muted">{location.localContext}</p>

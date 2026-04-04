@@ -39,7 +39,7 @@ export default async function BrrrCalculatorPage() {
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={userId} landingVariant="brrr_calc_v1" />
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={BRRR_CALCULATOR_FAQ} />
           <nav className="flex items-center gap-1.5 text-sm text-muted" aria-label="Breadcrumb">
@@ -49,15 +49,17 @@ export default async function BrrrCalculatorPage() {
             <ChevronRight className="size-3.5 text-muted/50" aria-hidden />
             <span className="text-foreground">BRRRR</span>
           </nav>
-          <header className="mt-4 text-center">
-            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">BRRRR calculator</h1>
+          <header className="hero-animate mt-4 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              BRRRR calculator
+            </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
               Interest-only during rehab, then a cash-out refinance at ARV. Numbers are educational—confirm
               with your lender and include reserves, taxes, and insurance in expenses.
             </p>
           </header>
 
-          <div className="mt-8">
+          <div className="reveal-up reveal-up-d1 mt-8">
             <BrrrCalculator showCta landingVariant="brrr_calc_v1" />
           </div>
 
@@ -74,12 +76,13 @@ export default async function BrrrCalculatorPage() {
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 <FunnelCtaLink
                   href="/sign-up?intent=free"
-                  placement="calculator_footer"
-                  ctaId="create_free_account"
+                  placement="brrr_footer"
+                  ctaId="get_started_free"
                   planIntent="free"
-                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
+                  landingVariant="brrr_calc_v1"
+                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
                 >
-                  Start free
+                  Get started free
                 </FunnelCtaLink>
                 <Link
                   href="/pricing"

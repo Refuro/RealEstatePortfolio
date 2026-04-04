@@ -7,13 +7,22 @@ export type Theme = "light" | "dark" | "system";
 
 export function getStoredTheme(): Theme {
   if (typeof window === "undefined") return "system";
-  const stored = localStorage.getItem(STORAGE_KEY);
-  if (stored === "light" || stored === "dark" || stored === "system") return stored;
-  return "system";
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored === "light" || stored === "dark" || stored === "system") return stored;
+    return "system";
+  } catch {
+    // Safari private mode, cross-origin restrictions, or SecurityError (DOMException 18)
+    return "system";
+  }
 }
 
 export function setStoredTheme(theme: Theme) {
-  localStorage.setItem(STORAGE_KEY, theme);
+  try {
+    localStorage.setItem(STORAGE_KEY, theme);
+  } catch {
+    /* same cases as getStoredTheme */
+  }
 }
 
 export function applyTheme(theme: Theme) {

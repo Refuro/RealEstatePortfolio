@@ -40,7 +40,7 @@ export default async function StrVsLtrCalculatorPage() {
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={userId} landingVariant="str_ltr_v1" />
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={STR_VS_LTR_CALCULATOR_FAQ} />
           <nav className="flex items-center gap-1.5 text-sm text-muted" aria-label="Breadcrumb">
@@ -50,8 +50,8 @@ export default async function StrVsLtrCalculatorPage() {
             <ChevronRight className="size-3.5 text-muted/50" aria-hidden />
             <span className="text-foreground">STR vs LTR</span>
           </nav>
-          <header className="mt-4 text-center">
-            <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
+          <header className="hero-animate mt-4 text-center">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
               STR vs LTR calculator
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
@@ -60,7 +60,7 @@ export default async function StrVsLtrCalculatorPage() {
             </p>
           </header>
 
-          <div className="mt-8">
+          <div className="reveal-up reveal-up-d1 mt-8">
             <StrLtrCalculator showCta landingVariant="str_ltr_v1" />
           </div>
 
@@ -77,12 +77,13 @@ export default async function StrVsLtrCalculatorPage() {
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 <FunnelCtaLink
                   href="/sign-up?intent=free"
-                  placement="calculator_footer"
-                  ctaId="create_free_account"
+                  placement="str_ltr_footer"
+                  ctaId="get_started_free"
                   planIntent="free"
-                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
+                  landingVariant="str_ltr_v1"
+                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
                 >
-                  Start free
+                  Get started free
                 </FunnelCtaLink>
                 <Link
                   href="/pricing"

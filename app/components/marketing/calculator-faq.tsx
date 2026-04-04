@@ -35,16 +35,16 @@ export function CalculatorFaqSection({
 }) {
   return (
     <section
-      className="mt-10 border-t border-border/80 pt-10"
+      className="mt-12 border-t border-border pt-12 md:mt-14 md:pt-14"
       aria-labelledby="calculator-faq-heading"
     >
       <h2
         id="calculator-faq-heading"
-        className="text-center text-lg font-semibold text-foreground"
+        className="text-center text-2xl font-semibold text-foreground"
       >
         {heading}
       </h2>
-      <dl className="mx-auto mt-6 max-w-2xl space-y-6">
+      <dl className="mx-auto mt-8 max-w-2xl space-y-6 md:mt-10">
         {items.map((item) => (
           <div key={item.question}>
             <dt className="font-medium text-foreground">{item.question}</dt>

@@ -32,9 +32,9 @@ function numberOrFallback(value: string, fallback: number): number {
 }
 
 const appCtaClass =
-  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 const appCtaClassFullWidth =
-  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 
 /** Defaults tuned for healthy STR vs LTR (see `lib/str-ltr-calculator.test.ts` base fixture). */
 const DEFAULTS = {
@@ -118,7 +118,7 @@ export function StrLtrCalculator({
 
   const inputClass =
     "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
-  const labelClass = "block text-xs font-semibold uppercase tracking-wide text-muted";
+  const labelClass = "block text-xs font-medium text-muted";
 
   const { str, ltr, delta } = result;
 
@@ -133,7 +133,7 @@ export function StrLtrCalculator({
 
       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="sm:col-span-2 lg:col-span-3">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Short-term (STR)</p>
+          <p className="text-xs font-medium text-muted">Short-term (STR)</p>
         </div>
         <div>
           <label className={labelClass} htmlFor="str-nightly">
@@ -195,7 +195,7 @@ export function StrLtrCalculator({
         </div>
 
         <div className="sm:col-span-2 lg:col-span-3 mt-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Long-term (LTR)</p>
+          <p className="text-xs font-medium text-muted">Long-term (LTR)</p>
         </div>
         <div>
           <label className={labelClass} htmlFor="ltr-rent">
@@ -242,7 +242,7 @@ export function StrLtrCalculator({
         </div>
 
         <div className="sm:col-span-2 lg:col-span-3 mt-2">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">Shared</p>
+          <p className="text-xs font-medium text-muted">Shared</p>
         </div>
         <div>
           <label className={labelClass} htmlFor="str-shared-exp">
@@ -323,7 +323,7 @@ export function StrLtrCalculator({
   const resultsContent = (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Comparison</h3>
+        <h3 className="text-sm font-semibold text-foreground">Comparison</h3>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <CalculatorMetric
             label="Δ Monthly cash flow (STR − LTR)"
@@ -339,7 +339,7 @@ export function StrLtrCalculator({
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Short-term (STR)</h3>
+        <h3 className="text-sm font-semibold text-foreground">Short-term (STR)</h3>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <CalculatorMetric
             label="Effective monthly income"
@@ -378,7 +378,7 @@ export function StrLtrCalculator({
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Long-term (LTR)</h3>
+        <h3 className="text-sm font-semibold text-foreground">Long-term (LTR)</h3>
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <CalculatorMetric
             label="Effective monthly rent"
@@ -437,18 +437,18 @@ export function StrLtrCalculator({
             <>
               <FunnelCtaLink
                 href="/sign-up?intent=free"
-                placement="str_ltr_calculator"
-                ctaId="str_ltr_signup_free"
+                placement="str_ltr_inline"
+                ctaId="get_started_free"
                 planIntent="free"
                 landingVariant={landingVariant}
-                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
               >
                 Create a free account
               </FunnelCtaLink>
               <div className="mt-2">
                 <FunnelCtaLink
                   href="/sign-up?intent=investor"
-                  placement="str_ltr_calculator"
+                  placement="str_ltr_inline"
                   ctaId="str_ltr_signup_investor"
                   planIntent="investor"
                   landingVariant={landingVariant}
@@ -490,7 +490,7 @@ export function StrLtrCalculator({
   const mobileSurface = (
     <div className="space-y-3">
       <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">STR assumptions</h3>
+        <h3 className="text-sm font-semibold text-foreground">STR assumptions</h3>
         <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClass} htmlFor="str-nightly-m">Nightly ($)</label>
@@ -533,7 +533,7 @@ export function StrLtrCalculator({
       </MobileSectionCard>
 
       <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">LTR assumptions</h3>
+        <h3 className="text-sm font-semibold text-foreground">LTR assumptions</h3>
         <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
           <div>
             <label className={labelClass} htmlFor="ltr-rent-m">Monthly rent</label>
@@ -650,7 +650,7 @@ export function StrLtrCalculator({
       </MobileSectionCard>
 
       <MobileSectionCard className="space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Results</h3>
+        <h3 className="text-sm font-semibold text-foreground">Results</h3>
         <div className="grid grid-cols-2 gap-2">
           <CalculatorMetric
             label="Δ Cash flow"
@@ -694,8 +694,8 @@ export function StrLtrCalculator({
           <div className="space-y-2">
             <FunnelCtaLink
               href="/sign-up?intent=free"
-              placement="str_ltr_calculator"
-              ctaId="str_ltr_signup_free_m"
+              placement="str_ltr_inline"
+              ctaId="get_started_free"
               planIntent="free"
               landingVariant={landingVariant}
               className={appCtaClassFullWidth}
@@ -704,7 +704,7 @@ export function StrLtrCalculator({
             </FunnelCtaLink>
             <FunnelCtaLink
               href="/sign-up?intent=investor"
-              placement="str_ltr_calculator"
+              placement="str_ltr_inline"
               ctaId="str_ltr_signup_investor_m"
               planIntent="investor"
               landingVariant={landingVariant}
@@ -718,7 +718,7 @@ export function StrLtrCalculator({
   );
 
   return (
-    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border/70 md:bg-card/95 md:p-5 md:shadow-sm">
+    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border md:bg-card md:p-5 md:shadow-sm">
       <div className="md:hidden">
         <MobileToolShell
           eyebrow="Calculator"

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeftRight, Hammer, Home, Wrench } from "lucide-react";
+import { ArrowLeftRight, ChevronRight, Hammer, Home, Wrench } from "lucide-react";
 
 export type CalculatorsHubVariant = "public" | "app";
 
@@ -17,11 +17,11 @@ export function CalculatorsHubCards({ variant }: { variant: CalculatorsHubVarian
   const fixFlipHref = variant === "public" ? "/tools/fix-and-flip" : "/calculators/fix-and-flip";
 
   const cardLinkClass =
-    "block rounded-xl border border-border bg-card/95 p-5 shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-subtle hover:shadow-md";
+    "block rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-150 hover:border-accent/30 hover:bg-subtle hover:shadow-md";
 
   return (
     <ul className="mt-10 space-y-4">
-      <li>
+      <li className="reveal-up reveal-up-d1">
         <Link href={rentalHref} className={cardLinkClass}>
           <div className="flex items-start gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
@@ -32,12 +32,15 @@ export function CalculatorsHubCards({ variant }: { variant: CalculatorsHubVarian
               <p className="mt-1 text-sm text-muted">
                 Monthly cash flow, cap rate, DSCR, and cash-on-cash for a stabilized rental.
               </p>
-              <p className="mt-3 text-sm font-medium text-accent">Open calculator →</p>
+              <p className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Open calculator
+                <ChevronRight className="size-3.5" aria-hidden />
+              </p>
             </div>
           </div>
         </Link>
       </li>
-      <li>
+      <li className="reveal-up reveal-up-d2">
         <Link href={brrrHref} className={cardLinkClass}>
           <div className="flex items-start gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
@@ -48,12 +51,15 @@ export function CalculatorsHubCards({ variant }: { variant: CalculatorsHubVarian
               <p className="mt-1 text-sm text-muted">
                 Buy, rehab, rent, refinance—estimate cash-out at refi and stabilized cash flow vs. ARV.
               </p>
-              <p className="mt-3 text-sm font-medium text-accent">Open calculator →</p>
+              <p className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Open calculator
+                <ChevronRight className="size-3.5" aria-hidden />
+              </p>
             </div>
           </div>
         </Link>
       </li>
-      <li>
+      <li className="reveal-up reveal-up-d3">
         <Link href={strLtrHref} className={cardLinkClass}>
           <div className="flex items-start gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
@@ -65,12 +71,15 @@ export function CalculatorsHubCards({ variant }: { variant: CalculatorsHubVarian
                 Compare short-term (STR) and long-term rental (LTR) income, expenses, and cash flow side by
                 side on the same financing.
               </p>
-              <p className="mt-3 text-sm font-medium text-accent">Open calculator →</p>
+              <p className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Open calculator
+                <ChevronRight className="size-3.5" aria-hidden />
+              </p>
             </div>
           </div>
         </Link>
       </li>
-      <li>
+      <li className="reveal-up reveal-up-d4">
         <Link href={fixFlipHref} className={cardLinkClass}>
           <div className="flex items-start gap-3">
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent/10">
@@ -82,7 +91,10 @@ export function CalculatorsHubCards({ variant }: { variant: CalculatorsHubVarian
                 Estimate net profit, ROI, and annualized return on a flip — purchase, rehab, hold, and
                 sale.
               </p>
-              <p className="mt-3 text-sm font-medium text-accent">Open calculator →</p>
+              <p className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-accent">
+                Open calculator
+                <ChevronRight className="size-3.5" aria-hidden />
+              </p>
             </div>
           </div>
         </Link>

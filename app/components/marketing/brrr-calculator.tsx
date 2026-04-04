@@ -33,9 +33,9 @@ function numberOrFallback(value: string, fallback: number): number {
 }
 
 const appCtaClass =
-  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 const appCtaClassFullWidth =
-  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 
 export function BrrrCalculator({
   compact = false,
@@ -97,7 +97,7 @@ export function BrrrCalculator({
 
   const inputClass =
     "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
-  const labelClass = "block text-xs font-semibold uppercase tracking-wide text-muted";
+  const labelClass = "block text-xs font-medium text-muted";
 
   const m = result.metricsAfterRefi;
   const dscr = result.dscrAfterRefi;
@@ -307,7 +307,7 @@ export function BrrrCalculator({
 
   const resultsContent = (
     <div>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">After refinance</h3>
+      <h3 className="text-sm font-semibold text-foreground">After refinance</h3>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         <CalculatorMetric label="Cash out at refi" value={formatCurrency(result.cashOutAtRefi)} />
         <CalculatorMetric
@@ -362,11 +362,11 @@ export function BrrrCalculator({
           ) : !isSignedIn ? (
             <FunnelCtaLink
               href="/sign-up?intent=free"
-              placement="brrr_calculator"
-              ctaId="track_property_signup"
+              placement="brrr_inline"
+              ctaId="get_started_free"
               planIntent="free"
               landingVariant={landingVariant}
-              className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
             >
               Track this property in Veld after you close
             </FunnelCtaLink>
@@ -402,7 +402,7 @@ export function BrrrCalculator({
   const mobileSurface = (
     <div className="space-y-3">
       <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Acquisition & rehab</h3>
+        <h3 className="text-sm font-semibold text-foreground">Acquisition & rehab</h3>
         <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className={labelClass} htmlFor="brrr-purchase-m">Purchase price</label>
@@ -571,7 +571,7 @@ export function BrrrCalculator({
       </MobileSectionCard>
 
       <MobileSectionCard className="space-y-3">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Stabilized result</h3>
+        <h3 className="text-sm font-semibold text-foreground">Stabilized result</h3>
         <div className="grid grid-cols-2 gap-2">
           <CalculatorMetric label="Cash out" value={formatCurrency(result.cashOutAtRefi)} />
           <CalculatorMetric label="Cash left in" value={formatCurrency(result.netCashLeftInDeal)} />
@@ -602,8 +602,8 @@ export function BrrrCalculator({
           ) : !isSignedIn ? (
             <FunnelCtaLink
               href="/sign-up?intent=free"
-              placement="brrr_calculator"
-              ctaId="track_property_signup"
+              placement="brrr_inline"
+              ctaId="get_started_free"
               planIntent="free"
               landingVariant={landingVariant}
               className={appCtaClassFullWidth}
@@ -616,7 +616,7 @@ export function BrrrCalculator({
   );
 
   return (
-    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border/70 md:bg-card/95 md:p-5 md:shadow-sm">
+    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border md:bg-card md:p-5 md:shadow-sm">
       <div className="md:hidden">
         <MobileToolShell
           eyebrow="Calculator"
