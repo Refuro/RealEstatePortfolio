@@ -80,12 +80,16 @@ export async function CompetitorAlternativePage({ config }: { config: Competitor
               >
                 Create free account
               </FunnelCtaLink>
-              <Link
+              <FunnelCtaLink
                 href="/pricing"
+                placement="competitor_alt_hero_pricing"
+                ctaId="view_pricing"
+                planIntent="free"
+                landingVariant={config.landingVariant}
                 className="inline-flex rounded-md border border-default bg-transparent px-5 py-2.5 text-sm font-medium text-foreground hover:bg-subtle"
               >
                 View pricing
-              </Link>
+              </FunnelCtaLink>
             </div>
           </header>
 
@@ -131,9 +135,16 @@ export async function CompetitorAlternativePage({ config }: { config: Competitor
           {/* Pricing note below table */}
           <p className="mt-3 text-center text-sm text-muted">
             Free plan available — no card required.{" "}
-            <Link href="/pricing" className="font-medium text-foreground hover:underline">
+            <FunnelCtaLink
+              href="/pricing"
+              placement="competitor_alt_pricing_note"
+              ctaId="see_full_pricing"
+              planIntent="free"
+              landingVariant={config.landingVariant}
+              className="font-medium text-foreground hover:underline"
+            >
               See full pricing.
-            </Link>
+            </FunnelCtaLink>
           </p>
 
           {/* Inline CTA after table */}
@@ -202,9 +213,16 @@ export async function CompetitorAlternativePage({ config }: { config: Competitor
           <aside className="mt-10 rounded-lg border border-default bg-subtle px-6 py-4 text-center">
             <p className="text-sm text-muted">
               Free plan includes 1 property and 5 saved deals — no card required.{" "}
-              <Link href="/pricing" className="font-medium text-foreground hover:underline">
+              <FunnelCtaLink
+                href="/pricing"
+                placement="competitor_alt_transparency"
+                ctaId="view_all_plans"
+                planIntent="free"
+                landingVariant={config.landingVariant}
+                className="font-medium text-foreground hover:underline"
+              >
                 View all plans.
-              </Link>
+              </FunnelCtaLink>
             </p>
           </aside>
 
@@ -248,12 +266,16 @@ export async function CompetitorAlternativePage({ config }: { config: Competitor
               >
                 Create free account
               </FunnelCtaLink>
-              <Link
+              <FunnelCtaLink
                 href="/pricing"
+                placement="competitor_alt_footer_pricing"
+                ctaId="view_pricing_footer"
+                planIntent="free"
+                landingVariant={config.landingVariant}
                 className="inline-flex rounded-md border border-default bg-transparent px-5 py-2.5 text-sm font-medium text-foreground hover:bg-subtle"
               >
                 View pricing
-              </Link>
+              </FunnelCtaLink>
             </div>
           </section>
 

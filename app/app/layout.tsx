@@ -8,6 +8,7 @@ import { GoogleAdsGtagClient } from "@/components/analytics/google-ads-gtag";
 import { VercelAnalyticsClient } from "@/components/analytics/vercel-analytics";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
 import { getAppOrigin } from "@/lib/app-url";
+import { PRICING_DISPLAY } from "@/lib/pricing-display";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,11 +39,11 @@ export const metadata: Metadata = {
     "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
   icons: {
     icon: [
-      { url: "/favicon-96x96.png", sizes: "96x96", type: "image/png" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png?v=2", sizes: "96x96", type: "image/png" },
+      { url: "/favicon.svg?v=2", type: "image/svg+xml" },
     ],
-    shortcut: "/favicon.ico",
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    shortcut: "/favicon.ico?v=2",
+    apple: [{ url: "/apple-touch-icon.png?v=2", sizes: "180x180" }],
   },
   manifest: "/site.webmanifest",
   openGraph: {
@@ -100,9 +101,30 @@ function JsonLdScript() {
         "@type": "WebApplication",
         name: "Veld Portfolio",
         url: APP_URL,
+        operatingSystem: "Web",
         applicationCategory: "FinanceApplication",
         description:
           "Portfolio analytics for real estate investors. Track equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+        offers: [
+          {
+            "@type": "Offer",
+            name: "Free",
+            price: "0",
+            priceCurrency: "USD",
+          },
+          {
+            "@type": "Offer",
+            name: "Investor",
+            price: String(PRICING_DISPLAY.investorMonthly),
+            priceCurrency: "USD",
+          },
+          {
+            "@type": "Offer",
+            name: "Pro",
+            price: String(PRICING_DISPLAY.proMonthly),
+            priceCurrency: "USD",
+          },
+        ],
       },
     ],
   };

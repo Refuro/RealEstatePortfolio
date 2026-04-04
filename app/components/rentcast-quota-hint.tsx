@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { shouldShowRentCastQuotaHint } from "@/lib/rentcast-quota-display";
-
-type QuotaPayload = { limit: number; used: number; remaining: number };
+import { useRentCastQuota } from "@/lib/rentcast-quota-client";
 
 /**
- * Shows rolling-hour RentCast quota when exhausted or near limit. Fetches `/api/rentcast-quota`.
+ * Shows rolling-hour RentCast quota when exhausted or near limit. Fetches `/api/rentcast-quota`
+ * via a shared cache so multiple hints on the same page do not duplicate requests.
  * Bump `refreshKey` after a successful estimate/refresh so the count updates.
  */
 export function RentCastQuotaHint({
@@ -19,31 +18,7 @@ export function RentCastQuotaHint({
   className?: string;
   forceVisible?: boolean;
 }) {
-  const [quota, setQuota] = useState<QuotaPayload | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch("/api/rentcast-quota");
-        if (!res.ok) return;
-        const j = (await res.json()) as QuotaPayload;
-        if (
-          typeof j.limit === "number" &&
-          typeof j.used === "number" &&
-          typeof j.remaining === "number" &&
-          !cancelled
-        ) {
-          setQuota(j);
-        }
-      } catch {
-        /* ignore */
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [refreshKey]);
+  const quota = useRentCastQuota(refreshKey);
 
   if (quota == null) return null;
 

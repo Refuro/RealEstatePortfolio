@@ -47,7 +47,7 @@
 
 ## 3. Design principles (consistency)
 
-All assets must align with the product design spec. See `docs/policies/design-spec.md` for full details.
+All assets must align with the product design spec. The canonical reference is [`docs/design/design-spec-2026.md`](design/design-spec-2026.md); legacy policy notes live in [`docs/policies/design-spec.md`](policies/design-spec.md) where still relevant.
 
 ### 3.1 Visual style
 
@@ -230,8 +230,8 @@ When generating assets with AI, include these in your prompt:
 - [ ] SVG assets have proper viewBox and scale cleanly
 - [ ] OG image is 1200×630 and text is legible
 - [ ] Empty states: geometric only, no decorative elements, no X/magnifier/person, transparent
-- [ ] All assets align with design-spec.md principles
+- [ ] All assets align with design-spec-2026.md principles
 
 ---
 
-*Reference: [design-spec.md](design-spec.md), [architecture-and-build-practices.md](architecture-and-build-practices.md)*
+*Reference: [design-spec-2026.md](design/design-spec-2026.md), [architecture-and-build-practices.md](architecture-and-build-practices.md)*

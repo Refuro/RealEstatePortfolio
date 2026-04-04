@@ -1,6 +1,8 @@
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SignIn } from "@clerk/nextjs";
+import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 
 export const metadata: Metadata = {
   robots: { index: false, follow: false },
@@ -9,6 +11,9 @@ export const metadata: Metadata = {
 export default function SignInPage() {
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4">
+      <Suspense fallback={null}>
+        <PlanIntentUrlSync />
+      </Suspense>
       <SignIn
         appearance={{
           elements: {

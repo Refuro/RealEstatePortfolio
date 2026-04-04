@@ -1407,21 +1407,11 @@ NOTE: The Plans loading skeleton shows the pill-shaped chips in the context pane
 
 These items require human action and cannot be automated.
 
-### 7.1 — Product Screenshots
+### 7.1 — Product visuals (embedded mockups; PNG screenshots retired)
 
-The following screenshots in `app/public/` were taken before the Phase 1 design overhaul and no longer accurately represent the product:
+Static PNGs (`/ScreenDashboard.png`, `/ScreenMortgage.png`, `/ScreenDeal.png`) were **removed** from `app/public/` in favor of deterministic React components: **`DashboardMockup`**, **`MortgageMockup`**, **`DealAnalyzerMockup`**, wrapped in **`MockupFrame`** on marketing and pricing pages (`app/app/page.tsx`, `app/app/pricing/page.tsx`, etc.).
 
-| File | Replaces | Captures |
-|---|---|---|
-| `ScreenDashboard.png` | Current dashboard screenshot | Dashboard with indigo CTAs, metric grouping containers, clean action strip |
-| `ScreenMortgage.png` | Current mortgage screenshot | Mortgage workspace with flat action strip |
-| `ScreenDeal.png` | Current deal analyzer screenshot | Deal analyzer without card-wrapped heading |
-
-**Instructions:**
-1. Sign in to the product with a test account that has at least 2–3 properties
-2. Set the browser to 1280×800 resolution (matches the `width={1280} height={800}` in `pricing/page.tsx` and the landing page)
-3. Capture each page in dark mode and light mode — use whichever looks better
-4. Replace files in `app/public/` — keep the same filenames
+**Do not** recapture or re-add full-page screenshots for those placements. When the real product UI changes, update the mockup components under `app/components/mockups/` so marketing stays representative.
 
 ### 7.2 — Landing Page Social Proof Numbers
 

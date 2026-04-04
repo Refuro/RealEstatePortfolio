@@ -1,65 +1,99 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
+import { MockupFrame } from "@/components/mockups/mockup-frame";
+import { DashboardMockup } from "@/components/mockups/dashboard-mockup";
 import dynamic from "next/dynamic";
 import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
+import {
+  Building2,
+  Calculator,
+  Check,
+  ChevronRight,
+  LayoutGrid,
+  Minus,
+  SlidersHorizontal,
+  Target,
+  TrendingUp,
+} from "lucide-react";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
-const PublicCalculator = dynamic(() =>
-  import("@/components/marketing/public-calculator").then((m) => m.PublicCalculator),
-  { loading: () => <div className="min-h-[240px]" aria-hidden /> }
-);
-import {
-  Building2,
-  ChevronRight,
-  LayoutGrid,
-  TrendingUp,
-  Calculator,
-  SlidersHorizontal,
-} from "lucide-react";
+import { AnimatedSection } from "@/components/marketing/animated-section";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
 import { PLAN_DEAL_LIMITS, PLAN_PROPERTY_LIMITS } from "@/lib/plans";
 import { getAppOrigin } from "@/lib/app-url";
 
+const PublicCalculator = dynamic(
+  () =>
+    import("@/components/marketing/public-calculator").then(
+      (m) => m.PublicCalculator
+    ),
+  { loading: () => <div className="min-h-[240px]" aria-hidden /> }
+);
+
 const APP_URL = getAppOrigin();
+const LANDING_VARIANT = "home_v4";
 
 export const metadata: Metadata = {
   title: {
-    absolute: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+    absolute: "Veld Portfolio — Track Your Rental Properties in One Place",
   },
   description:
-    "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+    "Track equity, cash flow, and rent estimates across your rental portfolio. Analyze deals before you buy. Replace your spreadsheet with Veld.",
   alternates: { canonical: APP_URL + "/" },
   openGraph: {
-    title: "Veld Portfolio — Portfolio Analytics for Real Estate Investors",
+    title: "Veld Portfolio — Track Your Rental Properties in One Place",
     description:
-      "Track and analyze your rental property portfolio. Equity, cash flow, rent and value estimates.",
+      "Track equity, cash flow, and rent estimates across your rental portfolio. Analyze deals before you buy.",
     url: "/",
   },
 };
 
-const VALUE_PROPS = [
+const HERO_STEPS = [
   {
-    title: "Replace spreadsheets",
-    description: "Equity, debt, and cash flow across every property — always current. No manual updates.",
+    title: "Add each property once",
+    description:
+      "Purchase price, value, rent, expenses, and mortgage — one profile per property.",
+    icon: Building2,
+  },
+  {
+    title: "Track portfolio performance",
+    description:
+      "Equity, cash flow, cap rate, and LTV — always current, no formula maintenance.",
     icon: LayoutGrid,
   },
   {
-    title: "Rent & value estimates",
-    description: "See what your property could rent for today, pulled from live market data. Know if you're above or below market.",
+    title: "Underwrite your next deal",
+    description: "Cash flow, cap rate, DSCR, and CoC return before you commit.",
+    icon: Target,
+  },
+];
+
+const VALUE_PROPS = [
+  {
+    title: "Always-current portfolio numbers",
+    description:
+      "Equity, cash flow, cap rate, and LTV across every property — pulled together automatically. Enter your data once, never again.",
+    icon: LayoutGrid,
+  },
+  {
+    title: "Know if your rent is above market",
+    description:
+      "Live rent and value estimates from real market data. See where you stand without switching tabs or Googling comps.",
     icon: TrendingUp,
   },
   {
-    title: "Deal analyzer",
-    description: "Enter purchase price, rent, and expenses. Get cash flow, cap rate, DSCR, and CoC return instantly before you commit.",
+    title: "Underwrite a deal in minutes",
+    description:
+      "Enter purchase price, rent, and expenses. Get cash flow, cap rate, DSCR, and cash-on-cash return instantly before you commit.",
     icon: Calculator,
   },
   {
-    title: "Scenario modeling",
-    description: "What-if sliders for rent, value, and mortgage. See how changes in assumptions affect your returns.",
+    title: "Model what happens next",
+    description:
+      "Adjust rent, value, and mortgage assumptions with sliders. See how your returns shift over 5, 10, or 20 years.",
     icon: SlidersHorizontal,
   },
 ];
@@ -67,35 +101,49 @@ const VALUE_PROPS = [
 const HOW_IT_WORKS = [
   {
     step: "01",
-    title: "Add your properties",
-    description: "Enter purchase price, estimated value, rent, expenses, and mortgage details. Takes about 2 minutes per property.",
+    title: "Add a property",
+    description:
+      "Enter purchase price, estimated value, rent, expenses, and mortgage details. Takes about 60 seconds per property.",
     icon: Building2,
   },
   {
     step: "02",
-    title: "See your portfolio clearly",
-    description: "Equity, cash flow, cap rate, and LTV across every property in one dashboard — always current, never a spreadsheet.",
+    title: "See your portfolio at a glance",
+    description:
+      "Equity, cash flow, cap rate, and LTV — all in one dashboard. Always current, no manual updates.",
     icon: LayoutGrid,
   },
   {
     step: "03",
-    title: "Analyze and model",
-    description: "Run deal analyses before buying, model what-if scenarios with sliders, and simulate mortgage payoff.",
-    icon: SlidersHorizontal,
+    title: "Analyze deals before you buy",
+    description:
+      "Run full deal analyses, save and compare them, and promote a winning deal to your portfolio when you close.",
+    icon: Calculator,
   },
 ];
 
-function ValuePropIcon({
-  Icon,
-}: {
-  Icon: React.ComponentType<{ className?: string }>;
-}) {
-  return (
-    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent/10 sm:size-11">
-      <Icon className="size-5 text-accent sm:size-5" aria-hidden />
-    </div>
-  );
-}
+const VELD_DOES = [
+  "Portfolio tracking — equity, cash flow, cap rate, LTV",
+  "Deal underwriting — cash flow, DSCR, CoC return, cap rate",
+  "Scenario modeling with 5, 10, and 20-year projections",
+  "Mortgage amortization and payoff tracking",
+  "Live rent and value estimates via RentCast",
+  "CSV import and export",
+];
+
+const VELD_DOES_NOT = [
+  "Rent collection or payment processing",
+  "Bank sync or transaction import",
+  "Full general-ledger accounting",
+  "Tenant screening or lease management",
+];
+
+const CALCULATOR_LINKS = [
+  { label: "Deal analyzer", href: "/investment-property-calculator" },
+  { label: "BRRRR calculator", href: "/brrrr-calculator" },
+  { label: "Fix and flip calculator", href: "/fix-and-flip-calculator" },
+  { label: "STR vs LTR calculator", href: "/str-ltr-calculator" },
+];
 
 export default async function HomePage({
   searchParams,
@@ -112,46 +160,68 @@ export default async function HomePage({
       <Suspense fallback={null}>
         <PlanIntentUrlSync />
       </Suspense>
-      <LandingNav userId={userId} landingVariant="home_default_v2" />
+      <LandingNav userId={userId} landingVariant={LANDING_VARIANT} />
 
       <main className="flex flex-1 flex-col">
         {/* Hero */}
-        <section className="px-4 py-12 sm:py-16 md:py-20">
+        <section className="bg-gradient-to-b from-accent/[0.04] to-transparent px-4 py-10 sm:py-14">
           <div className="mx-auto max-w-6xl">
-            <div className="grid items-center gap-12 lg:grid-cols-[3fr_2fr]">
-              {/* Left: copy + CTAs */}
-              <div className="flex flex-col items-start gap-5">
-                <h1 className="max-w-2xl text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
-                  Replace spreadsheet sprawl with one clear view of your rental portfolio
-                </h1>
-                <p className="max-w-lg text-base text-muted sm:text-lg">
-                  All the numbers that matter — equity, cash flow, rent estimates, and deal analysis — without the spreadsheet chaos.
-                </p>
+            <div className="grid gap-10 lg:grid-cols-[3fr_2fr] lg:items-center">
+              <div className="space-y-5">
                 {deletedParam === "1" && (
-                  <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-center text-sm text-foreground">
-                    Your account has been deactivated. You can sign in again to restore it.
+                  <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground shadow-sm">
+                    Your account has been deactivated. You can sign in again to
+                    restore it.
                   </p>
                 )}
                 {deletedParam === "permanent" && (
-                  <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-center text-sm text-foreground">
+                  <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground shadow-sm">
                     Your account and data have been permanently deleted.
                   </p>
                 )}
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+
+                <h1
+                  className="hero-animate max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl"
+                  style={{ transitionDelay: "0ms" }}
+                >
+                  Replace spreadsheet chaos with one clear view of your rental
+                  portfolio
+                </h1>
+
+                <p
+                  className="hero-animate max-w-xl text-base text-muted sm:text-lg"
+                  style={{ transitionDelay: "80ms" }}
+                >
+                  Add your properties once and get equity, cash flow, rent
+                  estimates, and deal analysis — always current, without
+                  spreadsheet maintenance.
+                </p>
+
+                <div
+                  className="hero-animate flex flex-col gap-3 sm:flex-row sm:items-center"
+                  style={{ transitionDelay: "160ms" }}
+                >
                   {userId ? (
                     <>
-                      <Link
+                      <FunnelCtaLink
                         href="/dashboard"
-                        className="inline-flex items-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+                        placement="landing_hero_signed_in"
+                        ctaId="go_to_dashboard"
+                        landingVariant={LANDING_VARIANT}
+                        className="cta-accent-glow inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover sm:w-auto"
                       >
                         Go to dashboard
-                      </Link>
-                      <Link
+                      </FunnelCtaLink>
+                      <FunnelCtaLink
                         href="/pricing"
-                        className="text-sm font-medium text-muted hover:text-foreground hover:underline"
+                        placement="landing_hero_signed_in"
+                        ctaId="view_pricing"
+                        landingVariant={LANDING_VARIANT}
+                        className="inline-flex min-h-[44px] items-center justify-center gap-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground sm:justify-start"
                       >
-                        View pricing plans
-                      </Link>
+                        View pricing
+                        <ChevronRight className="size-3.5" aria-hidden />
+                      </FunnelCtaLink>
                     </>
                   ) : (
                     <>
@@ -160,8 +230,8 @@ export default async function HomePage({
                         placement="landing_hero"
                         ctaId="get_started_free"
                         planIntent="free"
-                        landingVariant="home_default_v2"
-                        className="inline-flex items-center rounded-lg bg-accent px-6 py-3 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+                        landingVariant={LANDING_VARIANT}
+                        className="cta-accent-glow inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover sm:w-auto"
                       >
                         Get started free
                       </FunnelCtaLink>
@@ -169,199 +239,486 @@ export default async function HomePage({
                         href="/pricing"
                         placement="landing_hero"
                         ctaId="view_pricing"
-                        landingVariant="home_default_v2"
-                        className="text-sm font-medium text-muted hover:text-foreground hover:underline"
+                        landingVariant={LANDING_VARIANT}
+                        className="inline-flex min-h-[44px] items-center justify-center gap-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground sm:justify-start"
                       >
                         See pricing
+                        <ChevronRight className="size-3.5" aria-hidden />
                       </FunnelCtaLink>
                     </>
                   )}
                 </div>
+
                 {!userId && (
-                  <p className="text-sm text-muted">
-                    Free plan - <span className="font-medium text-foreground">no card required</span>.
-                    Your first property in about 60 seconds.
+                  <p
+                    className="hero-animate text-sm text-muted"
+                    style={{ transitionDelay: "220ms" }}
+                  >
+                    Free plan —{" "}
+                    <span className="font-medium text-foreground">
+                      no card required
+                    </span>
+                    . Your first property in about 60 seconds.
                   </p>
                 )}
+
+                <div
+                  className="hero-animate sm:hidden"
+                  style={{ transitionDelay: "280ms" }}
+                >
+                  <MockupFrame
+                    className="rounded-xl border border-border shadow-lg"
+                    ariaLabel="Veld Portfolio dashboard showing property equity, cash flow, and portfolio metrics"
+                  >
+                    <DashboardMockup />
+                  </MockupFrame>
+                </div>
+
+                <div
+                  className="hero-animate hidden gap-2 sm:grid sm:grid-cols-3"
+                  style={{ transitionDelay: "300ms" }}
+                >
+                  {HERO_STEPS.map((step) => (
+                    <div
+                      key={step.title}
+                      className="rounded-lg border border-border bg-card p-3 shadow-sm"
+                    >
+                      <div className="mb-2 flex items-center gap-2">
+                        <step.icon
+                          className="size-4 text-accent"
+                          aria-hidden
+                        />
+                        <p className="text-sm font-semibold text-foreground">
+                          {step.title}
+                        </p>
+                      </div>
+                      <p className="text-xs text-muted">{step.description}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
 
-              {/* Right: product screenshot — hidden on < lg */}
-              <div className="hidden lg:block">
-                <div className="overflow-hidden rounded-xl border border-border/60 shadow-xl">
-                  {/* Faux browser chrome */}
-                  <div className="flex items-center gap-1.5 border-b border-border/60 bg-subtle px-3 py-2">
-                    <span className="size-2.5 rounded-full bg-border" />
-                    <span className="size-2.5 rounded-full bg-border" />
-                    <span className="size-2.5 rounded-full bg-border" />
-                  </div>
-                  <Image
-                    src="/ScreenDashboard.png"
-                    alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-                    className="h-auto w-full"
-                    loading="eager"
-                    width={1280}
-                    height={800}
-                    sizes="(max-width: 1280px) 50vw, 640px"
-                    priority
-                  />
-                </div>
+              <div className="hidden md:block">
+                <MockupFrame
+                  chrome
+                  className="rounded-xl border border-border shadow-xl"
+                  ariaLabel="Veld Portfolio dashboard showing property equity, cash flow, cap rate, and portfolio metrics"
+                >
+                  <DashboardMockup />
+                </MockupFrame>
               </div>
             </div>
           </div>
         </section>
 
         {/* Social proof strip */}
-        <section className="border-y border-border bg-subtle px-4 py-6">
-          <div className="mx-auto max-w-4xl">
-            <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:justify-center sm:gap-8">
+        <section
+          aria-label="Product highlights"
+          className="border-y border-border bg-subtle px-4 py-6"
+        >
+          <div className="mx-auto max-w-5xl">
+            <div
+              className="hero-animate flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-8"
+              style={{ transitionDelay: "400ms" }}
+            >
               <p className="text-sm text-muted">
-                Built for small landlords managing{" "}
-                <span className="font-medium text-foreground">1-10 properties</span>
+                Built for landlords with{" "}
+                <span className="font-medium text-foreground">
+                  1–10 properties
+                </span>
               </p>
-              <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
+              <span
+                className="hidden h-4 w-px bg-border sm:block"
+                aria-hidden
+              />
               <p className="text-sm text-muted">
-                Replaces your{" "}
-                <span className="font-medium text-foreground">portfolio spreadsheet</span> in
-                about 5 minutes
+                Track your portfolio and{" "}
+                <span className="font-medium text-foreground">
+                  analyze new deals
+                </span>{" "}
+                in one place
               </p>
-              <span className="hidden h-4 w-px bg-border sm:block" aria-hidden />
+              <span
+                className="hidden h-4 w-px bg-border sm:block"
+                aria-hidden
+              />
               <p className="text-sm text-muted">
-                Free plan with <span className="font-medium text-foreground">no card required</span>
+                Free plan —{" "}
+                <span className="font-medium text-foreground">
+                  no card required
+                </span>
               </p>
             </div>
           </div>
         </section>
 
-        {/* Calculator section */}
-        <section className="border-b border-border bg-card/40 px-4 py-12 sm:py-16">
-          <div className="mx-auto max-w-5xl">
-            <h2 className="text-2xl font-semibold text-foreground">
-              Try the free calculator
-            </h2>
-            <p className="mt-2 max-w-xl text-sm text-muted">
-              Estimate cash flow, cap rate, DSCR, and cash-on-cash return before you commit to anything. No account required.
-            </p>
-            <div className="mt-6">
-              <PublicCalculator compact />
-            </div>
-            <div className="mt-4">
-              <FunnelCtaLink
-                href="/investment-property-calculator"
-                placement="landing_how_it_works"
-                ctaId="open_public_calculator"
-                landingVariant="home_default_v2"
-                className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline"
+        {/* Calculator */}
+        <section
+          aria-labelledby="calculator-heading"
+          className="border-b border-border bg-subtle px-4 py-12 sm:py-16"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-5xl">
+              <div className="mb-3 flex justify-center sm:justify-start">
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  Free tool
+                </span>
+              </div>
+              <h2
+                id="calculator-heading"
+                className="text-2xl font-semibold text-foreground"
               >
-                Open full calculator
-                <ChevronRight className="size-4" aria-hidden />
-              </FunnelCtaLink>
+                Try the deal analyzer — no account needed
+              </h2>
+              <p className="mt-2 max-w-xl text-sm text-muted">
+                Estimate cash flow, cap rate, DSCR, and cash-on-cash return
+                before you commit to anything.
+              </p>
+              <div className="mt-6">
+                <PublicCalculator compact />
+              </div>
+              <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+                <FunnelCtaLink
+                  href="/investment-property-calculator"
+                  placement="landing_calculator"
+                  ctaId="open_public_calculator"
+                  landingVariant={LANDING_VARIANT}
+                  className="inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-accent transition-colors duration-150 hover:underline"
+                >
+                  Open full calculator
+                  <ChevronRight className="size-4" aria-hidden />
+                </FunnelCtaLink>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+                  {CALCULATOR_LINKS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      className="inline-flex min-h-[44px] items-center gap-1 text-sm text-muted transition-colors duration-150 hover:text-foreground"
+                    >
+                      {item.label}
+                      <ChevronRight className="size-3.5" aria-hidden />
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              {!userId && (
+                <p className="mt-4 text-sm text-muted">
+                  Want to save your analyses?{" "}
+                  <FunnelCtaLink
+                    href="/sign-up?intent=free"
+                    placement="landing_calculator"
+                    ctaId="signup_from_calculator"
+                    planIntent="free"
+                    landingVariant={LANDING_VARIANT}
+                    className="font-medium text-accent transition-colors duration-150 hover:underline"
+                  >
+                    Create a free account
+                  </FunnelCtaLink>
+                </p>
+              )}
             </div>
-          </div>
+          </AnimatedSection>
         </section>
 
         {/* Value props */}
-        <section className="border-b border-border px-4 py-12 sm:py-16">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-3 flex justify-center sm:justify-start">
-              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
-                Why Veld
-              </span>
-            </div>
-            <h2 className="mb-2 text-2xl font-semibold text-foreground">
-              Everything your portfolio needs
-            </h2>
-            <p className="mb-8 text-base text-muted">Built for individual investors who want clarity, not complexity.</p>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 lg:grid-cols-4 lg:gap-6">
-              {VALUE_PROPS.map((prop) => (
-                <div
-                  key={prop.title}
-                  className="flex flex-row items-start gap-4 rounded-xl border border-border bg-card p-5 shadow-sm sm:flex-col sm:gap-3"
-                >
-                  <ValuePropIcon Icon={prop.icon} />
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-base font-semibold text-foreground">
-                      {prop.title}
-                    </h3>
-                    <p className="mt-1 text-sm text-muted">
-                      {prop.description}
-                    </p>
+        <section
+          aria-labelledby="value-props-heading"
+          className="px-4 py-12 sm:py-16"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-5xl">
+              <div className="mb-3 flex justify-center sm:justify-start">
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  Why Veld
+                </span>
+              </div>
+              <h2
+                id="value-props-heading"
+                className="mb-2 text-2xl font-semibold text-foreground"
+              >
+                The numbers that matter, always current
+              </h2>
+              <p className="mb-8 text-base text-muted">
+                For small landlords who want clarity, not complexity.
+              </p>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {VALUE_PROPS.map((prop) => (
+                  <div
+                    key={prop.title}
+                    className="flex flex-col gap-3 rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md"
+                  >
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-accent/10">
+                      <prop.icon className="size-5 text-accent" aria-hidden />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        {prop.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted">
+                        {prop.description}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </AnimatedSection>
         </section>
 
         {/* How it works */}
-        <section className="border-b border-border bg-card/40 px-4 py-12 sm:py-16">
-          <div className="mx-auto max-w-5xl">
-            <div className="mb-3 flex justify-center sm:justify-start">
-              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
-                How it works
-              </span>
+        <section
+          aria-labelledby="how-it-works-heading"
+          className="px-4 py-12 sm:py-16"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-5xl">
+              <div className="mb-3 flex justify-center sm:justify-start">
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  How it works
+                </span>
+              </div>
+              <h2
+                id="how-it-works-heading"
+                className="mb-2 text-2xl font-semibold text-foreground"
+              >
+                Up and running in minutes
+              </h2>
+              <p className="mb-10 text-base text-muted">
+                No learning curve. No onboarding call.
+              </p>
+              <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
+                {HOW_IT_WORKS.map((item) => (
+                  <div key={item.step} className="flex flex-col gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="flex size-9 shrink-0 items-center justify-center rounded-full bg-accent/10 text-sm font-bold tabular-nums text-accent">
+                        {item.step}
+                      </span>
+                      <item.icon className="size-5 text-muted" aria-hidden />
+                    </div>
+                    <div>
+                      <h3 className="text-base font-semibold text-foreground">
+                        {item.title}
+                      </h3>
+                      <p className="mt-1 text-sm text-muted">
+                        {item.description}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
-            <h2 className="mb-2 text-2xl font-semibold text-foreground">How it works</h2>
-            <p className="mb-10 text-base text-muted">Set up your portfolio in minutes. No learning curve.</p>
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-              {HOW_IT_WORKS.map((item) => (
-                <div key={item.step} className="flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <span className="flex size-9 items-center justify-center rounded-full bg-accent/10 text-sm font-bold text-accent">
-                      {item.step}
-                    </span>
-                    <item.icon className="size-5 text-muted" aria-hidden />
-                  </div>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground">{item.title}</h3>
-                    <p className="mt-1 text-sm text-muted">{item.description}</p>
-                  </div>
+          </AnimatedSection>
+        </section>
+
+        {/* Honest scope */}
+        <section
+          aria-labelledby="scope-heading"
+          className="border-y border-border bg-subtle px-4 py-12 sm:py-16"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-5xl">
+              <h2
+                id="scope-heading"
+                className="mb-2 text-2xl font-semibold text-foreground"
+              >
+                Built for one job, done well
+              </h2>
+              <p className="mb-8 max-w-2xl text-base text-muted">
+                Veld is portfolio analytics and deal underwriting — and
+                explicitly not a full property management platform. It works
+                alongside whatever banking, PM, or accounting tools you already
+                use.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 sm:gap-6">
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="text-base font-semibold text-foreground">
+                    What Veld does
+                  </h3>
+                  <ul className="mt-4 space-y-2.5">
+                    {VELD_DOES.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <Check
+                          className="mt-0.5 size-4 shrink-0 text-positive"
+                          aria-hidden
+                        />
+                        <span className="text-sm text-muted">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-              ))}
+                <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                  <h3 className="text-base font-semibold text-foreground">
+                    What it doesn&apos;t do
+                  </h3>
+                  <ul className="mt-4 space-y-2.5">
+                    {VELD_DOES_NOT.map((item) => (
+                      <li key={item} className="flex items-start gap-2.5">
+                        <Minus
+                          className="mt-0.5 size-4 shrink-0 text-muted"
+                          aria-hidden
+                        />
+                        <span className="text-sm text-muted">{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-5 text-xs text-muted">
+                    Not accounting software. Not rent collection. Just the
+                    investor numbers that matter.
+                  </p>
+                </div>
+              </div>
             </div>
-          </div>
+          </AnimatedSection>
         </section>
 
         {/* Pricing preview */}
-        <section className="px-4 py-12 sm:py-16">
-          <div className="mx-auto max-w-3xl text-center">
-            <h2 className="mb-2 text-2xl font-semibold text-foreground">Simple pricing</h2>
-            <p className="mb-8 text-base text-muted">
-              Start free. Upgrade as your portfolio grows.
-            </p>
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p className="text-base font-semibold text-foreground">Free</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">$0<span className="text-base font-normal text-muted">/mo</span></p>
-                <p className="mt-2 text-sm text-muted">{PLAN_PROPERTY_LIMITS.free} property · {PLAN_DEAL_LIMITS.free} saved deals</p>
+        <section
+          aria-labelledby="pricing-heading"
+          className="px-4 py-12 sm:py-16"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-3xl">
+              <div className="mb-3 flex justify-center sm:justify-start">
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  Pricing
+                </span>
               </div>
-              <div className="rounded-xl border border-accent/40 bg-accent/5 p-5 shadow-sm ring-2 ring-accent/20">
-                <div className="mb-1 flex items-center justify-between">
-                  <p className="text-base font-semibold text-foreground">Investor</p>
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">Popular</span>
-                </div>
-                <p className="text-2xl font-semibold tabular-nums text-foreground">${PRICING_DISPLAY.investorMonthly}<span className="text-base font-normal text-muted">/mo</span></p>
-                <p className="mt-2 text-sm text-muted">{PLAN_PROPERTY_LIMITS.investor} properties · {PLAN_DEAL_LIMITS.investor} saved deals</p>
-              </div>
-              <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
-                <p className="text-base font-semibold text-foreground">Pro</p>
-                <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">${PRICING_DISPLAY.proMonthly}<span className="text-base font-normal text-muted">/mo</span></p>
-                <p className="mt-2 text-sm text-muted">{PLAN_PROPERTY_LIMITS.pro} properties · {PLAN_DEAL_LIMITS.pro} saved deals</p>
-              </div>
-            </div>
-            <div className="mt-6">
-              <FunnelCtaLink
-                href="/pricing"
-                placement="landing_pricing_preview"
-                ctaId="view_pricing"
-                landingVariant="home_default_v2"
-                className="inline-flex items-center gap-1 rounded-lg border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-subtle"
+              <h2
+                id="pricing-heading"
+                className="mb-2 text-2xl font-semibold text-foreground"
               >
-                See full pricing
-                <ChevronRight className="size-4" aria-hidden />
-              </FunnelCtaLink>
+                Simple pricing
+              </h2>
+              <p className="mb-8 text-base text-muted">
+                Start free. Upgrade as your portfolio grows.
+              </p>
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <p className="text-base font-semibold text-foreground">
+                    Free
+                  </p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                    $0
+                    <span className="text-base font-normal text-muted">/mo</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    {PLAN_PROPERTY_LIMITS.free} property &middot;{" "}
+                    {PLAN_DEAL_LIMITS.free} saved deals
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-accent/50 bg-accent/5 p-5 shadow-sm ring-2 ring-accent/25">
+                  <div className="mb-1 flex items-center justify-between">
+                    <p className="text-base font-semibold text-foreground">
+                      Investor
+                    </p>
+                    <span className="rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-accent-foreground">
+                      Popular
+                    </span>
+                  </div>
+                  <p className="text-2xl font-semibold tabular-nums text-foreground">
+                    ${PRICING_DISPLAY.investorMonthly}
+                    <span className="text-base font-normal text-muted">/mo</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    {PLAN_PROPERTY_LIMITS.investor} properties &middot;{" "}
+                    {PLAN_DEAL_LIMITS.investor} saved deals
+                  </p>
+                  <p className="mt-1 tabular-nums text-xs text-muted">
+                    ${PRICING_DISPLAY.investorYearly}/year (2 months free)
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                  <p className="text-base font-semibold text-foreground">Pro</p>
+                  <p className="mt-1 text-2xl font-semibold tabular-nums text-foreground">
+                    ${PRICING_DISPLAY.proMonthly}
+                    <span className="text-base font-normal text-muted">/mo</span>
+                  </p>
+                  <p className="mt-2 text-sm text-muted">
+                    {PLAN_PROPERTY_LIMITS.pro} properties &middot;{" "}
+                    {PLAN_DEAL_LIMITS.pro} saved deals
+                  </p>
+                  <p className="mt-1 tabular-nums text-xs text-muted">
+                    ${PRICING_DISPLAY.proYearly}/year (2 months free)
+                  </p>
+                </div>
+              </div>
+              <div className="mt-6 flex flex-wrap items-center gap-3">
+                <FunnelCtaLink
+                  href="/pricing"
+                  placement="landing_pricing_preview"
+                  ctaId="view_pricing"
+                  landingVariant={LANDING_VARIANT}
+                  className="inline-flex min-h-[44px] items-center gap-1 rounded-md border border-border bg-card px-5 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors duration-150 hover:bg-subtle"
+                >
+                  See full pricing
+                  <ChevronRight className="size-4" aria-hidden />
+                </FunnelCtaLink>
+                {!userId && (
+                  <FunnelCtaLink
+                    href="/sign-up?intent=free"
+                    placement="landing_pricing_preview"
+                    ctaId="signup_from_pricing"
+                    planIntent="free"
+                    landingVariant={LANDING_VARIANT}
+                    className="inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground"
+                  >
+                    or sign up free
+                    <ChevronRight className="size-3.5" aria-hidden />
+                  </FunnelCtaLink>
+                )}
+              </div>
             </div>
-          </div>
+          </AnimatedSection>
         </section>
+
+        {/* Bottom CTA — signed-out only */}
+        {!userId && (
+          <section
+            aria-labelledby="bottom-cta-heading"
+            className="border-y border-border bg-subtle px-4 py-16 sm:py-20"
+          >
+            <AnimatedSection>
+              <div className="mx-auto max-w-xl text-center">
+                <h2
+                  id="bottom-cta-heading"
+                  className="text-2xl font-semibold text-foreground"
+                >
+                  Start tracking your portfolio today
+                </h2>
+                <p className="mx-auto mt-3 max-w-sm text-base text-muted">
+                  Free plan. Full features. No card required.
+                </p>
+                <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+                  <FunnelCtaLink
+                    href="/sign-up?intent=free"
+                    placement="landing_bottom_cta"
+                    ctaId="create_free_account"
+                    planIntent="free"
+                    landingVariant={LANDING_VARIANT}
+                    className="cta-accent-glow inline-flex min-h-[44px] items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
+                  >
+                    Create your free account
+                  </FunnelCtaLink>
+                  <FunnelCtaLink
+                    href="/vs/spreadsheets"
+                    placement="landing_bottom_cta"
+                    ctaId="compare_vs_spreadsheets"
+                    landingVariant={LANDING_VARIANT}
+                    className="inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground"
+                  >
+                    Compare Veld vs spreadsheets
+                    <ChevronRight className="size-4" aria-hidden />
+                  </FunnelCtaLink>
+                </div>
+                <p className="mt-3 text-xs text-muted">
+                  Your first property in about 60 seconds.
+                </p>
+              </div>
+            </AnimatedSection>
+          </section>
+        )}
       </main>
 
       <Footer supportEmail={supportEmail} />

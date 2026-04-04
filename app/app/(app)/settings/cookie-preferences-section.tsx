@@ -9,8 +9,9 @@ export function CookiePreferencesSection() {
         Cookies & optional analytics
       </h2>
       <p className="text-sm text-muted">
-        Essential cookies keep you signed in. PostHog and Google Ads load only if you accept
-        optional tracking in the cookie banner. You can change your choice anytime.
+        Essential cookies keep you signed in. PostHog, Vercel Web Analytics, and Google Ads load
+        only if you accept optional tracking in the cookie banner. You can change your choice
+        anytime.
       </p>
       <p className="mt-4">
         <CookiePreferencesButton />

@@ -38,6 +38,240 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ## Active tasks
 
+### Audit synthesis — Ship phase (2026-04-03 full audit, run 2)
+
+*Source:* [`docs/audits/synthesis/2026-04-03-audit-synthesis-2.md`](audits/synthesis/2026-04-03-audit-synthesis-2.md) **Ship** triage. *Promoted 2026-04-03.*
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| 1 | **Performance: MockupFrame CLS fix** | Add a minimum-height placeholder to `MockupFrame` (`app/components/mockups/mockup-frame.tsx`) so the outer container reserves space during the `scale === 0` phase before `ResizeObserver` fires. Affected placements: hero desktop, hero mobile, and pricing dashboard (non-`fitToHeight` frames). The `fitToHeight` pricing placements (mortgage, deal analyzer) have explicit `h-[340px]` and are not affected. The mockup content already fades in via `opacity: 0 → 1` — only the container height needs to be reserved. Verify: at 375px and 1440px, loading the landing and pricing pages shows no layout jump in the hero or mockup sections on a throttled (Slow 3G) connection in DevTools. |
+| 2 | **Code: Deprecated tokens in new mockup components** | Replace `border-border/70` and `bg-card/95` with `border-border` and `bg-card` (full values) in `app/components/mockups/deal-analyzer-mockup.tsx` (9 instances) and `app/components/mockups/mortgage-mockup.tsx` (1 instance), per `design-spec-2026.md` §15.2 deprecation rule. The mockups should look visually identical after the change. Also remove any `uppercase tracking-wide` instances in the mockup files not within a sidebar nav group label or table column header context. `npm run lint` clean on touched files. |
+| 3 | **Reliability: Sentry environment tagging** | Replace `process.env.NODE_ENV` with `process.env.VERCEL_ENV ?? process.env.NODE_ENV` in all four Sentry init files: `app/sentry.client.config.ts`, `app/sentry.server.config.ts`, `app/sentry.edge.config.ts`, and `app/instrumentation-client.ts` (or equivalent files that set the Sentry `environment` option). `VERCEL_ENV` is injected automatically by Vercel (`"production"` / `"preview"` / `"development"`); the `NODE_ENV` fallback covers local dev. After the change, a Vercel preview deployment should appear as `environment: preview` in Sentry, not `production`. `npm run check` green. |
+
+- [x] **Ship 4-03-2 #1** — MockupFrame CLS fix *(done 2026-04-03)*
+- [x] **Ship 4-03-2 #2** — Deprecated tokens in new mockup components *(done 2026-04-03)*
+- [x] **Ship 4-03-2 #3** — Sentry environment tagging *(done 2026-04-03)*
+
+---
+
+### Audit synthesis — Schedule phase (2026-04-03 full audit, run 2)
+
+*Source:* [`docs/audits/synthesis/2026-04-03-audit-synthesis-2.md`](audits/synthesis/2026-04-03-audit-synthesis-2.md) **Schedule** triage. *Promoted 2026-04-03.*
+
+**Intentional design decisions (not tasks):**
+- Mobile pricing comparison accordion omits the "Hourly estimate pool" row — **intentional**. The row doesn't fit the mobile accordion layout cleanly. Desktop comparison table is the canonical reference for full feature detail.
+
+#### UX / Feature
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S1 | **Timing copy consistency** | Change the two "2 minutes" instances to "60 seconds": (1) `app/app/page.tsx` line ~106 — How it works "Add a property" step description: change `"Takes about 2 minutes per property."` to `"Takes about 60 seconds per property."` (2) `app/app/(app)/onboarding-panel.tsx` line ~128 — change `"Typical setup time: about 2 minutes."` to `"Typical setup time: about 60 seconds."` The two "60 seconds" hero/bottom CTA instances are already correct and unchanged. No other copy changes. |
+| S2 | **640–767px hero breakpoint overlap** | At widths 640px–767px, both the `md:hidden` mobile mockup and `sm:grid` HERO_STEPS cards are simultaneously visible in the hero. Clarify the intended visibility boundary: the mobile mockup should be `md:hidden` (hidden ≥768px) and the HERO_STEPS should be `hidden sm:grid` (visible ≥640px) — either extend the HERO_STEPS breakpoint to `md:grid` or the mobile mockup hide to `sm:hidden` so the two don't overlap. Verify at 640px exactly: only one version is visible. |
+| S3 | **Pricing FAQ deduplication** | "Do I need a credit card?" appears in both the FAQ accordion and the bottom CTA card in `app/app/pricing/page.tsx`. Remove the duplicate from the bottom CTA card (keep it in the FAQ). Layout and all other content unchanged. |
+| S4 | **Welcome modal a11y** | Add `role="dialog"`, `aria-modal="true"`, `aria-labelledby` (pointing to the modal heading), focus trap (Tab stays within modal while open), and Escape key handler to the onboarding modal card in `app/components/onboarding/onboarding-panel.tsx`. Visual appearance unchanged. Keyboard smoke: Tab cycles within modal, Escape closes it, focus returns to the trigger. |
+
+#### Math / Content
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S5 | **DashboardMockup — Annual Rent ≠ NOI** | In `app/components/mockups/dashboard-mockup.tsx`, Annual Rent and NOI are both hardcoded as `$55,290`, implying zero operating expenses. Update one of the values so the mockup shows a realistic NOI/rent split (e.g. Annual Rent ~$66,000, NOI ~$55,290, implying ~16% expense ratio). No other mockup data changes. |
+
+#### Performance / Code
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S6 | **Remove `images.localPatterns` wildcard** | Delete the `localPatterns: [{ pathname: "**", search: "" }]` entry from `images` config in `app/next.config.ts`. The screenshot PNGs it referenced are deleted. `npm run build` clean; no `next/image` warnings. |
+| S7 | **Billing portal Zod validation** | Add a Zod schema for the `POST /api/billing/portal` request body (`app/app/api/billing/portal/route.ts`), matching the pattern used on other billing routes. Return 400 with a stable error shape on invalid body. `npm run check` green. |
+| S8 | **RentCast quota single fetch** | `RentCastQuotaHint` is mounted 3 times per page in `property-form.tsx` and `benchmark-display.tsx`, each firing a separate `/api/rentcast-quota` fetch. Deduplicate so only one fetch occurs per page render (e.g. lift the fetch to a parent or use React context/SWR dedup). Existing quota display behavior unchanged. |
+
+#### Security
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S9 | **Billing route rate limits** | Add `billing:sync` and `billing:portal` entries to `RATE_LIMITS` in `app/lib/rate-limit.ts` and wire `checkRateLimit` / `recordRateLimit` into `POST /api/billing/sync` and `POST /api/billing/portal` (matching the pattern on other billing routes). If intentionally omitted, add a one-line rationale comment in `rate-limit.ts` and document in `docs/security/security-audit.md` §6. |
+| S10 | **Admin layout soft-delete guard** | Replace `getAppUser()` with `getActiveAppUser()` in `app/app/admin/layout.tsx` and add a null redirect (matching the pattern used on other protected layouts). A soft-deleted admin account should not pass the layout gate. |
+| S11 | **CSP docs refresh** | Update `docs/security/security-audit.md` §5 CSP directive table to include the domains now present in `app/next.config.ts` but not yet documented: Google Ads domains, PostHog, Facebook Pixel, Clerk custom domain (`clerk.veldportfolio.com`), and Google Fonts. Doc-only change; no code changes. |
+
+#### Reliability
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S12 | **`(app)/error.tsx` Sentry capture pattern** | Move `Sentry.captureException(error)` from the render body into `useEffect([error])` in `app/app/(app)/error.tsx` to avoid double-capture on re-renders (align with `global-error.tsx` pattern). Only fires when `NEXT_PUBLIC_SENTRY_DSN` is set. `npm run check` green. |
+| S13 | **Webhook fully-unresolved user test** | Add a test case in `app/app/api/billing/webhook/route.test.ts` for the path where both `stripeCustomerId` DB lookup and metadata `appUserId` return null — pin the expected behavior (currently a silent 200 with no DB write). |
+
+#### Data Integrity
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S14 | **Export truncation UX** | In `app/components/settings/download-csv-button.tsx` (or equivalent), read the `X-Veld-Slice-Truncated`, `X-Veld-Property-Count-Total`, and `X-Veld-Property-Count-Included` headers from the `GET /api/export/portfolio` response. When `X-Veld-Slice-Truncated` is `"true"`, show a non-blocking warning (toast or inline message) telling the user the download contains N of M properties and they can upgrade for the full export. Normal (non-truncated) downloads are unaffected. |
+| S15 | **Import `loanType` normalization** | In `app/lib/import/csv-parser.ts`, normalize the `loan type` column value to uppercase and trim before storing, then validate it against `LOAN_TYPE_OPTIONS`. Invalid values should produce a row-level error in the import response (not a silent bad write). Also surface Papa Parse structural errors alongside row-level errors in `app/app/api/import/portfolio/route.ts` so they appear in the response `errors` array. Existing valid import behavior unchanged; `npm run test` green. |
+| S16 | **CSV download silent error** | In `download-csv-button.tsx`, replace the empty catch block with a user-visible error message (toast or inline) for failed download requests (429 rate limit, 5xx, network error). The success path is unchanged. |
+
+#### Growth / Analytics
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S17 | **Deals at-limit CTA** | Replace the plain `<Link>` on the deals at-limit state with `UpgradePlanLink` (matching the over-limit state styling). The at-limit and over-limit states should have visual and functional parity for the upgrade prompt. |
+| S18 | **`PlanIntentUrlSync` on `/sign-in`** | Add `<PlanIntentUrlSync />` in a `<Suspense>` boundary near the top of `app/app/sign-in/page.tsx` (matching the pattern on the sign-up page). Verify that visiting `/sign-in?intent=investor` preserves intent through the auth flow. |
+| S19 | **Funnel instrumentation gaps** | (a) Add `FunnelCtaLink` + `planIntent` to the body CTA on `app/app/investment-property-calculator/page.tsx`. (b) Add `planIntent` to the primary CTAs on competitor/alternative pages where plain `<Link>` is used. (c) Wrap the `PaidIntentCheckoutBanner` upgrade link in `FunnelCtaLink` with an appropriate `placement`. Each fix produces a `funnel_cta_clicked` PostHog event for that placement. |
+| S20 | **PostHog `landingVariant` on sign-up** | Pass `landingVariant` (from cookie or URL param, same source used by `FunnelCtaLink`) as a property on the `user_signed_up` PostHog event fired in `app/components/auth/posthog-signup-once.tsx` (or equivalent). This enables direct breakdown of signups by landing variant in PostHog without a separate insight join. |
+
+#### SEO
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S21 | **JSON-LD `WebApplication` fields** | Add `operatingSystem: "Web"` and an `offers` block (free tier, Investor tier, Pro tier with their prices) to the `WebApplication` structured data in `app/app/layout.tsx`. Validate with Rich Results Test after deploy; no other metadata changes. |
+| S22 | **BRRRR cross-link on investment-property-calculator** | Add a link to `/tools/brrr` in the cross-link footer of `app/app/investment-property-calculator/page.tsx`. STR vs LTR and Fix-and-Flip are already linked; BRRRR is the missing sibling. |
+
+#### Legal
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S23 | **Cookie preferences — Vercel Web Analytics** | Add Vercel Web Analytics to the list of named analytics providers in `app/components/consent/cookie-preferences-section.tsx` (or equivalent cookie consent UI), alongside PostHog and Google Ads. Wording should match the Privacy page processor list. |
+| S24 | **`security-notes.md` gtag consent wording** | Update `docs/security/security-notes.md` to accurately reflect that `gtag.js` / Google Ads tracking is consent-gated (only loads after user consent via `GoogleAdsGtagClient`). The current wording implies it loads unconditionally when `NEXT_PUBLIC_GOOGLE_ADS_ID` is set. Doc-only change. |
+
+#### Documentation / Governance
+
+| # | Deliverable | Acceptance criteria |
+|---|-------------|----------------------|
+| S25 | **`cursor-agent-setup.md` Step 1** | Add `seo-audit-agent.mdc` to the Step 1 clone list in `docs/cursor-agent-setup.md`. Doc-only change. |
+| S26 | **`visual-assets-guide.md` broken links** | Fix the broken relative link at footer L237 (`[design-spec.md](design-spec.md)` → correct path to `design-spec-2026.md`). Also fix the broken benchmarking archive link at L148 (`docs/roadmap.md` → correct archive path). Doc-only changes. |
+| S27 | **Design-brief reconciliation** | `docs/design/design-brief-2026.md` has a SUPERSEDED banner but still shows "Status: Active"; `docs/policies/design-spec.md` still says "consult brief first". Update both to clearly defer to `docs/design/design-spec-2026.md` as the single canonical reference. Doc-only changes. |
+| S28 | **Post-ship PNG reference cleanup** | Remove or update references to the deleted screenshot PNGs (`/ScreenDashboard.png`, `/ScreenMortgage.png`, `/ScreenDeal.png`) in `design-brief-2026.md` and implementation guide docs where they appear as placement examples. Replace with a note pointing to the new mockup components. Doc-only changes. |
+
+- [x] **Sched 4-03-2 #S1** — Timing copy consistency *(done 2026-04-04 — Phase E)*
+- [x] **Sched 4-03-2 #S2** — 640–767px hero breakpoint overlap *(done 2026-04-04 — Phase E)*
+- [x] **Sched 4-03-2 #S3** — Pricing FAQ deduplication *(done 2026-04-04 — Phase E)*
+- [x] **Sched 4-03-2 #S4** — Welcome modal a11y *(done 2026-04-04 — Phase E)*
+- [x] **Sched 4-03-2 #S5** — DashboardMockup Annual Rent ≠ NOI *(done 2026-04-03 — Phase A)*
+- [x] **Sched 4-03-2 #S6** — Remove `images.localPatterns` wildcard *(done 2026-04-03 — Phase A)*
+- [x] **Sched 4-03-2 #S7** — Billing portal Zod validation *(done 2026-04-04 — Phase B)*
+- [x] **Sched 4-03-2 #S8** — RentCast quota single fetch *(done 2026-04-04 — Phase D)*
+- [x] **Sched 4-03-2 #S9** — Billing route rate limits *(done 2026-04-04 — Phase B; `docs/security/security-audit.md` §6 updated)*
+- [x] **Sched 4-03-2 #S10** — Admin layout soft-delete guard *(done 2026-04-04 — Phase B)*
+- [x] **Sched 4-03-2 #S11** — CSP docs refresh *(done 2026-04-04 — Phase G)*
+- [x] **Sched 4-03-2 #S12** — `(app)/error.tsx` Sentry capture pattern *(done 2026-04-04 — Phase B)*
+- [x] **Sched 4-03-2 #S13** — Webhook fully-unresolved user test *(done 2026-04-04 — Phase B)*
+- [x] **Sched 4-03-2 #S14** — Export truncation UX *(done 2026-04-04 — Phase C)*
+- [x] **Sched 4-03-2 #S15** — Import `loanType` normalization *(done 2026-04-04 — Phase C)*
+- [x] **Sched 4-03-2 #S16** — CSV download silent error *(done 2026-04-04 — Phase C)*
+- [x] **Sched 4-03-2 #S17** — Deals at-limit CTA *(done 2026-04-04 — Phase D)*
+- [x] **Sched 4-03-2 #S18** — `PlanIntentUrlSync` on `/sign-in` *(done 2026-04-04 — Phase D)*
+- [x] **Sched 4-03-2 #S19** — Funnel instrumentation gaps *(done 2026-04-04 — Phase D)*
+- [x] **Sched 4-03-2 #S20** — PostHog `landingVariant` on sign-up *(done 2026-04-04 — Phase D)*
+- [x] **Sched 4-03-2 #S21** — JSON-LD `WebApplication` fields *(done 2026-04-04 — Phase F)*
+- [x] **Sched 4-03-2 #S22** — BRRRR cross-link on investment-property-calculator *(done 2026-04-04 — Phase F)*
+- [x] **Sched 4-03-2 #S23** — Cookie preferences — Vercel Web Analytics *(done 2026-04-04 — Phase F)*
+- [x] **Sched 4-03-2 #S24** — `security-notes.md` gtag consent wording *(done 2026-04-04 — Phase F)*
+- [x] **Sched 4-03-2 #S25** — `cursor-agent-setup.md` Step 1 *(done 2026-04-04 — Phase G)*
+- [x] **Sched 4-03-2 #S26** — `visual-assets-guide.md` broken links *(done 2026-04-04 — Phase G)*
+- [x] **Sched 4-03-2 #S27** — Design-brief reconciliation *(done 2026-04-04 — Phase G)*
+- [x] **Sched 4-03-2 #S28** — Post-ship PNG reference cleanup *(done 2026-04-04 — Phase G)*
+
+---
+
+### Execution phases — 2026-04-03 audit run 2
+
+*Sequencing rationale: Phase A resolves anything live in production now. Phases B–C harden the safety layer before growth work. Phase D is the highest business-value batch. Phases E–G are polish and hygiene with no blocking dependencies.*
+
+**Exit gate (all phases):** `npm run check` green on touched files before marking a phase complete.
+
+---
+
+#### Phase A — Production stability *(do first — 5 items)* — **complete 2026-04-03**
+
+Fixes that are already live or affect the LCP element on the landing page. No dependencies; can be done in a single pass.
+
+| Item | Deliverable | Why first |
+|------|-------------|-----------|
+| Ship #1 | MockupFrame CLS fix | Above-the-fold layout jump on hero — live in production now |
+| Ship #2 | Deprecated tokens in mockups | Freshly committed; cheapest to clean up now |
+| Ship #3 | Sentry environment tagging | Preview deploys mistagged as production — affects all observability |
+| S5 | DashboardMockup Annual Rent ≠ NOI | Demo data visible to every landing page visitor |
+| S6 | Remove `images.localPatterns` wildcard | One-line config cleanup; zero risk |
+
+---
+
+#### Phase B — Security & reliability hardening *(5 items)* — **complete 2026-04-04**
+
+Closes known attack surface gaps and pins critical billing behavior with tests. No UX dependencies.
+
+| Item | Deliverable |
+|------|-------------|
+| S7 | Billing portal Zod validation |
+| S9 | Billing route rate limits (`sync` + `portal`) |
+| S10 | Admin layout soft-delete guard |
+| S12 | `(app)/error.tsx` Sentry capture pattern |
+| S13 | Webhook fully-unresolved user test |
+
+---
+
+#### Phase C — Data integrity *(3 items)* — **complete 2026-04-04**
+
+Import/export reliability. Builds on Phase B patterns (error handling, validation parity). Can run concurrently with B if resourced.
+
+| Item | Deliverable |
+|------|-------------|
+| S14 | Export truncation UX (surface count headers in download button) |
+| S15 | Import `loanType` normalization + Papa Parse error surfacing |
+| S16 | CSV download silent error feedback |
+
+---
+
+#### Phase D — Growth & analytics *(5 items)* — **complete 2026-04-04**
+
+Highest business-value batch. Closes funnel tracking blind spots and intent-passing gaps before any paid acquisition. Depends on nothing from B/C.
+
+| Item | Deliverable |
+|------|-------------|
+| S8 | RentCast quota single fetch (also reduces API cost at scale) |
+| S17 | Deals at-limit CTA (`UpgradePlanLink` parity) |
+| S18 | `PlanIntentUrlSync` on `/sign-in` |
+| S19 | Funnel instrumentation gaps (calculator, competitor pages, banner) |
+| S20 | PostHog `landingVariant` on sign-up event |
+
+---
+
+#### Phase E — UX & visual polish *(4 items)* — **complete 2026-04-04**
+
+All visible changes. Timing copy requires a PM decision on the number before builder starts.
+
+| Item | Deliverable |
+|------|-------------|
+| S1 | Timing copy consistency — update 2× "2 minutes" instances to "60 seconds" (decision: 2026-04-03) |
+| S2 | 640–767px hero breakpoint overlap |
+| S3 | Pricing FAQ deduplication |
+| S4 | Welcome modal a11y (focus trap, Escape, `role="dialog"`) |
+
+---
+
+#### Phase F — SEO & legal *(4 items)* — **complete 2026-04-04**
+
+No code dependencies. SEO items take effect on next crawl after deploy; legal items are copy/doc changes.
+
+| Item | Deliverable |
+|------|-------------|
+| S21 | JSON-LD `WebApplication` — `operatingSystem` + `offers` |
+| S22 | BRRRR cross-link on investment-property-calculator |
+| S23 | Cookie preferences — add Vercel Web Analytics |
+| S24 | `security-notes.md` gtag consent wording |
+
+---
+
+#### Phase G — Documentation & governance *(5 items)* — **complete 2026-04-04**
+
+All doc-only changes. No code touched; can be batched in one pass or deferred until a quiet moment.
+
+| Item | Deliverable |
+|------|-------------|
+| S11 | CSP docs refresh (add new domains to security-audit.md §5) |
+| S25 | `cursor-agent-setup.md` Step 1 — add `seo-audit-agent.mdc` |
+| S26 | `visual-assets-guide.md` broken links (L237 + L148) |
+| S27 | Design-brief reconciliation (`design-spec-2026.md` as single canonical) |
+| S28 | Post-ship PNG reference cleanup in docs |
+
+---
+
 ### Audit synthesis — Ship phase (2026-04-03 full audit)
 
 *Source:* [`docs/audits/synthesis/2026-04-03-audit-synthesis.md`](audits/synthesis/2026-04-03-audit-synthesis.md) **Ship** triage. *Promoted 2026-04-03.*

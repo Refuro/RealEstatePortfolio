@@ -12,6 +12,11 @@ const { getActiveAppUserMock } = vi.hoisted(() => ({
   getActiveAppUserMock: vi.fn(),
 }));
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     subscription: {
@@ -33,6 +38,12 @@ const getStripe = vi.fn(() => ({
 
 vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  getRateLimitIdentifier: () => "user:test-id",
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -80,6 +91,7 @@ describe("GET /api/billing/sync", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     captureExceptionMock.mockClear();
+    checkRateLimitMock.mockResolvedValue({ allowed: true });
     prismaMock.$transaction.mockImplementation(async (ops: unknown) => {
       const arr = ops as Promise<unknown>[];
       if (Array.isArray(arr)) {
@@ -93,6 +105,21 @@ describe("GET /api/billing/sync", () => {
     const { GET } = await import("./route");
     const res = await GET(makeRequest());
     expect(res.status).toBe(401);
+    expect(checkRateLimitMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when rate limit exceeded", async () => {
+    getActiveAppUserMock.mockResolvedValue({
+      ...mockActiveUser,
+      stripeCustomerId: "cus_test",
+      subscriptionTier: "free",
+      subscriptionTierOverride: null,
+    });
+    checkRateLimitMock.mockResolvedValue({ allowed: false, retryAfter: 3600 });
+    const { GET } = await import("./route");
+    const res = await GET(makeRequest());
+    expect(res.status).toBe(429);
+    expect(subscriptionsList).not.toHaveBeenCalled();
   });
 
   it("skips sync and returns free when user has no stripeCustomerId", async () => {

@@ -1029,26 +1029,15 @@ function ValuePropIcon({
           )}
         </div>
 
-        {/* Right: product screenshot — hidden on < lg */}
+        {/* Right: product visual — hidden on < lg. Shipped code uses MockupFrame + DashboardMockup (no static PNG). */}
         <div className="hidden lg:block">
-          <div className="overflow-hidden rounded-xl border border-border/60 shadow-xl">
-            {/* Faux browser chrome */}
-            <div className="flex items-center gap-1.5 border-b border-border/60 bg-subtle px-3 py-2">
-              <span className="size-2.5 rounded-full bg-border" />
-              <span className="size-2.5 rounded-full bg-border" />
-              <span className="size-2.5 rounded-full bg-border" />
-            </div>
-            <Image
-              src="/ScreenDashboard.png"
-              alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-              className="h-auto w-full"
-              loading="eager"
-              width={1280}
-              height={800}
-              sizes="(max-width: 1280px) 50vw, 640px"
-              priority
-            />
-          </div>
+          <MockupFrame
+            chrome
+            className="rounded-xl border border-border shadow-xl"
+            ariaLabel="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+          >
+            <DashboardMockup />
+          </MockupFrame>
         </div>
       </div>
     </div>

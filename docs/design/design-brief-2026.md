@@ -4,9 +4,9 @@
 
 **Version:** 1.0  
 **Date:** 2026-04-01  
-**Status:** Active — supersedes relevant visual sections of `docs/policies/design-spec.md`  
+**Status:** Superseded — historical planning record only. **Canonical UI and design rules:** [`design-spec-2026.md`](./design-spec-2026.md). Do not treat this brief as active guidance for new work.  
 **Scope:** Full visual overhaul of marketing site and in-app product  
-**Companion document:** `docs/design/implementation-guide-2026.md` (AI-executable technical instructions)
+**Companion document:** `docs/design/implementation-guide-2026.md` (AI-executable technical instructions; may contain pre-mockup examples — prefer current code and `design-spec-2026.md`)
 
 ---
 
@@ -310,9 +310,9 @@ This is the highest-impact change in the overhaul. The current landing page is t
 
 The hero moves from a centered text block to an asymmetric two-column grid:
 - Left column (60% on `lg+`, 100% on mobile): Headline → subline → CTAs → trust pills
-- Right column (40% on `lg+`, hidden on mobile below `lg`): Dashboard screenshot (`/ScreenDashboard.png`) in a styled frame
+- Right column (40% on `lg+`, hidden on mobile below `lg`): **Embedded dashboard mockup** — use `MockupFrame` + `DashboardMockup` from `app/components/mockups/` (see landing `page.tsx`), not a static PNG. The frame adds visual credibility: border, shadow, optional macOS-style chrome via `MockupFrame`’s `chrome` prop.
 
-The screenshot frame adds visual credibility: a subtle border, a light shadow, and a small top bar with three colored circles (macOS-style chrome hint) to suggest this is a live application screenshot. This is a pure CSS treatment — no additional image assets needed.
+The implementation uses deterministic React mockups instead of `/ScreenDashboard.png` (removed from `public/`). Update the mockup components when the product UI changes.
 
 On mobile, the layout stacks: headline → subline → CTAs → trust pills. The screenshot does not show on mobile (too small to be readable). This is fine — the mobile hero is still strong through copy.
 

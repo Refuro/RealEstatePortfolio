@@ -5,6 +5,7 @@ import { useEffect, useRef } from "react";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { getPlanIntentForAnalytics } from "@/lib/plan-intent";
+import { getLandingVariantForAnalytics } from "@/lib/landing-variant-attribution";
 import { getUtmForAnalytics } from "@/lib/utm-attribution";
 
 const SIGNUP_WINDOW_MS = 7 * 24 * 60 * 60 * 1000; // 7 days after account creation
@@ -57,6 +58,7 @@ export function PostHogSignupOnce(): null {
       clerk_user_id: user.id,
       plan_intent: intent.plan_intent,
       plan_intent_source: intent.plan_intent_source,
+      ...getLandingVariantForAnalytics(),
       ...getUtmForAnalytics(),
     });
     try {

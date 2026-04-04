@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import {
@@ -53,66 +53,134 @@ export function OnboardingPanel({
     });
   }, [isLoaded, user?.id, showWelcomeModal]);
 
-  async function handleWelcome(startNow: boolean) {
-    if (busy) return;
-    setBusy(true);
-    setErrorMessage(null);
-    try {
-      const next = await patchOnboarding("mark_welcome_seen");
-      if (!next) {
-        setErrorMessage("We couldn't save your onboarding step. Please try again.");
-        return;
-      }
-
-      if (!startNow) {
-        const dismissed = await patchOnboarding("dismiss_modal");
-        if (!dismissed) {
-          setErrorMessage("We couldn't dismiss the welcome modal. Please try again.");
+  const handleWelcome = useCallback(
+    async (startNow: boolean) => {
+      if (busy) return;
+      setBusy(true);
+      setErrorMessage(null);
+      try {
+        const next = await patchOnboarding("mark_welcome_seen");
+        if (!next) {
+          setErrorMessage("We couldn't save your onboarding step. Please try again.");
           return;
         }
-        setProgress(dismissed);
-        if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_maybe_later")) {
-          markFiredOnboardingStep(user.id, "welcome_maybe_later");
-          const pi = getPlanIntentForAnalytics();
-          captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
-            step: "welcome_maybe_later",
-            plan_intent: pi.plan_intent,
-            plan_intent_source: pi.plan_intent_source,
-          });
+
+        if (!startNow) {
+          const dismissed = await patchOnboarding("dismiss_modal");
+          if (!dismissed) {
+            setErrorMessage("We couldn't dismiss the welcome modal. Please try again.");
+            return;
+          }
+          setProgress(dismissed);
+          if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_maybe_later")) {
+            markFiredOnboardingStep(user.id, "welcome_maybe_later");
+            const pi = getPlanIntentForAnalytics();
+            captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+              step: "welcome_maybe_later",
+              plan_intent: pi.plan_intent,
+              plan_intent_source: pi.plan_intent_source,
+            });
+          }
+          router.refresh();
+        } else {
+          setProgress(next);
+          if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_add_first_property")) {
+            markFiredOnboardingStep(user.id, "welcome_add_first_property");
+            const pi = getPlanIntentForAnalytics();
+            captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
+              step: "welcome_add_first_property",
+              plan_intent: pi.plan_intent,
+              plan_intent_source: pi.plan_intent_source,
+            });
+          }
+          router.push("/properties/new");
         }
-        router.refresh();
-      } else {
-        setProgress(next);
-        if (user?.id && !hasFiredOnboardingStep(user.id, "welcome_add_first_property")) {
-          markFiredOnboardingStep(user.id, "welcome_add_first_property");
-          const pi = getPlanIntentForAnalytics();
-          captureClientEvent(AnalyticsEvents.ONBOARDING_STEP_COMPLETED, {
-            step: "welcome_add_first_property",
-            plan_intent: pi.plan_intent,
-            plan_intent_source: pi.plan_intent_source,
-          });
-        }
-        router.push("/properties/new");
+      } catch {
+        setErrorMessage("Something went wrong while saving onboarding. Please try again.");
+      } finally {
+        setBusy(false);
       }
-    } catch {
-      setErrorMessage("Something went wrong while saving onboarding. Please try again.");
-    } finally {
-      setBusy(false);
-    }
-  }
+    },
+    [busy, router, user?.id]
+  );
+
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const primaryActionRef = useRef<HTMLButtonElement>(null);
+  const titleId = useId();
+
+  useEffect(() => {
+    if (!showWelcomeModal) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [showWelcomeModal]);
+
+  useEffect(() => {
+    if (!showWelcomeModal) return;
+    const onDocKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        void handleWelcome(false);
+      }
+    };
+    document.addEventListener("keydown", onDocKey);
+    return () => document.removeEventListener("keydown", onDocKey);
+  }, [showWelcomeModal, handleWelcome]);
+
+  useEffect(() => {
+    if (!showWelcomeModal || !dialogRef.current) return;
+    const root = dialogRef.current;
+    const getFocusable = () =>
+      Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+        )
+      ).filter((el) => !el.hasAttribute("disabled") && el.tabIndex !== -1);
+
+    const focusables = getFocusable();
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    primaryActionRef.current?.focus();
+
+    const onTrap = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || focusables.length === 0) return;
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last?.focus();
+        }
+      } else if (document.activeElement === last) {
+        e.preventDefault();
+        first?.focus();
+      }
+    };
+    root.addEventListener("keydown", onTrap);
+    return () => root.removeEventListener("keydown", onTrap);
+  }, [showWelcomeModal]);
 
   return (
     <>
       {showWelcomeModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
-          <div className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-7 shadow-2xl">
+          <div
+            ref={dialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby={titleId}
+            className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-7 shadow-2xl outline-none"
+          >
             <div className="pointer-events-none absolute -top-24 right-[-12%] h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-28 left-[-14%] h-60 w-60 rounded-full bg-primary/15 blur-3xl" />
             <div className="relative">
               <p className="inline-flex rounded-full border border-border/80 bg-background/60 px-3 py-1 text-xs font-medium text-muted">
                 Welcome
               </p>
-              <h2 className="mt-4 text-2xl font-semibold leading-tight text-foreground">
+              <h2
+                id={titleId}
+                className="mt-4 text-2xl font-semibold leading-tight text-foreground"
+              >
                 Build your real estate portfolio in minutes
               </h2>
               <p className="mt-2 max-w-lg text-sm text-muted">
@@ -125,7 +193,7 @@ export function OnboardingPanel({
                 <ValueChip label="Model upside" />
               </div>
 
-              <p className="mt-4 text-xs text-muted">Typical setup time: about 2 minutes.</p>
+              <p className="mt-4 text-xs text-muted">Typical setup time: about 60 seconds.</p>
               {errorMessage ? (
                 <p className="mt-3 text-sm text-negative" role="status" aria-live="polite">
                   {errorMessage}
@@ -143,6 +211,7 @@ export function OnboardingPanel({
                 Maybe later
               </button>
               <button
+                ref={primaryActionRef}
                 type="button"
                 onClick={() => void handleWelcome(true)}
                 disabled={busy}

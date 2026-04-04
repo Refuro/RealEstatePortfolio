@@ -27,6 +27,11 @@ const { getActiveAppUserMock } = vi.hoisted(() => ({
   getActiveAppUserMock: vi.fn(),
 }));
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
 const { prismaMock } = vi.hoisted(() => ({
   prismaMock: {
     subscription: {
@@ -39,6 +44,12 @@ const { prismaMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  getRateLimitIdentifier: () => "user:test-id",
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
 }));
 
 vi.mock("@/lib/db", () => ({
@@ -75,6 +86,7 @@ describe("POST /api/billing/portal", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     captureExceptionMock.mockClear();
+    checkRateLimitMock.mockResolvedValue({ allowed: true });
     getActiveAppUserMock.mockResolvedValue({
       ...mockActiveUser,
       stripeCustomerId: "cus_test_1",
@@ -93,6 +105,36 @@ describe("POST /api/billing/portal", () => {
     const res = await POST(postJson({}));
     expect(res.status).toBe(401);
     expect(billingPortalSessionsCreate).not.toHaveBeenCalled();
+    expect(checkRateLimitMock).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when rate limit exceeded", async () => {
+    checkRateLimitMock.mockResolvedValue({ allowed: false, retryAfter: 3600 });
+    const { POST } = await import("./route");
+    const res = await POST(postEmpty());
+    expect(res.status).toBe(429);
+    expect(billingPortalSessionsCreate).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 for invalid JSON body", async () => {
+    const { POST } = await import("./route");
+    const req = new NextRequest("http://localhost/api/billing/portal", {
+      method: "POST",
+      body: "{not-json",
+      headers: { "content-type": "application/json" },
+    });
+    const res = await POST(req);
+    expect(res.status).toBe(400);
+    const data = await res.json();
+    expect(data.error).toMatch(/invalid json/i);
+  });
+
+  it("returns 400 for unknown JSON keys (strict body)", async () => {
+    const { POST } = await import("./route");
+    const res = await POST(
+      postJson({ returnPath: "/plans", extraField: true } as Record<string, unknown>)
+    );
+    expect(res.status).toBe(400);
   });
 
   it("returns 400 when user has no Stripe customer id", async () => {

@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useEffect, useSyncExternalStore } from "react";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { getLandingVariantForAnalytics } from "@/lib/landing-variant-attribution";
 import { getPlanIntentForAnalytics } from "@/lib/plan-intent";
 
 /** v2: localStorage + cooldown so dismiss isn’t only session-scoped. */
@@ -54,6 +55,8 @@ export function PaidIntentCheckoutBanner({ effectiveTier }: PaidIntentCheckoutBa
   const { plan_intent } = getPlanIntentForAnalytics();
   if (plan_intent !== "investor" && plan_intent !== "pro") return null;
 
+  const { landing_variant: landingVariant } = getLandingVariantForAnalytics();
+
   const intentLabel = plan_intent === "pro" ? "Pro" : "Investor";
 
   const dismiss = () => {
@@ -73,12 +76,15 @@ export function PaidIntentCheckoutBanner({ effectiveTier }: PaidIntentCheckoutBa
           mind. When you&apos;re ready, continue to checkout from Plans &amp; billing.
         </p>
         <div className="flex shrink-0 flex-wrap gap-2">
-          <Link
+          <FunnelCtaLink
             href="/plans"
+            placement="paid_intent_checkout_banner"
+            ctaId="view_plans"
+            landingVariant={landingVariant}
             className="inline-flex rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
           >
             View plans
-          </Link>
+          </FunnelCtaLink>
           <button
             type="button"
             onClick={dismiss}

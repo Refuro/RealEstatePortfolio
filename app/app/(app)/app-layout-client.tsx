@@ -190,9 +190,9 @@ export function AppLayoutClient({
         >
           <Image
             src="/favicon.svg"
-            width={20}
-            height={20}
-            className="size-5 shrink-0 object-contain"
+            width={24}
+            height={24}
+            className="size-6 shrink-0 object-contain"
             alt=""
             aria-hidden
           />
@@ -208,9 +208,9 @@ export function AppLayoutClient({
         <div className="flex h-14 items-center gap-2 border-b border-border px-4">
           <Image
             src="/favicon.svg"
-            width={20}
-            height={20}
-            className="size-5 shrink-0 object-contain"
+            width={24}
+            height={24}
+            className="size-6 shrink-0 object-contain"
             alt=""
             aria-hidden
           />
