@@ -148,9 +148,9 @@ Replace spreadsheet chaos with one clear view of your rental portfolio.
 ### Top-of-funnel assets (free tools)
 Public calculators drive SEO traffic from people actively evaluating deals:
 - `/investment-property-calculator` — Deal analyzer (primary, most traffic)
-- `/brrrr-calculator` — BRRRR method
-- `/fix-and-flip-calculator` — Fix and flip analysis
-- `/str-ltr-calculator` — Short-term vs long-term rental comparison
+- `/tools/brrr` — BRRRR method
+- `/tools/fix-and-flip` — Fix and flip analysis
+- `/tools/str-vs-ltr` — Short-term vs long-term rental comparison
 
 These convert calculator users → signed-up users at higher rates than generic landing visitors.
 

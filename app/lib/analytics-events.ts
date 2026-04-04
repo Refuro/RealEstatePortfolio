@@ -17,4 +17,6 @@ export const AnalyticsEvents = {
   PLAN_LIMIT_UPGRADE_CTA_CLICKED: "plan_limit_upgrade_cta_clicked",
   IMPORT_COMPLETED: "import_completed",
   IMPORT_FAILED: "import_failed",
+  REFINANCE_SCENARIO_CHANGED: "refinance_scenario_changed",
+  REFINANCE_WORKSPACE_VIEWED: "refinance_workspace_viewed",
 } as const;

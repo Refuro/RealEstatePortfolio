@@ -101,7 +101,7 @@ function JsonLdScript() {
         "@type": "WebApplication",
         name: "Veld Portfolio",
         url: APP_URL,
-        operatingSystem: "Web",
+        operatingSystem: "Web Browser",
         applicationCategory: "FinanceApplication",
         description:
           "Portfolio analytics for real estate investors. Track equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",

@@ -84,7 +84,7 @@ cd RealEstatePortfolio/app && npm run check
 ## Copy-paste prompt (implementation agent)
 
 ```
-Polish the Veld Portfolio changelog page per docs/plans/2026-04-04-changelog-polish-plan.md.
+Polish the Veld Portfolio changelog page per docs/archive/plans/2026-04-04-changelog-polish-plan.md.
 
 Read: .cursor/skills/veld-ui/SKILL.md and .cursor/skills/veld-mobile/SKILL.md.
 

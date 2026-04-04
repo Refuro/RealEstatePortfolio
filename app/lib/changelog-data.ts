@@ -13,6 +13,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-04",
+    title: "Refinance workspace, property Details & Edit, and payoff what-ifs",
+    items: [
+      "Added Refinance under Tools — model a new rate and term against a saved loan with balance curves and interest comparison.",
+      "Mortgage workspace now includes a Refinance link for the selected property and loan.",
+      "Property Details reorganized into card sections with Edit links; mortgage rows show payoff or balloon projection with shortcuts to Refinance.",
+      "Edit property includes a Mortgages section — add, update, or remove loans without leaving the page.",
+      "Overview focuses on performance metrics with Modeling and Refinance workspace buttons.",
+      "Added a \"What if I refinanced?\" panel on Overview — enter a new rate, term, and closing costs to see monthly savings, interest comparison, and break-even.",
+    ],
+  },
+  {
     date: "2026-03-31",
     title: "Calculators, deal vs portfolio, and portfolio print view",
     items: [

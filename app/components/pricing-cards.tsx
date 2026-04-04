@@ -36,7 +36,7 @@ const PLANS: {
     ],
     publicBestFor: "Best for first-time rental analysis",
     publicFeatures: [
-      "Launch your first property dashboard quickly",
+      "Set up your first property dashboard in about 60 seconds",
       "Analyze deals before you buy",
       "Use modeling and mortgage tools from day one",
     ],
@@ -68,12 +68,12 @@ const PLANS: {
     features: [
       "Track up to 20 properties",
       "Save up to 50 analyzed deals",
-      "Designed for serious portfolio operators",
+      "For portfolios up to 20 properties",
     ],
-    publicBestFor: "Best for scaling operators and partners",
+    publicBestFor: "Best for landlords tracking 10–20 properties",
     publicFeatures: [
-      "Operate a larger portfolio with cleaner visibility",
-      "Stress-test acquisitions and debt strategy faster",
+      "Track up to 20 properties with the same metrics available on smaller plans",
+      "Underwrite acquisitions and model debt scenarios across more properties",
       "Consolidate analysis across properties",
     ],
   },

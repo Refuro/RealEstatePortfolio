@@ -95,6 +95,11 @@
 - [Agent governance audits](audits/agent-governance/)
 - [Audit synthesis](audits/synthesis/)
 
+## Plans
+
+- [Active plans](plans/) — current execution docs and gap analysis
+- [Archived plans](archive/plans/) — shipped or superseded handoff plans (historical)
+
 ## Proposals
 
 - [Refinance / payoff](proposals/refinance-payoff-proposal.md)

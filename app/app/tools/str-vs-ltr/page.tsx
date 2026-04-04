@@ -56,7 +56,7 @@ export default async function StrVsLtrCalculatorPage() {
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
               Compare short-term (nightly) and long-term rent on the same purchase and mortgage.
-              Adjust occupancy, platform fees, and rent to see cash flow and coverage side by side.
+              Adjust occupancy, platform fees, and rent to see cash flow and coverage.
             </p>
           </header>
 
@@ -72,7 +72,7 @@ export default async function StrVsLtrCalculatorPage() {
                 Ready to track this property?
               </p>
               <p className="mt-1 text-sm text-muted">
-                Save your analysis, model scenarios, and benchmark rent in one place.
+                Save your analysis, model scenarios, and track rent benchmarks.
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 <FunnelCtaLink

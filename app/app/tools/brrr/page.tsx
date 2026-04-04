@@ -71,7 +71,7 @@ export default async function BrrrCalculatorPage() {
                 Ready to track this property?
               </p>
               <p className="mt-1 text-sm text-muted">
-                Save your analysis, model scenarios, and benchmark rent in one place.
+                Save your analysis, model scenarios, and track rent benchmarks.
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-3">
                 <FunnelCtaLink

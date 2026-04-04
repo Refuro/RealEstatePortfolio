@@ -12,6 +12,7 @@ import {
   ClipboardList,
   SlidersHorizontal,
   Landmark,
+  TrendingDown,
   CreditCard,
   Settings,
   Shield,
@@ -26,6 +27,7 @@ const portfolioNav = [
 const toolsNav = [
   { href: "/modeling", label: "Modeling", icon: SlidersHorizontal },
   { href: "/mortgage", label: "Mortgage", icon: Landmark },
+  { href: "/refinance", label: "Refinance", icon: TrendingDown },
   { href: "/calculators", label: "Calculators", icon: Calculator },
   { href: "/analyze", label: "Analyze deal", icon: ClipboardList },
   { href: "/deals", label: "Deals", icon: Briefcase },

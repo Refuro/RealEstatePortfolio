@@ -71,11 +71,11 @@ export default async function ChangelogPage() {
             </p>
           </header>
 
-          <ol className="relative mt-10 space-y-8 border-l-2 border-border pl-6 md:space-y-10">
+          <ol className="relative mt-10 pl-6">
             {CHANGELOG_ENTRIES.map((entry, index) => (
               <li
                 key={`${entry.date}-${entry.title}`}
-                className={`relative reveal-up ${REVEAL_STAGGER[index % REVEAL_STAGGER.length]}`}
+                className={`relative pb-8 reveal-up before:absolute before:-left-[1.5625rem] before:top-0 before:h-[1.625rem] before:w-px before:bg-border before:content-[''] first:before:hidden after:absolute after:-left-[1.5625rem] after:top-8 after:bottom-0 after:w-px after:bg-border after:content-[''] last:pb-0 last:after:hidden md:pb-10 ${REVEAL_STAGGER[index % REVEAL_STAGGER.length]}`}
               >
                 <span
                   className="absolute -left-[1.9375rem] top-5 size-3 rounded-full bg-accent ring-2 ring-background"

@@ -63,9 +63,7 @@ export default async function PaidCalculatorLandingPage() {
               Calculator or full deal analyzer?
             </h2>
             <p className="mt-2 text-sm text-muted">
-              Use this page for quick investment property calculator results. If you are doing
-              deeper deal analysis (including multifamily assumptions and saved comparisons), create
-              a free account and continue in the full analyzer.
+              For quick estimates, stay here. For deeper analysis (multifamily, saved comparisons), create a free account and continue in the full analyzer.
             </p>
           </section>
 

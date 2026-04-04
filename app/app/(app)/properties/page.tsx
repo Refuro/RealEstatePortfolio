@@ -77,7 +77,7 @@ function PropertyTypeBadge({
 }) {
   const label = formatPropertyType(propertyType, units);
   return (
-    <span className="inline-flex items-center rounded-md border border-border bg-subtle px-2 py-0.5 text-xs font-medium text-muted">
+    <span className="inline-flex shrink-0 items-center rounded-md border border-border bg-subtle px-2 py-0.5 text-xs font-medium text-muted whitespace-nowrap">
       {label}
     </span>
   );

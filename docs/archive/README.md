@@ -24,6 +24,10 @@ Active proposals remaining in `docs/proposals/`: `refinance-payoff-proposal.md`,
 - `proposals/epic-f-overview-qa.md`
 - `proposals/epic-g-regression-matrix.md`
 
+## Plans (shipped or superseded)
+
+Execution plans moved out of [`../plans/`](../plans/): [`plans/README.md`](plans/README.md).
+
 ## Launch — paid-ads readouts (archived)
 
 See [`launch/paid-ads-readouts/README.md`](launch/paid-ads-readouts/README.md).

@@ -1,6 +1,7 @@
 "use client";
 
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
@@ -379,7 +380,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
     <form
       ref={formRef}
       onSubmit={handleSubmit}
-      className={`space-y-6 rounded-lg border border-border bg-card p-6 ${className}`}
+      className={`space-y-6 rounded-xl border border-border bg-card p-6 shadow-sm ${className}`}
     >
       {error && (
         <div className="rounded-md px-4 py-2 text-sm text-negative">
@@ -398,13 +399,16 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       {isEdit && (
         <nav
           aria-label="Edit property sections"
-          className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card/95 px-6 py-3 backdrop-blur supports-backdrop-filter:bg-card/85"
+          className="sticky top-0 z-10 -mx-6 mb-8 border-b border-border bg-card px-6 py-3"
         >
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
           <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
             {PROPERTY_EDIT_SECTION_NAV.map((s) => (
               <li key={s.id} className="shrink-0">
-                <a href={`#${s.id}`} className="text-accent hover:underline">
+                <a
+                  href={`#${s.id}`}
+                  className="inline-flex min-h-[44px] items-center text-accent transition-colors duration-150 hover:text-accent-hover"
+                >
                   {s.label}
                 </a>
               </li>
@@ -420,7 +424,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           className="scroll-mt-28 border-b border-border pb-10"
           aria-labelledby="heading-edit-location"
         >
-          <h2 id="heading-edit-location" className="text-lg font-semibold text-foreground">
+          <h2 id="heading-edit-location" className="text-xl font-semibold text-foreground">
             Location &amp; profile
           </h2>
           <p className="mt-1 text-sm text-muted">
@@ -685,11 +689,11 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           className="scroll-mt-28 border-b border-border pb-10"
           aria-labelledby="heading-edit-economics"
         >
-          <h2 id="heading-edit-economics" className="text-lg font-semibold text-foreground">
+          <h2 id="heading-edit-economics" className="text-xl font-semibold text-foreground">
             Purchase &amp; value
           </h2>
           <p className="mt-1 text-sm text-muted">
-            What you paid, current value, cash invested, and ownership—aligned with the add-property flow.
+            What you paid, current estimated value, cash invested, and ownership share.
           </p>
           <div className="mt-4 space-y-4">
             <RentCastQuotaHint refreshKey={rentCastQuotaTick} />
@@ -790,7 +794,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           className="scroll-mt-28 border-b border-border pb-10"
           aria-labelledby="heading-edit-income"
         >
-          <h2 id="heading-edit-income" className="text-lg font-semibold text-foreground">
+          <h2 id="heading-edit-income" className="text-xl font-semibold text-foreground">
             Income &amp; expenses
           </h2>
           <p className="mt-1 text-sm text-muted">Rent, operating expenses, and vacancy assumption.</p>
@@ -986,7 +990,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           className="scroll-mt-28"
           aria-labelledby="heading-edit-notes"
         >
-          <h2 id="heading-edit-notes" className="text-lg font-semibold text-foreground">
+          <h2 id="heading-edit-notes" className="text-xl font-semibold text-foreground">
             Notes
           </h2>
           <p className="mt-1 text-sm text-muted">Optional context for your portfolio (not required for calculations).</p>
@@ -1011,16 +1015,16 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         <button
           type="submit"
           disabled={submitting}
-          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
+          className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover disabled:opacity-50"
         >
           {submitting ? "Saving…" : isEdit ? "Save changes" : "Create property"}
         </button>
-        <a
+        <Link
           href={isEdit ? `/properties/${property.id}` : "/properties"}
-          className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
+          className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium transition-colors duration-150 hover:bg-subtle"
         >
           Cancel
-        </a>
+        </Link>
       </div>
     </form>
   );
