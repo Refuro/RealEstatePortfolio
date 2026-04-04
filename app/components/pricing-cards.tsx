@@ -223,7 +223,7 @@ export function PricingCards({
   return (
     <div className={className}>
       <div className="mb-10">
-        <div className="mx-auto flex w-full max-w-md items-center rounded-lg border border-border/70 bg-card p-1 md:w-fit">
+        <div className="mx-auto flex w-full max-w-md items-center rounded-lg border border-border bg-card p-1 md:w-fit">
           <button
             type="button"
             onClick={() => setBillingCycle("monthly")}
@@ -315,7 +315,7 @@ export function PricingCards({
         return (
           <div
             key={plan.tier}
-            className={`flex flex-col rounded-xl border bg-card/95 p-4 shadow-sm md:p-5 ${cardBorder}`}
+            className={`flex flex-col rounded-xl border bg-card p-4 shadow-sm md:p-5 ${cardBorder}`}
           >
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -339,10 +339,10 @@ export function PricingCards({
               )}
             </div>
             <div className="mt-3 flex flex-wrap gap-2 text-xs">
-              <span className="rounded-full border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+              <span className="rounded-full border border-border bg-subtle px-2.5 py-1 text-muted">
                 {plan.propertyLimit} {plan.propertyLimit === 1 ? "property" : "properties"}
               </span>
-              <span className="rounded-full border border-border/70 bg-background/45 px-2.5 py-1 text-muted">
+              <span className="rounded-full border border-border bg-subtle px-2.5 py-1 text-muted">
                 {plan.dealLimit} saved deals
               </span>
             </div>
@@ -420,7 +420,7 @@ export function PricingCards({
               {plan.tier === "free" && showSignUp && (
                 <Link
                   href="/sign-up?intent=free"
-                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover md:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover md:w-auto"
                   onClick={() => setPlanIntent("free", "pricing_card")}
                 >
                   Choose Free
@@ -433,7 +433,7 @@ export function PricingCards({
                       ? "/sign-up?intent=investor"
                       : "/sign-up?intent=pro"
                   }
-                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover md:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover md:w-auto"
                   onClick={() =>
                     setPlanIntent(
                       plan.tier === "investor" ? "investor" : "pro",
@@ -451,7 +451,7 @@ export function PricingCards({
                     handlePaidOrFreeUpgrade(plan.tier as "investor" | "pro")
                   }
                   disabled={!!loading}
-                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50 md:w-auto"
+                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover disabled:opacity-50 md:w-auto"
                 >
                   {signedInMode &&
                   (currentTier.toLowerCase() === "investor" ||
@@ -483,7 +483,7 @@ export function PricingCards({
                     )
                   }
                   disabled={!!loading}
-                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50 md:w-auto"
+                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover disabled:opacity-50 md:w-auto"
                 >
                   {loading === "portal_" + plan.tier
                     ? "Opening…"
@@ -520,7 +520,7 @@ export function PricingCards({
           <button
             type="button"
             onClick={() => setError(null)}
-            className="mt-2 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-subtle"
+            className="mt-2 rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
           >
             Dismiss
           </button>

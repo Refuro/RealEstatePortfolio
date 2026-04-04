@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import { COMPETITOR_ALTERNATIVES } from "@/lib/marketing/competitor-data";
 import { getAppOrigin } from "@/lib/app-url";
 
@@ -70,9 +71,16 @@ export default async function AlternativesHubPage() {
               All calculators
             </Link>
             {" · "}
-            <Link href="/pricing" className="font-medium text-foreground hover:underline">
+            <FunnelCtaLink
+              href="/pricing"
+              placement="alternatives_hub_footer"
+              ctaId="pricing"
+              planIntent="free"
+              landingVariant="alt_hub_v1"
+              className="font-medium text-foreground hover:underline"
+            >
               Pricing
-            </Link>
+            </FunnelCtaLink>
           </p>
         </div>
       </main>

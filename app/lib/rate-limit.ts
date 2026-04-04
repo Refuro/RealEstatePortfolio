@@ -21,6 +21,10 @@ export const RATE_LIMITS: Record<string, number> = {
   "account:delete": 5,
   "account:delete-permanent": 3,
   "billing:create-checkout": 10,
+  /** Billing sync (GET) — per user; client throttles to ~5 min; server cap prevents abuse. */
+  "billing:sync": 60,
+  /** Stripe Customer Portal session creation — per user / hour. */
+  "billing:portal": 30,
 };
 
 export function getRateLimitIdentifier(userId: string | null, req: NextRequest): string {

@@ -1,6 +1,9 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { Metadata } from "next";
+import { MockupFrame } from "@/components/mockups/mockup-frame";
+import { DashboardMockup } from "@/components/mockups/dashboard-mockup";
+import { MortgageMockup } from "@/components/mockups/mortgage-mockup";
+import { DealAnalyzerMockup } from "@/components/mockups/deal-analyzer-mockup";
 import { Suspense } from "react";
 import { getAppUser } from "@/lib/auth";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
@@ -36,21 +39,23 @@ export default async function PricingPage() {
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={user?.id ?? null} />
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-12 md:py-16 lg:py-20">
         <div className="mx-auto max-w-6xl">
           <div className="text-center">
-            <h1 className="text-3xl font-semibold text-foreground">Pricing</h1>
-            <p className="mx-auto mt-2 max-w-2xl text-base text-muted">
+            <h1 className="reveal-up text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+              Pricing
+            </h1>
+            <p className="reveal-up reveal-up-d1 mx-auto mt-3 max-w-2xl text-base text-muted md:text-lg">
               {user
                 ? "Choose a plan based on how many properties you track."
                 : "Simple pricing for serious portfolio tracking. Start free, then scale as your portfolio grows."}
             </p>
             {user && (
-              <p className="mx-auto mt-4 max-w-2xl text-center text-sm text-muted">
+              <p className="reveal-up reveal-up-d2 mx-auto mt-4 max-w-2xl text-center text-sm text-muted">
                 Manage subscription and billing on{" "}
                 <Link
                   href="/plans"
-                  className="font-medium text-foreground underline underline-offset-2 hover:text-accent"
+                  className="font-medium text-foreground underline underline-offset-2 transition-colors duration-150 hover:text-accent"
                 >
                   Plans &amp; billing
                 </Link>
@@ -58,7 +63,7 @@ export default async function PricingPage() {
               </p>
             )}
             {!user && (
-              <div className="mt-4 flex flex-wrap justify-center gap-2 text-sm text-muted">
+              <div className="reveal-up reveal-up-d2 mt-5 flex flex-wrap justify-center gap-2 text-sm text-muted">
                 <span className="rounded-full border border-border bg-card px-3 py-1 shadow-sm">
                   Secure billing via Stripe
                 </span>
@@ -73,7 +78,7 @@ export default async function PricingPage() {
           </div>
           <PricingCards
             currentTier={user ? getEffectiveTier(user) : ""}
-            className="mt-10"
+            className="reveal-up reveal-up-d3 mt-10"
             showSignUp={!user}
             billingPortalReturnPath="/pricing"
           />
@@ -83,21 +88,21 @@ export default async function PricingPage() {
             or the billing portal.{" "}
             <Link
               href="/terms#subscriptions-and-payments"
-              className="underline underline-offset-2 hover:text-foreground"
+              className="underline underline-offset-2 transition-colors duration-150 hover:text-foreground"
             >
               Billing
             </Link>
             ,{" "}
             <Link
               href="/terms#refunds"
-              className="underline underline-offset-2 hover:text-foreground"
+              className="underline underline-offset-2 transition-colors duration-150 hover:text-foreground"
             >
               refunds
             </Link>
             , and{" "}
             <Link
               href="/terms#cancellation"
-              className="underline underline-offset-2 hover:text-foreground"
+              className="underline underline-offset-2 transition-colors duration-150 hover:text-foreground"
             >
               cancellation
             </Link>{" "}
@@ -105,11 +110,16 @@ export default async function PricingPage() {
           </p>
 
           {/* Feature comparison — desktop table */}
-          <section className="mt-12 hidden md:block">
-            <h2 className="mb-6 text-center text-base font-semibold text-foreground">
+          <section className="mt-16 hidden md:block">
+            <div className="mb-3 flex justify-center">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                Features
+              </span>
+            </div>
+            <h2 className="mb-6 text-center text-2xl font-semibold text-foreground">
               Compare plans
             </h2>
-            <div className="overflow-hidden rounded-xl border border-border">
+            <div className="overflow-hidden rounded-xl border border-border shadow-sm">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-subtle">
@@ -161,7 +171,7 @@ export default async function PricingPage() {
           </section>
 
           {/* Feature comparison — mobile accordion */}
-          <section className="mt-8 md:hidden">
+          <section className="mt-10 md:hidden">
             <details className="rounded-xl border border-border">
               <summary className="cursor-pointer px-4 py-3 text-sm font-medium text-muted">
                 Compare all features
@@ -199,9 +209,16 @@ export default async function PricingPage() {
           </section>
 
           {/* Pricing FAQ */}
-          <section className="mt-10">
-            <h2 className="mb-4 text-base font-semibold text-foreground">Common questions</h2>
-            <div className="space-y-2">
+          <section className="mt-16">
+            <div className="mb-3 flex justify-center">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                FAQ
+              </span>
+            </div>
+            <h2 className="mb-6 text-center text-2xl font-semibold text-foreground">
+              Common questions
+            </h2>
+            <div className="mx-auto max-w-3xl space-y-2">
               {[
                 {
                   q: "Does the Free plan require a credit card?",
@@ -234,46 +251,44 @@ export default async function PricingPage() {
           </section>
 
           {!user && (
-            <section className="mt-12">
-              <h2 className="mb-6 text-center text-xl font-semibold text-foreground">
+            <section className="mt-16">
+              <div className="mb-3 flex justify-center">
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                  Preview
+                </span>
+              </div>
+              <h2 className="mb-8 text-center text-2xl font-semibold text-foreground">
                 See it in action
               </h2>
               <div className="grid gap-4 md:grid-cols-2">
-                <Image
-                  src="/ScreenDashboard.png"
-                  alt="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
-                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg md:col-span-2"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                  sizes="(max-width: 1280px) 100vw, 1280px"
-                />
-                <Image
-                  src="/ScreenMortgage.png"
-                  alt="Mortgage workspace with payoff simulation and balance projection chart"
-                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                  sizes="(max-width: 768px) 100vw, 640px"
-                />
-                <Image
-                  src="/ScreenDeal.png"
-                  alt="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
-                  className="h-auto w-full rounded-xl border border-border/70 shadow-lg"
-                  loading="lazy"
-                  width={1280}
-                  height={800}
-                  sizes="(max-width: 768px) 100vw, 640px"
-                />
+                <MockupFrame
+                  className="rounded-xl border border-border shadow-lg md:col-span-2"
+                  ariaLabel="Veld Portfolio dashboard showing property value, equity, cash flow, and portfolio metrics"
+                >
+                  <DashboardMockup />
+                </MockupFrame>
+                <MockupFrame
+                  fitToHeight
+                  className="h-[340px] rounded-xl border border-border shadow-lg md:h-[380px] lg:h-[400px]"
+                  ariaLabel="Mortgage workspace with payoff simulation and balance projection chart"
+                >
+                  <MortgageMockup />
+                </MockupFrame>
+                <MockupFrame
+                  fitToHeight
+                  className="h-[340px] rounded-xl border border-border shadow-lg md:h-[380px] lg:h-[400px]"
+                  ariaLabel="Deal analyzer with income, expenses, deal signal metrics, and investment metrics"
+                >
+                  <DealAnalyzerMockup />
+                </MockupFrame>
               </div>
             </section>
           )}
           {!user && (
-            <section className="mt-12 rounded-2xl border border-border/70 bg-card/95 p-6 shadow-sm md:p-8">
+            <section className="mt-16 rounded-xl border border-border bg-card p-6 shadow-sm md:p-8">
               <div className="grid gap-6 md:grid-cols-[1.3fr_0.7fr] md:items-center">
                 <div>
-                  <h2 className="text-xl font-semibold text-foreground">
+                  <h2 className="text-2xl font-semibold text-foreground">
                     Start free and make your first property decision with confidence.
                   </h2>
                   <p className="mt-2 text-sm text-muted">
@@ -281,15 +296,7 @@ export default async function PricingPage() {
                     deals, and model scenarios right away.
                   </p>
                   <div className="mt-6 space-y-2">
-                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
-                      <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
-                        Do I need a credit card to start?
-                      </summary>
-                      <p className="mt-2 text-sm text-muted">
-                        No. Free accounts start without a credit card.
-                      </p>
-                    </details>
-                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
+                    <details className="group rounded-lg border border-border p-3 transition-colors duration-150 hover:bg-subtle">
                       <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
                         What changes between monthly and annual billing?
                       </summary>
@@ -298,7 +305,7 @@ export default async function PricingPage() {
                         total cost.
                       </p>
                     </details>
-                    <details className="group rounded-lg border border-border/70 p-3 transition-colors hover:bg-subtle">
+                    <details className="group rounded-lg border border-border p-3 transition-colors duration-150 hover:bg-subtle">
                       <summary className="cursor-pointer list-none text-sm font-medium text-foreground">
                         Can I cancel or upgrade later?
                       </summary>
@@ -312,14 +319,14 @@ export default async function PricingPage() {
                     </details>
                   </div>
                 </div>
-                <div className="rounded-xl border border-border/70 bg-background/45 p-4 md:self-center">
+                <div className="rounded-xl border border-border bg-subtle p-4 md:self-center">
                   <p className="text-sm font-medium text-foreground">New to Veld?</p>
                   <FunnelCtaLink
                     href="/sign-up?intent=free"
                     placement="pricing_footer"
                     ctaId="create_free_account"
                     planIntent="free"
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
                   >
                     Create free account
                   </FunnelCtaLink>
@@ -328,7 +335,7 @@ export default async function PricingPage() {
                   </p>
                   <Link
                     href="/sign-in"
-                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground hover:bg-subtle"
+                    className="mt-2 inline-flex w-full items-center justify-center rounded-lg border border-border bg-background px-4 py-2.5 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
                   >
                     Sign in
                   </Link>

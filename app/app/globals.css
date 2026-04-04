@@ -199,3 +199,50 @@ input[type="date"] {
     animation-iteration-count: 1 !important;
   }
 }
+
+/* Subtle accent-colored glow behind primary CTA buttons */
+.cta-accent-glow {
+  box-shadow: 0 0 20px color-mix(in srgb, var(--accent) 15%, transparent);
+}
+
+/* Hero entrance animation — fires on initial render, no JS required.
+   Uses @starting-style so elements fade/slide up from their hidden state
+   the first time they are displayed. transition-behavior: allow-discrete
+   is required for @starting-style transitions to fire correctly.
+   The motion-safe media query ensures users with prefers-reduced-motion
+   see the element immediately without any transition. */
+@media (prefers-reduced-motion: no-preference) {
+  .hero-animate {
+    transition: opacity 400ms ease-out, transform 400ms ease-out;
+    transition-behavior: allow-discrete;
+  }
+
+  @starting-style {
+    .hero-animate {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+  }
+
+}
+
+/* Staggered reveal — reusable entrance cascade for marketing pages.
+   Same @starting-style mechanism as hero-animate but with delay variants
+   so sequential sections cascade in naturally. */
+@media (prefers-reduced-motion: no-preference) {
+  .reveal-up {
+    transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+    transition-behavior: allow-discrete;
+  }
+
+  .reveal-up-d1 { transition-delay: 80ms; }
+  .reveal-up-d2 { transition-delay: 160ms; }
+  .reveal-up-d3 { transition-delay: 240ms; }
+
+  @starting-style {
+    .reveal-up {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+  }
+}

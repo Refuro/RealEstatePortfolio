@@ -9,6 +9,7 @@ import {
   hasFiredSession,
   markFiredSession,
 } from "@/lib/analytics-dedup";
+import { touchLandingVariantFromTrackedCta } from "@/lib/landing-variant-attribution";
 import { setPlanIntent, type PlanIntentValue } from "@/lib/plan-intent";
 
 type FunnelCtaLinkProps = {
@@ -56,6 +57,9 @@ export function FunnelCtaLink({
         }
         if (planIntent) {
           setPlanIntent(planIntent, "landing_cta");
+        }
+        if (landingVariant) {
+          touchLandingVariantFromTrackedCta(landingVariant);
         }
         onClick?.(e);
       }}

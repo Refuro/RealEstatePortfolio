@@ -1,8 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveTier } from "@/lib/plans";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getStripe, planTierFromPriceId, billingIntervalFromPriceId } from "@/lib/stripe-config";
 
 /**
@@ -17,19 +22,33 @@ import { getStripe, planTierFromPriceId, billingIntervalFromPriceId } from "@/li
  *
  * When subscriptionTierOverride is set, skip — admin override wins.
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "billing:sync");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
+  }
+
+  async function respondOk(body: Record<string, unknown>) {
+    await recordRateLimit(identifier, "billing:sync");
+    return NextResponse.json(body);
+  }
+
   if (user.subscriptionTierOverride) {
-    return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user) });
   }
 
   // No Stripe customer at all — never initiated billing; nothing to sync.
   if (!user.stripeCustomerId) {
-    return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user) });
   }
 
   const tier = (user.subscriptionTier ?? "free").toLowerCase();
@@ -87,11 +106,11 @@ export async function GET() {
             data: { subscriptionTier: stripeTier },
           }),
         ]);
-        return NextResponse.json({ synced: true, tier: stripeTier });
+        return respondOk({ synced: true, tier: stripeTier });
       }
 
       // Tier matches — no change needed.
-      return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
+      return respondOk({ synced: false, tier: getEffectiveTier(user) });
     }
 
     // No subscription, or definitively ended — downgrade to free.
@@ -108,11 +127,11 @@ export async function GET() {
           }),
         ]);
       }
-      return NextResponse.json({ synced: tier !== "free", tier: "free" });
+      return respondOk({ synced: tier !== "free", tier: "free" });
     }
 
     // past_due / incomplete: keep current tier; past_due banner handles user-facing messaging.
-    return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user) });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const name = err instanceof Error ? err.name : "Error";
@@ -133,6 +152,6 @@ export async function GET() {
         stripeCustomerId: user.stripeCustomerId ?? null,
       },
     });
-    return NextResponse.json({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user) });
   }
 }

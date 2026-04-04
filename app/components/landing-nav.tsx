@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Menu, X } from "lucide-react";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { persistLandingVariantFromPageView } from "@/lib/landing-variant-attribution";
 
 type LandingNavProps = {
   userId: string | null;
@@ -24,6 +25,10 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
   const openMenu = useCallback(() => {
     setMobileMenuOpen(true);
   }, []);
+
+  useEffect(() => {
+    persistLandingVariantFromPageView(landingVariant);
+  }, [landingVariant]);
 
   useEffect(() => {
     if (!mobileMenuOpen) return;
@@ -100,7 +105,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
             ctaId="sign_up"
             planIntent="free"
             landingVariant={landingVariant}
-            className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-accent-foreground hover:bg-accent-hover md:inline-block md:w-auto md:py-2"
+            className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover md:inline-block md:w-auto md:py-2"
             onClick={() => setMobileMenuOpen(false)}
           >
             Sign up
@@ -112,13 +117,13 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
 
   return (
     <nav className="border-b border-border">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="mx-auto flex max-w-screen-2xl items-center justify-between px-4 py-3">
         <Link href="/" className="flex items-center gap-2 text-lg font-semibold text-foreground">
           <Image
             src="/favicon.svg"
-            width={20}
-            height={20}
-            className="size-5 shrink-0 object-contain"
+            width={24}
+            height={24}
+            className="size-6 shrink-0 object-contain"
             alt=""
             aria-hidden
           />
@@ -133,7 +138,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
           ref={menuButtonRef}
           type="button"
           onClick={() => (mobileMenuOpen ? closeMenu() : openMenu())}
-          className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground md:hidden"
+          className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-subtle hover:text-foreground md:hidden"
           aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           aria-expanded={mobileMenuOpen}
           aria-controls="landing-nav-drawer"
@@ -167,7 +172,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
           <button
             type="button"
             onClick={closeMenu}
-            className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted hover:bg-subtle hover:text-foreground"
+            className="flex size-11 min-h-11 min-w-11 items-center justify-center rounded-lg text-muted transition-colors duration-150 hover:bg-subtle hover:text-foreground"
             aria-label="Close menu"
           >
             <X className="size-5" />

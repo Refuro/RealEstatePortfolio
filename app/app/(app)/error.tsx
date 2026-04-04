@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import * as Sentry from "@sentry/nextjs";
 import Link from "next/link";
 
@@ -10,9 +11,11 @@ export default function Error({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
-  if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
-    Sentry.captureException(error);
-  }
+  useEffect(() => {
+    if (process.env.NEXT_PUBLIC_SENTRY_DSN) {
+      Sentry.captureException(error);
+    }
+  }, [error]);
   void error; // Required by Next.js; not displayed to avoid leaking internal details
   return (
     <div className="rounded-lg border border-border bg-card p-8 text-center">

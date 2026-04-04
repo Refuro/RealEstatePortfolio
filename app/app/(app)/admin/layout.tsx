@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getAppUser, isAdmin } from "@/lib/auth";
+import { getActiveAppUser, isAdmin } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const user = await getAppUser();
+  const user = await getActiveAppUser();
   if (!user) {
     redirect("/sign-in");
   }

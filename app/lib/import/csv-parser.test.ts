@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   getCol,
+  normalizeLoanTypeFromCsv,
   normalizePropertyTypeFromCsv,
   parseAddressFromCombined,
   parseDate,
@@ -57,6 +58,26 @@ describe("normalizePropertyTypeFromCsv", () => {
   it("passes through canonical enum strings", () => {
     expect(normalizePropertyTypeFromCsv("apartment")).toBe("apartment");
     expect(normalizePropertyTypeFromCsv("single_family")).toBe("single_family");
+  });
+});
+
+describe("normalizeLoanTypeFromCsv", () => {
+  it("returns null for empty input", () => {
+    expect(normalizeLoanTypeFromCsv(null)).toEqual({ value: null });
+    expect(normalizeLoanTypeFromCsv("  ")).toEqual({ value: null });
+  });
+
+  it("matches LOAN_TYPE_OPTIONS case-insensitively", () => {
+    expect(normalizeLoanTypeFromCsv("fha")).toEqual({ value: "FHA" });
+    expect(normalizeLoanTypeFromCsv("Conventional")).toEqual({ value: "conventional" });
+  });
+
+  it("returns error for unknown values", () => {
+    const out = normalizeLoanTypeFromCsv("balloon");
+    expect("error" in out).toBe(true);
+    if ("error" in out) {
+      expect(out.error).toMatch(/Invalid loan type/i);
+    }
   });
 });
 
@@ -147,6 +168,35 @@ describe("parseRow", () => {
       expect(r.data.mortgageBalance).toBe(175000);
       expect(r.data.escrowAmount).toBe(350);
     }
+  });
+
+  it("normalizes loan type from CSV (e.g. fha → FHA)", () => {
+    const r = parseRow(
+      {
+        ...minimalRow,
+        "property type": "single_family",
+        units: "1",
+        "loan type": "fha",
+      },
+      6
+    );
+    expect("error" in r).toBe(false);
+    if ("data" in r) {
+      expect(r.data.loanType).toBe("FHA");
+    }
+  });
+
+  it("returns error for invalid loan type", () => {
+    const r = parseRow(
+      {
+        ...minimalRow,
+        "property type": "single_family",
+        units: "1",
+        "loan type": "invalid_type",
+      },
+      7
+    );
+    expect("error" in r).toBe(true);
   });
 });
 

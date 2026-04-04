@@ -1,7 +1,7 @@
 # Security Audit
 
-**Version:** 2.1  
-**Last updated:** 2026-03-31  
+**Version:** 2.2  
+**Last updated:** 2026-04-04  
 **Last reviewed by:** PM + security review pass  
 **Review cadence:** Monthly + pre-launch gate  
 **Scope:** Real Estate Portfolio app — auth, API, data, integrations, and operational security posture.
@@ -98,17 +98,19 @@ Headers apply to `/:path*` via `async headers()`.
 
 When `NEXT_PUBLIC_APP_URL` is set, the policy includes **`report-uri {baseUrl}/api/csp-report`** for violation reporting.
 
-**Policy string (concatenated in code; summarize here):**
+**Policy string (concatenated in code; summarize here — keep in sync with `cspDirectives` in `app/next.config.ts`):**
 
 - `default-src 'self'`
-- `script-src` — `'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://va.vercel-scripts.com https://vitals.vercel-insights.com https://vercel.live`
-- `style-src` — `'self' 'unsafe-inline'`
+- `script-src` — `'self' 'unsafe-inline' 'unsafe-eval'` plus: `https://*.clerk.accounts.dev`, **`https://clerk.veldportfolio.com`** (custom Clerk Frontend API), `https://challenges.cloudflare.com` (Turnstile), **`https://va.vercel-scripts.com`**, **`https://vitals.vercel-insights.com`**, **`https://vercel.live`** (Vercel analytics / live), **`https://www.googletagmanager.com`** and **`https://googleads.g.doubleclick.net`** (Google Ads / gtag when consented), **`https://us-assets.i.posthog.com`** (PostHog), **`https://connect.facebook.net`** (Facebook Pixel when configured)
+- `style-src` — `'self' 'unsafe-inline'` · **`https://fonts.googleapis.com`**
 - `img-src` — `'self' data: https://img.clerk.com https:`
-- `font-src` — `'self' data:`
-- `connect-src` — `'self' https:`
-- `frame-src` — `'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com`
+- `font-src` — `'self' data:` · **`https://fonts.gstatic.com`**
+- `connect-src` — `'self' https:` (broad; covers PostHog, Sentry, RentCast API preconnect, Stripe, Clerk, etc.)
+- `frame-src` — `'self'` · `https://*.clerk.accounts.dev` · **`https://clerk.veldportfolio.com`** · `https://challenges.cloudflare.com` · `https://*.js.stripe.com` · `https://js.stripe.com` · `https://hooks.stripe.com`
 - `worker-src` — `'self' blob:`
 - `frame-ancestors 'none'` · `base-uri 'self'` · `form-action 'self'`
+
+Optional: when `NEXT_PUBLIC_APP_URL` is set, the built policy appends **`report-uri {baseUrl}/api/csp-report`** (see `reportUri` in `next.config.ts`).
 
 **Source of truth:** `app/next.config.ts` (`cspDirectives`, `cspValue`, `cspHeaders`).
 
@@ -137,6 +139,8 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | `account:delete` | 5 |
 | `account:delete-permanent` | 3 |
 | `billing:create-checkout` | 10 |
+| `billing:sync` | 60 (`GET /api/billing/sync`) |
+| `billing:portal` | 30 (`POST /api/billing/portal`) |
 
 **RentCast hourly quota** is **not** this table — it uses `RentCastApiCall` counts and `getRentCastHourlyLimit` / `RENTCAST_HOURLY_LIMITS` in `lib/plans.ts`. See [reference/rentcast-quota.md](../reference/rentcast-quota.md).
 

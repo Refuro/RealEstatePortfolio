@@ -74,9 +74,12 @@ export default async function DealsPage() {
             {atLimit && (
               <>
                 {" · "}
-                <Link href="/plans" className="font-medium text-foreground hover:underline">
+                <UpgradePlanLink
+                  placement="deals_list_at_limit"
+                  className="font-medium text-foreground hover:underline"
+                >
                   Upgrade to save more
-                </Link>
+                </UpgradePlanLink>
               </>
             )}
           </p>

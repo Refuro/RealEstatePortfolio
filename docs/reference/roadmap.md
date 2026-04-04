@@ -103,6 +103,42 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 Post-MVP features in suggested order. Promote to `docs/tasks.md` when ready to build.
 
+### Interactive demo (no-signup required)
+
+**Priority:** Very near-term — validate with Arcade.so first, then build if it converts
+
+**Purpose:** Let visitors experience the real product before signing up. Removes the biggest conversion objection ("I don't know what I'm getting") for skeptical passive landlords. Targets the gap between "clicked sign up" and "convinced enough to sign up."
+
+**Recommended phased approach:**
+
+**Phase A — Validate with Arcade.so (this week, zero engineering):**
+Record a clickthrough of the real app (with realistic staged data) using [Arcade.so](https://arcade.software/) or [Storylane](https://www.storylane.io/). Embed on a dedicated `/demo` route and as a section on the landing page. If demos increase signups vs. baseline, proceed to Phase B.
+
+**Phase B — Seeded demo account (ideal solution, ~1 weekend of engineering):**
+- A special Clerk user (or temporary anonymous session) pre-loaded with 2–3 realistic fake properties and saved deals
+- "Try without signing up" button on landing page / ad landing pages — instantly drops user into the real app dashboard with realistic data
+- Read-only guards on destructive API routes for demo sessions (no writes to real DB)
+- Demo data reset on a schedule (so demo users don't trash state for each other)
+- After 30 minutes (or when user tries to add their own property): "Save your work — create a free account" modal
+- The conversion ask changes from "sign up to see if this is useful" → "sign up to keep what you just built"
+
+**Why Phase B beats screenshot tools:**
+The target user is a detail-oriented landlord. They'll notice they can't type real numbers into a screenshot demo. The real product running with real data — where they can enter their actual address and see a real rent estimate — is the product selling itself.
+
+**Ad landing page note:** For paid traffic, a dedicated ad landing page with the demo front and center (stripped of nav, single CTA) will outperform sending ad traffic to the general homepage. Phase A Arcade embed is enough to test this immediately.
+
+**Distinct from:** The existing free public calculators (those are top-of-funnel SEO tools; the demo is mid-funnel, post-intent). The Admin membership override (that's for partner/realtor accounts, not anonymous demo sessions).
+
+**Acceptance criteria (Phase B):**
+- [ ] "Try demo" CTA on landing page (and ad landing page variant)
+- [ ] Demo session loads in < 2 seconds with pre-seeded portfolio data visible
+- [ ] Read-only guard on all write API routes for demo sessions
+- [ ] "Save your work" modal triggers on first add-property attempt or after 30 min
+- [ ] Demo data resets on a schedule (cron or on-demand)
+- [ ] Analytics: `demo_session_started`, `demo_session_converted` events in PostHog
+
+---
+
 ### Completed (reference)
 
 | Feature | Status |

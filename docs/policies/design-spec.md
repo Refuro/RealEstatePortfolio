@@ -4,8 +4,8 @@
 **Last updated:** 2026-03-19  
 **Last reviewed by:** PM + builder workflow  
 **Review cadence:** Quarterly or before major UX overhaul  
-**Status:** Active — all UI work must align with this spec.
-**Superseded sections:** Sections 2 (Typography), 3 (Color Palette), and 9 (What to avoid) are superseded by `docs/design/design-brief-2026.md`. All other sections remain in effect. For new UI work, consult the design brief first, then this spec for patterns not covered there.
+**Status:** Active for legacy structural patterns; **canonical visual and interaction rules live in [`docs/design/design-spec-2026.md`](../design/design-spec-2026.md).** Use that document first for all new UI work.
+**Historical context:** `docs/design/design-brief-2026.md` is a superseded planning record, not an active spec. Sections 2 (Typography), 3 (Color Palette), and 9 (What to avoid) in *this* file may overlap the 2026 spec — **when they conflict, `design-spec-2026.md` wins.** Retain this policy doc for architecture/process cross-references until fully merged.
 
 ---
 

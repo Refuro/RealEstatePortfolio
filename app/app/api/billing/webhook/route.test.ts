@@ -152,6 +152,45 @@ describe("POST /api/billing/webhook", () => {
     );
   });
 
+  it("returns 200 without DB writes when app user cannot be resolved", async () => {
+    prismaMock.user.findFirst.mockResolvedValue(null);
+    constructEvent.mockReturnValue({
+      id: "evt_unresolved",
+      type: "customer.subscription.updated" as const,
+      data: {
+        object: {
+          id: "sub_test_unresolved",
+          customer: "cus_no_match",
+          status: "active",
+          metadata: {},
+          items: {
+            data: [
+              {
+                price: { id: "price_pro_test" },
+                current_period_end: Math.floor(Date.now() / 1000) + 86400 * 30,
+              },
+            ],
+          },
+          cancel_at_period_end: false,
+        },
+      },
+    });
+    const { POST } = await import("./route");
+    const res = await POST(postWebhook("{}", "sig_ok"));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.received).toBe(true);
+    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(prismaMock.subscription.upsert).not.toHaveBeenCalled();
+    expect(captureMessageMock).toHaveBeenCalledWith(
+      expect.stringMatching(/could not resolve app user/i),
+      expect.objectContaining({
+        level: "warning",
+        tags: expect.objectContaining({ area: "billing" }),
+      })
+    );
+  });
+
   it("prefers stripeCustomerId mapping when metadata appUserId mismatches", async () => {
     prismaMock.user.findFirst.mockResolvedValue({ id: "user-from-customer" });
     constructEvent.mockReturnValue(subscriptionUpdatedEvent());

@@ -101,6 +101,7 @@ Do this in the project root (same level as `app/` and `docs/`).
   - `.cursor/rules/data-integrity-audit-agent.mdc`
   - `.cursor/rules/business-valuation-audit-agent.mdc`
   - `.cursor/rules/growth-funnel-audit-agent.mdc`
+  - `.cursor/rules/seo-audit-agent.mdc`
   - `.cursor/rules/agent-governance-audit-agent.mdc`
   - `.cursor/rules/documentation-audit-agent.mdc`
   - `.cursor/rules/legal-compliance-audit-agent.mdc`

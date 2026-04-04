@@ -8,7 +8,10 @@ Promise.resolve().then(() => {
   if (dsn) {
     Sentry.init({
       dsn,
-      environment: process.env.NODE_ENV,
+      environment:
+        process.env.NEXT_PUBLIC_VERCEL_ENV ||
+        process.env.NODE_ENV ||
+        "development",
       tracesSampleRate: process.env.NODE_ENV === "development" ? 1.0 : 0.1,
     });
   }

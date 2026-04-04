@@ -10,3 +10,14 @@ export const createCheckoutSessionSchema = z.object({
 export type CreateCheckoutSessionInput = z.infer<
   typeof createCheckoutSessionSchema
 >;
+
+/** POST /api/billing/portal — optional JSON body (empty body uses defaults). */
+export const billingPortalBodySchema = z
+  .object({
+    returnPath: z.string().optional(),
+    targetPlan: z.enum(["investor", "pro"]).optional(),
+    targetBillingCycle: z.enum(["monthly", "yearly"]).optional(),
+  })
+  .strict();
+
+export type BillingPortalBodyInput = z.infer<typeof billingPortalBodySchema>;

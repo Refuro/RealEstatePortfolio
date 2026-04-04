@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { syncPlanIntentFromSearchParams } from "@/lib/plan-intent";
+import { syncLandingVariantFromSearchParams } from "@/lib/landing-variant-attribution";
 import { syncUtmFromSearchParams } from "@/lib/utm-attribution";
 
 /**
@@ -14,6 +15,7 @@ export function PlanIntentUrlSync(): null {
 
   useEffect(() => {
     syncPlanIntentFromSearchParams(searchParams);
+    syncLandingVariantFromSearchParams(searchParams);
     syncUtmFromSearchParams(searchParams);
   }, [searchParams]);
 

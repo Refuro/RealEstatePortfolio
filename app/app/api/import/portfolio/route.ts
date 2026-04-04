@@ -44,16 +44,25 @@ export async function POST(req: NextRequest) {
     skipEmptyLines: true,
   });
 
+  const papaErrors: { row: number; message: string }[] = parsed.errors.map((e) => ({
+    row: e.row != null ? e.row + 1 : 0,
+    message: e.message || String(e.code ?? "CSV parse error"),
+  }));
+
   if (parsed.errors.length > 0 && parsed.data.length === 0) {
     return NextResponse.json(
-      { error: "Invalid CSV. Could not parse.", imported: 0, errors: [] },
+      {
+        error: "Invalid CSV. Could not parse.",
+        imported: 0,
+        errors: papaErrors,
+      },
       { status: 400 }
     );
   }
 
   const rows = parsed.data;
   if (rows.length === 0) {
-    return NextResponse.json({ imported: 0, errors: [] });
+    return NextResponse.json({ imported: 0, errors: papaErrors });
   }
 
   const propertyCount = await prisma.property.count({
@@ -66,7 +75,7 @@ export async function POST(req: NextRequest) {
 
   const validRows: ImportRow[] = [];
   const validRowNumbers: number[] = [];
-  const errors: { row: number; message: string }[] = [];
+  const errors: { row: number; message: string }[] = [...papaErrors];
 
   for (let i = 0; i < rows.length; i++) {
     const rowNum = i + 2; // 1-based, +1 for header

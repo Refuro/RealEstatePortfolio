@@ -1,4 +1,5 @@
 import { US_STATES } from "@/lib/us-states";
+import { LOAN_TYPE_OPTIONS } from "@/lib/validations/mortgage";
 import { resolveImportRentForCreate } from "@/lib/import/rent-resolve";
 
 export const PROPERTY_TYPE_MAP: Record<string, string> = {
@@ -24,6 +25,23 @@ const CANONICAL_TYPES = new Set([
   "multi_family",
   "apartment",
 ]);
+
+/** Maps CSV "loan type" to canonical `LOAN_TYPE_OPTIONS` value (case-insensitive). */
+export function normalizeLoanTypeFromCsv(
+  raw: string | null
+): { value: string | null } | { error: string } {
+  if (raw == null || !String(raw).trim()) {
+    return { value: null };
+  }
+  const trimmed = String(raw).trim();
+  const match = LOAN_TYPE_OPTIONS.find(
+    (opt) => opt.toLowerCase() === trimmed.toLowerCase()
+  );
+  if (match) return { value: match };
+  return {
+    error: `Invalid loan type "${trimmed}". Use one of: ${LOAN_TYPE_OPTIONS.join(", ")}.`,
+  };
+}
 
 /** Normalizes CSV "property type" cell to Prisma enum string (round-trip with export). */
 export function normalizePropertyTypeFromCsv(raw: string): string {
@@ -333,7 +351,11 @@ export function parseRow(
     escrowAmountRaw != null && escrowAmountRaw >= 0 ? escrowAmountRaw : null;
   const lenderName = getCol(row, "lender", "lender (first lien)") || null;
   const loanTypeRaw = getCol(row, "loan type", "loanType");
-  const loanType = loanTypeRaw ? loanTypeRaw.trim() : null;
+  const loanTypeNorm = normalizeLoanTypeFromCsv(loanTypeRaw || null);
+  if ("error" in loanTypeNorm) {
+    return { error: `Row ${rowNum}: ${loanTypeNorm.error}` };
+  }
+  const loanType = loanTypeNorm.value;
 
   const nickname = getCol(row, "nickname") || null;
 

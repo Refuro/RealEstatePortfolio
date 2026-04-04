@@ -4,23 +4,30 @@ import { getActiveAppUser } from "@/lib/auth";
 import { resolveBillingPortalReturnPath } from "@/lib/billing/portal-return-path";
 import { prisma } from "@/lib/db";
 import { getPublicAppBaseUrlForBilling } from "@/lib/env";
+import {
+  checkRateLimit,
+  getRateLimitIdentifier,
+  recordRateLimit,
+} from "@/lib/rate-limit";
 import { getStripe, getPriceIdForPlan } from "@/lib/stripe-config";
+import { billingPortalBodySchema } from "@/lib/validations/checkout";
 
 type BillingCycle = "monthly" | "yearly";
 type PaidTier = "investor" | "pro";
-
-function isValidPaidTier(v: unknown): v is PaidTier {
-  return v === "investor" || v === "pro";
-}
-
-function isValidBillingCycle(v: unknown): v is BillingCycle {
-  return v === "monthly" || v === "yearly";
-}
 
 export async function POST(request: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, request);
+  const { allowed } = await checkRateLimit(identifier, "billing:portal");
+  if (!allowed) {
+    return NextResponse.json(
+      { error: "Rate limit exceeded. Try again later." },
+      { status: 429 }
+    );
   }
 
   if (!user.stripeCustomerId) {
@@ -34,20 +41,28 @@ export async function POST(request: NextRequest) {
   let targetPlan: PaidTier | null = null;
   let targetBillingCycle: BillingCycle | null = null;
 
-  try {
-    const text = await request.text();
-    if (text) {
-      const parsed = JSON.parse(text) as {
-        returnPath?: unknown;
-        targetPlan?: unknown;
-        targetBillingCycle?: unknown;
-      };
-      returnPath = resolveBillingPortalReturnPath(parsed.returnPath);
-      if (isValidPaidTier(parsed.targetPlan)) targetPlan = parsed.targetPlan;
-      if (isValidBillingCycle(parsed.targetBillingCycle)) targetBillingCycle = parsed.targetBillingCycle;
+  const text = await request.text();
+  if (text) {
+    let raw: unknown;
+    try {
+      raw = JSON.parse(text) as unknown;
+    } catch {
+      return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
-  } catch {
-    // Empty body or invalid JSON — use defaults
+    const parsed = billingPortalBodySchema.safeParse(raw);
+    if (!parsed.success) {
+      const flat = parsed.error.flatten();
+      const first =
+        flat.fieldErrors.returnPath?.[0] ??
+        flat.fieldErrors.targetPlan?.[0] ??
+        flat.fieldErrors.targetBillingCycle?.[0] ??
+        flat.formErrors[0] ??
+        "Invalid request";
+      return NextResponse.json({ error: first }, { status: 400 });
+    }
+    returnPath = resolveBillingPortalReturnPath(parsed.data.returnPath);
+    if (parsed.data.targetPlan) targetPlan = parsed.data.targetPlan;
+    if (parsed.data.targetBillingCycle) targetBillingCycle = parsed.data.targetBillingCycle;
   }
 
   const baseUrl = getPublicAppBaseUrlForBilling();
@@ -90,6 +105,7 @@ export async function POST(request: NextRequest) {
                 },
               },
             });
+            await recordRateLimit(identifier, "billing:portal");
             return NextResponse.json({ url: session.url });
           }
         } catch (flowErr) {
@@ -107,6 +123,7 @@ export async function POST(request: NextRequest) {
       return_url: returnUrl,
     });
 
+    await recordRateLimit(identifier, "billing:portal");
     return NextResponse.json({ url: session.url });
   } catch (err) {
     console.error("Billing portal error:", err);

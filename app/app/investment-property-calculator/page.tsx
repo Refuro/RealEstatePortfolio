@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
@@ -67,10 +68,21 @@ export default async function InvestmentPropertyCalculatorPage() {
             <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
               fix-and-flip calculator
             </Link>
+            ; or run a BRRRR scenario with the{" "}
+            <Link href="/tools/brrr" className="font-medium text-foreground hover:underline">
+              BRRRR calculator
+            </Link>
             . For saved deals, portfolio tracking, and comparisons in the app,{" "}
-            <Link href="/sign-up?intent=free" className="font-medium text-foreground hover:underline">
+            <FunnelCtaLink
+              href="/sign-up?intent=free"
+              placement="calc_page_body_signup"
+              ctaId="calc_create_free_account"
+              planIntent="free"
+              landingVariant="calc_control_v1"
+              className="font-medium text-foreground hover:underline"
+            >
               create a free account
-            </Link>{" "}
+            </FunnelCtaLink>{" "}
             (calculator inputs are not transferred automatically). Comparing products? See the{" "}
             <Link href="/alternatives/stessa" className="font-medium text-foreground hover:underline">
               Stessa alternative
