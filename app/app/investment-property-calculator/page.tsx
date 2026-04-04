@@ -39,13 +39,17 @@ export default async function InvestmentPropertyCalculatorPage() {
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={userId} landingVariant="calc_control_v1" />
-      <main className="flex-1 px-4 py-12">
+      <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={INVESTMENT_PROPERTY_CALCULATOR_FAQ} />
-          <header className="text-center">
-            <p className="text-sm font-medium uppercase tracking-wide text-muted">Calculator</p>
-            <h1 className="mt-2 text-3xl font-semibold text-foreground">
-              Investment Property Calculator
+          <header className="hero-animate text-center">
+            <div className="mb-3 flex justify-center">
+              <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                Calculator
+              </span>
+            </div>
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
+              Investment property calculator
             </h1>
             <p className="mx-auto mt-3 max-w-2xl text-base text-muted">
               Estimate rental property performance on this page. With a free account, save deals in
@@ -53,8 +57,12 @@ export default async function InvestmentPropertyCalculatorPage() {
             </p>
           </header>
 
-          <div className="mt-8">
-            <PublicCalculator showCta landingVariant="calc_control_v1" />
+          <div className="reveal-up reveal-up-d1 mt-8">
+            <PublicCalculator
+              showCta
+              landingVariant="calc_control_v1"
+              funnelPlacement="investment_property_inline"
+            />
           </div>
 
           <CalculatorFaqSection items={INVESTMENT_PROPERTY_CALCULATOR_FAQ} />
@@ -72,18 +80,8 @@ export default async function InvestmentPropertyCalculatorPage() {
             <Link href="/tools/brrr" className="font-medium text-foreground hover:underline">
               BRRRR calculator
             </Link>
-            . For saved deals, portfolio tracking, and comparisons in the app,{" "}
-            <FunnelCtaLink
-              href="/sign-up?intent=free"
-              placement="calc_page_body_signup"
-              ctaId="calc_create_free_account"
-              planIntent="free"
-              landingVariant="calc_control_v1"
-              className="font-medium text-foreground hover:underline"
-            >
-              create a free account
-            </FunnelCtaLink>{" "}
-            (calculator inputs are not transferred automatically). Comparing products? See the{" "}
+            . Calculator inputs are not transferred when you sign up—re-enter key numbers in the app.
+            Comparing products? See the{" "}
             <Link href="/alternatives/stessa" className="font-medium text-foreground hover:underline">
               Stessa alternative
             </Link>{" "}
@@ -114,6 +112,35 @@ export default async function InvestmentPropertyCalculatorPage() {
             </Link>
             .
           </p>
+
+          {!userId && (
+            <div className="mt-10 rounded-xl border border-accent/20 bg-accent/5 p-6 text-center">
+              <p className="text-base font-semibold text-foreground">
+                Ready to track this property?
+              </p>
+              <p className="mt-1 text-sm text-muted">
+                Save your analysis, model scenarios, and benchmark rent in one place.
+              </p>
+              <div className="mt-4 flex flex-wrap justify-center gap-3">
+                <FunnelCtaLink
+                  href="/sign-up?intent=free"
+                  placement="investment_property_footer"
+                  ctaId="get_started_free"
+                  planIntent="free"
+                  landingVariant="calc_control_v1"
+                  className="inline-flex items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
+                >
+                  Get started free
+                </FunnelCtaLink>
+                <Link
+                  href="/pricing"
+                  className="inline-flex items-center rounded-md border border-border px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
+                >
+                  See plans
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </main>
       <Footer supportEmail={supportEmail} />

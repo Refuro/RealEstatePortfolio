@@ -25,6 +25,8 @@ type PublicCalculatorProps = {
   surface?: "marketing" | "app";
   /** State-typical monthly rent pre-fill from HUD FMR data. Overrides the generic default. */
   initialMonthlyRent?: number;
+  /** Funnel analytics placement for inline CTAs (e.g. investment_property_inline on SEO page). */
+  funnelPlacement?: string;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -38,6 +40,7 @@ export function PublicCalculator({
   landingVariant,
   surface = "marketing",
   initialMonthlyRent,
+  funnelPlacement = "public_calculator",
 }: PublicCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
@@ -74,7 +77,7 @@ export function PublicCalculator({
 
   const inputClass =
     "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
-  const labelClass = "block text-xs font-semibold uppercase tracking-wide text-muted";
+  const labelClass = "block text-xs font-medium text-muted";
 
   const inputsContent = (
     <div>
@@ -245,18 +248,18 @@ export function PublicCalculator({
             <>
               <FunnelCtaLink
                 href="/sign-up?intent=free"
-                placement="public_calculator"
-                ctaId="save_analysis_signup"
+                placement={funnelPlacement}
+                ctaId="get_started_free"
                 planIntent="free"
                 landingVariant={landingVariant}
-                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
               >
                 Create a free account
               </FunnelCtaLink>
               <div className="mt-2">
                 <FunnelCtaLink
                   href="/sign-up?intent=investor"
-                  placement="public_calculator"
+                  placement={funnelPlacement}
                   ctaId="open_full_analyzer"
                   planIntent="investor"
                   landingVariant={landingVariant}
@@ -302,7 +305,7 @@ export function PublicCalculator({
     <div className="space-y-3">
       <MobileSectionCard className="space-y-3.5">
         <div>
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+          <h3 className="text-sm font-semibold text-foreground">
             Core assumptions
           </h3>
           <p className="mt-1 text-sm text-muted">
@@ -426,7 +429,7 @@ export function PublicCalculator({
       <MobileSectionCard className="space-y-3">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            <h3 className="text-sm font-semibold text-foreground">
               Live result
             </h3>
             <p className="mt-1 text-sm text-muted">
@@ -434,7 +437,7 @@ export function PublicCalculator({
             </p>
           </div>
           <div className="text-right">
-            <p className="text-[11px] uppercase tracking-wide text-muted">Cash flow</p>
+            <p className="text-xs font-medium text-muted">Cash flow</p>
             <p
               className={`mt-1 text-lg font-semibold ${calculatorToneValueClass[getMonthlyCashFlowTone(result.metrics.monthlyCashFlow)]}`}
             >
@@ -491,18 +494,18 @@ export function PublicCalculator({
             <div className="space-y-2 pt-1">
               <FunnelCtaLink
                 href="/sign-up?intent=free"
-                placement="public_calculator"
-                ctaId="save_analysis_signup_m"
+                placement={funnelPlacement}
+                ctaId="get_started_free"
                 planIntent="free"
                 landingVariant={landingVariant}
-                className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                className="inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
               >
                 Create a free account
               </FunnelCtaLink>
               <FunnelCtaLink
                 href="/sign-up?intent=investor"
-                placement="public_calculator"
-                ctaId="open_full_analyzer_m"
+                placement={funnelPlacement}
+                ctaId="open_full_analyzer"
                 planIntent="investor"
                 landingVariant={landingVariant}
                 className="block text-center text-sm font-medium text-muted hover:text-foreground hover:underline"
@@ -516,7 +519,7 @@ export function PublicCalculator({
   );
 
   return (
-    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border/70 md:bg-card/95 md:p-5 md:shadow-sm">
+    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border md:bg-card md:p-5 md:shadow-sm">
       <div className="md:hidden">
         <MobileToolShell
           eyebrow="Calculator"

@@ -55,6 +55,36 @@ describe("csp-report helpers", () => {
     expect(shouldForwardCspReport(parsed!, 0)).toBe(false);
   });
 
+  it("treats source-file label chrome-extension as ignorable", () => {
+    const parsed = parseCspReportPayload({
+      "csp-report": {
+        "effective-directive": "script-src-elem",
+        "blocked-uri": "https://apis.google.com/js/client.js",
+        "document-uri": "https://veldportfolio.com/",
+        "source-file": "chrome-extension",
+      },
+    });
+
+    expect(parsed).not.toBeNull();
+    expect(isIgnorableCspReport(parsed!)).toBe(true);
+    expect(shouldForwardCspReport(parsed!, 0.99)).toBe(false);
+  });
+
+  it("treats blocked apis.google.com gapi as ignorable (extension-injected)", () => {
+    const parsed = parseCspReportPayload({
+      "csp-report": {
+        "effective-directive": "script-src-elem",
+        "blocked-uri": "https://apis.google.com/js/client.js?onload=callback",
+        "document-uri": "https://veldportfolio.com/changelog",
+        "source-file": "https://apis.google.com/js/client.js",
+      },
+    });
+
+    expect(parsed).not.toBeNull();
+    expect(isIgnorableCspReport(parsed!)).toBe(true);
+    expect(shouldForwardCspReport(parsed!, 0.99)).toBe(false);
+  });
+
   it("samples lower-priority directives while always keeping script/style violations", () => {
     const scriptReport = parseCspReportPayload({
       "csp-report": {

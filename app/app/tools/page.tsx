@@ -7,6 +7,7 @@ import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import { CalculatorsHubCards } from "@/components/calculators/calculators-hub-cards";
+import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import { getAppOrigin } from "@/lib/app-url";
 
 const APP_URL = getAppOrigin();
@@ -33,16 +34,30 @@ export default async function ToolsHubPage() {
         <PlanIntentUrlSync />
       </Suspense>
       <LandingNav userId={userId} landingVariant="tools_hub_v1" />
-      <main className="flex-1 px-4 py-12">
-        <div className="mx-auto max-w-3xl">
-          <header className="rounded-xl border border-accent/10 bg-accent/5 px-6 py-8 text-center">
-            <h1 className="text-2xl font-semibold text-foreground">
+      <main className="flex-1 px-4 py-12 md:py-14">
+        <div className="mx-auto max-w-6xl">
+          <header className="hero-animate rounded-xl border border-border bg-card px-6 py-8 text-center shadow-sm md:px-8 md:py-10">
+            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl">
               Free real estate calculators
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-base text-muted">
               Quick, transparent math you can share. No account required for core estimates.
               Sign in to save analyses in the full deal workspace.
             </p>
+            {!userId && (
+              <div className="mt-5">
+                <FunnelCtaLink
+                  href="/sign-up?intent=free"
+                  placement="tools_hub_hero"
+                  ctaId="get_started_free"
+                  planIntent="free"
+                  landingVariant="tools_hub_v1"
+                  className="inline-flex items-center gap-1.5 rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
+                >
+                  Get started free
+                </FunnelCtaLink>
+              </div>
+            )}
             {userId && (
               <p className="mt-3 text-sm text-muted">
                 <Link
@@ -58,7 +73,7 @@ export default async function ToolsHubPage() {
 
           <CalculatorsHubCards variant="public" />
 
-          <p className="mt-10 text-center text-sm text-muted">
+          <p className="reveal-up reveal-up-d5 mt-10 text-center text-sm text-muted">
             <Link href="/resources" className="font-medium text-foreground hover:underline">
               Investor resources
             </Link>

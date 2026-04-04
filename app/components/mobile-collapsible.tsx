@@ -25,12 +25,12 @@ export function MobileCollapsible({
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 w-full items-center justify-between rounded-md px-1 py-2 text-sm font-medium text-muted hover:text-foreground"
+        className="flex min-h-[44px] w-full items-center justify-between rounded-md px-1 py-2 text-left text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground"
       >
         <span>{label}</span>
         <ChevronDown
           size={16}
-          className={`transition-transform ${open ? "rotate-180" : ""}`}
+          className={`transition-transform duration-200 ${open ? "rotate-180" : ""}`}
         />
       </button>
       {open && children}

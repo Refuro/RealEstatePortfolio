@@ -25,9 +25,9 @@ function numberOrFallback(value: string, fallback: number): number {
 }
 
 const appCtaClass =
-  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 const appCtaClassFullWidth =
-  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover";
+  "inline-flex w-full items-center justify-center rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover";
 
 /** Defaults produce positive net profit (see `lib/fix-and-flip-calculator.test.ts` happy path). */
 const DEFAULTS = {
@@ -88,7 +88,7 @@ export function FixAndFlipCalculator({
 
   const inputClass =
     "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
-  const labelClass = "block text-xs font-semibold uppercase tracking-wide text-muted";
+  const labelClass = "block text-xs font-medium text-muted";
 
   const cocDecimal =
     result.totalCashIn > 0 ? result.netProfit / result.totalCashIn : null;
@@ -224,7 +224,7 @@ export function FixAndFlipCalculator({
 
   const resultsContent = (
     <div>
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Results</h3>
+      <h3 className="text-sm font-semibold text-foreground">Results</h3>
       <div className="mt-2 grid gap-2 sm:grid-cols-2">
         <CalculatorMetric
           label="Net profit"
@@ -274,18 +274,18 @@ export function FixAndFlipCalculator({
             <>
               <FunnelCtaLink
                 href="/sign-up?intent=free"
-                placement="fix_flip_calculator"
-                ctaId="fix_flip_signup_free"
+                placement="fix_flip_inline"
+                ctaId="get_started_free"
                 planIntent="free"
                 landingVariant={landingVariant}
-                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                className="inline-flex rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
               >
                 Create a free account
               </FunnelCtaLink>
               <div className="mt-2">
                 <FunnelCtaLink
                   href="/sign-up?intent=investor"
-                  placement="fix_flip_calculator"
+                  placement="fix_flip_inline"
                   ctaId="fix_flip_signup_investor"
                   planIntent="investor"
                   landingVariant={landingVariant}
@@ -329,7 +329,7 @@ export function FixAndFlipCalculator({
   const mobileSurface = (
     <div className="space-y-3">
       <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">Deal</h3>
+        <h3 className="text-sm font-semibold text-foreground">Deal</h3>
         <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
           <div className="col-span-2">
             <label className={labelClass} htmlFor="ff-purchase-m">
@@ -471,8 +471,8 @@ export function FixAndFlipCalculator({
           <div className="space-y-2">
             <FunnelCtaLink
               href="/sign-up?intent=free"
-              placement="fix_flip_calculator"
-              ctaId="fix_flip_signup_free_m"
+              placement="fix_flip_inline"
+              ctaId="get_started_free"
               planIntent="free"
               landingVariant={landingVariant}
               className={appCtaClassFullWidth}
@@ -481,7 +481,7 @@ export function FixAndFlipCalculator({
             </FunnelCtaLink>
             <FunnelCtaLink
               href="/sign-up?intent=investor"
-              placement="fix_flip_calculator"
+              placement="fix_flip_inline"
               ctaId="fix_flip_signup_investor_m"
               planIntent="investor"
               landingVariant={landingVariant}
@@ -495,7 +495,7 @@ export function FixAndFlipCalculator({
   );
 
   return (
-    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border/70 md:bg-card/95 md:p-5 md:shadow-sm">
+    <section className="border-0 bg-transparent p-0 shadow-none md:rounded-xl md:border md:border-border md:bg-card md:p-5 md:shadow-sm">
       <div className="md:hidden">
         <MobileToolShell
           eyebrow="Calculator"

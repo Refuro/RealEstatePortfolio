@@ -31,7 +31,7 @@ export default async function PaidCalculatorLandingPage() {
       <LandingNav userId={userId} landingVariant="calc_paid_v1" />
       <main className="flex-1 px-4 py-10">
         <div className="mx-auto max-w-5xl">
-          <header className="text-center">
+          <header className="hero-animate text-center">
             <p className="text-sm font-medium uppercase tracking-wide text-muted">
               Rental deal math in seconds
             </p>
@@ -54,7 +54,7 @@ export default async function PaidCalculatorLandingPage() {
             )}
           </header>
 
-          <div className="mt-8">
+          <div className="reveal-up reveal-up-d1 mt-8">
             <PublicCalculator showCta landingVariant="calc_paid_v1" />
           </div>
 
