@@ -169,7 +169,7 @@ export function OnboardingPanel({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/70 bg-card/95 p-7 shadow-2xl outline-none"
+            className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border bg-card p-7 shadow-2xl outline-none"
           >
             <div className="pointer-events-none absolute -top-24 right-[-12%] h-56 w-56 rounded-full bg-accent/20 blur-3xl" />
             <div className="pointer-events-none absolute -bottom-28 left-[-14%] h-60 w-60 rounded-full bg-primary/15 blur-3xl" />
@@ -193,7 +193,10 @@ export function OnboardingPanel({
                 <ValueChip label="Model upside" />
               </div>
 
-              <p className="mt-4 text-xs text-muted">Typical setup time: about 60 seconds.</p>
+              <p className="mt-4 text-xs text-muted">
+                Takes about 5 minutes with your property details. You can start with just the
+                basics and fill in the rest later.
+              </p>
               {errorMessage ? (
                 <p className="mt-3 text-sm text-negative" role="status" aria-live="polite">
                   {errorMessage}
@@ -206,7 +209,7 @@ export function OnboardingPanel({
                 type="button"
                 onClick={() => void handleWelcome(false)}
                 disabled={busy}
-                className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-subtle disabled:opacity-60"
+                className="min-h-[44px] rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-subtle disabled:opacity-60"
               >
                 Maybe later
               </button>
@@ -215,7 +218,7 @@ export function OnboardingPanel({
                 type="button"
                 onClick={() => void handleWelcome(true)}
                 disabled={busy}
-                className="rounded-md bg-accent px-5 py-2 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition-all hover:-translate-y-px hover:bg-accent-hover disabled:opacity-60"
+                className="min-h-[44px] rounded-md bg-accent px-5 py-2 text-sm font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition-all hover:bg-accent-hover disabled:opacity-60"
               >
                 Add first property
               </button>
