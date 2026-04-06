@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { PropertyMetricsSection } from "../properties/property-metrics-section";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
+import { AddressAutocompleteInput } from "@/components/property/address-autocomplete-input";
 import type { DealPortfolioContext } from "@/lib/server/portfolio-summary-payload";
 
 const inputClass =
@@ -141,9 +142,21 @@ export function DealAnalyzerForm({
   const [cashInvested, setCashInvested] = useState("");
   const [rentStressPercent, setRentStressPercent] = useState<StressPreset>(0);
   const [expenseStressPercent, setExpenseStressPercent] = useState<StressPreset>(0);
+  const [activeDealId, setActiveDealId] = useState<string | undefined>(dealId);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [showSavedToast, setShowSavedToast] = useState(false);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [loadingDeal, setLoadingDeal] = useState(!!dealId);
+  const [enrichedBedrooms, setEnrichedBedrooms] = useState<number | null>(null);
+  const [enrichedBathrooms, setEnrichedBathrooms] = useState<number | null>(null);
+  const [enrichedSqFt, setEnrichedSqFt] = useState<number | null>(null);
+  const [enrichedMarketRent, setEnrichedMarketRent] = useState<string | null>(null);
+  const [enrichedMarketRentAsOf, setEnrichedMarketRentAsOf] = useState<string | null>(null);
+  const [enrichedPropertyType, setEnrichedPropertyType] = useState<string | null>(null);
+  const [rentSuggestion, setRentSuggestion] = useState<number | null>(null);
+  const [enrichmentLoading, setEnrichmentLoading] = useState(false);
+  const enrichmentTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [portfolioContext, setPortfolioContext] = useState<DealPortfolioContext | null>(null);
 
   const formSnapshot = useMemo(
@@ -240,6 +253,12 @@ export function DealAnalyzerForm({
         setOwnershipPercent(String(data.ownershipPercent ?? 100));
         setVacancyPercent(String(data.vacancyPercent ?? 5));
         setCashInvested(data.cashInvested ?? "");
+        if (data.bedrooms != null) setEnrichedBedrooms(data.bedrooms);
+        if (data.bathrooms != null) setEnrichedBathrooms(data.bathrooms);
+        if (data.squareFeet != null) setEnrichedSqFt(data.squareFeet);
+        if (data.propertyType) setEnrichedPropertyType(data.propertyType);
+        if (data.marketRent != null) setEnrichedMarketRent(data.marketRent);
+        if (data.marketRentAsOf) setEnrichedMarketRentAsOf(data.marketRentAsOf);
         if (data.portfolioContext) {
           setPortfolioContext(data.portfolioContext as DealPortfolioContext);
         } else {
@@ -253,6 +272,83 @@ export function DealAnalyzerForm({
       cancelled = true;
     };
   }, [dealId]);
+
+  useEffect(() => {
+    return () => {
+      if (enrichmentTimerRef.current != null) clearTimeout(enrichmentTimerRef.current);
+    };
+  }, []);
+
+  const runEnrichment = useCallback(async (addr: { addressLine1: string; city: string; state: string; zipCode: string }) => {
+    if (!addr.addressLine1?.trim() || !addr.city?.trim() || !addr.state?.trim() || !addr.zipCode?.trim()) return;
+    setEnrichmentLoading(true);
+    try {
+      const valueParams = new URLSearchParams({
+        addressLine1: addr.addressLine1,
+        city: addr.city,
+        state: addr.state,
+        zipCode: addr.zipCode,
+      });
+      const valueRes = await fetch(`/api/estimates/value?${valueParams.toString()}`);
+      const valueJson = (await valueRes.json().catch(() => ({}))) as {
+        value?: number;
+        bedrooms?: number;
+        bathrooms?: number;
+        squareFootage?: number;
+      };
+      if (valueRes.ok && valueJson.value != null && Number.isFinite(valueJson.value)) {
+        const val = String(Math.round(valueJson.value));
+        setCurrentValue((prev) => prev.trim() ? prev : val);
+        if (valueJson.bedrooms != null) setEnrichedBedrooms(valueJson.bedrooms);
+        if (valueJson.bathrooms != null) setEnrichedBathrooms(valueJson.bathrooms);
+        if (valueJson.squareFootage != null) setEnrichedSqFt(valueJson.squareFootage);
+      }
+    } catch {
+      // Silent — enrichment is best-effort
+    }
+    try {
+      const rentParams = new URLSearchParams({
+        addressLine1: addr.addressLine1,
+        city: addr.city,
+        state: addr.state,
+        zipCode: addr.zipCode,
+      });
+      const rentRes = await fetch(`/api/estimates/rent?${rentParams.toString()}`);
+      const rentJson = (await rentRes.json().catch(() => ({}))) as {
+        rent?: number;
+        marketRent?: number;
+        marketRentAsOf?: string;
+      };
+      if (rentRes.ok && rentJson.rent != null && Number.isFinite(rentJson.rent)) {
+        const today = new Date().toISOString().slice(0, 10);
+        const mRent = rentJson.marketRent != null && Number.isFinite(rentJson.marketRent)
+          ? String(Math.round(rentJson.marketRent))
+          : String(Math.round(rentJson.rent));
+        setEnrichedMarketRent(mRent);
+        setEnrichedMarketRentAsOf(
+          typeof rentJson.marketRentAsOf === "string" && rentJson.marketRentAsOf
+            ? rentJson.marketRentAsOf
+            : today
+        );
+        setRentSuggestion(Math.round(rentJson.rent));
+      }
+    } catch {
+      // Silent
+    } finally {
+      setEnrichmentLoading(false);
+    }
+  }, []);
+
+  function handleAddressSelect(address: { addressLine1: string; city: string; state: string; zipCode: string }) {
+    setAddressLine1(address.addressLine1);
+    setCity(address.city);
+    setState(address.state.toUpperCase());
+    setZipCode(address.zipCode);
+    if (enrichmentTimerRef.current != null) clearTimeout(enrichmentTimerRef.current);
+    enrichmentTimerRef.current = setTimeout(() => {
+      void runEnrichment(address);
+    }, 300);
+  }
 
   const purchasePriceNum = parseFloat(purchasePrice.replace(/,/g, "")) || 0;
   const currentValueNum =
@@ -284,7 +380,7 @@ export function DealAnalyzerForm({
     monthlyExpensesNum >= 0;
   const atLimit = dealCount >= dealLimit;
   const saveDisabled =
-    !canSave || (atLimit && !dealId) || saveStatus === "saving";
+    !canSave || (atLimit && !activeDealId) || saveStatus === "saving";
 
   const metrics = computePropertyMetrics(
     {
@@ -339,8 +435,19 @@ export function DealAnalyzerForm({
     setCashInvested("");
     setRentStressPercent(0);
     setExpenseStressPercent(0);
+    setActiveDealId(undefined);
     setSaveStatus("idle");
     setSaveError(null);
+    setShowSavedToast(false);
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setEnrichedBedrooms(null);
+    setEnrichedBathrooms(null);
+    setEnrichedSqFt(null);
+    setEnrichedMarketRent(null);
+    setEnrichedMarketRentAsOf(null);
+    setEnrichedPropertyType(null);
+    setRentSuggestion(null);
+    setEnrichmentLoading(false);
     setPortfolioContext(null);
     router.replace("/analyze");
   }
@@ -351,23 +458,29 @@ export function DealAnalyzerForm({
     setSaveError(null);
     const payload = {
       addressLine1: addressLine1.trim(),
-      addressLine2: addressLine2.trim() || undefined,
+      addressLine2: addressLine2.trim() || null,
       city: city.trim(),
       state,
       zipCode: zipCode.trim(),
-      purchasePrice: purchasePriceNum > 0 ? String(purchasePriceNum) : undefined,
-      currentEstimatedValue: currentValueNum > 0 ? String(currentValueNum) : undefined,
+      purchasePrice: purchasePriceNum > 0 ? String(purchasePriceNum) : null,
+      currentEstimatedValue: currentValueNum > 0 ? String(currentValueNum) : null,
       currentMonthlyRent: String(monthlyRentNum),
       currentMonthlyExpenses: String(monthlyExpensesNum),
       totalMortgageBalance: mortgageBalanceNum > 0 ? String(mortgageBalanceNum) : undefined,
       totalMonthlyPayment: monthlyPaymentNum > 0 ? String(monthlyPaymentNum) : undefined,
       ownershipPercent: ownershipNum,
       vacancyPercent: vacancyNum,
-      cashInvested: cashInvestedNum != null && cashInvestedNum > 0 ? String(cashInvestedNum) : undefined,
+      cashInvested: cashInvestedNum != null && cashInvestedNum > 0 ? String(cashInvestedNum) : null,
+      bedrooms: enrichedBedrooms,
+      bathrooms: enrichedBathrooms,
+      squareFeet: enrichedSqFt,
+      propertyType: enrichedPropertyType,
+      marketRent: enrichedMarketRent,
+      marketRentAsOf: enrichedMarketRentAsOf,
     };
     try {
-      const url = dealId ? `/api/deals/${dealId}` : "/api/deals";
-      const method = dealId ? "PATCH" : "POST";
+      const url = activeDealId ? `/api/deals/${activeDealId}` : "/api/deals";
+      const method = activeDealId ? "PATCH" : "POST";
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
@@ -379,7 +492,7 @@ export function DealAnalyzerForm({
         id?: string;
       };
       if (!res.ok) {
-        if (!dealId && data.code === "PLAN_LIMIT_REACHED") {
+        if (!activeDealId && data.code === "PLAN_LIMIT_REACHED") {
           captureClientEvent(AnalyticsEvents.PLAN_LIMIT_HIT, {
             resource: "deal",
           });
@@ -394,11 +507,16 @@ export function DealAnalyzerForm({
       }
       if (method === "POST" && typeof data.id === "string") {
         captureClientEvent(AnalyticsEvents.DEAL_CREATED, { deal_id: data.id });
+        setActiveDealId(data.id);
+        window.history.replaceState(null, "", `/analyze?deal=${data.id}`);
       }
       setSaveStatus("saved");
       queueMicrotask(() => {
         setBaselineSnapshot(formSnapshotRef.current);
       });
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      setShowSavedToast(true);
+      toastTimerRef.current = setTimeout(() => setShowSavedToast(false), 4000);
     } catch {
       setSaveError("Failed to save deal");
       setSaveStatus("error");
@@ -420,15 +538,17 @@ export function DealAnalyzerForm({
             <label htmlFor="addressLine1-mobile" className={labelClass}>
               Address line 1
             </label>
-            <input
+            <AddressAutocompleteInput
               id="addressLine1-mobile"
-              type="text"
-              autoComplete="street-address"
               value={addressLine1}
-              onChange={(e) => setAddressLine1(e.target.value)}
-              placeholder="123 Main St"
+              onValueChange={setAddressLine1}
+              onSelect={handleAddressSelect}
+              autoComplete="street-address"
               className={inputClass}
             />
+            {enrichmentLoading && (
+              <p className="mt-1 text-xs text-muted">Fetching property data...</p>
+            )}
           </div>
           <MobileCollapsible label="Add unit / apt (optional)" defaultOpen={!!addressLine2}>
             <div className="pt-3">
@@ -503,10 +623,7 @@ export function DealAnalyzerForm({
               <CurrencyInput
                 id="purchasePrice-mobile"
                 value={purchasePrice}
-                onChange={(v) => {
-                  setPurchasePrice(v);
-                  if (!currentValue) setCurrentValue(v);
-                }}
+                onChange={setPurchasePrice}
                 className={inputClass}
               />
             </div>
@@ -518,10 +635,14 @@ export function DealAnalyzerForm({
                 id="currentValue-mobile"
                 value={currentValue}
                 onChange={setCurrentValue}
-                placeholder={purchasePrice || "Same as price"}
+                placeholder={purchasePrice || undefined}
                 className={inputClass}
               />
-              <p className="mt-0.5 text-xs text-muted">Defaults to purchase price</p>
+              <p className="mt-0.5 text-xs text-muted">
+                {currentValue.trim() && enrichedBedrooms != null
+                  ? "Autofilled from property estimate"
+                  : "Defaults to purchase price"}
+              </p>
             </div>
           </div>
         </MobileSectionCard>
@@ -538,7 +659,12 @@ export function DealAnalyzerForm({
               <CurrencyInput
                 id="monthlyRent-mobile"
                 value={monthlyRent}
-                onChange={setMonthlyRent}
+                onChange={(v) => {
+                  setMonthlyRent(v);
+                  if (rentSuggestion != null && v && parseFloat(v.replace(/,/g, "")) !== rentSuggestion) {
+                    setRentSuggestion(null);
+                  }
+                }}
                 className={inputClass}
               />
             </div>
@@ -553,6 +679,23 @@ export function DealAnalyzerForm({
                 className={inputClass}
               />
             </div>
+            {rentSuggestion != null && (
+              <div className="col-span-2 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
+                <span className="text-sm text-foreground">
+                  Market rent estimate: <span className="font-medium">{formatCurrency(rentSuggestion)}/mo</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMonthlyRent(String(rentSuggestion));
+                    setRentSuggestion(null);
+                  }}
+                  className="shrink-0 text-sm font-medium text-accent hover:underline"
+                >
+                  Use this
+                </button>
+              </div>
+            )}
             <div className="col-span-2">
               <label htmlFor="vacancyPercent-mobile" className={labelClass}>
                 Vacancy %
@@ -638,7 +781,7 @@ export function DealAnalyzerForm({
 
   const mobileResultsSurface = (
     <section className="space-y-3.5">
-      {dealId && portfolioContext && (
+      {activeDealId && portfolioContext && (
         <DealPortfolioCompareBlock
           portfolio={portfolioContext}
           dealCapRate={metrics.capRate}
@@ -798,7 +941,7 @@ export function DealAnalyzerForm({
         <p className="text-sm font-medium text-foreground">
           {loadingDeal
             ? "Loading analysis..."
-            : addressLine1.trim() || (dealId ? "Saved deal" : "Unsaved analysis")}
+            : addressLine1.trim() || (activeDealId ? "Saved deal" : "Unsaved analysis")}
         </p>
         <div className="flex items-center gap-2">
           <p className="text-xs text-muted">
@@ -816,7 +959,7 @@ export function DealAnalyzerForm({
           {saveError}
         </p>
       )}
-      {atLimit && !dealId && (
+      {atLimit && !activeDealId && (
         <p className="text-sm text-muted">
           You&apos;ve reached your deal limit.{" "}
           <UpgradePlanLink
@@ -862,6 +1005,14 @@ export function DealAnalyzerForm({
 
   const mobileFooter = (
     <div className="space-y-3">
+      {showSavedToast && (
+        <div className="flex items-center justify-between rounded-xl border border-positive/30 bg-positive/10 px-3 py-2">
+          <span className="text-sm font-medium text-positive">Deal saved</span>
+          <Link href="/deals" className="text-sm font-medium text-foreground hover:underline">
+            View saved deals →
+          </Link>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2">
         <button
           type="button"
@@ -871,11 +1022,9 @@ export function DealAnalyzerForm({
         >
           {saveStatus === "saving"
             ? "Saving..."
-            : saveStatus === "saved"
-              ? "Saved"
-              : dealId
-                ? "Update deal"
-                : "Save deal"}
+            : activeDealId
+              ? "Update deal"
+              : "Save deal"}
         </button>
         <button
           type="button"
@@ -929,14 +1078,16 @@ export function DealAnalyzerForm({
                 <label htmlFor="addressLine1" className={labelClass}>
                   Address line 1
                 </label>
-                <input
+                <AddressAutocompleteInput
                   id="addressLine1"
-                  type="text"
                   value={addressLine1}
-                  onChange={(e) => setAddressLine1(e.target.value)}
-                  placeholder="123 Main St"
+                  onValueChange={setAddressLine1}
+                  onSelect={handleAddressSelect}
                   className={inputClass}
                 />
+                {enrichmentLoading && (
+                  <p className="mt-1 text-xs text-muted">Fetching property data...</p>
+                )}
               </div>
               <div>
                 <label htmlFor="addressLine2" className={labelClass}>
@@ -1007,10 +1158,7 @@ export function DealAnalyzerForm({
                   <CurrencyInput
                     id="purchasePrice"
                     value={purchasePrice}
-                    onChange={(v) => {
-                      setPurchasePrice(v);
-                      if (!currentValue) setCurrentValue(v);
-                    }}
+                    onChange={setPurchasePrice}
                     className={inputClass}
                   />
                 </div>
@@ -1022,10 +1170,14 @@ export function DealAnalyzerForm({
                     id="currentValue"
                     value={currentValue}
                     onChange={setCurrentValue}
-                    placeholder={purchasePrice || "Same as price"}
+                    placeholder={purchasePrice || undefined}
                     className={inputClass}
                   />
-                  <p className="mt-0.5 text-xs text-muted">Defaults to purchase price</p>
+                  <p className="mt-0.5 text-xs text-muted">
+                    {currentValue.trim() && enrichedBedrooms != null
+                      ? "Autofilled from property estimate"
+                      : "Defaults to purchase price"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -1043,7 +1195,12 @@ export function DealAnalyzerForm({
                 <CurrencyInput
                   id="monthlyRent"
                   value={monthlyRent}
-                  onChange={setMonthlyRent}
+                  onChange={(v) => {
+                    setMonthlyRent(v);
+                    if (rentSuggestion != null && v && parseFloat(v.replace(/,/g, "")) !== rentSuggestion) {
+                      setRentSuggestion(null);
+                    }
+                  }}
                   className={inputClass}
                 />
               </div>
@@ -1074,6 +1231,23 @@ export function DealAnalyzerForm({
                 />
               </div>
             </div>
+            {rentSuggestion != null && (
+              <div className="md:mt-3 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
+                <span className="text-sm text-foreground">
+                  Market rent estimate: <span className="font-medium">{formatCurrency(rentSuggestion)}/mo</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMonthlyRent(String(rentSuggestion));
+                    setRentSuggestion(null);
+                  }}
+                  className="shrink-0 text-sm font-medium text-accent hover:underline"
+                >
+                  Use this
+                </button>
+              </div>
+            )}
           </div>
 
           <MobileCollapsible label="Debt and ownership" defaultOpen={!!dealId || !!mortgageBalance}>
@@ -1164,6 +1338,14 @@ export function DealAnalyzerForm({
                 </UpgradePlanLink>
               </p>
             )}
+            {showSavedToast && (
+              <div className="flex items-center justify-between rounded-lg border border-positive/30 bg-positive/10 px-3 py-2">
+                <span className="text-sm font-medium text-positive">Deal saved</span>
+                <Link href="/deals" className="text-sm font-medium text-foreground hover:underline">
+                  View saved deals →
+                </Link>
+              </div>
+            )}
             <div className="flex flex-wrap items-center gap-2">
               <button
                 type="button"
@@ -1173,11 +1355,9 @@ export function DealAnalyzerForm({
               >
                 {saveStatus === "saving"
                   ? "Saving…"
-                  : saveStatus === "saved"
-                    ? "Saved"
-                    : dealId
-                      ? "Update deal"
-                      : "Save deal"}
+                  : activeDealId
+                    ? "Update deal"
+                    : "Save deal"}
               </button>
               <button
                 type="button"
@@ -1196,7 +1376,7 @@ export function DealAnalyzerForm({
           </div>
         </div>
 
-        {dealId && (
+        {activeDealId && (
           <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Convert to property
@@ -1206,7 +1386,7 @@ export function DealAnalyzerForm({
             </p>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <Link
-                href={`/properties/new?from=${dealId}`}
+                href={`/properties/new?from=${activeDealId}`}
                 className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
               >
                 Add this deal to portfolio
@@ -1356,7 +1536,7 @@ export function DealAnalyzerForm({
           </div>
         </div>
 
-        {dealId && portfolioContext && (
+        {activeDealId && portfolioContext && (
           <DealPortfolioCompareBlock
             portfolio={portfolioContext}
             dealCapRate={metrics.capRate}

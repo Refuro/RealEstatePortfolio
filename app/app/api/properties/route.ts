@@ -22,16 +22,24 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const properties = await prisma.property.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    include: { mortgages: true },
-  });
+  try {
+    const properties = await prisma.property.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      include: { mortgages: true },
+    });
 
-  type PropertyWithMortgages = (typeof properties)[number];
-  return NextResponse.json(
-    properties.map((p: PropertyWithMortgages) => serializePropertyForApi(p))
-  );
+    type PropertyWithMortgages = (typeof properties)[number];
+    return NextResponse.json(
+      properties.map((p: PropertyWithMortgages) => serializePropertyForApi(p))
+    );
+  } catch (err) {
+    console.error("Property list error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Property list failed"), {
+      tags: { route: "api/properties", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to load properties" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -174,7 +182,6 @@ export async function POST(request: NextRequest) {
         unitRents: unitRentsJson ?? Prisma.DbNull,
         bedrooms: data.bedrooms ?? null,
         bathrooms: data.bathrooms ?? null,
-        unitMix: data.unitMix ?? null,
         squareFeet: data.squareFeet ?? null,
         currentMonthlyExpenses: data.currentMonthlyExpenses,
         vacancyPercent: data.vacancyPercent ?? 5,
@@ -182,6 +189,7 @@ export async function POST(request: NextRequest) {
         notes: data.notes ?? null,
         marketRent: data.marketRent ?? null,
         marketRentAsOf: data.marketRentAsOf ? new Date(data.marketRentAsOf) : null,
+        hasMortgage: data.hasMortgage ?? null,
       },
     });
 
@@ -191,6 +199,10 @@ export async function POST(request: NextRequest) {
           propertyId: property.id,
           ...mortgageData,
         },
+      });
+      await prisma.property.update({
+        where: { id: property.id },
+        data: { hasMortgage: true },
       });
     }
 

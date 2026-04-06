@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getBalanceSource, getEffectiveBalance, getPayoffProjection } from "@/lib/amortization";
+import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { PropertyForm } from "../../property-form";
 import { MortgageSection } from "../../mortgage-section";
 
@@ -52,6 +53,17 @@ export default async function EditPropertyPage({
     };
   });
 
+  const initialIsIncomplete = !getPropertyCompleteness({
+    purchasePrice: Number(property.purchasePrice),
+    currentEstimatedValue: Number(property.currentEstimatedValue),
+    cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
+    mortgageCount: mortgages.length,
+    hasMortgage: property.hasMortgage ?? null,
+    bedrooms: property.bedrooms ?? null,
+    bathrooms: property.bathrooms != null ? Number(property.bathrooms) : null,
+    squareFeet: property.squareFeet ?? null,
+  }).isComplete;
+
   return (
     <div>
       <div className="mb-6">
@@ -65,11 +77,15 @@ export default async function EditPropertyPage({
       </div>
       <h1 className="text-2xl font-semibold text-foreground">Edit property</h1>
       <p className="mt-1 max-w-2xl text-sm text-muted">
-        Update location, purchase &amp; value, income, mortgages, and notes. Use the workspaces for
-        modeling and refinance scenarios.
+        {initialIsIncomplete
+          ? "Complete the missing fields below to unlock full portfolio metrics."
+          : "Update location, purchase & value, income, mortgages, and notes. Use the workspaces for modeling and refinance scenarios."}
       </p>
-      <div className="mt-6 space-y-8">
+      <div className="mt-6 space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-0">
         <PropertyForm
+          initialIsIncomplete={initialIsIncomplete}
+          mortgageCount={mortgages.length}
+          hasMortgage={property.hasMortgage ?? null}
           property={{
             id: property.id,
             nickname: property.nickname ?? undefined,
@@ -94,7 +110,6 @@ export default async function EditPropertyPage({
             cashInvested: property.cashInvested?.toString(),
             bedrooms: property.bedrooms ?? undefined,
             bathrooms: property.bathrooms?.toString(),
-            unitMix: property.unitMix ?? undefined,
             squareFeet: property.squareFeet ?? undefined,
             notes: property.notes ?? undefined,
           }}
@@ -113,7 +128,7 @@ export default async function EditPropertyPage({
             </p>
           </div>
           <div className="border-t border-border p-6">
-            <MortgageSection propertyId={id} mortgages={mortgageData} embedded />
+            <MortgageSection propertyId={id} mortgages={mortgageData} embedded initialHasMortgage={property.hasMortgage ?? null} />
           </div>
         </section>
       </div>

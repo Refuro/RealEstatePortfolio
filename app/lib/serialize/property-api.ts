@@ -39,7 +39,6 @@ export function serializePropertyForApi(p: {
   unitRents?: unknown;
   bedrooms?: number | null;
   bathrooms?: { toString(): string } | null;
-  unitMix?: string | null;
   squareFeet?: number | null;
   currentMonthlyExpenses: { toString(): string };
   cashInvested: { toString(): string } | null;
@@ -60,7 +59,6 @@ export function serializePropertyForApi(p: {
     unitRents: parseUnitRentsFromDb(p.unitRents),
     bedrooms: p.bedrooms ?? null,
     bathrooms: p.bathrooms?.toString() ?? null,
-    unitMix: p.unitMix ?? null,
     squareFeet: p.squareFeet ?? null,
     currentMonthlyExpenses: p.currentMonthlyExpenses.toString(),
     cashInvested: p.cashInvested?.toString() ?? null,

@@ -178,3 +178,98 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 ---
 
 *When the builder completes a task, they check it off here and report back. Add new tasks below.*
+
+---
+
+### Admin email tooling — onboarding email preview + re-subscribe
+
+*Added 2026-04-05. Builder can run both items in one pass.*
+
+- [x] **ADMIN-EMAIL-1** — Add a "Preview onboarding email" panel to the admin page (`app/app/(app)/admin/page.tsx`). The panel has two buttons — **"Send day-3 preview"** and **"Send day-7 preview"** — that POST to a new admin-only API route `POST /api/admin/email-preview`. That route reads `SUPPORT_EMAIL` from env, calls `sendOnboardingEmail(supportEmail, adminUserId, variant)` with the caller's own `userId` so the unsubscribe link in the email is real and testable, and returns `{ sent: true }`. The route must verify `isAdmin` before doing anything (same guard as the tier-override route). The UI buttons are disabled while the request is in-flight and show a brief success/error message inline.
+  - *Acceptance:* Clicking either button from the admin page sends a real email (via Resend) to `SUPPORT_EMAIL` containing the correct subject, body, and a working unsubscribe link signed for the admin's own userId. Route returns 403 for non-admins. `npm run check` passes.
+
+- [x] **ADMIN-EMAIL-2** — Add a "Re-subscribe me" button to the admin page that calls a new admin-only API route `POST /api/admin/resubscribe-self`. That route sets `onboardingEmailsOptedOutAt = null` AND resets `onboardingEmailsSentAt = null` on the calling admin user, so the full day-3 / day-7 cron path can run from scratch. Returns `{ resubscribed: true }`. The button shows confirmation inline and is only visible when the admin user's own `onboardingEmailsOptedOutAt` is not null (i.e., they are currently unsubscribed). Pass the current opt-out state from the server component as a prop.
+  - *Acceptance:* After clicking, admin user's `onboardingEmailsOptedOutAt` is `null` and `onboardingEmailsSentAt` is `null` in the DB. Visiting `/api/unsubscribe?userId=…&token=…` for that user afterwards sets `onboardingEmailsOptedOutAt` again (full round-trip confirmed). Route returns 403 for non-admins. `npm run check` passes.
+
+---
+
+### Full audit remediation — 2026-04-05 synthesis — Ship batch
+
+*Promoted from:* [`docs/audits/synthesis/2026-04-05-audit-synthesis.md`](audits/synthesis/2026-04-05-audit-synthesis.md). *Individual lane reports:* `docs/audits/*/2026-04-05-*`. *Completed items will be archived to [`docs/tasks-archived.md`](tasks-archived.md).*
+
+> **⚠️ PM review required before builder runs UX-SHIP-1** — the onboarding dismiss change is a visible behavior shift for all signed-up users. Confirm the cooldown duration and re-display approach with the PM before implementing. All other items are surgical and can run without a prior review gate.
+
+---
+
+#### Security
+
+- [ ] **SEC-SHIP-1** — Add `/api/unsubscribe` AND `/api/cron/onboarding-emails` to `isPublicRoute` in `app/proxy.ts`. Both routes implement their own auth (HMAC token and Bearer secret respectively) and must be reachable without a Clerk session. Closes CAN-SPAM compliance gap on unsubscribes; also unblocks the Vercel Cron job that has been silently 401-ing on every invocation.
+  - *Acceptance:* Unauthenticated `GET /api/unsubscribe?userId=…&token=…` returns unsubscribe confirmation (not 401). Simulate Vercel Cron call with `Authorization: Bearer $CRON_SECRET` and confirm it hits the handler.
+
+- [ ] **SEC-SHIP-2** — Wrap the Stripe billing webhook event-dispatch `switch` block in an outer try/catch + `Sentry.captureException` in `app/app/api/billing/webhook/route.ts` (lines 41–113). Currently DB failures inside `syncSubscriptionToDb` propagate as silent 500s; Stripe retries for up to 72h with no operator visibility.
+  - *Acceptance:* Simulated DB error inside the switch block produces a Sentry event and still returns 500 (so Stripe retries). Existing webhook happy-path tests pass.
+
+- [ ] **SEC-SHIP-3** — Add try/catch + `Sentry.captureException` + `console.error` to all currently unguarded read routes. Match the existing pattern in PATCH/DELETE handlers.
+  - Routes: `GET /api/properties`, `GET /api/properties/[id]`, `GET /api/deals`, `GET /api/portfolio/summary`, `GET /api/onboarding`, `PATCH /api/onboarding`, `GET /api/export/portfolio`, `GET /api/export/portfolio-summary`.
+  - *Acceptance:* Each route has a catch block that logs and captures to Sentry. `npm run check` passes.
+
+- [ ] **SEC-SHIP-4** — Add try/catch around the `prisma.$transaction` block in `POST /api/import/portfolio/route.ts` (lines 166–225). Currently a mid-import DB failure produces an unguarded 500 with no Sentry signal.
+  - *Acceptance:* Simulated transaction failure returns a clear 500 JSON with message; Sentry receives the event; DB is left in consistent state (all-or-nothing transaction guarantees this).
+
+- [ ] **SEC-SHIP-5** — Add try/catch around the final `prisma.$transaction` in `POST /api/account/delete/route.ts` (lines 87–108). Stripe cancel already has a guard; the DB step does not. Failure leaves Stripe subscription canceled but app account still active.
+  - *Acceptance:* Simulated DB failure returns 503; no `User` row is deleted; Sentry captures the error.
+
+---
+
+#### UX / Feature
+
+- [x] **UX-SHIP-1** — Replace the permanent "Maybe later" onboarding modal dismissal with a 7-day snooze. `onboardingDismissedAt` now records dismiss timestamp; re-engagement nudge strip appears after 7 days if `propertyCount === 0`. Users with ≥1 property never see either surface. Dismissing the nudge resets the 7-day clock. Touches: `app/app/(app)/onboarding-panel.tsx`, `app/app/(app)/app-layout-client.tsx`.
+  - *Acceptance:* After dismissing and returning past the cooldown period with 0 properties, a re-engagement nudge appears. A user with ≥1 property is never re-shown the modal regardless of cooldown. Existing tests pass.
+
+- [ ] **UX-SHIP-2** — Widen `getPropertyCompleteness` heuristic to flag missing bedrooms/bathrooms/sqft as incomplete (not only when all three of cash invested, mortgage, and purchase price are simultaneously mismatched). Also render "Not set" placeholder text when bedrooms/bathrooms/sqft are all null instead of hiding the row entirely. Touches: `app/lib/property-completeness.ts`, `app/app/(app)/properties/[id]/overview-tab-content.tsx`.
+  - *Acceptance:* A quick-add property (address + rent + value only) shows the completion banner and displays "Not set" for the three field groups. A fully-populated property shows no banner. `npm run check` passes.
+
+---
+
+#### Data Integrity
+
+- [ ] **DI-SHIP-1** — CSV import: after creating `Mortgage` records inside the import transaction, add `tx.property.update({ where: { id }, data: { hasMortgage: true } })` for each property that had mortgage columns in `app/app/api/import/portfolio/route.ts`. Currently `hasMortgage` stays `null` for all imported properties even when mortgage data is present.
+  - *Acceptance:* Import a CSV with mortgage columns → property record has `hasMortgage = true`. Import a CSV with no mortgage columns → `hasMortgage` remains `null` (unchanged). `npm run check` passes.
+
+- [ ] **DI-SHIP-2** — Mortgage DELETE: after deleting a `Mortgage` row in `app/app/api/properties/[id]/mortgage/[mortgageId]/route.ts`, count remaining mortgages for the property and update `Property.hasMortgage` to `true` (any remain) or `false` (none remain).
+  - *Acceptance:* Delete the last mortgage on a property → `hasMortgage = false`. Delete one of multiple mortgages → `hasMortgage = true`. `npm run check` passes.
+
+- [ ] **DI-SHIP-3** — `app/app/api/account/delete-permanent/route.ts`: return HTTP 503 on Stripe subscription cancel failure instead of swallowing the error and proceeding to delete the `User` row. Mirror the pattern already in `delete/route.ts` (lines 71–85).
+  - *Acceptance:* When Stripe cancel throws, the route returns 503 and the `User` row is NOT deleted. Sentry captures the error. `npm run check` passes.
+
+---
+
+#### Performance
+
+- [ ] **PERF-SHIP-1** — Add scheduled cleanup of `ApiRateLimitEntry` rows older than 1 hour. Options: (a) a new Vercel Cron endpoint that runs `prisma.apiRateLimitEntry.deleteMany({ where: { createdAt: { lt: oneHourAgo } } })` daily or hourly, or (b) an inline prune after every `recordRateLimit` call. The compound index `[identifier, action, createdAt]` keeps queries fast today but the table grows unboundedly.
+  - *Acceptance:* Rows older than 1 hour are pruned on schedule. Live entries (<1 h old) are preserved. Document chosen approach. `npm run check` passes.
+
+- [ ] **PERF-SHIP-2** — Remove `<link rel="preconnect" href="https://api.rentcast.io" />` from `app/app/layout.tsx` (line 160). RentCast is a server-side-only integration; the browser never sends requests to `api.rentcast.io`; the preconnect wastes a TLS handshake on every page load for every user.
+  - *Acceptance:* Line removed. Spot-check that RentCast API calls still function (they originate from Next.js API routes, not the browser). `npm run check` passes.
+
+---
+
+#### Legal
+
+- [ ] **LEG-SHIP-1** — Add a one-sentence "Numbers are educational — confirm with your lender" disclaimer near the refinance projection output block in `app/app/(app)/properties/[id]/payoff-card.tsx` (around the monthly savings / break-even / total interest display). Match the pattern already used in `app/app/tools/brrr/page.tsx` lines 57–59 and `app/app/tools/fix-and-flip/page.tsx` lines 56–58.
+  - *Acceptance:* Disclaimer is visible when the "What if I refinanced?" panel is expanded, adjacent to the projection output. `npm run check` passes.
+
+---
+
+#### Business / Policy (doc-only)
+
+- [x] **BIZ-SHIP-1** — Wrote `docs/policies/property-completeness.md` — defines required vs. optional fields, full scoring algorithm (base 10, purchase price 25, mortgage 25, cash invested 20, home profile 20, max 100), threshold 60, banner behavior rules, mortgage edge cases, and implementation guardrails. Cross-referenced from `property-completeness.ts` JSDoc.
+  - *Acceptance:* File exists at `docs/policies/property-completeness.md`; defines field classifications; cross-referenced from `property-completeness.ts` JSDoc. No code changes needed.
+
+---
+
+#### Deferred from this batch
+
+- **UX-SHIP-2 (QuickActions)** — Importing `quick-actions.tsx` on property detail overview. Component fully built; deferred by PM — will promote when ready. See `docs/audits/feature/2026-04-05-feature-ux-audit.md` §High for context.
+- **GRW-SHIP-1 (Social proof)** — Add real social proof to landing page. Deferred: no user testimonials or verified stats to use yet. Will promote when evidence is available. See `docs/audits/growth-funnel/2026-04-05-growth-funnel-audit.md` §Critical.
+- **GRW-SHIP-2 (60-second copy)** — Not a task. Quick-add legitimately reduces first-property setup to ~60 seconds. Copy is accurate for that mode. No change needed.

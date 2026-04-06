@@ -248,3 +248,20 @@ input[type="date"] {
     }
   }
 }
+
+/* Wizard step transition — fires on step change via key={currentStep} in AddPropertyWizard.
+   Uses @starting-style so the new step content fades + slides up from its initial state.
+   motion-safe gate ensures users with prefers-reduced-motion: reduce see an instant swap. */
+@media (prefers-reduced-motion: no-preference) {
+  .wizard-step-enter {
+    transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out);
+    transition-behavior: allow-discrete;
+  }
+
+  @starting-style {
+    .wizard-step-enter {
+      opacity: 0;
+      transform: translateY(6px);
+    }
+  }
+}

@@ -195,11 +195,22 @@ export async function DELETE(
     return NextResponse.json({ error: "Mortgage not found" }, { status: 404 });
   }
 
-  await prisma.mortgage.delete({
-    where: {
-      id: mortgageId,
-      property: { userId: user.id },
-    },
+  await prisma.$transaction(async (tx) => {
+    await tx.mortgage.delete({
+      where: {
+        id: mortgageId,
+        property: { userId: user.id },
+      },
+    });
+
+    const remainingMortgageCount = await tx.mortgage.count({
+      where: { propertyId: existing.propertyId },
+    });
+
+    await tx.property.update({
+      where: { id: existing.propertyId },
+      data: { hasMortgage: remainingMortgageCount > 0 },
+    });
   });
   await recordRateLimit(identifier, "properties:mortgage-delete");
   return NextResponse.json({ success: true });

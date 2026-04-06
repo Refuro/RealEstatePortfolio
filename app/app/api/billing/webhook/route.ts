@@ -38,75 +38,84 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid signature" }, { status: 400 });
   }
 
-  switch (event.type) {
-    case "customer.subscription.created": {
-      const sub = event.data.object as Stripe.Subscription;
-      await syncSubscriptionToDb(sub);
-      break;
-    }
-    case "customer.subscription.updated": {
-      const sub = event.data.object as Stripe.Subscription;
-      await syncSubscriptionToDb(sub);
-      const { appUserId } = await resolveAppUserIdForSubscription(sub);
-      if (appUserId) {
-        const firstItem = sub.items?.data?.[0];
-        const priceId =
-          typeof firstItem?.price === "string" ? firstItem.price : firstItem?.price?.id;
-        const planTier = priceId ? planTierFromPriceId(priceId) : null;
-        await captureStripeWebhookAnalyticsOnce(event.id, async () => {
-          await captureServerEvent(appUserId, AnalyticsEvents.SUBSCRIPTION_UPDATED, {
-            status: sub.status,
-            plan_tier: planTier ?? undefined,
-            cancel_at_period_end: sub.cancel_at_period_end ?? false,
-          });
-        });
+  try {
+    switch (event.type) {
+      case "customer.subscription.created": {
+        const sub = event.data.object as Stripe.Subscription;
+        await syncSubscriptionToDb(sub);
+        break;
       }
-      break;
-    }
-    case "customer.subscription.deleted": {
-      const sub = event.data.object as Stripe.Subscription;
-      const row = await prisma.subscription.findFirst({
-        where: { stripeSubscriptionId: sub.id },
-        select: { userId: true },
-      });
-      await setSubscriptionCanceled(sub.id);
-      if (row?.userId) {
-        await captureStripeWebhookAnalyticsOnce(event.id, async () => {
-          await captureServerEvent(row.userId, AnalyticsEvents.SUBSCRIPTION_CANCELED, {
-            stripe_subscription_id: sub.id,
-          });
-        });
-      }
-      break;
-    }
-    case "checkout.session.completed": {
-      const session = event.data.object as Stripe.Checkout.Session;
-      if (session.mode === "subscription" && session.subscription) {
-        const stripe = getStripe();
-        const subscription =
-          typeof session.subscription === "string"
-            ? await stripe.subscriptions.retrieve(session.subscription)
-            : session.subscription;
-        await syncSubscriptionToDb(subscription);
-        const appUserId = session.metadata?.appUserId;
-        if (typeof appUserId === "string" && appUserId.length > 0) {
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        await syncSubscriptionToDb(sub);
+        const { appUserId } = await resolveAppUserIdForSubscription(sub);
+        if (appUserId) {
+          const firstItem = sub.items?.data?.[0];
+          const priceId =
+            typeof firstItem?.price === "string" ? firstItem.price : firstItem?.price?.id;
+          const planTier = priceId ? planTierFromPriceId(priceId) : null;
           await captureStripeWebhookAnalyticsOnce(event.id, async () => {
-            await captureServerEvent(
-              appUserId,
-              AnalyticsEvents.SUBSCRIPTION_ACTIVATED,
-              {
-                plan: session.metadata?.plan ?? undefined,
-                billing_cycle: session.metadata?.billing_cycle ?? undefined,
-              }
-            );
+            await captureServerEvent(appUserId, AnalyticsEvents.SUBSCRIPTION_UPDATED, {
+              status: sub.status,
+              plan_tier: planTier ?? undefined,
+              cancel_at_period_end: sub.cancel_at_period_end ?? false,
+            });
           });
         }
+        break;
       }
-      break;
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const row = await prisma.subscription.findFirst({
+          where: { stripeSubscriptionId: sub.id },
+          select: { userId: true },
+        });
+        await setSubscriptionCanceled(sub.id);
+        if (row?.userId) {
+          await captureStripeWebhookAnalyticsOnce(event.id, async () => {
+            await captureServerEvent(row.userId, AnalyticsEvents.SUBSCRIPTION_CANCELED, {
+              stripe_subscription_id: sub.id,
+            });
+          });
+        }
+        break;
+      }
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        if (session.mode === "subscription" && session.subscription) {
+          const stripe = getStripe();
+          const subscription =
+            typeof session.subscription === "string"
+              ? await stripe.subscriptions.retrieve(session.subscription)
+              : session.subscription;
+          await syncSubscriptionToDb(subscription);
+          const appUserId = session.metadata?.appUserId;
+          if (typeof appUserId === "string" && appUserId.length > 0) {
+            await captureStripeWebhookAnalyticsOnce(event.id, async () => {
+              await captureServerEvent(
+                appUserId,
+                AnalyticsEvents.SUBSCRIPTION_ACTIVATED,
+                {
+                  plan: session.metadata?.plan ?? undefined,
+                  billing_cycle: session.metadata?.billing_cycle ?? undefined,
+                }
+              );
+            });
+          }
+        }
+        break;
+      }
+      default:
+        // Ignore other events
+        break;
     }
-    default:
-      // Ignore other events
-      break;
+  } catch (err) {
+    console.error("Webhook processing failed:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Webhook processing failed"), {
+      tags: { route: "api/billing/webhook", eventType: event.type },
+      extra: { eventId: event.id },
+    });
+    return NextResponse.json({ error: "Webhook processing failed" }, { status: 500 });
   }
 
   return NextResponse.json({ received: true });

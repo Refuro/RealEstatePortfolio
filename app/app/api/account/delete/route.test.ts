@@ -123,4 +123,12 @@ describe("POST /api/account/delete", () => {
     });
     expect(recordRateLimitMock).toHaveBeenCalled();
   });
+
+  it("returns 503 when database soft-delete transaction fails", async () => {
+    prismaMock.$transaction.mockRejectedValue(new Error("db failure"));
+    const { POST } = await import("./route");
+    const res = await POST(postJson({ password: "correcthorse" }));
+    expect(res.status).toBe(503);
+    expect(recordRateLimitMock).not.toHaveBeenCalled();
+  });
 });

@@ -32,7 +32,6 @@ export type PropertyDetailTabsProps = {
     units: number;
     bedrooms: number | null;
     bathrooms: number | null;
-    unitMix: string | null;
     squareFeet: number | null;
     purchasePrice: number;
     purchaseDate: Date | string;
@@ -46,6 +45,7 @@ export type PropertyDetailTabsProps = {
     notes: string | null;
     marketRent: number | null;
     marketRentAsOf: Date | string | null;
+    hasMortgage: boolean | null;
     updatedAt: Date | string;
   };
   address: string;

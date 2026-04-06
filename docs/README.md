@@ -11,6 +11,7 @@
 
 ## Reference
 
+- [Valuation brief](reference/valuation-brief.md) — single-document codebase + product evaluation for external reviewers
 - [Product overview](reference/product-overview.md)
 - [MVP spec](reference/mvp-spec.md)
 - [Engineering spec](reference/engineering-spec.md)

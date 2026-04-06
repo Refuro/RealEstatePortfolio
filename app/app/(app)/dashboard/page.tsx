@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Building2 } from "lucide-react";
 import { getAppUser } from "@/lib/auth";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
@@ -35,6 +34,26 @@ export default async function DashboardPage({
     displayMode,
     effectiveTier,
   } = await buildDashboardPortfolioPayload(user);
+
+  const nowMs = new Date().getTime();
+  const daysSinceSignup = Math.max(
+    0,
+    Math.floor(
+      (nowMs - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)
+    )
+  );
+  const emptyStateHeading =
+    daysSinceSignup <= 1
+      ? "Your dashboard is waiting for its first property"
+      : daysSinceSignup <= 6
+        ? "Still setting up? Most landlords add their first property in under 5 minutes"
+        : "Your portfolio metrics are ready when you are";
+  const emptyStateBody =
+    daysSinceSignup <= 1
+      ? "Add one property and see live equity, cash flow, and cap rate - all in one place."
+      : daysSinceSignup <= 6
+        ? "Your dashboard will show real-time portfolio metrics the moment you add a property."
+        : "Add a property to start tracking equity, cash flow, and rent benchmarks.";
 
   const portfolioInput = properties.map((p) => {
     const totalMortgageBalance = p.mortgages.reduce(
@@ -98,44 +117,41 @@ export default async function DashboardPage({
     return (
       <>
         <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
-        <div>
-          <div className="rounded-lg border border-border bg-card p-8 text-center shadow-sm">
-            <Building2 className="mx-auto mb-4 size-12 text-muted/40" aria-hidden />
-            <h1 className="text-2xl font-semibold text-foreground">
-              Welcome to Veld
+        <div className="space-y-4">
+          <div className="rounded-xl border border-accent/20 bg-accent/5 p-6">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              {emptyStateHeading}
             </h1>
-            <p className="mt-2 text-base text-muted">
-              Start with a property to unlock your dashboard — equity, cash flow, and benchmarks in
-              one place.
-            </p>
-            <div className="mt-6 flex justify-center">
+            <p className="mt-2 text-sm text-muted">{emptyStateBody}</p>
+            <div className="mt-5">
               <Link
-                href="/properties/new"
-                className="rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
+                href="/properties/new?mode=quick"
+                className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-5 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
               >
                 Add your first property
               </Link>
             </div>
-            <details className="group mt-6 text-left">
-              <summary className="cursor-pointer list-none text-center text-sm text-muted hover:text-foreground [&::-webkit-details-marker]:hidden">
-                <span className="underline decoration-border underline-offset-4">More ways to get started</span>
-              </summary>
-              <div className="mt-4 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-                <Link
-                  href="/analyze"
-                  className="rounded-md border border-border px-4 py-2 text-base font-medium text-foreground hover:bg-subtle"
-                >
-                  Analyze a deal
-                </Link>
-              </div>
-              <p className="mt-3 text-center text-sm text-muted">
-                Have a spreadsheet?{" "}
-                <Link href="/settings#export" className="font-medium text-foreground hover:underline">
-                  Import from CSV
-                </Link>{" "}
-                in Settings.
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Link
+              href="/analyze"
+              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md"
+            >
+              <p className="text-sm font-semibold text-foreground">Analyze a deal first</p>
+              <p className="text-xs text-muted">
+                Run the numbers on a property before you commit. No account data needed.
               </p>
-            </details>
+            </Link>
+            <Link
+              href="/settings#export"
+              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md"
+            >
+              <p className="text-sm font-semibold text-foreground">Import from a spreadsheet</p>
+              <p className="text-xs text-muted">
+                Have your properties in CSV format? Import them all at once from Settings.
+              </p>
+            </Link>
           </div>
         </div>
       </>
@@ -152,9 +168,17 @@ export default async function DashboardPage({
             Property added. Your portfolio is now live.
           </p>
           <p className="mt-1 text-sm text-muted">
-            Great start. Here are some things to try next:
+            Great start. Add more details to your property to unlock full analytics.
           </p>
           <div className="mt-3 flex flex-wrap gap-2">
+            {singleProperty && (
+              <Link
+                href={`/properties/${singleProperty.id}/edit`}
+                className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+              >
+                Complete property details
+              </Link>
+            )}
             <Link
               href="/analyze"
               className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"

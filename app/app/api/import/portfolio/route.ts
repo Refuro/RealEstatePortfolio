@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import Papa from "papaparse";
 import type { Prisma } from "@prisma/client";
 import { getActiveAppUser } from "@/lib/auth";
@@ -163,66 +164,81 @@ export async function POST(req: NextRequest) {
 
   let imported = 0;
 
-  await prisma.$transaction(async (tx) => {
-    for (let i = 0; i < allowedRows.length; i++) {
-      const r = allowedRows[i].r;
-      const prop = await tx.property.create({
-        data: {
-          userId: user.id,
-          addressLine1: r.addressLine1,
-          addressLine2: r.addressLine2 || null,
-          city: r.city,
-          state: r.state,
-          zipCode: r.zipCode,
-          nickname: r.nickname,
-          propertyType: r.propertyType,
-          units: r.units,
-          purchasePrice: r.purchasePrice,
-          purchaseDate: r.purchaseDate,
-          currentEstimatedValue: r.currentEstimatedValue,
-          currentMonthlyRent: r.currentMonthlyRent,
-          isRented: r.isRented,
-          unitRents:
-            r.isRented && r.unitRents && r.unitRents.length > 0
-              ? r.unitRents
-              : null,
-          currentMonthlyExpenses: r.currentMonthlyExpenses,
-          vacancyPercent: r.vacancyPercent,
-          cashInvested: r.cashInvested,
-          ownershipPercent: r.ownershipPercent,
-        } as Prisma.PropertyUncheckedCreateInput,
-      });
-
-      if (
-        r.mortgageBalance != null &&
-        r.mortgageBalance > 0 &&
-        r.monthlyPayment != null &&
-        r.monthlyPayment > 0 &&
-        r.mortgageRate != null &&
-        r.mortgageTerm != null
-      ) {
-        const originalLoan = r.originalLoanAmount ?? r.mortgageBalance;
-        await tx.mortgage.create({
+  try {
+    await prisma.$transaction(async (tx) => {
+      for (let i = 0; i < allowedRows.length; i++) {
+        const r = allowedRows[i].r;
+        const prop = await tx.property.create({
           data: {
-            propertyId: prop.id,
-            originalLoanAmount: originalLoan,
-            currentBalance: r.mortgageBalance,
-            balanceAsOfDate: r.balanceAsOfDate,
-            interestRate: r.mortgageRate,
-            termYears: r.mortgageTerm,
-            startDate: r.mortgageStartDate ?? r.purchaseDate,
-            monthlyPayment: r.monthlyPayment,
-            escrowIncluded: r.escrowAmount != null && r.escrowAmount > 0,
-            escrowAmount: r.escrowAmount,
-            lenderName: r.lenderName,
-            loanType: r.loanType ?? null,
-          },
+            userId: user.id,
+            addressLine1: r.addressLine1,
+            addressLine2: r.addressLine2 || null,
+            city: r.city,
+            state: r.state,
+            zipCode: r.zipCode,
+            nickname: r.nickname,
+            propertyType: r.propertyType,
+            units: r.units,
+            purchasePrice: r.purchasePrice,
+            purchaseDate: r.purchaseDate,
+            currentEstimatedValue: r.currentEstimatedValue,
+            currentMonthlyRent: r.currentMonthlyRent,
+            isRented: r.isRented,
+            unitRents:
+              r.isRented && r.unitRents && r.unitRents.length > 0
+                ? r.unitRents
+                : null,
+            currentMonthlyExpenses: r.currentMonthlyExpenses,
+            vacancyPercent: r.vacancyPercent,
+            cashInvested: r.cashInvested,
+            ownershipPercent: r.ownershipPercent,
+          } as Prisma.PropertyUncheckedCreateInput,
         });
-      }
 
-      imported++;
-    }
-  });
+        if (
+          r.mortgageBalance != null &&
+          r.mortgageBalance > 0 &&
+          r.monthlyPayment != null &&
+          r.monthlyPayment > 0 &&
+          r.mortgageRate != null &&
+          r.mortgageTerm != null
+        ) {
+          const originalLoan = r.originalLoanAmount ?? r.mortgageBalance;
+          await tx.mortgage.create({
+            data: {
+              propertyId: prop.id,
+              originalLoanAmount: originalLoan,
+              currentBalance: r.mortgageBalance,
+              balanceAsOfDate: r.balanceAsOfDate,
+              interestRate: r.mortgageRate,
+              termYears: r.mortgageTerm,
+              startDate: r.mortgageStartDate ?? r.purchaseDate,
+              monthlyPayment: r.monthlyPayment,
+              escrowIncluded: r.escrowAmount != null && r.escrowAmount > 0,
+              escrowAmount: r.escrowAmount,
+              lenderName: r.lenderName,
+              loanType: r.loanType ?? null,
+            },
+          });
+          await tx.property.update({
+            where: { id: prop.id },
+            data: { hasMortgage: true },
+          });
+        }
+
+        imported++;
+      }
+    });
+  } catch (err) {
+    console.error("Portfolio import transaction failed:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Portfolio import failed"), {
+      tags: { route: "api/import/portfolio", userId: user.id },
+    });
+    return NextResponse.json(
+      { error: "Import failed. Please try again.", imported: 0, errors },
+      { status: 500 }
+    );
+  }
 
   await recordRateLimit(identifier, "import:portfolio");
 

@@ -27,13 +27,21 @@ export async function GET(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { id } = await params;
-  const property = await getPropertyForUser(id, user.id);
-  if (!property) {
-    return NextResponse.json({ error: "Property not found" }, { status: 404 });
-  }
+  try {
+    const { id } = await params;
+    const property = await getPropertyForUser(id, user.id);
+    if (!property) {
+      return NextResponse.json({ error: "Property not found" }, { status: 404 });
+    }
 
-  return NextResponse.json(serializePropertyForApi(property));
+    return NextResponse.json(serializePropertyForApi(property));
+  } catch (err) {
+    console.error("Property get error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Property get failed"), {
+      tags: { route: "api/properties/[id]", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
+  }
 }
 
 export async function PATCH(
@@ -112,11 +120,11 @@ export async function PATCH(
   }
   if (data.bedrooms !== undefined) updatePayload.bedrooms = data.bedrooms;
   if (data.bathrooms !== undefined) updatePayload.bathrooms = data.bathrooms;
-  if (data.unitMix !== undefined) updatePayload.unitMix = data.unitMix;
   if (data.squareFeet !== undefined) updatePayload.squareFeet = data.squareFeet;
   if (data.currentMonthlyExpenses !== undefined) updatePayload.currentMonthlyExpenses = data.currentMonthlyExpenses;
   if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;
+  if (data.hasMortgage !== undefined) updatePayload.hasMortgage = data.hasMortgage;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
   if (data.marketRent !== undefined) updatePayload.marketRent = data.marketRent;
   if (data.marketRentAsOf !== undefined) updatePayload.marketRentAsOf = data.marketRentAsOf;

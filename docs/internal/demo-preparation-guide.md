@@ -1,7 +1,8 @@
 # Demo Preparation Guide — Veld Portfolio
 
 **Audience:** Owner/non-expert presenter  
-**Purpose:** Help you explain the product, the major pages, and the core metrics with confidence in plain English.
+**Purpose:** Help you explain the product, the major pages, and the core metrics with confidence in plain English.  
+**Last reviewed:** April 2026
 
 ---
 
@@ -118,6 +119,44 @@ This is the idea that you should not assume the property is occupied and paying 
 
 If you own only part of a property, the app can scale most economic metrics to your share. This matters for shared ownership situations.
 
+### GRM (Gross Rent Multiplier)
+
+A quick "how expensive is this property relative to its rent" check.
+
+**Simple version:** property value divided by annual gross rent.
+
+Lower is generally better — it means you're paying less per dollar of rent produced. GRM doesn't factor in expenses, so it's a rough screening number, not a substitute for cap rate or cash flow.
+
+### Amortization
+
+How a mortgage loan balance decreases over time as you make payments.
+
+Early payments go mostly toward interest; later payments go mostly toward principal. The Amortization page shows a visual schedule of this paydown curve for each mortgage.
+
+### BRRRR
+
+A real estate investment strategy: **Buy, Rehab, Rent, Refinance, Repeat.**
+
+The idea is to buy a distressed property, improve it, rent it out, then refinance based on the new higher value — pulling out close to your original cash invested, which you then use to do it again. The BRRRR calculator models whether a specific property fits this strategy by showing equity returned, cash-on-cash, and total return.
+
+### Fix and flip
+
+Buying a property, renovating it, and selling it for a profit instead of renting it.
+
+The Fix & Flip calculator helps model whether a specific deal makes financial sense: purchase price, rehab costs, after-repair value (ARV), holding costs, and your net profit.
+
+### STR vs LTR (Short-term rental vs. Long-term rental)
+
+A comparison of whether a property performs better as a short-term rental (like an Airbnb) vs. a traditional long-term tenant lease.
+
+The STR vs LTR calculator compares expected income, occupancy, expenses, and net profit across both strategies for a given property.
+
+### Refinance
+
+Replacing an existing mortgage with a new one — typically to get a lower interest rate or pull out equity as cash (called a cash-out refinance).
+
+The Refinance workspace in the app models what a refinance would do to your monthly payment, cash flow, and overall debt position, so you can compare before making a decision.
+
 ---
 
 ## 4. High-level math explanation
@@ -232,6 +271,46 @@ If they ask why ownership matters:
 
 ---
 
+### Refinance workspace
+
+**What it is:** A refinance scenario modeler for owned properties.
+
+**What to say:**
+
+> The Refinance workspace answers "what happens if I refinance this mortgage?" It pulls in the current loan details from your portfolio and lets you test a new rate, new term, or cash-out amount — then shows you the impact on monthly payment, cash flow, and DSCR before you make any real decision.
+
+**Key concepts to explain:**
+
+- It models the current loan vs. a hypothetical new loan side by side.
+- Cash-out refinance: taking equity out as cash, which increases the loan balance and usually changes cash flow.
+- It doesn't require you to apply — it's purely a decision-support tool.
+
+**Why it matters:** In a market where interest rates have been fluctuating, landlords frequently ask "should I refi now?" This answers that question with their actual property numbers, not a generic calculator.
+
+---
+
+### Calculators hub
+
+**What it is:** A set of standalone investment calculators, available both publicly and inside the authenticated app.
+
+**What to say:**
+
+> The calculators let you run common real estate math without needing to add a full property to your portfolio. They're useful for quick analysis before you're ready to commit numbers to your portfolio.
+
+**The three main calculators:**
+
+- **BRRRR** — Models the Buy-Rehab-Rent-Refinance-Repeat strategy. Enter the purchase price, rehab cost, ARV, and new loan terms; see equity recaptured and cash-on-cash return.
+- **Fix & Flip** — Models a renovation-and-sell deal. Enter purchase, rehab, ARV, holding costs; see projected profit and return.
+- **STR vs LTR** — Compares short-term rental (Airbnb-style) vs. long-term lease income and expenses for the same property.
+
+**Public vs. in-app:**
+
+> The same calculators exist at `/tools/` (publicly accessible, shareable links) and at `/calculators/` inside the app. The in-app version keeps your portfolio context nearby. The public version you can send to someone who doesn't have an account.
+
+**Why it matters:** Investors evaluating strategy ("should I rent this or flip it?") or exploring a specific approach ("does BRRRR work on this deal?") get a dedicated tool rather than having to mentally do the math.
+
+---
+
 ### Settings and plans
 
 **What it is:** Account, billing, preferences, and import/export support.
@@ -252,7 +331,9 @@ If you are giving a live demo, this order is usually easiest:
 4. Go to **Analyze deal** to show how the app helps before purchase.
 5. Go to **Modeling** to show future-looking insight.
 6. Go to **Mortgage** to show debt-specific intelligence.
-7. End by returning to the value proposition: portfolio clarity plus decision support.
+7. If the audience is strategy-focused, briefly show the **Calculators hub** (BRRRR, Fix & Flip, or STR vs LTR depending on their interest).
+8. If they ask about refinancing, open the **Refinance workspace** to show how they can model a rate change or cash-out on their actual property data.
+9. End by returning to the value proposition: portfolio clarity plus decision support — no bank sync required, no accounting setup, just investor intelligence.
 
 ---
 
@@ -282,6 +363,36 @@ Use:
 
 > The app keeps the metrics consistent across the portfolio, property detail, analysis, and modeling surfaces. It also adds benchmark and workflow support that spreadsheets usually do not maintain well.
 
+### "What is BRRRR?"
+
+Use:
+
+> BRRRR stands for Buy, Rehab, Rent, Refinance, Repeat — it's a strategy for recycling your initial cash investment by refinancing after you've added value. The app has a calculator that models whether a specific property fits this strategy.
+
+### "What does the Refinance workspace do?"
+
+Use:
+
+> It lets you model what happens to your monthly payment, cash flow, and DSCR if you refinance one of your existing mortgages. You can test a lower rate, a longer term, or a cash-out amount — all against your real property data, not a generic example.
+
+### "What is the difference between STR and LTR?"
+
+Use:
+
+> STR is short-term rental — like Airbnb — where guests stay for days or weeks. LTR is long-term rental with a traditional tenant lease. They have different income patterns and expense structures. The STR vs. LTR calculator helps you compare which strategy would likely perform better for a specific property.
+
+### "Does the app connect to my bank account?"
+
+Use:
+
+> No, and that is intentional. You enter your property data directly. This keeps setup fast and avoids requiring you to hand over bank credentials. The app focuses on investor intelligence — metrics, analysis, and modeling — not bookkeeping or accounting.
+
+### "What is the BRRRR calculator vs. the Deal Analyzer?"
+
+Use:
+
+> The Deal Analyzer is for evaluating any new acquisition — it covers all deal types and gives you broad metrics like cash flow, cap rate, and DSCR. The BRRRR calculator is specifically for modeling the rehab-and-refinance strategy, where the goal is to pull your cash back out after adding value. They answer different questions.
+
 ---
 
 ## 8. Things to avoid saying
@@ -296,9 +407,14 @@ Use:
 
 Read these right before presenting:
 
-1. `docs/internal/demo-preparation-guide.md`
-2. `docs/internal/project-grounding.md`
-3. `docs/policies/ownership-metrics.md`
-4. `docs/policies/analytics-math-policy.md`
+1. `docs/internal/demo-preparation-guide.md` — this file; page walkthroughs and metric glossary
+2. `docs/internal/project-grounding.md` — what the product is, who it's for, current state
+3. `docs/reference/product-overview.md` — features, routes, pricing, integrations
+4. `docs/policies/ownership-metrics.md` — how ownership % affects metrics
+5. `docs/policies/analytics-math-policy.md` — how NOI, cash flow, and cap rate are calculated
 
-That combination will usually give you the product story, page story, and metric story you need.
+For competitive positioning context (useful if the user asks "how is this different from Stessa / DealCheck / etc."):
+
+6. `docs/plans/2026-04-04-product-gap-discovery.md` — competitive landscape and where Veld stands
+
+That combination will give you the product story, page story, metric story, and competitive story you need.

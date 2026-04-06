@@ -84,28 +84,39 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  await prisma.$transaction([
-    prisma.user.update({
-      where: { id: user.id },
-      data: {
-        deletedAt: new Date(),
-        stripeCustomerId: null,
-        subscriptionTier: "free",
-      },
-    }),
-    ...(subscription
-      ? [
-          prisma.subscription.update({
-            where: { id: subscription.id },
-            data: {
-              status: "canceled",
-              planName: null,
-              currentPeriodEnd: null,
-            },
-          }),
-        ]
-      : []),
-  ]);
+  try {
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { id: user.id },
+        data: {
+          deletedAt: new Date(),
+          stripeCustomerId: null,
+          subscriptionTier: "free",
+        },
+      }),
+      ...(subscription
+        ? [
+            prisma.subscription.update({
+              where: { id: subscription.id },
+              data: {
+                status: "canceled",
+                planName: null,
+                currentPeriodEnd: null,
+              },
+            }),
+          ]
+        : []),
+    ]);
+  } catch (err) {
+    console.error("Failed to soft-delete account in database:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Account soft delete failed"), {
+      tags: { route: "api/account/delete", userId: user.id },
+    });
+    return NextResponse.json(
+      { error: "We could not delete your account right now. Please try again shortly." },
+      { status: 503 }
+    );
+  }
 
   await recordRateLimit(identifier, "account:delete");
 

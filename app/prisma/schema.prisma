@@ -27,6 +27,8 @@ model User {
   onboardingWelcomeSeenAt DateTime?
   onboardingDismissedAt   DateTime?
   onboardingModeledAt     DateTime?
+  onboardingEmailsSentAt      Json?     // { day3: ISOString | null, day7: ISOString | null }
+  onboardingEmailsOptedOutAt  DateTime? // null = subscribed, date = unsubscribed
   deletedAt             DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -56,6 +58,12 @@ model SavedDeal {
   vacancyPercent         Int       @default(5)
   cashInvested           Decimal?  @db.Decimal(14, 2)
   notes                  String?
+  bedrooms               Int?
+  bathrooms              Decimal?  @db.Decimal(4, 2)
+  squareFeet             Int?
+  propertyType           String?
+  marketRent             Decimal?  @db.Decimal(12, 2)
+  marketRentAsOf         DateTime? @db.Date
   createdAt              DateTime  @default(now())
   updatedAt              DateTime  @updatedAt
 
@@ -84,8 +92,8 @@ model Property {
   unitRents              Json?    // array of numbers, one per unit. Single-family: [total]. Multi-family: [1500, 1900]. Total = sum.
   bedrooms               Int?
   bathrooms              Decimal? @db.Decimal(4, 2)
-  unitMix                String?  // e.g. "2BR, 3BR" for multi-family
-  squareFeet             Int?     // optional; improves RentCast AVM when set
+  squareFeet             Int?
+  hasMortgage            Boolean?
   currentMonthlyExpenses Decimal  @db.Decimal(12, 2)
   vacancyPercent         Int      @default(5) // 0-100, expected vacancy; reduces rent in cash flow
   cashInvested           Decimal? @db.Decimal(14, 2)
