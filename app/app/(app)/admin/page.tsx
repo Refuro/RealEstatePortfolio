@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
 import { LocalDateTime } from "@/components/local-date-time";
 import { AdminUserTierSelect } from "./admin-user-tier-select";
+import { AdminEmailTools } from "./admin-email-tools";
 
 export const dynamic = "force-dynamic";
 
@@ -310,6 +311,8 @@ export default async function AdminPage() {
           </div>
         </section>
       )}
+
+      <AdminEmailTools isOptedOut={user.onboardingEmailsOptedOutAt !== null} />
 
       <section className="mt-8">
         <h2 className="text-sm font-medium text-muted mb-4">

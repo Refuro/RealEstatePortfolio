@@ -12,10 +12,11 @@ type PropertySquareFeetFieldProps = {
   onChange: (value: string) => void;
   disabled?: boolean;
   className?: string;
+  inputClassName?: string;
 };
 
 /**
- * Optional living area for RentCast AVM (`squareFootage` query param).
+ * Optional living area — shown on property details page.
  */
 export function PropertySquareFeetField({
   id = "squareFeet",
@@ -24,6 +25,7 @@ export function PropertySquareFeetField({
   onChange,
   disabled,
   className = "",
+  inputClassName,
 }: PropertySquareFeetFieldProps) {
   return (
     <div className={className}>
@@ -41,10 +43,10 @@ export function PropertySquareFeetField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className={PROPERTY_INPUT_CLASS}
+        className={inputClassName ? `${PROPERTY_INPUT_CLASS} ${inputClassName}` : PROPERTY_INPUT_CLASS}
       />
       <p className="mt-0.5 text-xs text-muted">
-        Improves rent and value estimates when using &quot;Estimate&quot; buttons.
+        Shown on your property details page
       </p>
     </div>
   );

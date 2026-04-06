@@ -55,8 +55,6 @@ export async function POST(
         zipCode: property.zipCode,
         propertyType: property.propertyType as "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment",
         units: property.units,
-        bedrooms: property.bedrooms ?? undefined,
-        bathrooms: property.bathrooms != null ? Number(property.bathrooms) : undefined,
       },
       apiKey
     );

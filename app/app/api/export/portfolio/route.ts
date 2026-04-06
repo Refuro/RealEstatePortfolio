@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import {
   checkRateLimit,
@@ -35,30 +36,31 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const identifier = getRateLimitIdentifier(user.id, request);
-  const { allowed } = await checkRateLimit(identifier, "export:portfolio");
-  if (!allowed) {
-    return NextResponse.json(
-      { error: "Rate limit exceeded. Try again later." },
-      { status: 429 }
-    );
-  }
+  try {
+    const identifier = getRateLimitIdentifier(user.id, request);
+    const { allowed } = await checkRateLimit(identifier, "export:portfolio");
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "Rate limit exceeded. Try again later." },
+        { status: 429 }
+      );
+    }
 
-  const tier = getEffectiveTier(user);
-  const propertyLimit = getPropertyLimit(tier);
-  const propertyCountTotal = await prisma.property.count({
-    where: { userId: user.id },
-  });
-  const properties = await prisma.property.findMany({
-    where: { userId: user.id },
-    include: { mortgages: true },
-    orderBy: { updatedAt: "desc" },
-    take: propertyLimit,
-  });
-  const propertyCountIncluded = properties.length;
-  const truncated = propertyCountTotal > propertyCountIncluded;
+    const tier = getEffectiveTier(user);
+    const propertyLimit = getPropertyLimit(tier);
+    const propertyCountTotal = await prisma.property.count({
+      where: { userId: user.id },
+    });
+    const properties = await prisma.property.findMany({
+      where: { userId: user.id },
+      include: { mortgages: true },
+      orderBy: { updatedAt: "desc" },
+      take: propertyLimit,
+    });
+    const propertyCountIncluded = properties.length;
+    const truncated = propertyCountTotal > propertyCountIncluded;
 
-  const headers = [
+    const headers = [
     "address",
     "nickname",
     "property type",
@@ -93,12 +95,12 @@ export async function GET(request: NextRequest) {
     "LTV",
   ];
 
-  const rows: string[][] = [];
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
-    | "proportional"
-    | "full_liability";
+    const rows: string[][] = [];
+    const displayMode = (user.ownershipDisplayMode ?? "proportional") as
+      | "proportional"
+      | "full_liability";
 
-  for (const p of properties) {
+    for (const p of properties) {
     const orderedMortgages = [...p.mortgages].sort(
       (a, b) => a.createdAt.getTime() - b.createdAt.getTime()
     );
@@ -212,20 +214,27 @@ export async function GET(request: NextRequest) {
     ]);
   }
 
-  const csv =
-    headers.join(",") + "\n" + rows.map((r) => r.join(",")).join("\n");
+    const csv =
+      headers.join(",") + "\n" + rows.map((r) => r.join(",")).join("\n");
 
-  await recordRateLimit(identifier, "export:portfolio");
+    await recordRateLimit(identifier, "export:portfolio");
 
-  return new NextResponse(csv, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/csv",
-      "Content-Disposition": 'attachment; filename="portfolio-export.csv"',
-      "X-Veld-Property-Count-Total": String(propertyCountTotal),
-      "X-Veld-Property-Count-Included": String(propertyCountIncluded),
-      "X-Veld-Property-Limit": String(propertyLimit),
-      "X-Veld-Property-Slice-Truncated": truncated ? "true" : "false",
-    },
-  });
+    return new NextResponse(csv, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/csv",
+        "Content-Disposition": 'attachment; filename="portfolio-export.csv"',
+        "X-Veld-Property-Count-Total": String(propertyCountTotal),
+        "X-Veld-Property-Count-Included": String(propertyCountIncluded),
+        "X-Veld-Property-Limit": String(propertyLimit),
+        "X-Veld-Property-Slice-Truncated": truncated ? "true" : "false",
+      },
+    });
+  } catch (err) {
+    console.error("Portfolio export error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Portfolio export failed"), {
+      tags: { route: "api/export/portfolio", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to export portfolio" }, { status: 500 });
+  }
 }

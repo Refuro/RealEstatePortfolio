@@ -16,12 +16,6 @@ export type RentCastParams = {
   addressLine2?: string;
   propertyType?: "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment";
   units?: number;
-  /** Bedrooms (single-family) or typical unit bedrooms (multi-family). RentCast supported. */
-  bedrooms?: number;
-  /** Bathrooms (single-family) or typical unit bathrooms (multi-family). RentCast supported. */
-  bathrooms?: number;
-  /** Living area; RentCast query param `squareFootage` — improves AVM accuracy. */
-  squareFootage?: number;
 };
 
 export type RentCastResult = { rent: number };
@@ -67,15 +61,6 @@ export async function fetchRentEstimate(
   }
   if (params.units != null && params.units > 1) {
     searchParams.set("units", String(params.units));
-  }
-  if (params.bedrooms != null && params.bedrooms >= 1) {
-    searchParams.set("bedrooms", String(params.bedrooms));
-  }
-  if (params.bathrooms != null && params.bathrooms >= 0.5) {
-    searchParams.set("bathrooms", String(params.bathrooms));
-  }
-  if (params.squareFootage != null && params.squareFootage >= 100) {
-    searchParams.set("squareFootage", String(Math.round(params.squareFootage)));
   }
 
   const url = `${RENTCAST_RENT_BASE}?${searchParams.toString()}`;
@@ -138,11 +123,16 @@ export type ValueEstimateParams = {
   zipCode: string;
   addressLine2?: string;
   propertyType?: "single_family" | "condo" | "townhouse" | "manufactured" | "multi_family" | "apartment";
-  /** RentCast `squareFootage` when available. */
-  squareFootage?: number;
 };
 
-export type ValueEstimateResult = { value: number };
+export type ValueEstimateResult = {
+  value: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  squareFootage?: number;
+  lastSalePrice?: number;
+  lastSaleDate?: string;
+};
 
 /**
  * Fetch value estimate from RentCast AVM API.
@@ -163,9 +153,6 @@ export async function fetchValueEstimate(
   });
   if (params.propertyType) {
     searchParams.set("propertyType", toRentCastPropertyType(params.propertyType));
-  }
-  if (params.squareFootage != null && params.squareFootage >= 100) {
-    searchParams.set("squareFootage", String(Math.round(params.squareFootage)));
   }
 
   const url = `${RENTCAST_VALUE_BASE}?${searchParams.toString()}`;
@@ -208,7 +195,42 @@ export async function fetchValueEstimate(
     if (typeof value !== "number" || !Number.isFinite(value) || value < 0) {
       throw new Error("Value estimate unavailable for this address.");
     }
-    return { value };
+    const bedrooms =
+      typeof data.bedrooms === "number" &&
+      Number.isFinite(data.bedrooms) &&
+      data.bedrooms >= 1
+        ? data.bedrooms
+        : undefined;
+    const bathrooms =
+      typeof data.bathrooms === "number" &&
+      Number.isFinite(data.bathrooms) &&
+      data.bathrooms >= 0.5
+        ? data.bathrooms
+        : undefined;
+    const squareFootage =
+      typeof data.squareFootage === "number" &&
+      Number.isFinite(data.squareFootage) &&
+      data.squareFootage >= 100
+        ? Math.round(data.squareFootage)
+        : undefined;
+
+    const sub = (data.subjectProperty ?? data) as Record<string, unknown>;
+    const rawSalePrice = sub.lastSalePrice ?? data.lastSalePrice;
+    const lastSalePrice =
+      typeof rawSalePrice === "number" &&
+      Number.isFinite(rawSalePrice) &&
+      rawSalePrice > 0
+        ? rawSalePrice
+        : undefined;
+    const rawSaleDate = sub.lastSaleDate ?? data.lastSaleDate;
+    const lastSaleDate =
+      typeof rawSaleDate === "string" &&
+      rawSaleDate.length >= 10 &&
+      !Number.isNaN(Date.parse(rawSaleDate))
+        ? rawSaleDate
+        : undefined;
+
+    return { value, bedrooms, bathrooms, squareFootage, lastSalePrice, lastSaleDate };
   } catch (err) {
     clearTimeout(timeoutId);
     if (err instanceof Error) {

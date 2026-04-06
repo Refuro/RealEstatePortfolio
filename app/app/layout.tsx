@@ -157,7 +157,6 @@ export default function RootLayout({
       <html lang="en">
         <head>
           <meta name="apple-mobile-web-app-title" content="Veld" />
-          <link rel="preconnect" href="https://api.rentcast.io" />
           {process.env.NEXT_PUBLIC_CLERK_PRECONNECT_ORIGIN ? (
             <link
               rel="preconnect"

@@ -446,6 +446,9 @@ function PayoffInsightPerMortgage({
                             into the loan changes these figures.
                           </p>
                         ) : null}
+                        <p className="text-xs text-muted">
+                          These refinance numbers are educational estimates. Confirm terms with your lender.
+                        </p>
                         {propertyId && (
                           <Link
                             href={`/refinance?propertyId=${propertyId}`}

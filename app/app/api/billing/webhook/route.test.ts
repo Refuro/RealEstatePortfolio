@@ -8,9 +8,10 @@ const getStripe = vi.fn(() => ({
   subscriptions: { retrieve: vi.fn() },
 }));
 
-const { prismaMock, captureServerEventMock, captureMessageMock } = vi.hoisted(() => {
+const { prismaMock, captureServerEventMock, captureMessageMock, captureExceptionMock } = vi.hoisted(() => {
   const captureServerEventMock = vi.fn().mockResolvedValue(undefined);
   const captureMessageMock = vi.fn();
+  const captureExceptionMock = vi.fn();
   const prismaMock = {
     subscription: {
       upsert: vi.fn().mockResolvedValue({}),
@@ -27,7 +28,7 @@ const { prismaMock, captureServerEventMock, captureMessageMock } = vi.hoisted(()
     },
     $transaction: vi.fn(),
   };
-  return { prismaMock, captureServerEventMock, captureMessageMock };
+  return { prismaMock, captureServerEventMock, captureMessageMock, captureExceptionMock };
 });
 
 vi.mock("@/lib/db", () => ({
@@ -49,7 +50,7 @@ vi.mock("@/lib/stripe-config", () => ({
 
 vi.mock("@sentry/nextjs", () => ({
   captureMessage: captureMessageMock,
-  captureException: vi.fn(),
+  captureException: captureExceptionMock,
 }));
 
 function postWebhook(body: string, signature: string | null) {
@@ -215,5 +216,18 @@ describe("POST /api/billing/webhook", () => {
         level: "warning",
       })
     );
+  });
+
+  it("returns 500 and reports to Sentry when webhook processing throws", async () => {
+    prismaMock.user.findFirst.mockResolvedValue({ id: "user-cuid-1" });
+    prismaMock.$transaction.mockRejectedValue(new Error("db offline"));
+    constructEvent.mockReturnValue(subscriptionUpdatedEvent());
+
+    const { POST } = await import("./route");
+    const res = await POST(postWebhook("{}", "sig_ok"));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/Webhook processing failed/i);
+    expect(captureExceptionMock).toHaveBeenCalled();
   });
 });

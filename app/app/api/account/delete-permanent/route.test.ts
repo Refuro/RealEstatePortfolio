@@ -35,6 +35,10 @@ const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
   recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
 }));
 
+const { cancelSubscriptionMock } = vi.hoisted(() => ({
+  cancelSubscriptionMock: vi.fn().mockResolvedValue({}),
+}));
+
 vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
 }));
@@ -53,7 +57,7 @@ vi.mock("@/lib/rate-limit", () => ({
 
 vi.mock("@/lib/stripe-config", () => ({
   getStripe: vi.fn(() => ({
-    subscriptions: { cancel: vi.fn().mockResolvedValue({}) },
+    subscriptions: { cancel: (...args: unknown[]) => cancelSubscriptionMock(...args) },
   })),
 }));
 
@@ -72,6 +76,7 @@ describe("POST /api/account/delete-permanent", () => {
     getActiveAppUserMock.mockResolvedValue(mockActiveUser);
     prismaMock.subscription.findUnique.mockResolvedValue(null);
     verifyPasswordMock.mockResolvedValue(undefined);
+    cancelSubscriptionMock.mockResolvedValue({});
   });
 
   it("returns 401 when there is no active user", async () => {
@@ -116,5 +121,27 @@ describe("POST /api/account/delete-permanent", () => {
     });
     expect(deleteUserMock).toHaveBeenCalledWith(mockActiveUser.clerkUserId);
     expect(recordRateLimitMock).toHaveBeenCalled();
+  });
+
+  it("returns 503 and does not delete user when Stripe cancel fails", async () => {
+    getActiveAppUserMock.mockResolvedValue({
+      ...mockActiveUser,
+      stripeCustomerId: "cus_test",
+    });
+    prismaMock.subscription.findUnique.mockResolvedValue({
+      id: "sub-1",
+      userId: mockActiveUser.id,
+      stripeSubscriptionId: "stripe-sub-1",
+      status: "active",
+    });
+    cancelSubscriptionMock.mockRejectedValue(new Error("stripe down"));
+
+    const { POST } = await import("./route");
+    const res = await POST(
+      postJson({ password: "correcthorse", confirmText: "DELETE" })
+    );
+    expect(res.status).toBe(503);
+    expect(prismaMock.user.delete).not.toHaveBeenCalled();
+    expect(deleteUserMock).not.toHaveBeenCalled();
   });
 });

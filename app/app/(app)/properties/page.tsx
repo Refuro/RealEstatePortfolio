@@ -20,6 +20,7 @@ import {
   type PortfolioPropertyInput,
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { Building2, Search } from "lucide-react";
 import { PropertiesFiltersMobile } from "./properties-filters-mobile";
 
@@ -108,7 +109,8 @@ type PropertiesFilter =
   | "needs_attention"
   | "no_mortgage"
   | "stale_benchmark"
-  | "negative_cashflow";
+  | "negative_cashflow"
+  | "incomplete_profile";
 type PropertiesSort = "updated" | "worst_cashflow";
 
 const FILTER_OPTIONS: { key: PropertiesFilter; label: string }[] = [
@@ -117,6 +119,7 @@ const FILTER_OPTIONS: { key: PropertiesFilter; label: string }[] = [
   { key: "no_mortgage", label: "No mortgage" },
   { key: "stale_benchmark", label: "Stale benchmark" },
   { key: "negative_cashflow", label: "Negative cash flow" },
+  { key: "incomplete_profile", label: "Incomplete profile" },
 ];
 
 const SORT_OPTIONS: { key: PropertiesSort; label: string }[] = [
@@ -223,7 +226,18 @@ export default async function PropertiesPage({
       benchmarkEligibility === "benchmark_stale";
     const noMortgage = p.mortgages.length === 0;
     const negativeCashFlow = metrics.monthlyCashFlow < 0;
-    const needsAttention = noMortgage || benchmarkStale || negativeCashFlow;
+    const completeness = getPropertyCompleteness({
+      purchasePrice: Number(p.purchasePrice),
+      currentEstimatedValue: Number(p.currentEstimatedValue),
+      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+      mortgageCount: p.mortgages.length,
+      hasMortgage: p.hasMortgage ?? null,
+      bedrooms: p.bedrooms ?? null,
+      bathrooms: p.bathrooms != null ? Number(p.bathrooms) : null,
+      squareFeet: p.squareFeet ?? null,
+    });
+    const incompleteProfile = !completeness.isComplete;
+    const needsAttention = noMortgage || benchmarkStale || negativeCashFlow || incompleteProfile;
 
     return {
       property: p,
@@ -232,6 +246,7 @@ export default async function PropertiesPage({
       noMortgage,
       benchmarkStale,
       negativeCashFlow,
+      incompleteProfile,
       needsAttention,
     };
   });
@@ -246,6 +261,8 @@ export default async function PropertiesPage({
         return card.benchmarkStale;
       case "negative_cashflow":
         return card.negativeCashFlow;
+      case "incomplete_profile":
+        return card.incompleteProfile;
       default:
         return true;
     }
@@ -263,12 +280,20 @@ export default async function PropertiesPage({
       <div className="mb-6 space-y-3">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold text-foreground">Properties</h1>
-          <Link
-            href="/properties/new"
-            className="w-fit rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add property
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link
+              href="/properties/new"
+              className="w-fit rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            >
+              Add property
+            </Link>
+            <Link
+              href="/properties/new?mode=quick"
+              className="text-sm text-muted hover:text-foreground"
+            >
+              Quick add
+            </Link>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link
@@ -436,6 +461,7 @@ export default async function PropertiesPage({
                       </div>
                       <div className="flex flex-wrap items-center gap-1.5">
                         <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
+                        {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
                         {card.noMortgage && <InsightTag label="No mortgage" />}
                         {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
                         {card.negativeCashFlow && (
@@ -531,6 +557,7 @@ export default async function PropertiesPage({
                         <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
                       </div>
                       <div className="mt-2 flex min-h-6 flex-wrap content-start gap-1.5">
+                        {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
                         {card.noMortgage && <InsightTag label="No mortgage" />}
                         {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
                         {card.negativeCashFlow && (

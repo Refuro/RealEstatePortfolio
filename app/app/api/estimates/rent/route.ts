@@ -25,16 +25,6 @@ const rentEstimateQuerySchema = z.object({
     .enum(["single_family", "condo", "townhouse", "manufactured", "multi_family", "apartment"])
     .optional(),
   units: z.coerce.number().int().min(1).max(999).optional(),
-  bedrooms: z.coerce.number().int().min(1).max(10).optional(),
-  bathrooms: z.coerce.number().min(0.5).max(10).optional(),
-  squareFootage: z.preprocess(
-    (v) => {
-      if (v === "" || v === undefined || v === null) return undefined;
-      const n = typeof v === "number" ? v : parseInt(String(v), 10);
-      return Number.isFinite(n) ? n : undefined;
-    },
-    z.number().int().min(100).max(500_000).optional()
-  ),
   propertyId: z.string().optional(),
 });
 
@@ -67,9 +57,6 @@ export async function GET(req: NextRequest) {
     zipCode: searchParams.get("zipCode") ?? "",
     propertyType: searchParams.get("propertyType") ?? undefined,
     units: searchParams.get("units") ?? undefined,
-    bedrooms: searchParams.get("bedrooms") ?? undefined,
-    bathrooms: searchParams.get("bathrooms") ?? undefined,
-    squareFootage: searchParams.get("squareFootage") ?? undefined,
     propertyId: searchParams.get("propertyId") ?? undefined,
   });
 
@@ -94,9 +81,6 @@ export async function GET(req: NextRequest) {
         zipCode: parsed.data.zipCode,
         propertyType: parsed.data.propertyType,
         units: parsed.data.units,
-        bedrooms: parsed.data.bedrooms,
-        bathrooms: parsed.data.bathrooms,
-        squareFootage: parsed.data.squareFootage,
       },
       apiKey
     );

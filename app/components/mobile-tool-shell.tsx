@@ -81,7 +81,7 @@ export function MobileToolShell({
         )}
       </div>
       {footer ? (
-        <div className="border-t border-border/70 px-4 pt-4 pb-[calc(1.5rem+env(safe-area-inset-bottom,0px))]">
+        <div className="border-t border-border/70 px-4 pt-4 pb-[calc(4rem+env(safe-area-inset-bottom,0px)+1.5rem)]">
           {footer}
         </div>
       ) : null}

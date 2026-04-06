@@ -39,6 +39,12 @@ function serializeDeal(deal: {
   vacancyPercent: number;
   cashInvested: { toString(): string } | null;
   notes: string | null;
+  bedrooms: number | null;
+  bathrooms: { toString(): string } | null;
+  squareFeet: number | null;
+  propertyType: string | null;
+  marketRent: { toString(): string } | null;
+  marketRentAsOf: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -86,6 +92,12 @@ function serializeDeal(deal: {
     vacancyPercent: deal.vacancyPercent ?? 5,
     cashInvested: deal.cashInvested?.toString() ?? null,
     notes: deal.notes,
+    bedrooms: deal.bedrooms,
+    bathrooms: deal.bathrooms != null ? parseFloat(deal.bathrooms.toString()) : null,
+    squareFeet: deal.squareFeet,
+    propertyType: deal.propertyType,
+    marketRent: deal.marketRent?.toString() ?? null,
+    marketRentAsOf: deal.marketRentAsOf ? deal.marketRentAsOf.toISOString().slice(0, 10) : null,
     createdAt: deal.createdAt.toISOString(),
     updatedAt: deal.updatedAt.toISOString(),
     metrics,
@@ -174,6 +186,12 @@ export async function PATCH(
   if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested ? parseFloat(data.cashInvested) : null;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
+  if (data.bedrooms !== undefined) updatePayload.bedrooms = data.bedrooms;
+  if (data.bathrooms !== undefined) updatePayload.bathrooms = data.bathrooms;
+  if (data.squareFeet !== undefined) updatePayload.squareFeet = data.squareFeet;
+  if (data.propertyType !== undefined) updatePayload.propertyType = data.propertyType;
+  if (data.marketRent !== undefined) updatePayload.marketRent = data.marketRent ? parseFloat(data.marketRent) : null;
+  if (data.marketRentAsOf !== undefined) updatePayload.marketRentAsOf = data.marketRentAsOf ? new Date(data.marketRentAsOf) : null;
 
   try {
     const deal = await prisma.savedDeal.update({

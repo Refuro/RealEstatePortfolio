@@ -208,7 +208,7 @@ Landing / calculator / competitor page → Sign up (free, no card) → Add first
 4. Scenario modeling — What-if sliders for rent, value, mortgage. See how changes affect returns.
 
 ### Live how it works
-1. Add your properties — Enter purchase price, estimated value, rent, expenses, mortgage. ~2 min/property.
+1. Add your properties — Enter purchase price, estimated value, rent, expenses, mortgage. A few minutes per property.
 2. See your portfolio clearly — Equity, cash flow, cap rate, LTV in one dashboard.
 3. Analyze and model — Run deal analyses, model what-ifs, simulate mortgage payoff.
 
@@ -216,7 +216,7 @@ Landing / calculator / competitor page → Sign up (free, no card) → Add first
 
 ## Known Copy Issues (fix these)
 
-- **"60 seconds" vs "2 minutes" inconsistency** — Hero trust line says 60 seconds; onboarding modal says 2 minutes; How It Works says 2 min/property. Pick one realistic number and make it consistent everywhere.
+- ~~**"60 seconds" vs "2 minutes" inconsistency"**~~ — **Resolved 2026-04-05.** Two-tier decision: marketing pages (hero trust line, competitor pages, pricing cards, LP) keep "60 seconds" — this is accurate for the quick-add path (Phase 2, Unit 7 of `docs/plans/2026-04-05-onboarding-activation-rollout.md`) and is a legitimate minimum-viable-path marketing claim. In-product onboarding modal uses "5 minutes" because it sets expectations for the full wizard the user is about to enter. "How It Works" step updated to "a few minutes per property" to match reality.
 - **Value prop headings are features, not outcomes** — "Replace spreadsheets" is the strongest. Others could be more outcome-oriented.
 - **"Everything your portfolio needs"** (value props section h2) is generic — could be sharper.
 

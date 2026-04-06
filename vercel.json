@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/onboarding-emails",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/rate-limit-cleanup",
+      "schedule": "20 * * * *"
+    }
+  ]
+}
