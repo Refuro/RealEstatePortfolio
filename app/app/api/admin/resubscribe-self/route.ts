@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { Prisma } from "@prisma/client";
 import { getActiveAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -9,13 +8,12 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
   }
 
-  await prisma.user.update({
-    where: { id: admin.id },
-    data: {
-      onboardingEmailsOptedOutAt: null,
-      onboardingEmailsSentAt: Prisma.JsonNull,
-    },
-  });
+  await prisma.$executeRaw`
+    UPDATE "User"
+    SET "onboardingEmailsOptedOutAt" = NULL,
+        "onboardingEmailsSentAt" = NULL
+    WHERE "id" = ${admin.id}
+  `;
 
   console.info(
     JSON.stringify({
