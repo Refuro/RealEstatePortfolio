@@ -2223,7 +2223,6 @@ export function AddPropertyWizard({
 
   if (quickAdd) {
     return (
-      <div className="pb-[calc(4rem+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-0">
       <form onSubmit={handleFormSubmit} className="rounded-lg border border-border bg-card p-6">
         {error && (
           <div className="mb-4 rounded-md px-4 py-2 text-sm text-negative">
@@ -2525,7 +2524,6 @@ export function AddPropertyWizard({
           </button>
         </div>
       </form>
-      </div>
     );
   }
 

@@ -279,7 +279,7 @@ export function AppLayoutClient({
 
       {/* Main content + footer */}
       <div className="flex min-w-0 flex-1 flex-col">
-        <main className="app-safe-area-bottom flex-1 overflow-auto p-4 pb-[calc(4rem+env(safe-area-inset-bottom))] pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
+        <main className="flex-1 overflow-auto p-4 pb-[calc(4rem+1.5rem+env(safe-area-inset-bottom))] pt-[calc(3.5rem+env(safe-area-inset-top,0px)+1rem)] md:p-6 md:pt-6">
           <div className="mx-auto max-w-4xl xl:max-w-6xl 2xl:max-w-7xl space-y-4">
             {bannerProps && (
               <>

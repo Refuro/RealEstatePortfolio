@@ -81,7 +81,7 @@ export default async function EditPropertyPage({
           ? "Complete the missing fields below to unlock full portfolio metrics."
           : "Update location, purchase & value, income, mortgages, and notes. Use the workspaces for modeling and refinance scenarios."}
       </p>
-      <div className="mt-6 space-y-8 pb-[calc(4rem+env(safe-area-inset-bottom,0px)+1.5rem)] md:pb-0">
+      <div className="mt-6 space-y-8">
         <PropertyForm
           initialIsIncomplete={initialIsIncomplete}
           mortgageCount={mortgages.length}
