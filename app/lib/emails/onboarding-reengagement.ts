@@ -22,6 +22,83 @@ function getAppBaseUrl(): string {
 // Email copy
 // ---------------------------------------------------------------------------
 
+function buildHtml(
+  bodyContent: string,
+  ctaText: string,
+  ctaUrl: string,
+  unsubscribeUrl: string
+): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Veld Portfolio</title>
+</head>
+<body style="margin:0;padding:0;background-color:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background-color:#f5f5f4;padding:40px 16px;">
+    <tr>
+      <td align="center">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:520px;">
+
+          <!-- Logo / wordmark -->
+          <tr>
+            <td style="padding-bottom:24px;">
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="vertical-align:middle;padding-right:8px;">
+                    <img src="https://veldportfolio.com/assets/Veld_Logo_New.svg"
+                         alt="Veld"
+                         width="22"
+                         height="22"
+                         style="display:block;width:22px;height:22px;" />
+                  </td>
+                  <td style="vertical-align:middle;">
+                    <span style="font-size:15px;font-weight:600;color:#1c1917;letter-spacing:-0.2px;">Veld Portfolio</span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <!-- Card -->
+          <tr>
+            <td style="background-color:#ffffff;border-radius:12px;padding:40px 36px;border:1px solid #e7e5e4;">
+
+              <!-- Body copy -->
+              <p style="margin:0 0 28px 0;font-size:16px;line-height:26px;color:#292524;">${bodyContent}</p>
+
+              <!-- CTA button -->
+              <table role="presentation" cellspacing="0" cellpadding="0">
+                <tr>
+                  <td style="border-radius:8px;background-color:#1c1917;">
+                    <a href="${ctaUrl}"
+                       style="display:inline-block;padding:12px 24px;font-size:14px;font-weight:600;color:#ffffff;text-decoration:none;letter-spacing:-0.1px;">${ctaText}</a>
+                  </td>
+                </tr>
+              </table>
+
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding-top:24px;">
+              <p style="margin:0;font-size:12px;color:#a8a29e;line-height:18px;">
+                Veld Portfolio &nbsp;&middot;&nbsp;
+                <a href="${unsubscribeUrl}" style="color:#a8a29e;text-decoration:underline;">Unsubscribe</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 export const day3Email = {
   subject: "Your Veld dashboard is ready",
   buildText: (unsubscribeUrl: string, baseUrl: string) =>
@@ -33,6 +110,13 @@ ${baseUrl}/properties/new?mode=quick
 —
 Veld Portfolio
 Unsubscribe: ${unsubscribeUrl}`.trim(),
+  buildHtml: (unsubscribeUrl: string, baseUrl: string) =>
+    buildHtml(
+      "You signed up for Veld Portfolio but haven&rsquo;t added a property yet. Add one in under 5 minutes and start tracking equity, cash flow, and cap rate.",
+      "Add your first property",
+      `${baseUrl}/properties/new?mode=quick`,
+      unsubscribeUrl
+    ),
 };
 
 export const day7Email = {
@@ -46,6 +130,13 @@ ${baseUrl}/properties/new?mode=quick
 —
 Veld Portfolio
 Unsubscribe: ${unsubscribeUrl}`.trim(),
+  buildHtml: (unsubscribeUrl: string, baseUrl: string) =>
+    buildHtml(
+      "You&rsquo;re one property away from seeing your real estate portfolio in real time.",
+      "Add your first property",
+      `${baseUrl}/properties/new?mode=quick`,
+      unsubscribeUrl
+    ),
 };
 
 // ---------------------------------------------------------------------------
@@ -102,6 +193,7 @@ export async function sendOnboardingEmail(
   const baseUrl = getAppBaseUrl();
   const template = variant === "day3" ? day3Email : day7Email;
   const text = template.buildText(unsubscribeUrl, baseUrl);
+  const html = template.buildHtml(unsubscribeUrl, baseUrl);
 
   const resend = new Resend(resendKey);
   const { data, error } = await resend.emails.send({
@@ -109,6 +201,7 @@ export async function sendOnboardingEmail(
     to: [to],
     subject: template.subject,
     text,
+    html,
     headers: {
       "List-Unsubscribe": `<${unsubscribeUrl}>`,
       "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
