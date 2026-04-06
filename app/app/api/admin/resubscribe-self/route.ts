@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { getActiveAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 
@@ -12,7 +13,7 @@ export async function POST() {
     where: { id: admin.id },
     data: {
       onboardingEmailsOptedOutAt: null,
-      onboardingEmailsSentAt: null,
+      onboardingEmailsSentAt: Prisma.JsonNull,
     },
   });
 
