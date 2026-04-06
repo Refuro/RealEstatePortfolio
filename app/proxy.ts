@@ -22,9 +22,12 @@ const isPublicRoute = createRouteMatcher([
   "/changelog",
   "/contact",
   "/api/billing/webhook",
+  "/api/cron/onboarding-emails",
+  "/api/cron/rate-limit-cleanup",
   "/api/contact",
   "/api/csp-report",
   "/api/health",
+  "/api/unsubscribe",
 ]);
 
 export default clerkMiddleware(async (auth, req) => {

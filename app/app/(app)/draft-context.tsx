@@ -38,6 +38,8 @@ function useModalFocus(open: boolean, onClose: () => void, containerRef: React.R
   }, [open, onClose]);
 }
 import { usePathname, useRouter } from "next/navigation";
+import { captureClientEvent } from "@/lib/analytics-client";
+import { AnalyticsEvents } from "@/lib/analytics-events";
 
 const STORAGE_KEY = "add-property-wizard-draft";
 
@@ -69,6 +71,7 @@ export type WizardData = {
 export type DraftPayload = {
   data: WizardData;
   savedAt: string;
+  currentStep?: number;
 };
 
 export function hasAnyWizardData(data: {
@@ -143,10 +146,11 @@ type DraftContextValue = {
   /** Increments when user chooses &quot;Start fresh&quot; on restore modal — add-property form resets + scroll top. */
   startFreshKey: number;
   setHasDraft: (v: boolean) => void;
-  saveDraft: (data: WizardData) => void;
+  saveDraft: (data: WizardData, currentStep?: number) => void;
   clearDraft: () => void;
   navigateTo: (href: string) => void;
   registerWizardGetData: (getData: (() => WizardData) | null) => void;
+  registerWizardGetStep: (getStep: (() => number) | null) => void;
 };
 
 const DraftContext = createContext<DraftContextValue | null>(null);
@@ -169,6 +173,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   const [restoreModal, setRestoreModal] = useState<DraftPayload | null>(null);
   const [startFreshKey, setStartFreshKey] = useState(0);
   const wizardGetDataRef = useRef<(() => WizardData) | null>(null);
+  const wizardGetStepRef = useRef<(() => number) | null>(null);
   const leaveModalRef = useRef<HTMLDivElement>(null);
   const restoreModalRef = useRef<HTMLDivElement>(null);
 
@@ -180,10 +185,11 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     setHasDraftState(v);
   }, []);
 
-  const saveDraft = useCallback((data: WizardData) => {
+  const saveDraft = useCallback((data: WizardData, currentStep?: number) => {
     const payload: DraftPayload = {
       data,
       savedAt: new Date().toISOString(),
+      ...(currentStep != null && { currentStep }),
     };
     saveDraftToStorage(payload);
     setDraftData(payload);
@@ -221,15 +227,9 @@ export function DraftProvider({ children }: { children: ReactNode }) {
       if (action === "discard") clearDraft();
       if (action === "save") {
         const currentData = wizardGetDataRef.current?.();
+        const currentStep = wizardGetStepRef.current?.();
         if (currentData) {
-          const payload: DraftPayload = {
-            data: currentData,
-            savedAt: new Date().toISOString(),
-          };
-          saveDraftToStorage(payload);
-          setDraftData(payload);
-          setSavedAt(payload.savedAt);
-          setHasDraftState(true);
+          saveDraft(currentData, currentStep);
         } else if (draftData) {
           saveDraftToStorage(draftData);
         }
@@ -238,7 +238,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
       }
       router.push(href);
     },
-    [leaveModal, draftData, router, clearDraft]
+    [leaveModal, draftData, router, clearDraft, saveDraft]
   );
 
   const handleRestoreChoice = useCallback(
@@ -272,6 +272,9 @@ export function DraftProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
       if (pathname === "/properties/new" && hasDraftRef.current) {
+        captureClientEvent(AnalyticsEvents.WIZARD_ABANDONED, {
+          has_draft: true,
+        });
         e.preventDefault();
       }
     };
@@ -281,6 +284,10 @@ export function DraftProvider({ children }: { children: ReactNode }) {
 
   const registerWizardGetData = useCallback((getData: (() => WizardData) | null) => {
     wizardGetDataRef.current = getData;
+  }, []);
+
+  const registerWizardGetStep = useCallback((getStep: (() => number) | null) => {
+    wizardGetStepRef.current = getStep;
   }, []);
 
   const value: DraftContextValue = {
@@ -293,6 +300,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
     clearDraft,
     navigateTo,
     registerWizardGetData,
+    registerWizardGetStep,
   };
 
   return (

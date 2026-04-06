@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { formatCurrency } from "@/lib/format-currency";
+import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { BenchmarkRefreshButton } from "../benchmark-refresh-button";
 import { PropertyHero } from "./property-hero";
@@ -24,6 +25,18 @@ export function OverviewTabContent({
   showRefreshBenchmark,
 }: OverviewTabContentProps) {
   const hasMortgage = mortgageData.length > 0;
+  const completeness = getPropertyCompleteness({
+    purchasePrice: Number(property.purchasePrice),
+    currentEstimatedValue: Number(property.currentEstimatedValue),
+    cashInvested: property.cashInvested,
+    mortgageCount: mortgageData.length,
+    hasMortgage: property.hasMortgage,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    squareFeet: property.squareFeet,
+  });
+  const hasAnyHomeProfileField =
+    property.bedrooms != null || property.bathrooms != null || property.squareFeet != null;
 
   const mortgageDataForHealth = mortgageData.map((m) => ({
     ...m,
@@ -37,6 +50,23 @@ export function OverviewTabContent({
       <div>
         <h2 className="text-base font-semibold text-foreground">Overview</h2>
       </div>
+
+      {!completeness.isComplete && (
+        <div className="rounded-lg bg-subtle/40 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            Complete these for full metrics
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {completeness.missingFields.join(", ")}
+          </p>
+          <Link
+            href={`/properties/${propertyId}/edit`}
+            className="mt-3 inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+          >
+            Complete details
+          </Link>
+        </div>
+      )}
 
       <PropertyHero nickname={property.nickname} address={address} />
 
@@ -127,6 +157,27 @@ export function OverviewTabContent({
             Purchased <span className="tabular-nums font-medium text-foreground">{formatCurrency(property.purchasePrice)}</span> ·{" "}
             <span className="tabular-nums font-medium text-foreground">{formatCurrency(totalRent)}</span>/mo rent ·{" "}
             <span className="tabular-nums font-medium text-foreground">{formatCurrency(property.currentMonthlyExpenses)}</span>/mo expenses
+          </div>
+          <div className="mt-3 rounded-lg bg-subtle/40 px-4 py-3 text-sm text-muted">
+            Home profile:{" "}
+            {hasAnyHomeProfileField ? (
+              <>
+                <span className="font-medium text-foreground">
+                  {property.bedrooms != null ? property.bedrooms : "—"}
+                </span>{" "}
+                bd ·{" "}
+                <span className="font-medium text-foreground tabular-nums">
+                  {property.bathrooms != null ? property.bathrooms : "—"}
+                </span>{" "}
+                ba ·{" "}
+                <span className="font-medium text-foreground tabular-nums">
+                  {property.squareFeet != null ? property.squareFeet.toLocaleString() : "—"}
+                </span>{" "}
+                sqft
+              </>
+            ) : (
+              <span className="font-medium text-foreground">Not set</span>
+            )}
           </div>
           <MobileCollapsible label="Supporting metrics">
             <div className="mt-3 rounded-md bg-subtle/40 px-3 py-3">

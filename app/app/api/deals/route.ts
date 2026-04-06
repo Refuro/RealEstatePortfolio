@@ -30,6 +30,12 @@ function serializeDeal(deal: {
   vacancyPercent: number;
   cashInvested: { toString(): string } | null;
   notes: string | null;
+  bedrooms: number | null;
+  bathrooms: { toString(): string } | null;
+  squareFeet: number | null;
+  propertyType: string | null;
+  marketRent: { toString(): string } | null;
+  marketRentAsOf: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }) {
@@ -77,6 +83,12 @@ function serializeDeal(deal: {
     vacancyPercent: deal.vacancyPercent ?? 5,
     cashInvested: deal.cashInvested?.toString() ?? null,
     notes: deal.notes,
+    bedrooms: deal.bedrooms,
+    bathrooms: deal.bathrooms != null ? parseFloat(deal.bathrooms.toString()) : null,
+    squareFeet: deal.squareFeet,
+    propertyType: deal.propertyType,
+    marketRent: deal.marketRent?.toString() ?? null,
+    marketRentAsOf: deal.marketRentAsOf ? deal.marketRentAsOf.toISOString().slice(0, 10) : null,
     createdAt: deal.createdAt.toISOString(),
     updatedAt: deal.updatedAt.toISOString(),
     metrics,
@@ -89,25 +101,33 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const dealLimit = getDealLimit(getEffectiveTier(user));
-  const dealCountTotal = await prisma.savedDeal.count({
-    where: { userId: user.id },
-  });
+  try {
+    const dealLimit = getDealLimit(getEffectiveTier(user));
+    const dealCountTotal = await prisma.savedDeal.count({
+      where: { userId: user.id },
+    });
 
-  const deals = await prisma.savedDeal.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-  });
+    const deals = await prisma.savedDeal.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+    });
 
-  const exceedsPlanUiCap = dealCountTotal > dealLimit;
+    const exceedsPlanUiCap = dealCountTotal > dealLimit;
 
-  return NextResponse.json(deals.map(serializeDeal), {
-    headers: {
-      "X-Veld-Deal-Count-Total": String(dealCountTotal),
-      "X-Veld-Plan-Deal-Limit": String(dealLimit),
-      "X-Veld-Deals-Exceeds-Plan-Ui-Cap": exceedsPlanUiCap ? "true" : "false",
-    },
-  });
+    return NextResponse.json(deals.map(serializeDeal), {
+      headers: {
+        "X-Veld-Deal-Count-Total": String(dealCountTotal),
+        "X-Veld-Plan-Deal-Limit": String(dealLimit),
+        "X-Veld-Deals-Exceeds-Plan-Ui-Cap": exceedsPlanUiCap ? "true" : "false",
+      },
+    });
+  } catch (err) {
+    console.error("Deals list error:", err);
+    Sentry.captureException(err instanceof Error ? err : new Error("Deals list failed"), {
+      tags: { route: "api/deals", userId: user.id },
+    });
+    return NextResponse.json({ error: "Failed to load deals" }, { status: 500 });
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -183,6 +203,12 @@ export async function POST(request: NextRequest) {
         vacancyPercent: data.vacancyPercent ?? 5,
         cashInvested: cashInvested ?? undefined,
         notes: data.notes?.trim() || null,
+        bedrooms: data.bedrooms ?? undefined,
+        bathrooms: data.bathrooms ?? undefined,
+        squareFeet: data.squareFeet ?? undefined,
+        propertyType: data.propertyType ?? undefined,
+        marketRent: data.marketRent ? parseFloat(data.marketRent) : undefined,
+        marketRentAsOf: data.marketRentAsOf ? new Date(data.marketRentAsOf) : undefined,
       },
     });
 

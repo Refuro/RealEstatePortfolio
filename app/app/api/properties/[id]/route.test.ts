@@ -66,7 +66,6 @@ const baseProperty = {
   unitRents: [2000],
   bedrooms: null,
   bathrooms: null,
-  unitMix: null,
   squareFeet: null,
   currentMonthlyExpenses: 500,
   vacancyPercent: 5,

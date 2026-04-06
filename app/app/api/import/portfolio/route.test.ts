@@ -75,7 +75,10 @@ function csvOneBadMortgageOneCleanRow() {
 
 /** Minimal shape for Prisma interactive transaction callback (import route only uses property + mortgage). */
 type ImportTransaction = {
-  property: { create: (args: unknown) => Promise<{ id: string }> };
+  property: {
+    create: (args: unknown) => Promise<{ id: string }>;
+    update: (args: unknown) => Promise<unknown>;
+  };
   mortgage: { create: (args: unknown) => Promise<unknown> };
 };
 
@@ -99,6 +102,7 @@ describe("POST /api/import/portfolio", () => {
         const tx = {
           property: {
             create: vi.fn().mockResolvedValue({ id: "new-prop-id" }),
+            update: vi.fn().mockResolvedValue({}),
           },
           mortgage: { create: vi.fn().mockResolvedValue({}) },
         };
@@ -201,5 +205,14 @@ describe("POST /api/import/portfolio", () => {
     ).toBe(true);
     expect(prismaMock.$transaction).toHaveBeenCalled();
     expect(recordRateLimitMock).toHaveBeenCalled();
+  });
+
+  it("returns 500 when import transaction fails", async () => {
+    prismaMock.$transaction.mockRejectedValue(new Error("db down"));
+    const { POST } = await import("./route");
+    const res = await POST(formRequestWithFile(minimalCsvOneRow()));
+    expect(res.status).toBe(500);
+    const data = await res.json();
+    expect(data.error).toMatch(/Import failed/i);
   });
 });

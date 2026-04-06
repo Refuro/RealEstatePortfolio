@@ -12,13 +12,17 @@ import { PropertyDetailTabs } from "./property-detail-tabs";
 
 export default async function PropertyDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ from?: string; tab?: string }>;
 }) {
   const user = await getAppUser();
   if (!user) return null;
 
   const { id } = await params;
+  const { from } = await searchParams;
+  const fromQuickAdd = from === "quick-add";
   const property = await prisma.property.findFirst({
     where: { id, userId: user.id },
     include: { mortgages: true },
@@ -101,7 +105,6 @@ export default async function PropertyDetailPage({
     units: property.units,
     bedrooms: property.bedrooms,
     bathrooms: property.bathrooms != null ? Number(property.bathrooms) : null,
-    unitMix: property.unitMix,
     squareFeet: property.squareFeet,
     purchasePrice: Number(property.purchasePrice),
     purchaseDate: property.purchaseDate,
@@ -115,6 +118,7 @@ export default async function PropertyDetailPage({
     notes: property.notes,
     marketRent: property.marketRent != null ? Number(property.marketRent) : null,
     marketRentAsOf: property.marketRentAsOf,
+    hasMortgage: property.hasMortgage ?? null,
     updatedAt: property.updatedAt,
   };
 
@@ -132,6 +136,32 @@ export default async function PropertyDetailPage({
       </div>
 
       <h1 className="text-2xl font-semibold text-foreground">{pageTitle}</h1>
+
+      {fromQuickAdd && (
+        <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <p className="text-sm font-semibold text-foreground">
+            Property created with quick-add
+          </p>
+          <p className="mt-1 text-sm text-muted">
+            Add purchase details, mortgage info, and property specs to unlock DSCR, LTV,
+            cash-on-cash return, and payoff projections.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link
+              href={`/properties/${property.id}/edit`}
+              className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+            >
+              Complete details
+            </Link>
+            <Link
+              href={`/properties/${property.id}`}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              I&apos;ll do this later
+            </Link>
+          </div>
+        </div>
+      )}
 
       <div className="mt-6">
       <Suspense fallback={<div className="h-64 animate-pulse rounded-lg bg-muted" />}>

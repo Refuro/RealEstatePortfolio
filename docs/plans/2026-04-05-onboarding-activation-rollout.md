@@ -908,6 +908,124 @@ Runs at 14:00 UTC daily. Add `CRON_SECRET` to `.env.example` and Vercel environm
 
 ---
 
+### Unit 10: Test files for new API routes
+
+**Goal:** Write test files for every new API route introduced in Phase 2, matching the project's established `route.test.ts` pattern. No existing tests need to be changed — this unit is purely additive.
+
+**Requirements:** Ensures Phase 2 routes have the same test coverage as every other API route in the codebase.
+
+**Dependencies:** Units 6 and 9 must be complete — tests are written against the implemented route handlers.
+
+**Files:**
+- Create: `app/app/api/places/autocomplete/route.test.ts`
+- Create: `app/app/api/places/details/route.test.ts`
+- Create: `app/app/api/cron/onboarding-emails/route.test.ts`
+- Create: `app/app/api/unsubscribe/route.test.ts`
+
+**Reference pattern for all test files:**
+- `app/app/api/properties/route.test.ts` — mock setup, `vi.hoisted`, `vi.mock("@/lib/db")`, `vi.mock("@/lib/auth")`, `beforeEach` with `vi.clearAllMocks()`
+- `app/lib/test/api-route-mocks.ts` — import `mockActiveUser` and `mockFreeTierUser` for authenticated routes
+
+---
+
+**`app/api/places/autocomplete/route.test.ts`**
+
+Mock `@/lib/auth` and any fetch call to the Google Places upstream. Test scenarios:
+
+- Returns `401` when `getActiveAppUser()` returns null.
+- Returns `400` when `input` query param is missing or fewer than 3 characters.
+- Returns `200` with `{ predictions: [...] }` when upstream returns valid data.
+- Returns `200` with `{ predictions: [] }` when upstream returns no results (not a 500).
+- Returns `200` with `{ predictions: [] }` when the upstream fetch throws (graceful degradation — input should remain usable).
+
+---
+
+**`app/api/places/details/route.test.ts`**
+
+Mock `@/lib/auth` and the upstream fetch. Test scenarios:
+
+- Returns `401` when unauthenticated.
+- Returns `400` when `placeId` query param is missing.
+- Returns `200` with `{ addressLine1, city, state, zipCode }` when upstream returns a valid place.
+- Returns `400` when upstream returns a place that cannot be parsed into a US address (missing city or state component).
+
+---
+
+**`app/api/cron/onboarding-emails/route.test.ts`**
+
+Mock `@/lib/db` (prisma), Resend, and PostHog capture. Do not use `mockActiveUser` — the cron route is not user-authenticated. Test scenarios:
+
+- Returns `401` when the `Authorization` header is missing.
+- Returns `401` when the `Authorization` header does not match `Bearer {CRON_SECRET}`.
+- Returns `200` with `{ sent: 0 }` when there are no eligible users.
+- Sends day-3 email to a user whose `createdAt` is exactly 3 days ago with 0 properties and `onboardingEmailsSentAt.day3 === null`. Verifies `onboardingEmailsSentAt` is updated on the user record after send.
+- Sends day-7 email to a user whose `createdAt` is exactly 7 days ago with 0 properties and `onboardingEmailsSentAt.day7 === null`.
+- Does **not** send to a user who has `onboardingEmailsOptedOutAt` set.
+- Does **not** send to a user who already has `onboardingEmailsSentAt.day3` set (idempotency — cron can run multiple times safely).
+- Does **not** send to a user with 1 or more properties (they are already activated).
+- Each successful send fires `ONBOARDING_EMAIL_SENT` via the PostHog server-side capture mock.
+
+---
+
+**`app/api/unsubscribe/route.test.ts`**
+
+Mock `@/lib/db`. No auth mock needed — this route is public. Test scenarios:
+
+- Returns `400` when the `token` query param is missing.
+- Returns `400` when the token does not match the expected HMAC for any user.
+- Returns `200` and sets `onboardingEmailsOptedOutAt` on the user record when the token is valid.
+- Returns `200` (idempotent) when called a second time for a user who is already opted out — does not error.
+
+---
+
+**Approach:**
+
+Follow the exact mock setup pattern from `app/app/api/properties/route.test.ts`:
+
+```ts
+const { prismaMock } = vi.hoisted(() => {
+  const prismaMock = {
+    user: {
+      findMany: vi.fn(),
+      update: vi.fn(),
+      findUnique: vi.fn(),
+    },
+  };
+  return { prismaMock };
+});
+
+vi.mock("@/lib/db", () => ({ prisma: prismaMock }));
+```
+
+For the cron and unsubscribe routes, mock Resend's `emails.send` method:
+
+```ts
+vi.mock("resend", () => ({
+  Resend: vi.fn().mockImplementation(() => ({
+    emails: { send: vi.fn().mockResolvedValue({ id: "mock-email-id" }) },
+  })),
+}));
+```
+
+For the Places routes, mock the global `fetch`:
+
+```ts
+vi.stubGlobal("fetch", vi.fn());
+// In each test: (fetch as ReturnType<typeof vi.fn>).mockResolvedValue(...)
+```
+
+**Acceptance criteria:**
+- [ ] All four test files exist and pass `vitest run` with no failures.
+- [ ] Each file follows the `vi.hoisted` + `vi.mock` pattern from `app/app/api/properties/route.test.ts`.
+- [ ] The autocomplete route tests cover graceful degradation (upstream failure returns empty predictions, not a 500).
+- [ ] The cron route tests cover idempotency (running the cron twice does not double-send).
+- [ ] The cron route tests verify that users with ≥ 1 property are excluded.
+- [ ] The unsubscribe route tests verify idempotency (double opt-out does not error).
+- [ ] No existing test files are modified.
+- [ ] `vitest run` passes for the full test suite after all Phase 2 units are complete.
+
+---
+
 ## System-Wide Impact
 
 - **Activation path changes:** The onboarding modal primary CTA and the empty dashboard primary CTA now both link to `/properties/new?mode=quick` instead of `/properties/new`. The full wizard remains accessible from `/properties` → "Add property" nav link and the "Use the full form instead" link on the quick-add page.
@@ -932,6 +1050,22 @@ Runs at 14:00 UTC daily. Add `CRON_SECRET` to `.env.example` and Vercel environm
 - New environment variables required: `GOOGLE_PLACES_API_KEY`, `CRON_SECRET`, `UNSUBSCRIBE_SECRET`. Add all to `.env.example` and the Vercel project's environment variables before deploying Phase 2.
 - After Phase 1 deploys: verify in PostHog that `wizard_abandoned`, `estimate_value_used`, and `estimate_rent_used` events are appearing. Set up a funnel in PostHog: `welcome_modal_viewed` → `welcome_add_first_property` or `welcome_maybe_later` → `wizard_opened` → `section_economics` → `section_income` → `section_mortgage` → `section_review` → `property_created`.
 - After Phase 2 Unit 9 deploys: monitor the cron log in Vercel for successful runs. Check that `onboardingEmailsSentAt` is being populated on the user records. Verify Resend delivery reports for the first batch.
+
+## Roadmap: Future Email Re-engagement Expansion
+
+The current cron email system (day-3 and day-7) only targets users who have **zero properties**. After the completeness system overhaul (2026-04-06), there is a larger cohort of users who quick-added a property but never completed the details (purchase price still matches estimate, no mortgage status confirmed, no cash invested). These users only see in-app nudges, which require them to return on their own.
+
+**Planned expansion (not yet scheduled):**
+
+1. **Day-2 incomplete-property email** — Send to users who have 1+ properties but a completeness score below the threshold (60). Copy: "Your property profile is almost complete. Add your purchase price and mortgage status to unlock full portfolio metrics." CTA: link to `/properties/{id}/edit`.
+2. **Day-5 incomplete-property email** — Second nudge for users who received the day-2 email but still haven't completed. Copy: "You're one field away from seeing your real cap rate." CTA: link to the specific missing section.
+3. **Query change** — The cron would need a second candidate query: users WITH properties, where the property's completeness score is below threshold. This requires either computing completeness in SQL or fetching property data alongside the user.
+4. **Sentinel expansion** — `onboardingEmailsSentAt` would need additional keys (e.g., `incomplete_day2`, `incomplete_day5`) to track the new variants independently.
+5. **Opt-out scope** — Consider whether `onboardingEmailsOptedOutAt` should cover all onboarding emails or if incomplete-property emails need a separate opt-out.
+
+This expansion would close the gap between "signed up but didn't add a property" (current system) and "added a property but didn't complete it" (in-app nudges only today).
+
+---
 
 ## Sources & References
 

@@ -36,6 +36,12 @@ const dealSchemaBase = z.object({
   vacancyPercent: z.coerce.number().int().min(0).max(100).default(5),
   cashInvested: optionalDecimalString,
   notes: z.string().max(2000).optional().nullable(),
+  bedrooms: z.coerce.number().int().min(1).max(10).optional().nullable(),
+  bathrooms: z.coerce.number().min(0.5).max(10).optional().nullable(),
+  squareFeet: z.coerce.number().int().min(100).max(500_000).optional().nullable(),
+  propertyType: z.enum(["single_family", "condo", "townhouse", "manufactured", "multi_family", "apartment"]).optional().nullable(),
+  marketRent: optionalDecimalString,
+  marketRentAsOf: z.string().optional().nullable(),
 });
 
 export const createDealSchema = dealSchemaBase.superRefine((data, ctx) => {

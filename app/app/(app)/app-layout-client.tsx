@@ -293,7 +293,12 @@ export function AppLayoutClient({
                 />
               </>
             )}
-            {onboardingProps && <OnboardingPanel initialProgress={onboardingProps} />}
+            {onboardingProps && (
+              <OnboardingPanel
+                initialProgress={onboardingProps}
+                propertyCount={bannerProps?.propertyCount ?? 0}
+              />
+            )}
             {children}
           </div>
         </main>

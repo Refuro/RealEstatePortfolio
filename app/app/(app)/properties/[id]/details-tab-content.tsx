@@ -58,7 +58,6 @@ export function DetailsTabContent({
     units: number;
     bedrooms: number | null;
     bathrooms: number | null;
-    unitMix: string | null;
     squareFeet: number | null;
     purchasePrice: number;
     purchaseDate: Date | string;
@@ -81,7 +80,6 @@ export function DetailsTabContent({
   const detailsSummary = [
     property.bedrooms != null && `${property.bedrooms} bed`,
     property.bathrooms != null && `${Number(property.bathrooms)} bath`,
-    property.unitMix && property.unitMix,
     property.squareFeet != null && `${property.squareFeet.toLocaleString()} sq ft`,
   ]
     .filter(Boolean)
@@ -118,10 +116,23 @@ export function DetailsTabContent({
                 {formatPropertyType(property.propertyType, property.units)}
               </dd>
             </div>
-            {detailsSummary && (
+            {detailsSummary ? (
               <div>
                 <dt className="text-sm font-medium text-muted">Details</dt>
                 <dd className="text-sm font-medium text-foreground">{detailsSummary}</dd>
+              </div>
+            ) : (
+              <div>
+                <dt className="text-sm font-medium text-muted">Details</dt>
+                <dd className="text-sm text-muted">
+                  Bedrooms, bathrooms, sq ft not set.{" "}
+                  <Link
+                    href={`/properties/${propertyId}/edit#section-location`}
+                    className="font-medium text-accent hover:underline"
+                  >
+                    Add details
+                  </Link>
+                </dd>
               </div>
             )}
             <div>
@@ -203,7 +214,19 @@ export function DetailsTabContent({
             <div>
               <dt className="text-sm font-medium text-muted">Cash invested</dt>
               <dd className="tabular-nums text-sm font-medium text-foreground">
-                {property.cashInvested != null ? formatCurrency(Number(property.cashInvested)) : "—"}
+                {property.cashInvested != null ? (
+                  formatCurrency(Number(property.cashInvested))
+                ) : (
+                  <span className="font-normal text-muted">
+                    Not set.{" "}
+                    <Link
+                      href={`/properties/${propertyId}/edit#section-economics`}
+                      className="font-medium text-accent hover:underline"
+                    >
+                      Add
+                    </Link>
+                  </span>
+                )}
               </dd>
             </div>
           </dl>

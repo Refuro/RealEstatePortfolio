@@ -103,7 +103,7 @@ const HOW_IT_WORKS = [
     step: "01",
     title: "Add a property",
     description:
-      "Enter purchase price, estimated value, rent, expenses, and mortgage details. Takes about 60 seconds per property.",
+      "Enter purchase price, estimated value, rent, expenses, and mortgage details. Takes a few minutes per property.",
     icon: Building2,
   },
   {

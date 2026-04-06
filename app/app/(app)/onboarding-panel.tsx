@@ -1,6 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { captureClientEvent } from "@/lib/analytics-client";
@@ -10,6 +11,9 @@ import {
   markFiredOnboardingStep,
 } from "@/lib/analytics-dedup";
 import { getPlanIntentForAnalytics } from "@/lib/plan-intent";
+
+/** After dismissing with 0 properties, re-show a nudge banner after this window. */
+const SNOOZE_DURATION_MS = 7 * 24 * 60 * 60 * 1000;
 
 type OnboardingProgress = {
   welcomeSeenAt: string | null;
@@ -30,8 +34,10 @@ async function patchOnboarding(
 
 export function OnboardingPanel({
   initialProgress,
+  propertyCount,
 }: {
   initialProgress: OnboardingProgress;
+  propertyCount: number;
 }) {
   const router = useRouter();
   const { user, isLoaded } = useUser();
@@ -39,7 +45,22 @@ export function OnboardingPanel({
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const showWelcomeModal = !progress.welcomeSeenAt && !progress.dismissedAt;
+  // A user who has added a property never sees any onboarding surface again,
+  // regardless of dismissal state or snooze expiry.
+  const hasNoProperties = propertyCount === 0;
+
+  const showWelcomeModal = hasNoProperties && !progress.welcomeSeenAt && !progress.dismissedAt;
+
+  const snoozeExpired =
+    progress.dismissedAt !== null &&
+    Date.now() - new Date(progress.dismissedAt).getTime() >= SNOOZE_DURATION_MS;
+
+  // Lighter re-engagement strip shown after the snooze expires, only when still no properties.
+  const showReEngagementNudge =
+    hasNoProperties &&
+    progress.welcomeSeenAt !== null &&
+    progress.dismissedAt !== null &&
+    snoozeExpired;
 
   useEffect(() => {
     if (!isLoaded || !user?.id || !showWelcomeModal) return;
@@ -93,7 +114,7 @@ export function OnboardingPanel({
               plan_intent_source: pi.plan_intent_source,
             });
           }
-          router.push("/properties/new");
+          router.push("/properties/new?mode=quick");
         }
       } catch {
         setErrorMessage("Something went wrong while saving onboarding. Please try again.");
@@ -103,6 +124,24 @@ export function OnboardingPanel({
     },
     [busy, router, user?.id]
   );
+
+  const handleDismissNudge = useCallback(async () => {
+    if (busy) return;
+    setBusy(true);
+    setErrorMessage(null);
+    try {
+      const next = await patchOnboarding("dismiss_modal");
+      if (!next) {
+        setErrorMessage("We couldn't save your preference. Please try again.");
+        return;
+      }
+      setProgress(next);
+    } catch {
+      setErrorMessage("Something went wrong. Please try again.");
+    } finally {
+      setBusy(false);
+    }
+  }, [busy]);
 
   const dialogRef = useRef<HTMLDivElement>(null);
   const primaryActionRef = useRef<HTMLButtonElement>(null);
@@ -162,6 +201,42 @@ export function OnboardingPanel({
 
   return (
     <>
+      {showReEngagementNudge && (
+        <div className="flex items-start justify-between gap-3 rounded-xl border border-accent/25 bg-accent/5 px-4 py-3">
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground">
+              Your portfolio dashboard is still empty
+            </p>
+            <p className="mt-0.5 text-xs text-muted">
+              Add your first property to unlock live equity, cash flow, and rent benchmarks.
+            </p>
+            {errorMessage && (
+              <p className="mt-1 text-xs text-negative" role="status" aria-live="polite">
+                {errorMessage}
+              </p>
+            )}
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/properties/new?mode=quick"
+              className="inline-flex min-h-[36px] items-center rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+            >
+              Add property
+            </Link>
+            <button
+              type="button"
+              onClick={() => void handleDismissNudge()}
+              disabled={busy}
+              aria-label="Dismiss"
+              className="flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle hover:text-foreground disabled:opacity-50"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+                <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      )}
       {showWelcomeModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
           <div

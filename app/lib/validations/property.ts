@@ -64,8 +64,6 @@ const propertySchemaBase = z.object({
     .refine((n) => (n * 2) % 1 === 0, "Bathrooms must use 0.5 steps (e.g. 1.5, 2)")
     .optional()
     .nullable(),
-  unitMix: z.string().max(100).optional().nullable(),
-  /** Optional; passed to RentCast as squareFootage for better AVM accuracy. */
   squareFeet: z
     .union([z.string(), z.number()])
     .optional()
@@ -87,6 +85,7 @@ const propertySchemaBase = z.object({
     .optional()
     .nullable()
     .transform((s) => (s === undefined ? undefined : s == null || s.trim() === "" ? null : s)),
+  hasMortgage: z.boolean().nullable().optional(),
   notes: z.string().max(2000).optional().nullable(),
   marketRent: z.union([z.string(), z.number()]).optional().nullable().transform((v) => {
     if (v === undefined) return undefined;

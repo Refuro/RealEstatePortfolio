@@ -43,17 +43,34 @@ export function MortgageSection({
   propertyId,
   mortgages: initialMortgages,
   embedded,
+  initialHasMortgage,
 }: {
   propertyId: string;
   mortgages: Mortgage[];
   embedded?: boolean;
+  initialHasMortgage?: boolean | null;
 }) {
   const router = useRouter();
   const [mortgages, setMortgages] = useState<Mortgage[]>(initialMortgages);
+  const [hasMortgage, setHasMortgage] = useState<boolean | null>(initialHasMortgage ?? null);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  async function updateHasMortgage(value: boolean) {
+    setHasMortgage(value);
+    try {
+      await fetch(`/api/properties/${propertyId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hasMortgage: value }),
+      });
+      router.refresh();
+    } catch {
+      setHasMortgage(initialHasMortgage ?? null);
+    }
+  }
 
   function refreshMortgages() {
     fetch(`/api/properties/${propertyId}/mortgage`)
@@ -80,16 +97,69 @@ export function MortgageSection({
             Mortgages
           </h2>
         )}
-        {!showForm && editingId === null && (
+        {!showForm && editingId === null && mortgages.length > 0 && (
           <button
             type="button"
             onClick={() => setShowForm(true)}
             className="text-sm font-medium text-accent transition-colors duration-150 hover:text-accent-hover"
           >
-            {mortgages.length > 0 ? "Add another mortgage" : "Add mortgage"}
+            Add another mortgage
           </button>
         )}
       </div>
+
+      {mortgages.length === 0 && hasMortgage === null && !showForm && (
+        <div className="mt-4 rounded-lg border border-border bg-subtle/30 p-4">
+          <p className="text-sm font-medium text-foreground">Does this property have a mortgage?</p>
+          <div className="mt-3 flex gap-3">
+            <button
+              type="button"
+              onClick={() => {
+                updateHasMortgage(true);
+                setShowForm(true);
+              }}
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
+            >
+              Yes, add mortgage
+            </button>
+            <button
+              type="button"
+              onClick={() => updateHasMortgage(false)}
+              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-muted transition-colors duration-150 hover:bg-subtle"
+            >
+              No mortgage
+            </button>
+          </div>
+        </div>
+      )}
+
+      {mortgages.length === 0 && hasMortgage === false && !showForm && (
+        <div className="mt-4 flex items-center gap-3 rounded-lg border border-border bg-subtle/20 px-4 py-3">
+          <p className="text-sm text-muted">This property has no mortgage.</p>
+          <button
+            type="button"
+            onClick={() => {
+              updateHasMortgage(true);
+              setShowForm(true);
+            }}
+            className="text-sm font-medium text-accent transition-colors duration-150 hover:text-accent-hover"
+          >
+            Add mortgage
+          </button>
+        </div>
+      )}
+
+      {mortgages.length === 0 && hasMortgage === true && !showForm && editingId === null && (
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="text-sm font-medium text-accent transition-colors duration-150 hover:text-accent-hover"
+          >
+            Add mortgage
+          </button>
+        </div>
+      )}
 
       {error && (
         <div className="mt-3 rounded-md px-3 py-2 text-sm text-negative">
@@ -103,6 +173,7 @@ export function MortgageSection({
           onSuccess={() => {
             setShowForm(false);
             setError(null);
+            if (hasMortgage !== true) updateHasMortgage(true);
             refreshMortgages();
           }}
           onCancel={() => {
@@ -133,22 +204,6 @@ export function MortgageSection({
           submitting={submitting}
           setSubmitting={setSubmitting}
         />
-      )}
-
-      {!showForm && !editingId && mortgages.length === 0 && (
-        <div className="mt-4 rounded-md border border-dashed border-border bg-subtle/50 p-4 text-center">
-          <p className="text-sm text-muted">No mortgage on file.</p>
-          <p className="mt-1 text-xs text-muted">
-            Add a mortgage to see equity, LTV, payoff timeline, and amortization.
-          </p>
-          <button
-            type="button"
-            onClick={() => setShowForm(true)}
-            className="mt-4 rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
-          >
-            Add mortgage
-          </button>
-        </div>
       )}
 
       {!showForm && !editingId && mortgages.length > 0 && (

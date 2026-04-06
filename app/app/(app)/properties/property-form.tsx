@@ -3,7 +3,7 @@
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CurrencyInput } from "@/components/currency-input";
 import { US_STATES } from "@/lib/us-states";
 import { PROPERTY_TYPE_LABELS } from "@/lib/property-utils";
@@ -12,6 +12,7 @@ import { RentCastQuotaHint } from "@/components/rentcast-quota-hint";
 import { PROPERTY_EDIT_SECTION_NAV } from "@/lib/property-form-section-nav";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
+import { getPropertyCompleteness } from "@/lib/property-completeness";
 
 function formatZodApiDetails(details: unknown): string | null {
   if (!details || typeof details !== "object") return null;
@@ -45,8 +46,7 @@ type PropertyFormData = {
   cashInvested?: string;
   bedrooms?: number;
   bathrooms?: string;
-  unitMix?: string;
-  /** Optional; improves RentCast estimates when set */
+  /** Optional; displayed on property details page */
   squareFeet?: number | null;
   notes?: string;
 };
@@ -70,14 +70,38 @@ const defaultValues: PropertyFormData = {
   notes: "",
 };
 
+const MISSING_FIELD_TO_SECTION: Record<string, string> = {
+  "actual purchase price": "section-economics",
+  "cash invested": "section-economics",
+  "mortgage status": "section-mortgage",
+  "mortgage details": "section-mortgage",
+  bedrooms: "section-location",
+  bathrooms: "section-location",
+  "square feet": "section-location",
+};
+
+const MISSING_LABEL_TO_FIELD_IDS: Record<string, string[]> = {
+  "cash invested": ["cashInvested"],
+  bedrooms: ["bedrooms"],
+  bathrooms: ["bathrooms"],
+  "square feet": ["squareFeet"],
+};
+
 type PropertyFormProps = {
   className?: string;
   property?: PropertyFormData & { id: string };
+  /** When true, fires the enrichment_started analytics event on mount. */
+  initialIsIncomplete?: boolean;
+  /** Number of existing mortgages on this property (for live completeness scoring). */
+  mortgageCount?: number;
+  /** Current hasMortgage value from DB (null = unanswered). */
+  hasMortgage?: boolean | null;
 };
 
-export function PropertyForm({ className = "", property }: PropertyFormProps) {
+export function PropertyForm({ className = "", property, initialIsIncomplete = false, mortgageCount: initialMortgageCount = 0, hasMortgage: initialHasMortgage = null }: PropertyFormProps) {
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
+  const hasScrolledRef = useRef(false);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [estimateLoading, setEstimateLoading] = useState(false);
@@ -87,6 +111,53 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
   const [lastValueEstimate, setLastValueEstimate] = useState<string>("");
   const [lastRentEstimate, setLastRentEstimate] = useState<string>("");
+
+  function highlightSection(sectionId: string) {
+    const el = document.getElementById(sectionId);
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+    el.classList.add("ring-2", "ring-accent/40", "rounded-xl", "transition-shadow", "duration-500");
+    setTimeout(() => {
+      el.classList.remove("ring-2", "ring-accent/40");
+      el.classList.add("ring-0");
+      setTimeout(() => {
+        el.classList.remove("rounded-xl", "transition-shadow", "duration-500", "ring-0");
+      }, 500);
+    }, 2500);
+  }
+
+  useEffect(() => {
+    if (property && initialIsIncomplete) {
+      captureClientEvent(AnalyticsEvents.PROPERTY_ENRICHMENT_STARTED, {
+        property_id: property.id,
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!property || !initialIsIncomplete || hasScrolledRef.current) return;
+    hasScrolledRef.current = true;
+    const initial = getPropertyCompleteness({
+      purchasePrice: parseCurrencyNum(property.purchasePrice),
+      currentEstimatedValue: parseCurrencyNum(property.currentEstimatedValue),
+      cashInvested: property.cashInvested ? parseCurrencyNum(property.cashInvested) : null,
+      mortgageCount: initialMortgageCount,
+      hasMortgage: initialHasMortgage,
+      bedrooms: property.bedrooms ?? null,
+      bathrooms: property.bathrooms != null ? Number(property.bathrooms) : null,
+      squareFeet: property.squareFeet ?? null,
+    });
+    const section = initial.missingFields[0]
+      ? MISSING_FIELD_TO_SECTION[initial.missingFields[0]]
+      : null;
+    if (!section) return;
+    const timer = setTimeout(() => {
+      highlightSection(section);
+    }, 300);
+    return () => clearTimeout(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function parseCurrencyNum(s: string): number {
     const cleaned = String(s ?? "").replace(/,/g, "").replace(/[^0-9.]/g, "");
@@ -119,7 +190,45 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
   const [squareFeet, setSquareFeet] = useState(
     () => (property?.squareFeet != null ? String(property.squareFeet) : "")
   );
-  const [unitMix, setUnitMix] = useState(() => property?.unitMix ?? "");
+  const liveCompleteness =
+    property && initialIsIncomplete
+      ? getPropertyCompleteness({
+          purchasePrice: parseCurrencyNum(purchasePrice),
+          currentEstimatedValue: parseCurrencyNum(currentEstimatedValue),
+          cashInvested:
+            cashInvested.trim() && parseCurrencyNum(cashInvested) > 0
+              ? parseCurrencyNum(cashInvested)
+              : null,
+          mortgageCount: initialMortgageCount,
+          hasMortgage: initialHasMortgage,
+          bedrooms: bedrooms.trim() ? Number(bedrooms) : null,
+          bathrooms: bathrooms.trim() ? Number(bathrooms) : null,
+          squareFeet: squareFeet.trim() ? Number(squareFeet) : null,
+        })
+      : null;
+
+  const firstMissingSection = liveCompleteness?.missingFields[0]
+    ? MISSING_FIELD_TO_SECTION[liveCompleteness.missingFields[0]]
+    : null;
+
+  const sectionMissingCounts = liveCompleteness
+    ? liveCompleteness.missingFields.reduce<Record<string, number>>((acc, field) => {
+        const section = MISSING_FIELD_TO_SECTION[field];
+        if (section) acc[section] = (acc[section] || 0) + 1;
+        return acc;
+      }, {})
+    : {};
+
+  const missingFieldIds = new Set(
+    (liveCompleteness?.missingFields ?? []).flatMap(
+      (label) => MISSING_LABEL_TO_FIELD_IDS[label] ?? []
+    )
+  );
+
+  function fieldInputClass(fieldId: string): string {
+    if (!initialIsIncomplete || !missingFieldIds.has(fieldId)) return inputClass;
+    return `${inputClass} ring-2 ring-accent/15`;
+  }
 
   const isEdit = !!property;
   const unitCount =
@@ -193,8 +302,6 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       const addressLine2 = (fd.get("addressLine2") as string)?.trim();
       if (addressLine2) params.set("addressLine2", addressLine2);
       params.set("propertyType", propertyType);
-      const sq = parseInt(squareFeet.trim(), 10);
-      if (!Number.isNaN(sq) && sq >= 100) params.set("squareFootage", String(sq));
       const res = await fetch(`/api/estimates/value?${params.toString()}`);
       const json = (await res.json()) as { value?: number; error?: string };
       if (json.value != null && Number.isFinite(json.value)) {
@@ -237,11 +344,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       if (addressLine2) params.set("addressLine2", addressLine2);
       params.set("propertyType", propertyType);
       if (isMulti) params.set("units", String(unitCount));
-      if (bedrooms.trim()) params.set("bedrooms", bedrooms);
-      if (bathrooms.trim()) params.set("bathrooms", bathrooms);
       if (property?.id) params.set("propertyId", property.id);
-      const sqFt = parseInt(squareFeet.trim(), 10);
-      if (!Number.isNaN(sqFt) && sqFt >= 100) params.set("squareFootage", String(sqFt));
       const res = await fetch(`/api/estimates/rent?${params.toString()}`);
       const json = (await res.json()) as { rent?: number; error?: string };
       if (json.rent != null && Number.isFinite(json.rent)) {
@@ -288,9 +391,9 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         : Number(currentMonthlyRent) || 0;
 
     const payload: Record<string, unknown> = {
-      nickname: (formData.get("nickname") as string) || undefined,
+      nickname: (formData.get("nickname") as string) || null,
       addressLine1: formData.get("addressLine1") as string,
-      addressLine2: (formData.get("addressLine2") as string) || undefined,
+      addressLine2: (formData.get("addressLine2") as string) || null,
       city: formData.get("city") as string,
       state: formData.get("state") as string,
       zipCode: formData.get("zipCode") as string,
@@ -304,8 +407,8 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       currentMonthlyRent: String(totalRent),
       currentMonthlyExpenses,
       vacancyPercent: Math.min(100, Math.max(0, Number(vacancyPercent) || 5)),
-      cashInvested: cashInvested.trim() || undefined,
-      notes: (formData.get("notes") as string) || undefined,
+      cashInvested: cashInvested.trim() || null,
+      notes: (formData.get("notes") as string) || null,
     };
     if (unitRentsArr != null) payload.unitRents = unitRentsArr;
     if (bedrooms.trim()) {
@@ -321,12 +424,6 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
       if (!Number.isNaN(s) && s >= 100) payload.squareFeet = s;
     } else if (isEdit) {
       payload.squareFeet = null;
-    }
-
-    if (isEdit) {
-      payload.unitMix = unitMix.trim() ? unitMix.trim() : null;
-    } else if (unitMix.trim()) {
-      payload.unitMix = unitMix.trim();
     }
 
     try {
@@ -364,6 +461,24 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           property_id: data.id,
         });
       }
+      if (isEdit && initialIsIncomplete) {
+        const cashNum = payload.cashInvested != null ? Number(payload.cashInvested) : null;
+        const afterSave = getPropertyCompleteness({
+          purchasePrice: parseCurrencyNum(purchasePrice),
+          currentEstimatedValue: parseCurrencyNum(currentEstimatedValue),
+          cashInvested: cashNum && cashNum > 0 ? cashNum : null,
+          mortgageCount: initialMortgageCount,
+          hasMortgage: initialHasMortgage,
+          bedrooms: bedrooms.trim() ? Number(bedrooms) : null,
+          bathrooms: bathrooms.trim() ? Number(bathrooms) : null,
+          squareFeet: squareFeet.trim() ? Number(squareFeet) : null,
+        });
+        if (afterSave.isComplete) {
+          captureClientEvent(AnalyticsEvents.PROPERTY_ENRICHMENT_COMPLETED, {
+            property_id: property.id,
+          });
+        }
+      }
       router.push(`/properties/${isEdit ? property.id : data.id}`);
       router.refresh();
     } catch {
@@ -396,6 +511,37 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         </div>
       )}
 
+      {liveCompleteness && !liveCompleteness.isComplete && (
+        <div className="rounded-lg bg-subtle/40 p-4">
+          <p className="text-sm font-semibold text-foreground">
+            {liveCompleteness.missingFields.length} field
+            {liveCompleteness.missingFields.length !== 1 ? "s" : ""} remaining for full metrics
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Complete these: {liveCompleteness.missingFields.join(", ")}.
+          </p>
+          {firstMissingSection && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                captureClientEvent(
+                  AnalyticsEvents.COMPLETION_GUIDANCE_JUMP_CLICKED,
+                  {
+                    property_id: property?.id,
+                    target_section: firstMissingSection,
+                  }
+                );
+                highlightSection(firstMissingSection);
+              }}
+              className="mt-3 inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle"
+            >
+              Jump to first missing field
+            </button>
+          )}
+        </div>
+      )}
+
       {isEdit && (
         <nav
           aria-label="Edit property sections"
@@ -403,16 +549,24 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
         >
           <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Jump to</p>
           <ul className="flex gap-x-4 gap-y-2 overflow-x-auto text-sm md:flex-wrap">
-            {PROPERTY_EDIT_SECTION_NAV.map((s) => (
-              <li key={s.id} className="shrink-0">
-                <a
-                  href={`#${s.id}`}
-                  className="inline-flex min-h-[44px] items-center text-accent transition-colors duration-150 hover:text-accent-hover"
-                >
-                  {s.label}
-                </a>
-              </li>
-            ))}
+            {PROPERTY_EDIT_SECTION_NAV.map((s) => {
+              const missingCount = sectionMissingCounts[s.id] || 0;
+              return (
+                <li key={s.id} className="shrink-0">
+                  <a
+                    href={`#${s.id}`}
+                    className="inline-flex min-h-[44px] items-center gap-1.5 text-accent transition-colors duration-150 hover:text-accent-hover"
+                  >
+                    {s.label}
+                    {missingCount > 0 && (
+                      <span className="inline-flex items-center rounded-full bg-accent/10 px-1.5 py-0.5 text-xs font-medium tabular-nums text-accent">
+                        {missingCount}
+                      </span>
+                    )}
+                  </a>
+                </li>
+              );
+            })}
           </ul>
         </nav>
       )}
@@ -428,7 +582,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
             Location &amp; profile
           </h2>
           <p className="mt-1 text-sm text-muted">
-            Address, property type, units, and optional details that improve rent estimates.
+            Address, property type, units, and optional property details.
           </p>
           <div className="mt-4 space-y-4">
         <div>
@@ -594,7 +748,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 onChange={(e) => setBedrooms(e.target.value)}
                 className={inputClass}
               />
-              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+              <p className="mt-0.5 text-xs text-muted">Shown on your property details page</p>
             </div>
             <div>
               <label htmlFor="bathrooms" className={labelClass}>
@@ -612,7 +766,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 onChange={(e) => setBathrooms(e.target.value)}
                 className={inputClass}
               />
-              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+              <p className="mt-0.5 text-xs text-muted">Shown on your property details page</p>
             </div>
           </div>
         )}
@@ -633,7 +787,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 onChange={(e) => setBedrooms(e.target.value)}
                 className={inputClass}
               />
-              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+              <p className="mt-0.5 text-xs text-muted">Shown on your property details page</p>
             </div>
             <div>
               <label htmlFor="bathrooms" className={labelClass}>
@@ -651,7 +805,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
                 onChange={(e) => setBathrooms(e.target.value)}
                 className={inputClass}
               />
-              <p className="mt-0.5 text-xs text-muted">Improves rent estimates</p>
+              <p className="mt-0.5 text-xs text-muted">Shown on your property details page</p>
             </div>
           </div>
         )}
@@ -661,24 +815,6 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
           onChange={setSquareFeet}
           className="max-w-xs"
         />
-
-        <div>
-          <label htmlFor="unitMix" className={labelClass}>
-            Unit mix (optional)
-          </label>
-          <textarea
-            id="unitMix"
-            rows={2}
-            value={unitMix}
-            onChange={(e) => setUnitMix(e.target.value)}
-            placeholder="e.g. 4×2BR, 1×1BR"
-            maxLength={100}
-            className={inputClass}
-          />
-          <p className="mt-0.5 text-xs text-muted">
-            Short summary of unit types (shown on property detail). Max 100 characters.
-          </p>
-        </div>
 
           </div>
         </section>
@@ -709,6 +845,13 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               required
               className={inputClass}
             />
+            {initialIsIncomplete &&
+              purchasePrice.trim() &&
+              Math.round(parseCurrencyNum(purchasePrice)) === Math.round(parseCurrencyNum(currentEstimatedValue)) && (
+                <p className="mt-1 text-xs text-accent">
+                  This may have been auto-filled. Update if it doesn&apos;t reflect your actual purchase price.
+                </p>
+              )}
           </div>
           <div>
             <label htmlFor="purchaseDate" className={labelClass}>
@@ -761,7 +904,7 @@ export function PropertyForm({ className = "", property }: PropertyFormProps) {
               id="cashInvested"
               value={cashInvested}
               onChange={setCashInvested}
-              className={inputClass}
+              className={fieldInputClass("cashInvested")}
             />
           </div>
         </div>
