@@ -188,7 +188,7 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
               <div className="mt-4 flex flex-wrap gap-2">
                 <Link
                   href={`/properties/new?from=${d.id}`}
-                  className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+                  className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-subtle"
                 >
                   Add to portfolio
                 </Link>
@@ -199,14 +199,14 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
                       type="button"
                       onClick={() => handleDelete(d.id)}
                       disabled={deletingId === d.id}
-                      className="rounded-md bg-negative/10 px-2.5 py-1 text-sm font-medium text-negative hover:bg-negative/20 disabled:opacity-50"
+                      className="inline-flex min-h-[44px] items-center rounded-md bg-negative/10 px-3 py-2 text-sm font-medium text-negative hover:bg-negative/20 disabled:opacity-50"
                     >
                       {deletingId === d.id ? "Deleting…" : "Confirm"}
                     </button>
                     <button
                       type="button"
                       onClick={() => setConfirmingId(null)}
-                      className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-muted hover:bg-subtle"
+                      className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-2 text-sm font-medium text-muted hover:bg-subtle"
                     >
                       Cancel
                     </button>
@@ -218,7 +218,7 @@ export function DealsList({ deals }: { deals: DealItem[] }) {
                       e.preventDefault();
                       setConfirmingId(d.id);
                     }}
-                    className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-negative hover:bg-subtle"
+                    className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-negative hover:bg-subtle"
                   >
                     Delete
                   </button>

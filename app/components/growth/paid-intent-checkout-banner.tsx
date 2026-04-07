@@ -69,7 +69,7 @@ export function PaidIntentCheckoutBanner({ effectiveTier }: PaidIntentCheckoutBa
   };
 
   return (
-    <div className="mb-4 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+    <div className="mb-4 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <p className="text-sm text-foreground">
           You started signup with the <span className="font-semibold">{intentLabel}</span> plan in

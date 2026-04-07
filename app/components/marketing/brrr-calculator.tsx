@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CalculatorMetric } from "@/components/calculators/calculator-metric";
 import { formatCurrency } from "@/lib/format-currency";
@@ -400,10 +400,9 @@ export function BrrrCalculator({
   ];
 
   const mobileSurface = (
-    <div className="space-y-3">
-      <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold text-foreground">Acquisition & rehab</h3>
-        <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
+    <div className="space-y-0">
+      <MobilePageSection title="Acquisition & rehab" variant="grouped">
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-4">
           <div className="col-span-2">
             <label className={labelClass} htmlFor="brrr-purchase-m">Purchase price</label>
             <input
@@ -440,10 +439,12 @@ export function BrrrCalculator({
               onChange={(e) => setArv(e.target.value)}
             />
           </div>
-        </MobileSectionCard>
-        <MobileSectionCard tone="subtle">
+        </div>
+      </MobilePageSection>
+
+      <MobilePageSection variant="flat">
           <MobileCollapsible label="Rent, refi & financing">
-            <div className="grid grid-cols-2 gap-3 pt-3">
+            <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-3 pt-6">
               <div>
                 <label className={labelClass} htmlFor="brrr-rent-m">Monthly rent</label>
                 <input
@@ -567,11 +568,10 @@ export function BrrrCalculator({
               </div>
             </div>
           </MobileCollapsible>
-        </MobileSectionCard>
-      </MobileSectionCard>
+      </MobilePageSection>
 
-      <MobileSectionCard className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Stabilized result</h3>
+      <MobilePageSection title="Stabilized result" variant="grouped">
+        <div className="space-y-3 p-4">
         <div className="grid grid-cols-2 gap-2">
           <CalculatorMetric label="Cash out" value={formatCurrency(result.cashOutAtRefi)} />
           <CalculatorMetric label="Cash left in" value={formatCurrency(result.netCashLeftInDeal)} />
@@ -611,7 +611,8 @@ export function BrrrCalculator({
               Track this property in Veld after you close
             </FunnelCtaLink>
           ) : null)}
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
     </div>
   );
 

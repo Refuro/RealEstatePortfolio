@@ -44,10 +44,10 @@ export default async function PaidCalculatorLandingPage() {
             </p>
             {!userId && (
               <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-muted">
-                <span className="rounded-full border border-border/70 px-3 py-1">
+                <span className="rounded-full border border-border px-3 py-1">
                   No card required
                 </span>
-                <span className="rounded-full border border-border/70 px-3 py-1">
+                <span className="rounded-full border border-border px-3 py-1">
                   Start in under 60 seconds
                 </span>
               </div>
@@ -58,7 +58,7 @@ export default async function PaidCalculatorLandingPage() {
             <PublicCalculator showCta landingVariant="calc_paid_v1" />
           </div>
 
-          <section className="mt-6 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <section className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
               Calculator or full deal analyzer?
             </h2>
@@ -67,24 +67,24 @@ export default async function PaidCalculatorLandingPage() {
             </p>
           </section>
 
-          <section className="mt-8 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <section className="mt-8 rounded-xl border border-border bg-card p-4 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
               What happens next
             </h2>
             <div className="mt-3 grid gap-3 md:grid-cols-3">
-              <div className="rounded-md border border-border/70 bg-background/45 p-3">
+              <div className="rounded-md border border-border bg-background/45 p-3">
                 <p className="text-xs font-semibold text-foreground">Calculator</p>
                 <p className="mt-1 text-sm text-muted">
                   Quick estimate for cash flow, cap rate, DSCR, and cash-on-cash.
                 </p>
               </div>
-              <div className="rounded-md border border-border/70 bg-background/45 p-3">
+              <div className="rounded-md border border-border bg-background/45 p-3">
                 <p className="text-xs font-semibold text-foreground">Deal analyzer</p>
                 <p className="mt-1 text-sm text-muted">
                   Save assumptions, compare scenarios, and keep deals in one place.
                 </p>
               </div>
-              <div className="rounded-md border border-border/70 bg-background/45 p-3">
+              <div className="rounded-md border border-border bg-background/45 p-3">
                 <p className="text-xs font-semibold text-foreground">Portfolio workspace</p>
                 <p className="mt-1 text-sm text-muted">
                   Move from one deal to tracked properties and portfolio metrics.

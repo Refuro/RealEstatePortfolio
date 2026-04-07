@@ -39,7 +39,7 @@ export function PropertiesFiltersMobile({
         <select
           value={activeFilter}
           onChange={(e) => pushState(e.target.value, activeSort)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground"
+          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base md:text-sm font-medium text-foreground"
         >
           {filterOptions.map((option) => (
             <option key={option.key} value={option.key}>
@@ -56,7 +56,7 @@ export function PropertiesFiltersMobile({
         <select
           value={activeSort}
           onChange={(e) => pushState(activeFilter, e.target.value)}
-          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium text-foreground"
+          className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base md:text-sm font-medium text-foreground"
         >
           {sortOptions.map((option) => (
             <option key={option.key} value={option.key}>

@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CalculatorMetric } from "@/components/calculators/calculator-metric";
 import { formatCurrency } from "@/lib/format-currency";
@@ -309,18 +309,13 @@ export function PublicCalculator({
   ] as const;
 
   const mobileCalculatorSurface = (
-    <div className="space-y-3">
-      <MobileSectionCard className="space-y-3.5">
-        <div>
-          <h3 className="text-sm font-semibold text-foreground">
-            Core assumptions
-          </h3>
-          <p className="mt-1 text-sm text-muted">
+    <div className="space-y-0">
+      <MobilePageSection title="Core assumptions" variant="grouped">
+        <div className="space-y-3 p-4">
+          <p className="text-sm text-muted">
             Start with price, rent, and expenses. Financing assumptions stay available when you want a deeper read.
           </p>
-        </div>
-
-        <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-3">
           <div className="col-span-2">
             <label className={labelClass} htmlFor="calc-purchase-price-mobile">
               Purchase price
@@ -366,10 +361,13 @@ export function PublicCalculator({
               onChange={(e) => setMonthlyExpenses(e.target.value)}
             />
           </div>
-        </MobileSectionCard>
+          </div>
+        </div>
+      </MobilePageSection>
 
-        <MobileSectionCard tone="subtle">
-          <MobileCollapsible label="Financing assumptions">
+      <MobilePageSection variant="flat">
+        <MobileCollapsible label="Financing assumptions">
+          <div className="rounded-lg bg-subtle/40 p-3">
             <div className="grid grid-cols-2 gap-3 pt-3">
               <div>
                 <label className={labelClass} htmlFor="calc-down-mobile">
@@ -436,16 +434,14 @@ export function PublicCalculator({
                 />
               </div>
             </div>
-          </MobileCollapsible>
-        </MobileSectionCard>
-      </MobileSectionCard>
+          </div>
+        </MobileCollapsible>
+      </MobilePageSection>
 
-      <MobileSectionCard className="space-y-3">
+      <MobilePageSection title="Live result" variant="grouped">
+        <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold text-foreground">
-              Live result
-            </h3>
             <p className="mt-1 text-sm text-muted">
               Loan amount {formatCurrency(result.loanAmount)} · payment {formatCurrency(result.monthlyPayment)}/mo
             </p>
@@ -528,7 +524,8 @@ export function PublicCalculator({
               </FunnelCtaLink>
             </div>
           ))}
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
     </div>
   );
 

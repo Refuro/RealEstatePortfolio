@@ -326,4 +326,16 @@ describe("AddPropertyWizard", () => {
     expect(screen.getByRole("button", { name: "Create property" })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: "Next" })).not.toBeInTheDocument();
   });
+
+  it("renders mobile shell flow when isMobile is true", async () => {
+    useIsMobileMock.mockReturnValue(true);
+
+    render(<AddPropertyWizard />);
+    expect(screen.getByRole("heading", { name: "Property" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Next" })).toBeInTheDocument();
+
+    fillStep1();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(await screen.findByRole("heading", { name: "Finances" })).toBeInTheDocument();
+  });
 });

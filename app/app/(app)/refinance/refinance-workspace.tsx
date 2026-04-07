@@ -12,8 +12,8 @@ import {
   YAxis,
 } from "recharts";
 import { CalculatorMetric } from "@/components/calculators/calculator-metric";
-import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobileContextBar } from "@/components/mobile-context-bar";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
@@ -315,7 +315,7 @@ export function RefinanceWorkspace({
               const v = parseFloat(trimmed.replace(/[^0-9.]/g, ""));
               setRateOutOfRange(!Number.isFinite(v) || v < 0 || v > 30);
             }}
-            className="block w-full rounded-md border border-border bg-background px-3 py-2 pr-8 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="block w-full rounded-md border border-border bg-background px-3 py-2 pr-8 text-base md:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
           <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-sm text-muted">%</span>
         </div>
@@ -328,7 +328,7 @@ export function RefinanceWorkspace({
         <select
           value={newTermYears}
           onChange={(e) => setNewTermYears(Number(e.target.value))}
-          className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
+          className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
         >
           <option value={30}>30 years</option>
           <option value={25}>25 years</option>
@@ -347,7 +347,7 @@ export function RefinanceWorkspace({
             placeholder="e.g. 4000"
             value={costsInput}
             onChange={(e) => setCostsInput(e.target.value)}
-            className="block w-full rounded-md border border-border bg-background py-2 pl-6 pr-3 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
+            className="block w-full rounded-md border border-border bg-background py-2 pl-6 pr-3 text-base md:text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
           />
         </div>
         <p className="mt-1 text-xs text-muted">Cash paid at closing, not rolled into the loan.</p>
@@ -543,10 +543,10 @@ export function RefinanceWorkspace({
       </p>
     );
 
-  const mobileContext = selectedProperty ? (
-    <div className="space-y-3">
-      <label className="block text-xs font-medium text-muted">
-        Property
+  const mobileContextBar = selectedProperty ? (
+    <MobileContextBar
+      title="Refinance"
+      subtitle={
         <select
           value={selectedProperty.id}
           onChange={(e) => {
@@ -558,7 +558,7 @@ export function RefinanceWorkspace({
             syncRefinanceWorkspaceQuery(nextPropertyId, firstM || null);
           }}
           disabled={properties.length <= 1}
-          className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+          className="max-w-[12rem] appearance-none bg-transparent pr-4 text-sm font-medium text-muted focus:outline-none disabled:cursor-not-allowed disabled:opacity-70"
         >
           {properties.map((property) => (
             <option key={property.id} value={property.id}>
@@ -566,28 +566,8 @@ export function RefinanceWorkspace({
             </option>
           ))}
         </select>
-      </label>
-      {selectedProperty.mortgages.length > 1 ? (
-        <label className="block text-xs font-medium text-muted">
-          Mortgage
-          <select
-            value={selectedMortgageId}
-            onChange={(e) => {
-              const id = e.target.value;
-              setSelectedMortgageId(id);
-              syncRefinanceWorkspaceQuery(selectedProperty.id, id);
-            }}
-            className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
-          >
-            {selectedProperty.mortgages.map((m, i) => (
-              <option key={m.id} value={m.id}>
-                {getMortgageLabel(m, i)}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-    </div>
+      }
+    />
   ) : null;
 
   if (properties.length === 0) {
@@ -619,23 +599,53 @@ export function RefinanceWorkspace({
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold text-foreground">Refinance</h1>
+      <h1 className="hidden text-2xl font-semibold text-foreground md:block">Refinance</h1>
       <p className="mt-2 text-base text-muted md:hidden">
         What-if refinance for your portfolio loans.
       </p>
 
       <div className="mt-4 md:hidden">
         <MobileToolShell
+          contextBar={mobileContextBar}
           eyebrow="Refinance"
           title="What-If Comparison"
-          context={mobileContext}
           summaryItems={summaryItems}
         >
-          <MobileSectionCard>
-            {inputsSection}
-            {metricsBlock}
-          </MobileSectionCard>
-          <MobileCollapsible label="Balance comparison">{chartSection}</MobileCollapsible>
+          <div className="space-y-0">
+            {selectedProperty && selectedProperty.mortgages.length > 1 ? (
+              <MobilePageSection variant="flat">
+                <label className="block text-xs font-medium text-muted">
+                  Mortgage
+                  <select
+                    value={selectedMortgageId}
+                    onChange={(e) => {
+                      const id = e.target.value;
+                      setSelectedMortgageId(id);
+                      syncRefinanceWorkspaceQuery(selectedProperty.id, id);
+                    }}
+                    className="mt-1.5 block w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
+                  >
+                    {selectedProperty.mortgages.map((m, i) => (
+                      <option key={m.id} value={m.id}>
+                        {getMortgageLabel(m, i)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </MobilePageSection>
+            ) : null}
+
+            <MobilePageSection variant="flat">
+              <div className="space-y-2">{chartSection}</div>
+            </MobilePageSection>
+
+            <MobilePageSection variant="grouped" title="Scenario">
+              <div className="space-y-4 p-4">
+                {inputsSection}
+                {metricsBlock ? <div className="border-t border-border pt-4">{metricsBlock}</div> : null}
+              </div>
+            </MobilePageSection>
+          </div>
         </MobileToolShell>
       </div>
 

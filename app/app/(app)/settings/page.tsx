@@ -98,17 +98,17 @@ export default async function SettingsPage() {
       </section>
 
       <div className="mt-6 rounded-xl border border-border bg-card shadow-sm">
-        <div className="px-6 py-5">
+        <div className="px-4 py-4 md:px-6 md:py-5">
           <p className="mb-3 text-sm font-medium text-muted">Appearance</p>
           <ThemeToggle />
         </div>
-        <div className="border-t border-border px-6 py-5">
+        <div className="border-t border-border px-4 py-4 md:px-6 md:py-5">
           <p className="mb-3 text-sm font-medium text-muted">Portfolio display</p>
           <OwnershipDisplayToggle
             initialMode={((user as { ownershipDisplayMode?: string | null }).ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability"}
           />
         </div>
-        <div className="border-t border-border px-6 py-5">
+        <div className="border-t border-border px-4 py-4 md:px-6 md:py-5">
           <p className="mb-3 text-sm font-medium text-muted">Profile</p>
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             {(user.firstName || user.lastName) && (
@@ -129,7 +129,7 @@ export default async function SettingsPage() {
 
       <section className="mt-6">
         <p className="mb-3 text-sm font-medium text-muted">Plan & billing</p>
-        <div className="rounded-xl border border-border bg-card px-6 py-5 shadow-sm">
+        <div className="rounded-xl border border-border bg-card px-4 py-4 shadow-sm md:px-6 md:py-5">
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
               <dt className="text-sm font-medium text-muted">Current plan</dt>
@@ -183,7 +183,7 @@ export default async function SettingsPage() {
           <div className="mt-4 flex flex-wrap gap-3">
             <Link
               href="/plans"
-              className="rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
+              className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
             >
               {effectiveTier === "free" ? "Upgrade plan" : "Change plan"}
             </Link>
@@ -196,7 +196,7 @@ export default async function SettingsPage() {
 
       <section id="export" className="mt-6 scroll-mt-8">
         <p className="mb-3 text-sm font-medium text-muted">Your data</p>
-        <div className="space-y-6 rounded-xl border border-border bg-card px-6 py-5 shadow-sm">
+        <div className="space-y-6 rounded-xl border border-border bg-card px-4 py-4 shadow-sm md:px-6 md:py-5">
           <p className="text-base text-muted">
             Download your properties and metrics as a CSV file.
           </p>
@@ -209,7 +209,7 @@ export default async function SettingsPage() {
 
       <section className="mt-6">
         <p className="mb-3 text-sm font-medium text-muted">Delete account</p>
-        <div className="rounded-xl border border-negative/20 bg-card px-6 py-5 shadow-sm">
+        <div className="rounded-xl border border-negative/20 bg-card px-4 py-4 shadow-sm md:px-6 md:py-5">
           <DeleteAccountSection />
         </div>
       </section>

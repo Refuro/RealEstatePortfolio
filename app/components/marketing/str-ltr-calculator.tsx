@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CalculatorMetric } from "@/components/calculators/calculator-metric";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
@@ -488,10 +488,9 @@ export function StrLtrCalculator({
   ];
 
   const mobileSurface = (
-    <div className="space-y-3">
-      <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold text-foreground">STR assumptions</h3>
-        <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
+    <div className="space-y-0">
+      <MobilePageSection title="STR assumptions" variant="grouped">
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-4">
           <div>
             <label className={labelClass} htmlFor="str-nightly-m">Nightly ($)</label>
             <input
@@ -529,12 +528,11 @@ export function StrLtrCalculator({
               onChange={(e) => setPlatformFeePercent(e.target.value)}
             />
           </div>
-        </MobileSectionCard>
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
-      <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold text-foreground">LTR assumptions</h3>
-        <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
+      <MobilePageSection title="LTR assumptions" variant="flat">
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-4">
           <div>
             <label className={labelClass} htmlFor="ltr-rent-m">Monthly rent</label>
             <input
@@ -559,12 +557,12 @@ export function StrLtrCalculator({
               onChange={(e) => setMonthlyLtrVacancyPercent(e.target.value)}
             />
           </div>
-        </MobileSectionCard>
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
-      <MobileSectionCard>
+      <MobilePageSection variant="flat">
         <MobileCollapsible label="Expenses & financing">
-          <div className="grid grid-cols-2 gap-3 pt-3">
+          <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-3 pt-6">
             <div className="col-span-2">
               <label className={labelClass} htmlFor="str-exp-m">STR-only $/mo</label>
               <input
@@ -647,10 +645,10 @@ export function StrLtrCalculator({
             </div>
           </div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
 
-      <MobileSectionCard className="space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Results</h3>
+      <MobilePageSection title="Results" variant="grouped">
+        <div className="space-y-3 p-4">
         <div className="grid grid-cols-2 gap-2">
           <CalculatorMetric
             label="Δ Cash flow"
@@ -675,7 +673,8 @@ export function StrLtrCalculator({
             tone={getMonthlyCashFlowTone(ltr.monthlyCashFlow)}
           />
         </div>
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
       {showCta &&
         (isAppShell ? (

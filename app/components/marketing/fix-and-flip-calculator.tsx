@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useUser } from "@clerk/nextjs";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CalculatorMetric } from "@/components/calculators/calculator-metric";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
@@ -327,10 +327,9 @@ export function FixAndFlipCalculator({
   ];
 
   const mobileSurface = (
-    <div className="space-y-3">
-      <MobileSectionCard className="space-y-3.5">
-        <h3 className="text-sm font-semibold text-foreground">Deal</h3>
-        <MobileSectionCard tone="subtle" className="grid grid-cols-2 gap-3">
+    <div className="space-y-0">
+      <MobilePageSection title="Deal" variant="grouped">
+        <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-4">
           <div className="col-span-2">
             <label className={labelClass} htmlFor="ff-purchase-m">
               Purchase
@@ -373,12 +372,12 @@ export function FixAndFlipCalculator({
               onChange={(e) => setArv(e.target.value)}
             />
           </div>
-        </MobileSectionCard>
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
-      <MobileSectionCard>
+      <MobilePageSection variant="flat">
         <MobileCollapsible label="Financing & hold">
-          <div className="grid grid-cols-2 gap-3 pt-3">
+          <div className="grid grid-cols-2 gap-3 rounded-lg bg-subtle/40 p-3 pt-6">
             <div>
               <label className={labelClass} htmlFor="ff-hold-m">
                 Hold mo
@@ -452,7 +451,7 @@ export function FixAndFlipCalculator({
             </div>
           </div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
 
       {showCta &&
         (isAppShell ? (

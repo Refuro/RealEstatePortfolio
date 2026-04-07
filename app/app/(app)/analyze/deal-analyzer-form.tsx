@@ -4,7 +4,9 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import Link from "next/link";
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { useRouter } from "next/navigation";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobileContextBar } from "@/components/mobile-context-bar";
+import { MobileFormGroup } from "@/components/mobile-form-group";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { CurrencyInput } from "@/components/currency-input";
 import { formatCurrency } from "@/lib/format-currency";
@@ -34,19 +36,39 @@ function DealPortfolioCompareBlock({
   dealCoc,
   dealDscr,
   dealMonthlyCf,
+  variant = "desktop",
 }: {
   portfolio: DealPortfolioContext;
   dealCapRate: number | null;
   dealCoc: number | null;
   dealDscr: number | null;
   dealMonthlyCf: number;
+  variant?: "desktop" | "mobile";
 }) {
   const fmtPct = (p: number | null) => (p != null ? `${(p * 100).toFixed(2)}%` : "—");
   const empty = portfolio.propertyCount === 0;
 
   if (empty) {
+    if (variant === "mobile") {
+      return (
+        <MobilePageSection title="Compared to your portfolio" variant="grouped">
+          <div className="space-y-2 p-4">
+            <p className="text-sm text-muted">
+              Add at least one property to your portfolio to compare this deal&apos;s metrics at a
+              glance.
+            </p>
+            <Link
+              href="/properties/new"
+              className="inline-flex text-sm font-medium text-accent hover:underline"
+            >
+              Add property
+            </Link>
+          </div>
+        </MobilePageSection>
+      );
+    }
     return (
-      <MobileSectionCard className="space-y-2">
+      <div className="space-y-2 rounded-xl border border-border bg-card p-4 shadow-sm">
         <h3 className="text-sm font-semibold text-foreground">
           Compared to your portfolio
         </h3>
@@ -59,12 +81,65 @@ function DealPortfolioCompareBlock({
         >
           Add property
         </Link>
-      </MobileSectionCard>
+      </div>
+    );
+  }
+
+  if (variant === "mobile") {
+    return (
+      <MobilePageSection title="Compared to your portfolio" variant="grouped">
+        <div className="space-y-3 p-4">
+          <p className="text-xs text-muted">
+            Portfolio uses your ownership display mode and up to {portfolio.propertyCount} included
+            properties
+            {portfolio.truncated ? " (plan limit applies)" : ""}.
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[280px] text-sm">
+              <thead>
+                <tr className="border-b border-border text-left text-[11px] text-muted">
+                  <th className="py-2 pr-2 font-medium">Metric</th>
+                  <th className="py-2 pr-2 font-medium">This deal</th>
+                  <th className="py-2 font-medium">Portfolio</th>
+                </tr>
+              </thead>
+              <tbody className="text-foreground">
+                <tr className="border-b border-border">
+                  <td className="py-2 pr-2 text-muted">Cap rate</td>
+                  <td className="py-2 pr-2 font-medium">{fmtPct(dealCapRate)}</td>
+                  <td className="py-2 font-medium">{fmtPct(portfolio.weightedCapRate)}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="py-2 pr-2 text-muted">Cash-on-cash</td>
+                  <td className="py-2 pr-2 font-medium">{fmtPct(dealCoc)}</td>
+                  <td className="py-2 font-medium">{fmtPct(portfolio.portfolioCashOnCashReturn)}</td>
+                </tr>
+                <tr className="border-b border-border">
+                  <td className="py-2 pr-2 text-muted">DSCR</td>
+                  <td className="py-2 pr-2 font-medium">{dealDscr != null ? dealDscr.toFixed(2) : "—"}</td>
+                  <td className="py-2 font-medium">
+                    {portfolio.dscr != null ? portfolio.dscr.toFixed(2) : "—"}
+                  </td>
+                </tr>
+                <tr>
+                  <td className="py-2 pr-2 text-muted">Monthly cash flow</td>
+                  <td className="py-2 pr-2 font-medium">{formatCurrency(dealMonthlyCf)}</td>
+                  <td className="py-2 font-medium">{formatCurrency(portfolio.totalMonthlyCashFlow)}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <p className="text-[11px] text-muted">
+            Deal metrics are from the assumptions above; portfolio metrics aggregate saved
+            properties.
+          </p>
+        </div>
+      </MobilePageSection>
     );
   }
 
   return (
-    <MobileSectionCard className="space-y-3">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       <div>
         <h3 className="text-sm font-semibold text-foreground">
           Compared to your portfolio
@@ -85,17 +160,17 @@ function DealPortfolioCompareBlock({
             </tr>
           </thead>
           <tbody className="text-foreground">
-            <tr className="border-b border-border/60">
+            <tr className="border-b border-border">
               <td className="py-2 pr-2 text-muted">Cap rate</td>
               <td className="py-2 pr-2 font-medium">{fmtPct(dealCapRate)}</td>
               <td className="py-2 font-medium">{fmtPct(portfolio.weightedCapRate)}</td>
             </tr>
-            <tr className="border-b border-border/60">
+            <tr className="border-b border-border">
               <td className="py-2 pr-2 text-muted">Cash-on-cash</td>
               <td className="py-2 pr-2 font-medium">{fmtPct(dealCoc)}</td>
               <td className="py-2 font-medium">{fmtPct(portfolio.portfolioCashOnCashReturn)}</td>
             </tr>
-            <tr className="border-b border-border/60">
+            <tr className="border-b border-border">
               <td className="py-2 pr-2 text-muted">DSCR</td>
               <td className="py-2 pr-2 font-medium">{dealDscr != null ? dealDscr.toFixed(2) : "—"}</td>
               <td className="py-2 font-medium">
@@ -113,7 +188,7 @@ function DealPortfolioCompareBlock({
       <p className="text-[11px] text-muted">
         Deal metrics are from the assumptions above; portfolio metrics aggregate saved properties.
       </p>
-    </MobileSectionCard>
+    </div>
   );
 }
 
@@ -525,15 +600,8 @@ export function DealAnalyzerForm({
 
   const mobileInputsSurface = (
     <section className="space-y-3.5">
-      <MobileSectionCard className="space-y-3.5">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
-          {loadingDeal ? "Loading deal…" : "Deal assumptions"}
-        </h2>
-
-        <MobileSectionCard tone="subtle" className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Basics
-          </p>
+      <MobilePageSection title={loadingDeal ? "Loading deal..." : "Basics"} variant="grouped">
+        <div className="space-y-3 p-4">
           <div>
             <label htmlFor="addressLine1-mobile" className={labelClass}>
               Address line 1
@@ -645,12 +713,11 @@ export function DealAnalyzerForm({
               </p>
             </div>
           </div>
-        </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
-        <MobileSectionCard tone="subtle" className="space-y-3">
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
-            Income and expenses
-          </p>
+      <MobilePageSection title="Income" variant="grouped">
+        <div className="space-y-3 p-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="monthlyRent-mobile" className={labelClass}>
@@ -679,23 +746,6 @@ export function DealAnalyzerForm({
                 className={inputClass}
               />
             </div>
-            {rentSuggestion != null && (
-              <div className="col-span-2 flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
-                <span className="text-sm text-foreground">
-                  Market rent estimate: <span className="font-medium">{formatCurrency(rentSuggestion)}/mo</span>
-                </span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMonthlyRent(String(rentSuggestion));
-                    setRentSuggestion(null);
-                  }}
-                  className="shrink-0 text-sm font-medium text-accent hover:underline"
-                >
-                  Use this
-                </button>
-              </div>
-            )}
             <div className="col-span-2">
               <label htmlFor="vacancyPercent-mobile" className={labelClass}>
                 Vacancy %
@@ -712,14 +762,33 @@ export function DealAnalyzerForm({
               />
             </div>
           </div>
-        </MobileSectionCard>
+          {rentSuggestion != null && (
+            <div className="flex items-center justify-between rounded-lg border border-accent/30 bg-accent/10 px-3 py-2">
+              <span className="text-sm text-foreground">
+                Market rent estimate: <span className="font-medium">{formatCurrency(rentSuggestion)}/mo</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setMonthlyRent(String(rentSuggestion));
+                  setRentSuggestion(null);
+                }}
+                className="shrink-0 text-sm font-medium text-accent hover:underline"
+              >
+                Use this
+              </button>
+            </div>
+          )}
+        </div>
+      </MobilePageSection>
 
-        <MobileSectionCard tone="subtle">
-          <MobileCollapsible
-            label={mortgageBalance || monthlyPayment || cashInvested ? "Debt and ownership" : "Add debt and ownership"}
-            defaultOpen={!!dealId || !!mortgageBalance || !!monthlyPayment}
-          >
-            <div className="space-y-3 pt-3">
+      <MobilePageSection variant="flat">
+        <MobileCollapsible
+          label={mortgageBalance || monthlyPayment || cashInvested ? "Debt and ownership" : "Add debt and ownership"}
+          defaultOpen={!!dealId || !!mortgageBalance || !!monthlyPayment}
+        >
+          <div className="space-y-4 pt-3">
+            <MobileFormGroup>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="mortgageBalance-mobile" className={labelClass}>
@@ -744,6 +813,8 @@ export function DealAnalyzerForm({
                   />
                 </div>
               </div>
+            </MobileFormGroup>
+            <MobileFormGroup>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label htmlFor="cashInvested-mobile" className={labelClass}>
@@ -772,10 +843,10 @@ export function DealAnalyzerForm({
                   />
                 </div>
               </div>
-            </div>
-          </MobileCollapsible>
-        </MobileSectionCard>
-      </MobileSectionCard>
+            </MobileFormGroup>
+          </div>
+        </MobileCollapsible>
+      </MobilePageSection>
     </section>
   );
 
@@ -788,18 +859,17 @@ export function DealAnalyzerForm({
           dealCoc={metrics.cashOnCashReturn}
           dealDscr={dscr}
           dealMonthlyCf={metrics.monthlyCashFlow}
+          variant="mobile"
         />
       )}
-      <MobileSectionCard className="space-y-3">
+      <MobilePageSection title="Deal signal" variant="grouped">
+        <div className="space-y-3 p-4">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">
-              Live result
-            </h3>
             <p className="mt-1 text-sm text-muted">{cashFlowSignal}</p>
           </div>
           <div className="text-right">
-            <p className="text-[11px] uppercase tracking-wide text-muted">Cash flow</p>
+            <p className="text-[11px] text-muted">Cash flow</p>
             <p className={`mt-1 text-lg font-semibold ${cashFlowTone}`}>
               {formatCurrency(metrics.monthlyCashFlow)}
             </p>
@@ -807,19 +877,19 @@ export function DealAnalyzerForm({
         </div>
 
         <div className="grid grid-cols-2 gap-2">
-          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+          <div className="rounded-lg bg-subtle/40 px-3 py-2.5">
             <p className="text-[11px] text-muted">Cap rate</p>
             <p className="mt-1 text-base font-semibold text-foreground">
               {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
             </p>
           </div>
-          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+          <div className="rounded-lg bg-subtle/40 px-3 py-2.5">
             <p className="text-[11px] text-muted">DSCR</p>
             <p className={`mt-1 text-base font-semibold ${dscrTone}`}>
               {dscr != null ? dscr.toFixed(2) : "—"}
             </p>
           </div>
-          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+          <div className="rounded-lg bg-subtle/40 px-3 py-2.5">
             <p className="text-[11px] text-muted">Cash-on-cash</p>
             <p className="mt-1 text-base font-semibold text-foreground">
               {metrics.cashOnCashReturn != null
@@ -827,7 +897,7 @@ export function DealAnalyzerForm({
                 : "—"}
             </p>
           </div>
-          <div className="rounded-xl bg-background/45 px-3 py-2.5">
+          <div className="rounded-lg bg-subtle/40 px-3 py-2.5">
             <p className="text-[11px] text-muted">Equity</p>
             <p className="mt-1 text-base font-semibold text-foreground">
               {formatCurrency(metrics.equity)}
@@ -835,13 +905,14 @@ export function DealAnalyzerForm({
           </div>
         </div>
 
-      </MobileSectionCard>
+        </div>
+      </MobilePageSection>
 
-      <MobileSectionCard tone="subtle">
+      <MobilePageSection variant="flat">
         <MobileCollapsible label="Stress test" defaultOpen={stressActive}>
           <div className="space-y-3 pt-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <p className="text-[11px] font-medium text-muted">
                 Sensitivity
               </p>
               {stressActive && (
@@ -858,7 +929,7 @@ export function DealAnalyzerForm({
               )}
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <p className="text-[11px] font-medium text-muted">
                 Rent sensitivity
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -882,7 +953,7 @@ export function DealAnalyzerForm({
               </div>
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted">
+              <p className="text-[11px] font-medium text-muted">
                 Expense sensitivity
               </p>
               <div className="mt-1 flex flex-wrap gap-2">
@@ -907,9 +978,9 @@ export function DealAnalyzerForm({
             </div>
           </div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
 
-      <MobileSectionCard tone="subtle">
+      <MobilePageSection variant="flat">
         <MobileCollapsible label="Full metrics">
           <div className="pt-3">
             <PropertyMetricsSection
@@ -927,51 +998,21 @@ export function DealAnalyzerForm({
             />
           </div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
     </section>
   );
 
   const analyzerLocation = [city.trim(), state.trim()].filter(Boolean).join(", ");
-  const mobileHeader = (
-    <div className="space-y-3">
-      <div className="space-y-1">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted">
-          Active deal
-        </p>
-        <p className="text-sm font-medium text-foreground">
-          {loadingDeal
-            ? "Loading analysis..."
-            : addressLine1.trim() || (activeDealId ? "Saved deal" : "Unsaved analysis")}
-        </p>
-        <div className="flex items-center gap-2">
-          <p className="text-xs text-muted">
-            {analyzerLocation || "Enter address, rent, and expenses to start."}
-          </p>
-          {dealLimit > 0 && (
-            <span className="shrink-0 text-xs text-muted">
-              · {dealCount}/{dealLimit} saved
-            </span>
-          )}
-        </div>
-      </div>
-      {saveError && (
-        <p className="rounded-xl border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative">
-          {saveError}
-        </p>
-      )}
-      {atLimit && !activeDealId && (
-        <p className="text-sm text-muted">
-          You&apos;ve reached your deal limit.{" "}
-          <UpgradePlanLink
-            placement="deal_analyzer_header_deal_limit"
-            className="font-medium text-foreground hover:underline"
-          >
-            Upgrade to save more deals
-          </UpgradePlanLink>
-          .
-        </p>
-      )}
-    </div>
+  const mobileContextBar = (
+    <MobileContextBar
+      title="Deal Analyzer"
+      subtitle={
+        loadingDeal
+          ? "Loading analysis..."
+          : analyzerLocation || (activeDealId ? "Saved deal" : "Unsaved analysis")
+      }
+      trailing={dealLimit > 0 ? <span className="text-xs text-muted">{dealCount}/{dealLimit}</span> : undefined}
+    />
   );
 
   const mobileSummaryItems = [
@@ -1005,6 +1046,23 @@ export function DealAnalyzerForm({
 
   const mobileFooter = (
     <div className="space-y-3">
+      {saveError && (
+        <p className="rounded-xl border border-negative/30 bg-negative/10 px-3 py-2 text-sm text-negative">
+          {saveError}
+        </p>
+      )}
+      {atLimit && !activeDealId && (
+        <p className="text-sm text-muted">
+          You&apos;ve reached your deal limit.{" "}
+          <UpgradePlanLink
+            placement="deal_analyzer_header_deal_limit"
+            className="font-medium text-foreground hover:underline"
+          >
+            Upgrade to save more deals
+          </UpgradePlanLink>
+          .
+        </p>
+      )}
       {showSavedToast && (
         <div className="flex items-center justify-between rounded-xl border border-positive/30 bg-positive/10 px-3 py-2">
           <span className="text-sm font-medium text-positive">Deal saved</span>
@@ -1043,24 +1101,23 @@ export function DealAnalyzerForm({
   if (isMobile) {
     return (
       <MobileToolShell
+        contextBar={mobileContextBar}
         eyebrow="Analyzer"
         title="Deal Analyzer"
-        context={mobileHeader}
         summaryItems={[...mobileSummaryItems]}
         footer={mobileFooter}
-        contentClassName="pt-3"
-      >
-        <div className="space-y-3">
-          {mobileInputsSurface}
-          {mobileResultsSurface}
-        </div>
-      </MobileToolShell>
+        modes={[
+          { id: "inputs", label: "Inputs", content: mobileInputsSurface },
+          { id: "results", label: "Results", content: mobileResultsSurface },
+        ]}
+        initialModeId="inputs"
+      />
     );
   }
 
   return (
     <div className="grid gap-5 xl:grid-cols-12">
-      <section className="xl:col-span-7 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+      <section className="xl:col-span-7 rounded-xl border border-border bg-card p-4 shadow-sm">
         <div className="mb-4">
           <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
             {loadingDeal ? "Loading deal…" : "Deal assumptions"}
@@ -1071,7 +1128,7 @@ export function DealAnalyzerForm({
         </div>
 
         <div className="space-y-3.5">
-          <div className="rounded-md border border-border/70 bg-background/45 p-3.5">
+          <div className="rounded-md border border-border bg-background/45 p-3.5">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">Basics</h3>
             <div className="space-y-4">
               <div>
@@ -1183,7 +1240,7 @@ export function DealAnalyzerForm({
             </div>
           </div>
 
-          <div className="rounded-md border border-border/70 bg-background/45 p-3.5">
+          <div className="rounded-md border border-border bg-background/45 p-3.5">
             <h3 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
               Income and expenses
             </h3>
@@ -1251,7 +1308,7 @@ export function DealAnalyzerForm({
           </div>
 
           <MobileCollapsible label="Debt and ownership" defaultOpen={!!dealId || !!mortgageBalance}>
-          <div className="rounded-md border border-border/70 bg-background/45 p-3.5">
+          <div className="rounded-md border border-border bg-background/45 p-3.5">
             <h3 className="mb-3 hidden text-xs font-semibold uppercase tracking-wide text-muted md:block">
               Debt and ownership
             </h3>
@@ -1315,7 +1372,7 @@ export function DealAnalyzerForm({
       </section>
 
       <section className="space-y-3.5 xl:col-span-5 xl:sticky xl:top-20 xl:self-start">
-        <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between gap-2">
               <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
@@ -1377,7 +1434,7 @@ export function DealAnalyzerForm({
         </div>
 
         {activeDealId && (
-          <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Convert to property
             </h3>
@@ -1404,7 +1461,7 @@ export function DealAnalyzerForm({
           </div>
         )}
 
-        <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
               Stress test
@@ -1477,26 +1534,26 @@ export function DealAnalyzerForm({
           </div>
         </div>
 
-        <div className="rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
           <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
             Deal signal
           </h3>
           <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            <div className="rounded-md border border-border/70 bg-background/50 px-2.5 py-1.5">
+            <div className="rounded-md border border-border bg-background/50 px-2.5 py-1.5">
               <p className="text-[11px] text-muted">Monthly cash flow</p>
               <p className={`mt-1 text-sm font-semibold ${cashFlowTone}`}>
                 {formatCurrency(metrics.monthlyCashFlow)}
               </p>
               <p className="mt-0.5 text-[11px] text-muted">{cashFlowSignal}</p>
             </div>
-            <div className="rounded-md border border-border/70 bg-background/50 px-2.5 py-1.5">
+            <div className="rounded-md border border-border bg-background/50 px-2.5 py-1.5">
               <p className="text-[11px] text-muted">DSCR</p>
               <p className={`mt-1 text-sm font-semibold ${dscrTone}`}>
                 {dscr != null ? dscr.toFixed(2) : "—"}
               </p>
               <p className="mt-0.5 text-[11px] text-muted">{dscrSignal}</p>
             </div>
-            <div className="rounded-md border border-border/70 bg-background/50 px-2.5 py-1.5">
+            <div className="rounded-md border border-border bg-background/50 px-2.5 py-1.5">
               <p className="text-[11px] text-muted">Cap rate</p>
               <p className="mt-1 text-sm font-semibold text-foreground">
                 {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
@@ -1511,13 +1568,13 @@ export function DealAnalyzerForm({
             </div>
           </div>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
-            <span className="rounded-md border border-border/70 bg-background/45 px-2 py-1 text-muted">
+            <span className="rounded-md border border-border bg-background/45 px-2 py-1 text-muted">
               Ownership: <span className="font-medium text-foreground">{ownershipNum}%</span>
             </span>
-            <span className="rounded-md border border-border/70 bg-background/45 px-2 py-1 text-muted">
+            <span className="rounded-md border border-border bg-background/45 px-2 py-1 text-muted">
               Vacancy: <span className="font-medium text-foreground">{vacancyNum}%</span>
             </span>
-            <span className="rounded-md border border-border/70 bg-background/45 px-2 py-1 text-muted">
+            <span className="rounded-md border border-border bg-background/45 px-2 py-1 text-muted">
               Debt:{" "}
               <span className="font-medium text-foreground">
                 {monthlyPaymentNum > 0
@@ -1582,34 +1639,6 @@ export function DealAnalyzerForm({
         )}
       </section>
 
-      {/* Mobile sticky results bar */}
-      {!needsInputGuidance && (
-        <div
-          className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-card px-4 pt-2.5 md:hidden"
-          style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
-        >
-          <div className="flex items-center justify-between gap-3 text-sm">
-            <div className="min-w-0">
-              <p className="text-[11px] text-muted">Cash flow</p>
-              <p className={`font-semibold ${cashFlowTone}`}>
-                {formatCurrency(metrics.monthlyCashFlow)}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] text-muted">Cap rate</p>
-              <p className="font-semibold text-foreground">
-                {metrics.capRate != null ? `${(metrics.capRate * 100).toFixed(2)}%` : "—"}
-              </p>
-            </div>
-            <div className="min-w-0">
-              <p className="text-[11px] text-muted">DSCR</p>
-              <p className={`font-semibold ${dscrTone}`}>
-                {dscr != null ? dscr.toFixed(2) : "—"}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

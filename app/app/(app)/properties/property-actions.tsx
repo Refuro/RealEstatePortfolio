@@ -29,7 +29,7 @@ export function PropertyActions({ propertyId }: { propertyId: string }) {
     <div className="flex items-center gap-2">
       <Link
         href={`/properties/${propertyId}/edit`}
-        className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+        className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium hover:bg-subtle"
       >
         Edit
       </Link>
@@ -37,7 +37,7 @@ export function PropertyActions({ propertyId }: { propertyId: string }) {
         <button
           type="button"
           onClick={() => setConfirmOpen(true)}
-          className="rounded-md border border-negative/30 px-3 py-1.5 text-sm font-medium text-negative hover:bg-negative/10"
+          className="inline-flex min-h-[44px] items-center rounded-md border border-negative/30 px-3 py-1.5 text-sm font-medium text-negative hover:bg-negative/10"
         >
           Delete
         </button>
@@ -48,7 +48,7 @@ export function PropertyActions({ propertyId }: { propertyId: string }) {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="rounded-md bg-negative px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center rounded-md bg-negative px-3 py-1.5 text-sm font-medium text-white disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Yes"}
           </button>
@@ -56,7 +56,7 @@ export function PropertyActions({ propertyId }: { propertyId: string }) {
             type="button"
             onClick={() => setConfirmOpen(false)}
             disabled={deleting}
-            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium hover:bg-subtle"
           >
             No
           </button>

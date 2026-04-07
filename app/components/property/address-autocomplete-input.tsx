@@ -165,6 +165,7 @@ export function AddressAutocompleteInput({
         ref={inputRef}
         id={id}
         type="text"
+        role="combobox"
         required={required}
         autoComplete={autoComplete}
         value={value}

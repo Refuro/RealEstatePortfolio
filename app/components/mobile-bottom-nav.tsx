@@ -24,8 +24,8 @@ export function MobileBottomNav() {
           <Link
             key={href}
             href={href}
-            className={`flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-[10px] font-medium transition-colors duration-150 ${
-              isActive ? "text-accent" : "text-muted hover:text-foreground"
+            className={`flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-[11px] transition-colors duration-150 ${
+              isActive ? "font-medium text-accent" : "text-muted hover:text-foreground"
             }`}
           >
             <Icon className="size-5" aria-hidden />
@@ -35,7 +35,7 @@ export function MobileBottomNav() {
       })}
       <button
         type="button"
-        className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-[10px] font-medium text-muted transition-colors duration-150 hover:text-foreground"
+        className="flex min-h-[44px] min-w-[44px] flex-col items-center justify-center gap-0.5 px-3 py-1 text-[11px] text-muted transition-colors duration-150 hover:text-foreground"
         aria-label="More navigation options"
         onClick={() => {
           document.dispatchEvent(new CustomEvent("open-mobile-menu"));

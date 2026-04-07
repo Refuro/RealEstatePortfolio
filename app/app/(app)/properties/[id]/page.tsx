@@ -138,7 +138,7 @@ export default async function PropertyDetailPage({
       <h1 className="text-2xl font-semibold text-foreground">{pageTitle}</h1>
 
       {fromQuickAdd && (
-        <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="mt-3 rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-sm font-semibold text-foreground">
             Property created with quick-add
           </p>

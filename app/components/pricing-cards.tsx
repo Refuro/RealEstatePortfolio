@@ -227,7 +227,7 @@ export function PricingCards({
           <button
             type="button"
             onClick={() => setBillingCycle("monthly")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md min-h-[44px] px-4 py-1.5 text-sm font-medium transition-colors ${
               billingCycle === "monthly"
                 ? "bg-accent text-accent-foreground"
                 : "text-muted hover:bg-subtle hover:text-foreground"
@@ -238,7 +238,7 @@ export function PricingCards({
           <button
             type="button"
             onClick={() => setBillingCycle("yearly")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`rounded-md min-h-[44px] px-4 py-1.5 text-sm font-medium transition-colors ${
               billingCycle === "yearly"
                 ? "bg-accent text-accent-foreground"
                 : "text-muted hover:bg-subtle hover:text-foreground"
@@ -320,7 +320,6 @@ export function PricingCards({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
-                <p className="mt-1 hidden text-sm text-muted md:block">{plan.description}</p>
                 {showSignUp && (
                   <p className="mt-2 text-xs font-medium text-foreground/90">
                     {plan.publicBestFor}

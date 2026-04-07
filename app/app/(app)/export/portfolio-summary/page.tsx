@@ -75,7 +75,7 @@ export default function PortfolioSummaryPrintPage() {
             type="button"
             onClick={handlePrint}
             disabled={!data}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
+            className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
           >
             Print or save as PDF
           </button>
