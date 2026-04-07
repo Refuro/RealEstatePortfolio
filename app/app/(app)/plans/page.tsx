@@ -92,7 +92,7 @@ export default async function PlansPage() {
             <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:items-center">
               <Link
                 href="/settings"
-                className="whitespace-nowrap rounded-md border border-border bg-transparent px-3 py-1.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
+                className="inline-flex min-h-[44px] items-center justify-center whitespace-nowrap rounded-md border border-border bg-transparent px-3 py-1.5 text-center text-sm font-medium text-foreground hover:bg-subtle"
               >
                 Open settings
               </Link>

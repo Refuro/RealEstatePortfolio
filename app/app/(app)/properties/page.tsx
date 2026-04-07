@@ -298,13 +298,13 @@ export default async function PropertiesPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/modeling"
-            className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
             Modeling
           </Link>
           <Link
             href="/mortgage"
-            className="rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
           >
             Mortgage
           </Link>
@@ -354,7 +354,7 @@ export default async function PropertiesPage({
                 {(activeFilter !== "all" || activeSort !== "updated") && (
                   <Link
                     href="/properties"
-                    className="rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-subtle"
+                    className="inline-flex min-h-[44px] items-center rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-subtle"
                   >
                     Reset
                   </Link>

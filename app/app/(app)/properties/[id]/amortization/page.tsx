@@ -41,11 +41,13 @@ export default async function AmortizationPage({
         <p className="mt-0.5 text-sm text-muted">{address}</p>
       )}
 
-      <div className="mt-8">
+      <div className="mt-8 overflow-x-auto">
         <p className="mb-4 text-sm text-muted">
           Original mortgage terms. Not affected by scenario.
         </p>
-        <AmortizationChartDynamic propertyId={property.id} />
+        <div className="min-w-0">
+          <AmortizationChartDynamic propertyId={property.id} />
+        </div>
       </div>
     </div>
   );

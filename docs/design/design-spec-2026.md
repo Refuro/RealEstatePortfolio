@@ -211,7 +211,15 @@ Three levels. Apply the discrete object test before wrapping content in a Panel:
 
 **The sibling rule:** When multiple sibling Panels would be traversed sequentially as part of a single user task (e.g., reading through settings), they belong in ONE Panel with internal `border-t border-border` section dividers.
 
-**The opacity-variant rule:** `border-border/70` and `bg-card/95` are permitted where subtle translucency is intentional — e.g. calculator result panels or nested card overlays where full-value tokens would add unwanted visual weight. Prefer full-value `border-border` and `bg-card` for standard Panel and Inset surfaces where translucency adds nothing.
+**The opacity-variant rule:** Default to full-value tokens on app surfaces. Deprecated variants must not be introduced in new code:
+
+- `border-border/70` -> `border-border`
+- `border-border/60` -> `border-border`
+- `bg-card/95`, `bg-card/90`, `bg-card/70` -> `bg-card`
+- `bg-background/75` -> `bg-subtle` for section tints, `bg-foreground/50` for scrims/backdrops
+- `bg-background/55`, `bg-background/35` -> `bg-card`
+
+Exception: `components/calculators/calculator-metric.tsx` intentionally keeps its current border treatment for visual continuity.
 
 **Settings page panel structure:**
 - Panel A — Account preferences (Appearance + Portfolio display + Profile)
@@ -586,11 +594,16 @@ Use for: `loading.tsx` files in each route segment. The skeleton must resemble t
 - Chart content area: `p-5`
 - Individual chart components must not carry their own `rounded-xl border ... shadow-sm` when nested inside the unified panel.
 
-### 13.10 MobileCollapsible and MobileSectionCard
+### 13.10 MobileCollapsible and Mobile Tool Primitives
 
-- These mobile-specific components work correctly. Visual polish only — no structural changes.
 - `MobileCollapsible`: label uses `text-sm font-medium text-muted` (no uppercase)
-- `MobileSectionCard`: border uses `border-border bg-card` (no `/70` or `/95` opacity dilution)
+- `MobileSectionCard` and `MobileSummaryRail` were removed after migration; do not reintroduce them.
+- For active mobile development, use:
+  - `MobileContextBar` (context row)
+  - `MobileStatStrip` (summary metrics)
+  - `MobilePageSection` (`grouped` + `flat`)
+  - `MobileFormGroup` (input clustering)
+- Preferred order on mobile tool pages: context bar -> stat strip -> primary chart/result -> assumptions/input sections.
 
 ### 13.11 MockupFrame (`components/mockups/mockup-frame.tsx`)
 
@@ -642,7 +655,7 @@ The result tile used in all calculator components to display computed metrics.
 - `warning` — `border-l-2 border-warning`, value in `text-warning`
 - `neutral` — no border accent, value in `text-muted`
 
-This component uses `border-border/70` and `bg-background/45`. The translucency creates visual separation within a calculator result panel without adding card weight — a good example of where opacity variants are appropriate per the §7 opacity-variant rule.
+This component currently uses `border-border/70` and `bg-background/45` as a legacy exception for calculator metric readability. Do not copy this pattern into new components; default to full-value tokens per the Phase 5 deprecation rules in §5.
 
 ### 13.14 FunnelCtaLink (`components/marketing/funnel-cta-link.tsx`)
 
@@ -1033,7 +1046,7 @@ These patterns are explicitly prohibited in all new and edited code.
 
 ### 16.2 Colors and Borders
 
-- Prefer `border-border` and `bg-card` at full values for standard Panel surfaces. Opacity variants (`border-border/70`, `bg-card/95`) are permitted where translucency is intentional — see §7 opacity-variant rule.
+- Prefer `border-border` and `bg-card` at full values for standard Panel surfaces. Do not introduce deprecated opacity variants (`border-border/70`, `border-border/60`, `bg-card/95`, `bg-card/90`, `bg-card/70`) outside documented legacy exceptions.
 - **Do not** use raw hex color values in components — always use semantic tokens (`text-accent`, not `text-[#6366f1]`)
 - **Do not** use `--positive` (green) for non-semantic purposes. It means financial gain. Not for brand accents or decoration.
 
@@ -1071,6 +1084,10 @@ These patterns are explicitly prohibited in all new and edited code.
 - **Do not** render the footer inside the authenticated app shell on mobile — `MobileBottomNav` replaces it
 - **Do not** add `env(safe-area-inset-bottom)` dependent styling without confirming `viewport-fit=cover` is set in the viewport meta
 - **Do not** have any `<button>` or `<a>` on mobile that renders below 44px in height — use `min-h-[44px]` as a guard
+- **Do not** ship mobile forms with `text-sm`-only input sizing. Use `text-base md:text-sm` to prevent iOS Safari zoom-on-focus
+- **Do not** stack redundant chrome (duplicate quick links + bottom nav, verbose header + context bar, multiple sticky bars competing on one view)
+- **Do not** hide a page's primary chart/result behind a default-closed collapsible
+- Use the mobile z-index scale consistently: `z-10` local sticky controls, `z-40` app header/non-nav overlays, `z-50` nav/drawer/modal shells, `z-[70]` onboarding tier
 
 ### 16.8 Social Proof
 
@@ -1092,6 +1109,7 @@ These patterns are explicitly prohibited in all new and edited code.
 | 2.5 | 2026-04-01 | Phase 3 Rollout: uppercase label removal, border pattern normalization, back-link icons |
 | 3.0 | 2026-04-03 | Consolidated canonical spec. Supersedes all prior phase documents. |
 | 3.1 | 2026-04-04 | **This document.** Spec reconciliation pass: added Section 10 motion system (hero-animate, reveal-up, AnimatedSection, cta-accent-glow), Section 15 Marketing Surface Patterns, Section 16 (renumbered Anti-Patterns); added Component entries 13.11–13.14 (MockupFrame, AnimatedSection, CalculatorMetric, FunnelCtaLink); corrected 13.5 logo size, 13.6 bg-card/95 contradiction, 14.1 landing page section count and hero details, 14.2 pricing page comparison table column count and screenshot section, 14.12 calculator page layouts, 14.13 changelog timeline dot and date chip. |
+| 3.2 | 2026-04-06 | Mobile redesign codification pass: deprecated opacity token replacements, migration guidance away from `MobileSectionCard`/`MobileSummaryRail`, and explicit mobile rules for content-first ordering, iOS zoom-safe inputs, chrome reduction, and z-index tiers. |
 
 **Superseded documents** (kept as historical record):
 - `docs/design/design-brief-2026.md` — Phase 1 brief

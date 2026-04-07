@@ -98,7 +98,7 @@ const defaultWizardData: WizardData = {
 };
 
 const inputClass =
-  "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
+  "mt-1 block w-full rounded-md border border-border bg-background px-3 py-2 text-base md:text-sm focus:outline-none focus:ring-2 focus:ring-accent/20";
 const labelClass = "block text-sm font-medium text-muted";
 const inputErrorClass = "ring-1 ring-negative/50 border-negative";
 

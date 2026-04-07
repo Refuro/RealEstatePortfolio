@@ -60,7 +60,7 @@ export default async function NewPropertyPage({
         </div>
       )}
       {dealId && (
-        <div className="mt-4 rounded-lg border border-border/70 bg-card/90 p-3">
+        <div className="mt-4 rounded-lg border border-border bg-card p-3">
           <p className="text-sm text-foreground">
             Converting a saved deal into a portfolio property.
           </p>

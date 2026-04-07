@@ -16,7 +16,6 @@ import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
-import { WorkspaceNavMobile } from "./workspace-nav-mobile";
 import { PaidIntentCheckoutBanner } from "@/components/growth/paid-intent-checkout-banner";
 
 export default async function DashboardPage({
@@ -163,7 +162,7 @@ export default async function DashboardPage({
       <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
       <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
       {onboarding === "first-property" && (
-        <div className="mt-3 rounded-xl border border-border/70 bg-card/95 p-4 shadow-sm">
+        <div className="mt-3 rounded-xl border border-border bg-card p-4 shadow-sm">
           <p className="text-sm font-semibold text-foreground">
             Property added. Your portfolio is now live.
           </p>
@@ -174,32 +173,32 @@ export default async function DashboardPage({
             {singleProperty && (
               <Link
                 href={`/properties/${singleProperty.id}/edit`}
-                className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+                className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
               >
                 Complete property details
               </Link>
             )}
             <Link
               href="/analyze"
-              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
               Analyze a deal
             </Link>
             <Link
               href={modelingHref}
-              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
               Run projections
             </Link>
             <Link
               href={mortgageHref}
-              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
               Simulate mortgage payoff
             </Link>
             <Link
               href="/properties/new"
-              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
+              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
             >
               Add another property
             </Link>
@@ -210,13 +209,13 @@ export default async function DashboardPage({
         <div className="flex flex-wrap items-center gap-2">
           <Link
             href="/properties/new"
-            className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+            className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
           >
             Add property
           </Link>
           <Link
             href="/analyze"
-            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
           >
             Analyze a deal
           </Link>
@@ -247,15 +246,6 @@ export default async function DashboardPage({
           >
             Print summary
           </Link>
-        </div>
-        {/* Mobile workspace dropdown */}
-        <div className="md:hidden">
-          <WorkspaceNavMobile
-            propertyHref={propertyHref}
-            propertyLabel={singleProperty ? "Property" : "Properties"}
-            modelingHref={modelingHref}
-            mortgageHref={mortgageHref}
-          />
         </div>
       </div>
 

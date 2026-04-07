@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { type ReactNode, useMemo, useState } from "react";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { MobileSectionCard } from "@/components/mobile-section-card";
+import { MobileFormGroup } from "@/components/mobile-form-group";
+import { MobilePageSection } from "@/components/mobile-page-section";
 import { MobileToolShell } from "@/components/mobile-tool-shell";
 import { useIsMobile } from "@/lib/use-is-mobile";
 import { getPiForAmortization } from "@/lib/amortization";
@@ -31,6 +32,7 @@ type ProjectionsTabContentProps = {
   propertyId?: string;
   workspaceVariant?: "default" | "modeling";
   mobileHeader?: ReactNode;
+  contextBar?: ReactNode;
   monthlyRent: number;
   monthlyExpenses: number;
   estimatedValue: number;
@@ -234,6 +236,7 @@ export function ProjectionsTabContent({
   propertyId,
   workspaceVariant = "default",
   mobileHeader,
+  contextBar,
   monthlyRent,
   monthlyExpenses,
   estimatedValue,
@@ -258,6 +261,7 @@ export function ProjectionsTabContent({
   const [reinvestCashFlow, setReinvestCashFlow] = useState(false);
   const [reinvestPct, setReinvestPct] = useState(50);
   const isModelingWorkspace = workspaceVariant === "modeling";
+  const effectiveContextBar = contextBar ?? mobileHeader;
   const projectionHorizonMonths = holdYears * 12;
 
   const projectedLoanSeries = useMemo(
@@ -1057,151 +1061,146 @@ export function ProjectionsTabContent({
   ] as const;
 
   const mobileModelingSurface = (
-    <div className="space-y-3">
-      <MobileSectionCard className="space-y-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <h3 className="text-sm font-semibold text-foreground">
-            Scenario setup
-          </h3>
-          <button
-            type="button"
-            onClick={handleReset}
-            className="rounded-full border border-border px-3 py-1 text-xs font-medium text-muted hover:text-foreground"
-          >
-            Reset
-          </button>
+    <div className="space-y-0">
+      <MobilePageSection variant="flat">
+        <div className="space-y-3">
+          {projectionChart}
+
+          <div className="flex flex-wrap gap-2 pb-2">
+            {Object.entries(PRESETS).map(([id, preset]) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => applyPreset(id as Exclude<PresetId, "custom">)}
+                className={`min-h-[44px] rounded-full border px-3 py-1.5 text-xs font-medium transition-all duration-150 ${
+                  activePreset === id
+                    ? "border-accent bg-accent/10 text-foreground"
+                    : "border-border bg-background text-muted hover:text-foreground"
+                }`}
+              >
+                {preset.label}
+              </button>
+            ))}
+            {activePreset === "custom" && (
+              <span className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted">
+                Custom
+              </span>
+            )}
+          </div>
         </div>
+      </MobilePageSection>
 
-        <div className="flex flex-wrap gap-2">
-          {Object.entries(PRESETS).map(([id, preset]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => applyPreset(id as Exclude<PresetId, "custom">)}
-              className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
-                activePreset === id
-                  ? "border-accent bg-accent/10 text-foreground"
-                  : "border-border bg-background text-muted hover:text-foreground"
-              }`}
-            >
-              {preset.label}
-            </button>
-          ))}
-          {activePreset === "custom" && (
-            <span className="rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted">
-              Custom
-            </span>
-          )}
-        </div>
+      <MobilePageSection variant="flat">
+        <MobileCollapsible label="Growth assumptions">
+          <div className="space-y-4 pt-3">
+            <div className="flex items-center justify-between gap-2">
+              <p className="text-xs text-muted">
+                Cash-flow positive year:{" "}
+                {cashFlowPositiveYear != null ? `Year ${cashFlowPositiveYear}` : `Not reached by Year ${holdYears}`}
+              </p>
+              <button
+                type="button"
+                onClick={handleReset}
+                className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 text-xs font-medium text-muted transition-colors duration-150 hover:text-foreground"
+              >
+                Reset
+              </button>
+            </div>
 
-        <MobileSectionCard tone="subtle" className="space-y-3">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-[11px] font-medium text-muted">
-              Horizon and risk
-            </p>
-            <span className="text-xs text-muted">
-              Cash-flow positive year: {cashFlowPositiveYear != null ? `Year ${cashFlowPositiveYear}` : "Not reached"}
-            </span>
+            <MobileFormGroup label="Horizon and risk">
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-xs font-medium text-muted">
+                  Hold years
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={holdYears}
+                    onChange={(e) => {
+                      setActivePreset("custom");
+                      setHoldYears(Math.min(30, Math.max(1, Number(e.target.value) || 1)));
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-muted">
+                  Vacancy %
+                  <input
+                    type="number"
+                    min={0}
+                    max={20}
+                    step={0.5}
+                    value={projectionVacancy}
+                    onChange={(e) => {
+                      setActivePreset("custom");
+                      setProjectionVacancy(Number(e.target.value));
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
+                  />
+                </label>
+              </div>
+            </MobileFormGroup>
+
+            <MobileFormGroup label="Growth assumptions">
+              <div className="grid grid-cols-3 gap-3">
+                <label className="block text-xs font-medium text-muted">
+                  Rent %
+                  <input
+                    type="number"
+                    min={-5}
+                    max={15}
+                    step={0.5}
+                    value={rentGrowth}
+                    onChange={(e) => {
+                      setActivePreset("custom");
+                      setRentGrowth(Number(e.target.value) || 0);
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-muted">
+                  Expense %
+                  <input
+                    type="number"
+                    min={-5}
+                    max={15}
+                    step={0.5}
+                    value={expenseGrowth}
+                    onChange={(e) => {
+                      setActivePreset("custom");
+                      setExpenseGrowth(Number(e.target.value) || 0);
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
+                  />
+                </label>
+                <label className="block text-xs font-medium text-muted">
+                  Value %
+                  <input
+                    type="number"
+                    min={-5}
+                    max={15}
+                    step={0.5}
+                    value={valueGrowth}
+                    onChange={(e) => {
+                      setActivePreset("custom");
+                      setValueGrowth(Number(e.target.value) || 0);
+                    }}
+                    className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
+                  />
+                </label>
+              </div>
+            </MobileFormGroup>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <label className="block text-xs font-medium text-muted">
-              Hold years
-              <input
-                type="number"
-                min={1}
-                max={30}
-                value={holdYears}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setHoldYears(Math.min(30, Math.max(1, Number(e.target.value) || 1)));
-                }}
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
-              />
-            </label>
-            <label className="block text-xs font-medium text-muted">
-              Vacancy %
-              <input
-                type="number"
-                min={0}
-                max={20}
-                step={0.5}
-                value={projectionVacancy}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setProjectionVacancy(Number(e.target.value));
-                }}
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
-              />
-            </label>
-          </div>
-        </MobileSectionCard>
+        </MobileCollapsible>
+      </MobilePageSection>
 
-        <MobileSectionCard tone="subtle" className="space-y-3">
-          <p className="text-[11px] font-medium text-muted">
-            Growth assumptions
-          </p>
-          <div className="grid grid-cols-3 gap-3">
-            <label className="block text-xs font-medium text-muted">
-              Rent %
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={rentGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setRentGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
-              />
-            </label>
-            <label className="block text-xs font-medium text-muted">
-              Expense %
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={expenseGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setExpenseGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
-              />
-            </label>
-            <label className="block text-xs font-medium text-muted">
-              Value %
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={valueGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setValueGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-xl border border-border bg-background px-2.5 py-2.5 text-base text-foreground"
-              />
-            </label>
-          </div>
-        </MobileSectionCard>
-
+      <MobilePageSection variant="flat">
         <MobileCollapsible
-          label={
-            reinvestCashFlow || includeSaleAnalysis || extraMonthlyPrincipal > 0
-              ? "Debt and exit assumptions"
-              : "Add debt and exit assumptions"
-          }
+          label="Debt and exit"
           defaultOpen={extraMonthlyPrincipal > 0}
         >
-          <div className="pt-3 space-y-3">
-            <MobileSectionCard tone="subtle" className="space-y-3">
-              <p className="text-[11px] font-medium text-muted">
-                Debt strategy
-              </p>
+          <div className="space-y-4 pt-3">
+            <MobileFormGroup label="Debt strategy">
               <label className="block text-xs font-medium text-muted">
                 Extra principal ($ / month)
                 <input
@@ -1217,7 +1216,7 @@ export function ProjectionsTabContent({
                   className="mt-1.5 w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base text-foreground"
                 />
               </label>
-              <label className="inline-flex items-center gap-2 text-sm text-muted">
+              <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-muted">
                 <input
                   type="checkbox"
                   checked={reinvestCashFlow}
@@ -1242,13 +1241,10 @@ export function ProjectionsTabContent({
                   />
                 </label>
               )}
-            </MobileSectionCard>
+            </MobileFormGroup>
 
-            <MobileSectionCard tone="subtle" className="space-y-3">
-              <p className="text-[11px] font-medium text-muted">
-                Exit assumptions
-              </p>
-              <label className="inline-flex items-center gap-2 text-sm text-muted">
+            <MobileFormGroup label="Exit assumptions">
+              <label className="inline-flex min-h-[44px] items-center gap-2 text-sm text-muted">
                 <input
                   type="checkbox"
                   checked={includeSaleAnalysis}
@@ -1271,30 +1267,22 @@ export function ProjectionsTabContent({
                   />
                 </label>
               )}
-            </MobileSectionCard>
+            </MobileFormGroup>
+
+            {(reinvestCashFlow || includeSaleAnalysis) && (
+              <MobileFormGroup label="Advanced breakdown">
+                {mobileAdvancedBreakdown}
+              </MobileFormGroup>
+            )}
           </div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
 
-      <MobileSectionCard tone="subtle">
-        <MobileCollapsible label="Projection chart">
-          <div className="pt-3">{projectionChart}</div>
-        </MobileCollapsible>
-      </MobileSectionCard>
-
-      {(reinvestCashFlow || includeSaleAnalysis) && (
-        <MobileSectionCard tone="subtle">
-          <MobileCollapsible label="Advanced breakdown">
-            <div className="pt-3">{mobileAdvancedBreakdown}</div>
-          </MobileCollapsible>
-        </MobileSectionCard>
-      )}
-
-      <MobileSectionCard tone="subtle">
+      <MobilePageSection variant="flat">
         <MobileCollapsible label="Baseline notes">
           <div className="pt-3">{baselineNotes}</div>
         </MobileCollapsible>
-      </MobileSectionCard>
+      </MobilePageSection>
     </div>
   );
 
@@ -1302,11 +1290,10 @@ export function ProjectionsTabContent({
     if (isMobile) {
       return (
         <MobileToolShell
+          contextBar={effectiveContextBar}
           eyebrow="Workspace"
           title="Modeling"
-          context={mobileHeader}
           summaryItems={[...mobileSummaryItems]}
-          contentClassName="pt-3"
         >
           {mobileModelingSurface}
         </MobileToolShell>

@@ -219,7 +219,7 @@ export function OnboardingPanel({
           <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/properties/new?mode=quick"
-              className="inline-flex min-h-[36px] items-center rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
+              className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-3 py-1.5 text-xs font-semibold text-accent-foreground transition-colors hover:bg-accent-hover"
             >
               Add property
             </Link>
@@ -228,7 +228,7 @@ export function OnboardingPanel({
               onClick={() => void handleDismissNudge()}
               disabled={busy}
               aria-label="Dismiss"
-              className="flex size-7 items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle hover:text-foreground disabled:opacity-50"
+              className="flex size-7 min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-muted transition-colors hover:bg-subtle hover:text-foreground disabled:opacity-50"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
                 <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"/>
@@ -238,7 +238,7 @@ export function OnboardingPanel({
         </div>
       )}
       {showWelcomeModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-background/75 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-foreground/50 p-4 backdrop-blur-sm">
           <div
             ref={dialogRef}
             role="dialog"
