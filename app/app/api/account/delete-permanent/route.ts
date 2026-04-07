@@ -86,15 +86,28 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  await prisma.user.delete({
-    where: { id: user.id },
-  });
-
+  // Delete from Clerk FIRST so we never leave an orphaned Clerk account.
+  // If Clerk deletion fails, abort and ask the user to retry (do not delete DB).
   try {
     await client.users.deleteUser(user.clerkUserId);
   } catch (err) {
     console.error("Failed to delete user from Clerk:", err);
+    Sentry.captureException(
+      err instanceof Error ? err : new Error("Clerk user delete failed"),
+      { tags: { route: "api/account/delete-permanent", userId: user.id } }
+    );
+    return NextResponse.json(
+      {
+        error:
+          "We could not permanently delete your auth account right now. Please try again in a moment or contact support.",
+      },
+      { status: 503 }
+    );
   }
+
+  await prisma.user.delete({
+    where: { id: user.id },
+  });
 
   await recordRateLimit(identifier, "account:delete-permanent");
 

@@ -1,31 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { SignUp } from "@clerk/nextjs";
+import { SignIn } from "@clerk/nextjs";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
-import { PlanIntentSignUpReinforcement } from "@/components/analytics/plan-intent-sign-up-reinforcement";
 import { PostHogAuthPageView } from "@/components/analytics/posthog-auth-page-view";
 
-export function SignUpView() {
+export function SignInView() {
   return (
     <>
-      <PostHogAuthPageView page="signup" />
+      <PostHogAuthPageView page="signin" />
       <PlanIntentUrlSync />
-      <PlanIntentSignUpReinforcement />
-      <SignUp
+      <SignIn
         appearance={{
           elements: {
             rootBox: "mx-auto",
           },
         }}
         fallbackRedirectUrl="/dashboard"
-        signInUrl="/sign-in"
+        signUpUrl="/sign-up"
       />
       <p className="max-w-sm text-center text-sm text-muted">
-        Your account includes a 14-day free trial of the Investor plan. No credit card required.
-      </p>
-      <p className="max-w-sm text-center text-sm text-muted">
-        By signing up you agree to our{" "}
+        By signing in you agree to our{" "}
         <Link href="/terms" className="underline hover:text-foreground">
           Terms of Service
         </Link>{" "}
