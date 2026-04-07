@@ -5,11 +5,45 @@ import { TRIAL_DURATION_DAYS } from "@/lib/plans";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import { captureServerEvent } from "@/lib/posthog-server";
 
+// Retry a Prisma operation up to maxAttempts times on transient failures
+// (connection pool exhaustion, cold-start timeouts, brief network blips).
+async function withPrismaRetry<T>(
+  fn: () => Promise<T>,
+  maxAttempts = 3,
+): Promise<T> {
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      const isTransient =
+        err instanceof Error &&
+        // Prisma error codes for connection / timeout issues
+        (err.message.includes("Can't reach database server") ||
+          err.message.includes("Connection pool timeout") ||
+          err.message.includes("ETIMEDOUT") ||
+          err.message.includes("ECONNRESET") ||
+          // Prisma client initialization error on cold starts
+          err.message.includes("PrismaClientInitializationError"));
+      if (!isTransient || attempt === maxAttempts) break;
+      // Exponential backoff: 200ms, 400ms
+      await new Promise((r) => setTimeout(r, 200 * attempt));
+    }
+  }
+  throw lastErr;
+}
+
 /**
  * Get the current user from Clerk and ensure they exist in our DB.
  * Use in API routes and server components that need the app user.
  * Uses currentUser() to reliably get email (sessionClaims.email is often empty for OAuth sign-ins).
  * Wrapped with React cache() to deduplicate within the same RSC request (layout + child pages share result).
+ *
+ * Prisma calls are wrapped with retry logic so transient DB failures (cold-start
+ * timeouts, connection pool exhaustion) don't crash the app shell on first load
+ * — a new user landing on /dashboard immediately after signing up would otherwise
+ * see "Something went wrong" with no recovery path.
  */
 export const getAppUser = cache(async function getAppUser() {
   const clerkUser = await currentUser();
@@ -22,9 +56,11 @@ export const getAppUser = cache(async function getAppUser() {
   const firstName = clerkUser.firstName ?? null;
   const lastName = clerkUser.lastName ?? null;
 
-  const existing = await prisma.user.findUnique({
-    where: { clerkUserId: clerkUser.id },
-  });
+  const existing = await withPrismaRetry(() =>
+    prisma.user.findUnique({
+      where: { clerkUserId: clerkUser.id },
+    })
+  );
 
   if (existing) {
     if (
@@ -34,10 +70,12 @@ export const getAppUser = cache(async function getAppUser() {
     ) {
       return existing;
     }
-    return prisma.user.update({
-      where: { id: existing.id },
-      data: { email: primaryEmail, firstName, lastName },
-    });
+    return withPrismaRetry(() =>
+      prisma.user.update({
+        where: { id: existing.id },
+        data: { email: primaryEmail, firstName, lastName },
+      })
+    );
   }
 
   const now = new Date();
@@ -45,21 +83,45 @@ export const getAppUser = cache(async function getAppUser() {
     now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000
   );
 
-  const createdUser = await prisma.user.create({
-    data: {
-      clerkUserId: clerkUser.id,
-      email: primaryEmail || `user-${clerkUser.id}@placeholder.local`,
-      firstName,
-      lastName,
-      subscriptionTier: "free",
-      trialStartedAt: now,
-      trialEndsAt: trialEnd,
-    },
-  });
+  let createdUser;
+  try {
+    createdUser = await withPrismaRetry(() =>
+      prisma.user.create({
+        data: {
+          clerkUserId: clerkUser.id,
+          email: primaryEmail || `user-${clerkUser.id}@placeholder.local`,
+          firstName,
+          lastName,
+          subscriptionTier: "free",
+          trialStartedAt: now,
+          trialEndsAt: trialEnd,
+        },
+      })
+    );
+  } catch (err) {
+    // Race-safe fallback: if another concurrent request already created
+    // this Clerk user, fetch and return it instead of failing the page load.
+    if (
+      err instanceof Error &&
+      (err.message.includes("Unique constraint failed") ||
+        err.message.includes("P2002"))
+    ) {
+      const existingAfterConflict = await withPrismaRetry(() =>
+        prisma.user.findUnique({
+          where: { clerkUserId: clerkUser.id },
+        })
+      );
+      if (existingAfterConflict) return existingAfterConflict;
+    }
+    throw err;
+  }
 
-  await captureServerEvent(createdUser.clerkUserId, AnalyticsEvents.TRIAL_STARTED, {
+  // Fire analytics in the background — don't let a PostHog failure block the user.
+  void captureServerEvent(createdUser.clerkUserId, AnalyticsEvents.TRIAL_STARTED, {
     trial_duration_days: TRIAL_DURATION_DAYS,
     trial_ends_at: createdUser.trialEndsAt?.toISOString() ?? null,
+  }).catch(() => {
+    // Non-critical — analytics failure must never affect the signup path.
   });
 
   return createdUser;

@@ -9,6 +9,7 @@ import { PostHogPageView } from "./posthog-page-view";
 import { PostHogPersonProperties } from "./posthog-person-properties";
 import { PostHogPlanIntent } from "./posthog-plan-intent";
 import { PostHogSignupOnce } from "./posthog-signup-once";
+import { PostHogSigninOnce } from "./posthog-signin-once";
 
 const POSTHOG_KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
 const POSTHOG_HOST =
@@ -61,6 +62,7 @@ export function PostHogGate({ children }: { children: React.ReactNode }) {
           <PostHogPersonProperties />
           <PostHogPlanIntent />
           <PostHogSignupOnce />
+          <PostHogSigninOnce />
         </>
       )}
       <PostHogPageView />

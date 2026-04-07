@@ -33,4 +33,8 @@ export const AnalyticsEvents = {
   PROPERTY_ENRICHMENT_STARTED: "property_enrichment_started",
   PROPERTY_ENRICHMENT_COMPLETED: "property_enrichment_completed",
   COMPLETION_GUIDANCE_JUMP_CLICKED: "completion_guidance_jump_clicked",
+  // --- Auth funnel ---
+  SIGNUP_PAGE_RENDERED: "signup_page_rendered",
+  SIGNIN_PAGE_RENDERED: "signin_page_rendered",
+  USER_SIGNED_IN: "user_signed_in",
 } as const;
