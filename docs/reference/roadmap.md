@@ -103,39 +103,47 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 Post-MVP features in suggested order. Promote to `docs/tasks.md` when ready to build.
 
-### Interactive demo (no-signup required)
+### Reverse trial pricing model
 
-**Priority:** Very near-term — validate with Arcade.so first, then build if it converts
+**Priority:** Very near-term — highest-leverage change for conversion
 
-**Purpose:** Let visitors experience the real product before signing up. Removes the biggest conversion objection ("I don't know what I'm getting") for skeptical passive landlords. Targets the gap between "clicked sign up" and "convinced enough to sign up."
+**Purpose:** Switch from pure freemium to a **reverse trial**: new signups get full Investor-tier access for 14 days (no CC required), then auto-downgrade to a feature-limited free tier. Users keep their data but lose multi-property access, scenario modeling, and full benchmarking. Leverages loss aversion (2–2.5x stronger than gain motivation) to convert at 3–6x the rate of freemium alone.
 
-**Recommended phased approach:**
+**Why now:** Current freemium converts at 2–5%. Reverse trial benchmarks at 8–15%. At low traffic volumes, every signup matters — this is the single highest-leverage change for getting to $1K MRR. No CC requirement means signup friction stays identical to today.
 
-**Phase A — Validate with Arcade.so (this week, zero engineering):**
-Record a clickthrough of the real app (with realistic staged data) using [Arcade.so](https://arcade.software/) or [Storylane](https://www.storylane.io/). Embed on a dedicated `/demo` route and as a section on the landing page. If demos increase signups vs. baseline, proceed to Phase B.
+**Key design decisions:**
+- Free tier after downgrade: 1 property visible (others locked, data preserved), limited deal saves, no scenario modeling, no/limited rent vs market benchmarks
+- Trial countdown visible in UI (subtle, not aggressive)
+- "Your trial ends in X days" email at day 10 and day 13
+- Downgrade is soft — data preserved, upgrade unlocks everything instantly
 
-**Phase B — Seeded demo account (ideal solution, ~1 weekend of engineering):**
-- A special Clerk user (or temporary anonymous session) pre-loaded with 2–3 realistic fake properties and saved deals
-- "Try without signing up" button on landing page / ad landing pages — instantly drops user into the real app dashboard with realistic data
-- Read-only guards on destructive API routes for demo sessions (no writes to real DB)
-- Demo data reset on a schedule (so demo users don't trash state for each other)
-- After 30 minutes (or when user tries to add their own property): "Save your work — create a free account" modal
-- The conversion ask changes from "sign up to see if this is useful" → "sign up to keep what you just built"
+**Research:** Full analysis, conversion math, benchmarks, and case studies (Databox 10%→25%, Toggl doubled) in [`docs/research/growth-pricing-research-2026-04.md` §Pricing Model Research](../research/growth-pricing-research-2026-04.md#pricing-model-research).
 
-**Why Phase B beats screenshot tools:**
-The target user is a detail-oriented landlord. They'll notice they can't type real numbers into a screenshot demo. The real product running with real data — where they can enter their actual address and see a real rent estimate — is the product selling itself.
+---
 
-**Ad landing page note:** For paid traffic, a dedicated ad landing page with the demo front and center (stripped of nav, single CTA) will outperform sending ad traffic to the general homepage. Phase A Arcade embed is enough to test this immediately.
+### Retention data hooks (monthly digest, AVM refresh, alerts)
 
-**Distinct from:** The existing free public calculators (those are top-of-funnel SEO tools; the demo is mid-funnel, post-intent). The Admin membership override (that's for partner/realtor accounts, not anonymous demo sessions).
+**Priority:** Very near-term — biggest structural retention gap
 
-**Acceptance criteria (Phase B):**
-- [ ] "Try demo" CTA on landing page (and ad landing page variant)
-- [ ] Demo session loads in < 2 seconds with pre-seeded portfolio data visible
-- [ ] Read-only guard on all write API routes for demo sessions
-- [ ] "Save your work" modal triggers on first add-property attempt or after 30 min
-- [ ] Demo data resets on a schedule (cron or on-demand)
-- [ ] Analytics: `demo_session_started`, `demo_session_converted` events in PostHog
+**Purpose:** Create automated reasons for users to return. Currently, once a user sets up properties, Veld has **zero outbound touchpoints** — no scheduled data refreshes, no email digests, no value change alerts. Stessa/Baselane pull users back via daily bank transaction sync; Veld needs an equivalent pull mechanism built on the data it already has.
+
+**Phased rollout:**
+
+| Phase | Hook | Effort | API cost |
+|-------|------|--------|----------|
+| 1 | **Monthly portfolio digest email** — equity, cash flow, cap rate, rent vs market summary per property. Resend already set up. | Low (cron + email template) | $0 — uses stored data |
+| 2 | **Monthly property value re-fetch** — cron calls RentCast AVM for each paid user's properties, updates `currentEstimatedValue`, equity recalculates automatically. | Medium (cron + RentCast calls) | ~$44/mo at $1K MRR scale |
+| 3 | **Value/equity change notification** — after monthly re-fetch, email if equity changed significantly. "Your portfolio equity grew $12,400 this month." | Low (diff + conditional email) | $0 — piggybacks on Phase 2 |
+| 4 | **Rent vs market alert** — if property rent drops >5% below market, email actionable nudge. Infrastructure exists from dashboard benchmarking. | Low–Medium | Included in Phase 2 calls |
+| 5 | **Mortgage milestone notifications** — "You crossed 50% LTV on Pine Cottage." Zero API cost, computed from existing amortization data. | Low | $0 |
+
+**Research:** Full audit of current state, hook recommendations, RentCast cost analysis, and competitor comparison in [`docs/research/growth-pricing-research-2026-04.md` §Retention & Data Hooks](../research/growth-pricing-research-2026-04.md#retention--data-hooks).
+
+---
+
+### Interactive demo (no-signup required) — Deferred
+
+**Priority:** ~~Very near-term~~ — *Deferred.* Moved to **§6 Deferred**. Full brief preserved in [`docs/research/interactive-demo-brief-2026-04.md`](../research/interactive-demo-brief-2026-04.md). Revisit after reverse trial and data hooks ship.
 
 ---
 
@@ -158,6 +166,8 @@ The target user is a detail-oriented landlord. They'll notice they can't type re
 | Dashboard — single-property improvements | Done — see `docs/archive/proposals/dashboard-single-property-proposal.md` (archived as implemented) |
 | Benchmarking v2 (rental-status-aware) | Done — see §Benchmarking v2 below |
 | Projections / cashflow timeline (single property) | Done — `ProjectionsTabContent` on property + `/modeling` workspace; rent/expense/value growth, hold period, charts, sale option |
+| Refinance workspace (v1 — scenario modeling) | Done — `/refinance` workspace; property/mortgage selector, projection engine, amortization comparison charts, break-even, savings metrics |
+| Automated testing (ongoing) | Done (ongoing) — Vitest, 50 test files, 374 tests across metrics, APIs, validators, calculators, components |
 
 ### Mortgage balance advancement (Phase 1 — amortization projection + manual override) — **Shipped**
 
@@ -177,11 +187,9 @@ The target user is a detail-oriented landlord. They'll notice they can't type re
 
 ---
 
-### Rent gap email notifications
+### Rent gap email notifications — superseded by §2 Retention data hooks
 
-**Priority:** 6 — *Deferred.* Cost scales with users; revisit when user base justifies.
-
-**Scope:** Periodically compare stored rent to RentCast. If gap exceeds threshold (e.g. 10–15%), email user. Drives retention.
+**Priority:** ~~6~~ — *Superseded.* Rolled into **§2 Retention data hooks** (Phase 4: rent vs market alerts) as part of the broader retention strategy. See [`docs/research/growth-pricing-research-2026-04.md` §Retention & Data Hooks](../research/growth-pricing-research-2026-04.md#retention--data-hooks).
 
 ---
 
@@ -215,11 +223,18 @@ The target user is a detail-oriented landlord. They'll notice they can't type re
 
 ---
 
-### Refinance / payoff insights
+### Refinance / payoff insights — v1 shipped, expand with recommendations
 
 **Priority:** 10
 
-**Scope:** "When to refinance" or "Payoff timeline". See `docs/proposals/refinance-payoff-proposal.md` for phased approach (payoff timeline first, then accelerator, then refinance what-if) and property detail page considerations.
+**Shipped (v1):** `/refinance` workspace (`refinance-workspace.tsx`, 715 lines) — property/mortgage selector, refinance projection engine (`getRefinanceProjection` in `amortization.ts`), amortization comparison charts (Recharts), break-even analysis, monthly/total savings metrics. Full refinance scenario modeling for existing mortgages.
+
+**Next — insights & recommendations layer:**
+Expand from "user runs a what-if" to "Veld proactively surfaces refi opportunities." When interest rates drop or a property crosses an LTV threshold, generate a recommendation: "Consider refinancing Oak Street Duplex — estimated $180/mo savings at current rates."
+
+**Connection to data hooks:** Refinance recommendations are a natural Phase 6 addition to **§2 Retention data hooks** — "You have a new recommendation for [property]" email drives a return visit with a specific, actionable reason. Zero API cost if using stored mortgage data + a rates feed (Freddie Mac PMMS is free).
+
+See `docs/proposals/refinance-payoff-proposal.md` for original phased approach.
 
 ---
 
@@ -276,11 +291,13 @@ The target user is a detail-oriented landlord. They'll notice they can't type re
 
 ---
 
-### Automated testing
+### Automated testing — ongoing
 
-**Priority:** 15
+**Priority:** ~~15~~ — *Ongoing, no longer a discrete roadmap item.*
 
-**Scope:** Larger planned effort. Configure test runner (Jest/Vitest), add unit tests for metric calculations and amortization logic, API route tests for auth-protected endpoints. Plan thoughtfully per engineering spec Module M.
+**Current state (April 2026):** Vitest configured and running. **50 test files, 374 tests, all passing.** Coverage across metric calculations, amortization logic, API routes (auth, billing, CRUD, cron, import/export), validation schemas, calculator engines (BRRR, STR vs LTR, fix-and-flip), benchmark utilities, CSV parsing, and component tests (mobile shell, address autocomplete, add-property wizard).
+
+**Ongoing:** Tests are added alongside new features. No separate "testing initiative" needed — treat as standard engineering practice.
 
 ---
 
@@ -346,8 +363,8 @@ Ways to enhance UX by pulling data from third-party APIs. MLS excluded (expensiv
 
 Future product direction (from mvp-spec). Overlaps **§1a** where noted.
 
-- Automated property value updates
-- Rent estimate tracking
+- ~~Automated property value updates~~ — promoted to **§2 Retention data hooks** (Phase 2: monthly AVM re-fetch)
+- ~~Rent estimate tracking~~ — promoted to **§2 Retention data hooks** (Phase 4: rent vs market alerts)
 - Refinance recommendations (see **§1a** + **Refinance / payoff insights**)
 - Portfolio optimization insights (**§1a** alerts / portfolio simulation if built)
 - Deal analysis tools for new acquisitions (**Tools hub**, **Analyze deal**)
@@ -360,6 +377,7 @@ Future product direction (from mvp-spec). Overlaps **§1a** where noted.
 
 Defer until validated or user base justifies:
 
+- **Interactive demo (no-signup required)** — Arcade.so or seeded demo account. Full brief in [`docs/research/interactive-demo-brief-2026-04.md`](../research/interactive-demo-brief-2026-04.md). Revisit after reverse trial and data hooks ship and there's enough traffic to justify the conversion optimization.
 - **Plaid (bank integration)** — Cost scales with connected accounts (~$0.30–$1+/account/month). Legal/compliance for storing financial data. Development: 4–8 weeks for Liabilities-only. See `docs/plaid-considerations.md`.
 - **Referral incentives** — Growth lever; validate with realtor feedback.
 - **Advanced analytics** — Defer until core analytics proven.
