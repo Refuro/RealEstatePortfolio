@@ -5,7 +5,7 @@ import { BenchmarkRefreshButton } from "./benchmark-refresh-button";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit, getEffectiveTier } from "@/lib/plans";
+import { getPropertyLimit, getEffectiveTier, hasTrialExpired } from "@/lib/plans";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
 import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
 import {
@@ -145,6 +145,7 @@ export default async function PropertiesPage({
   const { filter, sort } = await searchParams;
 
   const propertyLimit = getPropertyLimit(getEffectiveTier(user));
+  const trialExpired = hasTrialExpired(user);
   const [totalCount, properties] = await Promise.all([
     prisma.property.count({ where: { userId: user.id } }),
     prisma.property.findMany({
@@ -331,13 +332,27 @@ export default async function PropertiesPage({
         <>
           {overLimit && (
             <p className="mb-4 text-sm text-muted">
-              Showing {properties.length} of {totalCount} properties (plan limit).{" "}
-              <UpgradePlanLink
-                placement="properties_list_over_limit"
-                className="font-medium text-foreground hover:underline"
-              >
-                Upgrade to see all
-              </UpgradePlanLink>
+              {trialExpired ? (
+                <>
+                  Your trial has ended. {Math.max(totalCount - propertyLimit, 0)} properties are locked.{" "}
+                  <UpgradePlanLink
+                    placement="properties_list_over_limit"
+                    className="font-medium text-foreground hover:underline"
+                  >
+                    Upgrade to access all your properties
+                  </UpgradePlanLink>
+                </>
+              ) : (
+                <>
+                  Showing {properties.length} of {totalCount} properties (plan limit).{" "}
+                  <UpgradePlanLink
+                    placement="properties_list_over_limit"
+                    className="font-medium text-foreground hover:underline"
+                  >
+                    Upgrade to see all
+                  </UpgradePlanLink>
+                </>
+              )}
             </p>
           )}
           {!singlePropertyMode && (

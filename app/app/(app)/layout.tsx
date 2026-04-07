@@ -2,7 +2,14 @@ import type { Metadata } from "next";
 import { unstable_cache } from "next/cache";
 import { getAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { getPropertyLimit, getDealLimit, getEffectiveTier } from "@/lib/plans";
+import {
+  getPropertyLimit,
+  getDealLimit,
+  getEffectiveTier,
+  hasTrialExpired,
+  isOnTrial,
+  trialDaysRemaining,
+} from "@/lib/plans";
 import { buildOnboardingProgress } from "@/lib/onboarding";
 import { AppLayoutClient } from "./app-layout-client";
 import { RestoreAccountScreen } from "./restore-account-screen";
@@ -53,6 +60,9 @@ export default async function AppLayout({
   let dealLimit = 5;
   let subscriptionStatus: string | null = null;
   let overLimit = false;
+  let trialActive = false;
+  let trialExpired = false;
+  let trialDaysLeft: number | null = null;
   let onboardingProps:
     | {
         welcomeSeenAt: string | null;
@@ -69,6 +79,9 @@ export default async function AppLayout({
     propertyLimit = getPropertyLimit(getEffectiveTier(user));
     dealLimit = getDealLimit(getEffectiveTier(user));
     overLimit = propertyCount > propertyLimit || dealCount > dealLimit;
+    trialActive = isOnTrial(user);
+    trialExpired = hasTrialExpired(user);
+    trialDaysLeft = trialDaysRemaining(user);
     onboardingProps = buildOnboardingProgress(user);
   }
 
@@ -89,6 +102,9 @@ export default async function AppLayout({
         subscriptionStatus,
         stripeCustomerId: user?.stripeCustomerId ?? null,
         subscriptionTier: user ? getEffectiveTier(user) : "free",
+        isOnTrial: trialActive,
+        hasTrialExpired: trialExpired,
+        trialDaysRemaining: trialDaysLeft,
       }}
     >
       {children}

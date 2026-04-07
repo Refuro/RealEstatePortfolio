@@ -121,6 +121,13 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ received: true });
 }
 
+function isStripeCancelScheduled(sub: Stripe.Subscription): boolean {
+  return (
+    sub.cancel_at_period_end === true ||
+    (typeof sub.cancel_at === "number" && sub.cancel_at * 1000 > Date.now())
+  );
+}
+
 async function syncSubscriptionToDb(sub: Stripe.Subscription) {
   const firstItem = sub.items?.data?.[0];
   const priceId =
@@ -167,7 +174,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
         status,
         planName,
         currentPeriodEnd,
-        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+        cancelAtPeriodEnd: isStripeCancelScheduled(sub),
       },
       create: {
         userId: appUserId,
@@ -175,7 +182,7 @@ async function syncSubscriptionToDb(sub: Stripe.Subscription) {
         status,
         planName,
         currentPeriodEnd,
-        cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
+        cancelAtPeriodEnd: isStripeCancelScheduled(sub),
       },
     }),
     prisma.user.update({

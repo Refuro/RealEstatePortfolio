@@ -28,7 +28,7 @@ const PLANS: {
     name: "Free",
     propertyLimit: PLAN_PROPERTY_LIMITS.free,
     dealLimit: PLAN_DEAL_LIMITS.free,
-    description: "1 property · 5 saved deals",
+    description: "After trial, or anytime",
     features: [
       "Track one property with full metrics",
       "Analyze and save up to 5 deals",
@@ -81,6 +81,8 @@ const PLANS: {
 
 export function PricingCards({
   currentTier,
+  isOnTrial = false,
+  trialDaysRemaining = null,
   className = "",
   showSignUp = false,
   /** Same-origin path for Stripe Customer Portal `return_url` after plan changes. */
@@ -93,6 +95,8 @@ export function PricingCards({
   currentBillingCycle,
 }: {
   currentTier: string;
+  isOnTrial?: boolean;
+  trialDaysRemaining?: number | null;
   className?: string;
   /** When true, show "Sign up" link instead of "Upgrade" (for unauthenticated visitors). */
   showSignUp?: boolean;
@@ -209,7 +213,9 @@ export function PricingCards({
   function handlePaidOrFreeUpgrade(plan: "investor" | "pro") {
     const tier = currentTier.toLowerCase();
     const isPaidTier = tier === "investor" || tier === "pro";
-    if (isPaidTier) {
+    // Trial users have investor access without an active Stripe subscription.
+    // Route them through checkout (not billing portal) to start paid billing.
+    if (isPaidTier && !isOnTrial) {
       void handleOpenBillingPortalForPlanChange(plan);
       return;
     }
@@ -292,6 +298,8 @@ export function PricingCards({
         // Cross-tier upgrade (investor ↔ pro, or free → paid).
         const canUpgrade =
           (plan.tier === "investor" || plan.tier === "pro") && !isSameTier;
+        const isTrialInvestorCard =
+          signedInMode && isOnTrial && isSameTier && plan.tier === "investor";
 
         const highlightInvestor = signedInMode && currentTier.toLowerCase() === "free" && plan.tier === "investor";
         const cardBorder = isCurrent
@@ -320,13 +328,19 @@ export function PricingCards({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
+                <p className="mt-1 text-xs text-muted">{plan.description}</p>
                 {showSignUp && (
                   <p className="mt-2 text-xs font-medium text-foreground/90">
                     {plan.publicBestFor}
                   </p>
                 )}
               </div>
-              {isCurrent && (
+              {isTrialInvestorCard && (
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-0.5 text-xs font-medium text-accent">
+                  Trial · {Math.max(0, trialDaysRemaining ?? 0)} days left
+                </span>
+              )}
+              {isCurrent && !isTrialInvestorCard && (
                 <span className="rounded-md bg-positive/10 px-2 py-0.5 text-xs font-medium text-positive">
                   Current plan
                 </span>
@@ -334,6 +348,11 @@ export function PricingCards({
               {highlightInvestor && (
                 <span className="rounded-full bg-accent px-2.5 py-0.5 text-xs font-semibold text-accent-foreground">
                   Recommended
+                </span>
+              )}
+              {showSignUp && plan.tier === "investor" && (
+                <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-2.5 py-0.5 text-xs font-medium text-accent">
+                  14-day free trial
                 </span>
               )}
             </div>
@@ -467,7 +486,21 @@ export function PricingCards({
                         : "Choose Pro"}
                 </button>
               )}
-              {isCurrent && plan.tier !== "free" && (
+              {isTrialInvestorCard && (
+                <button
+                  type="button"
+                  onClick={() => handleCheckoutUpgrade("investor")}
+                  disabled={!!loading}
+                  className="w-full rounded-md bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover disabled:opacity-50 md:w-auto"
+                >
+                  {loading === "investor"
+                    ? "Redirecting..."
+                    : billingCycle === "yearly"
+                      ? `Keep access — $${PRICING_DISPLAY.investorYearly}/yr`
+                      : `Keep access — $${PRICING_DISPLAY.investorMonthly}/mo`}
+                </button>
+              )}
+              {isCurrent && plan.tier !== "free" && !isTrialInvestorCard && (
                 <span className="inline-flex w-full items-center justify-center rounded-md bg-positive/10 px-3 py-2 text-sm text-positive md:w-auto">
                   Current plan
                 </span>
@@ -497,6 +530,11 @@ export function PricingCards({
                 {currentTier.toLowerCase() === "free"
                   ? "Upgrades open checkout in a new Stripe session."
                   : "Plan changes use Stripe's billing portal so you keep one subscription."}
+              </p>
+            )}
+            {isTrialInvestorCard && (
+              <p className="mt-2 text-xs text-muted">
+                Your trial includes full Investor access. Subscribe now to keep everything after it ends.
               </p>
             )}
             {signedInMode && canSwitchCycle && (

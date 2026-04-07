@@ -233,7 +233,7 @@ export default async function HomePage({
                         landingVariant={LANDING_VARIANT}
                         className="cta-accent-glow inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover sm:w-auto"
                       >
-                        Get started free
+                        Start your free trial
                       </FunnelCtaLink>
                       <FunnelCtaLink
                         href="/pricing"
@@ -254,11 +254,8 @@ export default async function HomePage({
                     className="hero-animate text-sm text-muted"
                     style={{ transitionDelay: "220ms" }}
                   >
-                    Free plan —{" "}
-                    <span className="font-medium text-foreground">
-                      no card required
-                    </span>
-                    . Your first property in about 60 seconds.
+                    <span className="font-medium text-foreground">No credit card required.</span>{" "}
+                    Your first property in about 60 seconds.
                   </p>
                 )}
 
@@ -367,11 +364,12 @@ export default async function HomePage({
                 id="calculator-heading"
                 className="text-2xl font-semibold text-foreground"
               >
-                Try the deal analyzer — no account needed
+                Underwrite a deal in 30 seconds
               </h2>
               <p className="mt-2 max-w-xl text-sm text-muted">
-                Estimate cash flow, cap rate, DSCR, and cash-on-cash return
-                before you commit to anything.
+                Cash flow, cap rate, DSCR, and cash-on-cash return — right here,
+                no account needed. Sign up to save, compare, and track deals
+                over time.
               </p>
               <div className="mt-6">
                 <PublicCalculator compact />
@@ -402,7 +400,7 @@ export default async function HomePage({
               </div>
               {!userId && (
                 <p className="mt-4 text-sm text-muted">
-                  Want to save your analyses?{" "}
+                  Want to save and compare deals?{" "}
                   <FunnelCtaLink
                     href="/sign-up?intent=free"
                     placement="landing_calculator"
@@ -588,7 +586,7 @@ export default async function HomePage({
                 Simple pricing
               </h2>
               <p className="mb-8 text-base text-muted">
-                Start free. Upgrade as your portfolio grows.
+                Try everything free for 14 days. No credit card required.
               </p>
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
@@ -662,7 +660,7 @@ export default async function HomePage({
                     landingVariant={LANDING_VARIANT}
                     className="inline-flex min-h-[44px] items-center gap-1 text-sm font-medium text-muted transition-colors duration-150 hover:text-foreground"
                   >
-                    or sign up free
+                    or get started free
                     <ChevronRight className="size-3.5" aria-hidden />
                   </FunnelCtaLink>
                 )}
@@ -686,7 +684,7 @@ export default async function HomePage({
                   Start tracking your portfolio today
                 </h2>
                 <p className="mx-auto mt-3 max-w-sm text-base text-muted">
-                  Free plan. Full features. No card required.
+                  Full Investor access for 14 days. No card required.
                 </p>
                 <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
                   <FunnelCtaLink
@@ -697,7 +695,7 @@ export default async function HomePage({
                     landingVariant={LANDING_VARIANT}
                     className="cta-accent-glow inline-flex min-h-[44px] items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
                   >
-                    Create your free account
+                    Start your free trial
                   </FunnelCtaLink>
                   <FunnelCtaLink
                     href="/vs/spreadsheets"
@@ -711,7 +709,7 @@ export default async function HomePage({
                   </FunnelCtaLink>
                 </div>
                 <p className="mt-3 text-xs text-muted">
-                  Your first property in about 60 seconds.
+                  Set up in under a minute.
                 </p>
               </div>
             </AnimatedSection>

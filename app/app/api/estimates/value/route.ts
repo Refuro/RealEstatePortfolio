@@ -80,7 +80,7 @@ export async function GET(req: NextRequest) {
       apiKey
     );
     await prisma.rentCastApiCall.create({
-      data: { userId: user.id },
+      data: { userId: user.id, userEmail: user.email },
     });
     return NextResponse.json({
       value: result.value,

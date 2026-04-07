@@ -66,7 +66,7 @@ export async function POST(
     });
 
     await prisma.rentCastApiCall.create({
-      data: { userId: user.id, propertyId },
+      data: { userId: user.id, userEmail: user.email, propertyId },
     });
 
     const totalRent = getPropertyTotalRent(property);

@@ -1,11 +1,18 @@
 import type { Metadata } from "next";
 import { getAppUser } from "@/lib/auth";
-import { getDealLimit, getEffectiveTier, getPropertyLimit } from "@/lib/plans";
+import {
+  getDealLimit,
+  getEffectiveTier,
+  getPropertyLimit,
+  isOnTrial,
+  trialDaysRemaining,
+} from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 import { prisma } from "@/lib/db";
 import Link from "next/link";
 import { BillingPortalButton } from "../settings/billing-portal-button";
 import { parsePlanNameInterval } from "@/lib/stripe-config";
+import { getSubscriptionDetails } from "@/lib/billing/get-subscription-details";
 
 export const metadata: Metadata = {
   title: "Plans & billing",
@@ -16,24 +23,28 @@ export const metadata: Metadata = {
 export default async function PlansPage() {
   const user = await getAppUser();
   const effectiveTier = user ? getEffectiveTier(user) : "free";
+  const userOnTrial = user ? isOnTrial(user) : false;
+  const daysRemaining = user ? trialDaysRemaining(user) : null;
 
-  const [propertyCount, dealCount, subscription] = user
+  const [propertyCount, dealCount, subscription, subscriptionDetails] = user
     ? await Promise.all([
         prisma.property.count({ where: { userId: user.id } }),
         prisma.savedDeal.count({ where: { userId: user.id } }),
         prisma.subscription.findUnique({ where: { userId: user.id } }),
+        getSubscriptionDetails(user.id),
       ])
-    : [0, 0, null];
+    : [0, 0, null, { currentPeriodEnd: null, cancelAtPeriodEnd: null }];
   const propertyLimit = getPropertyLimit(effectiveTier);
   const dealLimit = getDealLimit(effectiveTier);
   const billingInterval = parsePlanNameInterval(subscription?.planName);
-  const periodEndLabel = subscription?.currentPeriodEnd
-    ? new Date(subscription.currentPeriodEnd).toLocaleDateString("en-US", {
+  const periodEndLabel = subscriptionDetails.currentPeriodEnd
+    ? new Date(subscriptionDetails.currentPeriodEnd).toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
         year: "numeric",
       })
     : null;
+  const willCancelAtPeriodEnd = subscriptionDetails.cancelAtPeriodEnd === true;
 
   return (
     <div>
@@ -83,8 +94,13 @@ export default async function PlansPage() {
                 )}
                 {periodEndLabel && (
                   <span className="col-span-2 rounded-full border border-border bg-card px-3 py-1 text-muted shadow-sm sm:col-span-1">
-                    Renews:{" "}
+                    {willCancelAtPeriodEnd ? "Ends: " : "Renews: "}
                     <span className="font-medium text-foreground">{periodEndLabel}</span>
+                  </span>
+                )}
+                {willCancelAtPeriodEnd && (
+                  <span className="col-span-2 rounded-full border border-warning/35 bg-warning/10 px-3 py-1 text-warning shadow-sm sm:col-span-1">
+                    Cancellation scheduled — access remains until end date
                   </span>
                 )}
               </div>
@@ -103,6 +119,8 @@ export default async function PlansPage() {
       )}
       <PricingCards
         currentTier={effectiveTier}
+        isOnTrial={userOnTrial}
+        trialDaysRemaining={daysRemaining}
         className="mt-8"
         showSignUp={false}
         billingPortalReturnPath="/plans"

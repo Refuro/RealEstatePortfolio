@@ -42,7 +42,7 @@ export function BillingPortalButton() {
         type="button"
         onClick={handleClick}
         disabled={loading}
-        className="w-full rounded-md border border-border bg-transparent px-3 py-1.5 text-center text-sm font-medium text-foreground hover:bg-subtle disabled:opacity-50"
+        className="inline-flex min-h-[44px] w-full items-center justify-center whitespace-nowrap rounded-md border border-border bg-transparent px-4 py-2 text-center text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle disabled:opacity-50"
       >
         {loading ? "Opening…" : "Manage billing"}
       </button>

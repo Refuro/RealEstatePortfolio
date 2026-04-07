@@ -1,7 +1,13 @@
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getSubscriptionDetails } from "@/lib/billing/get-subscription-details";
-import { getDealLimit, getPropertyLimit, getEffectiveTier } from "@/lib/plans";
+import {
+  getDealLimit,
+  getPropertyLimit,
+  getEffectiveTier,
+  isOnTrial,
+  trialDaysRemaining,
+} from "@/lib/plans";
 import Link from "next/link";
 import { BillingPortalButton } from "./billing-portal-button";
 import { SubscriptionBillingDisplay } from "@/app/(app)/settings/subscription-billing-display";
@@ -23,6 +29,8 @@ export default async function SettingsPage() {
   ]);
 
   const effectiveTier = getEffectiveTier(user);
+  const userOnTrial = isOnTrial(user);
+  const daysRemaining = trialDaysRemaining(user);
   const hasOverride = !!(user as { subscriptionTierOverride?: string | null }).subscriptionTierOverride;
   const limit = getPropertyLimit(effectiveTier);
   const canAddMore = propertyCount < limit;
@@ -47,8 +55,13 @@ export default async function SettingsPage() {
                 Plan
               </p>
               <p className="mt-1 text-sm font-medium capitalize text-foreground">
-                {effectiveTier}
+                {userOnTrial ? "Investor (trial)" : effectiveTier}
               </p>
+              {userOnTrial && daysRemaining != null && (
+                <p className="mt-0.5 text-[10px] font-medium text-muted">
+                  {daysRemaining} {daysRemaining === 1 ? "day" : "days"} remaining
+                </p>
+              )}
             </div>
             <div className="rounded-xl border border-border bg-subtle/40 px-3 py-2">
               <p className="text-[11px] font-medium text-muted">
@@ -133,9 +146,18 @@ export default async function SettingsPage() {
           <dl className="grid gap-x-8 gap-y-4 sm:grid-cols-2 sm:gap-y-3">
             <div className="flex flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
               <dt className="text-sm font-medium text-muted">Current plan</dt>
-              <dd className="text-base font-medium capitalize text-foreground">
-                {effectiveTier}
+              <dd className="text-base capitalize text-foreground">
+                <span className="font-medium">
+                  {userOnTrial && daysRemaining != null
+                    ? `Investor (trial) · ${daysRemaining} ${daysRemaining === 1 ? "day" : "days"} remaining`
+                    : effectiveTier}
+                </span>
                 {hasOverride && " (admin override)"}
+                {subscriptionDetails.cancelAtPeriodEnd && (
+                  <span className="ml-2 inline-flex rounded-full border border-warning/35 bg-warning/10 px-2 py-0.5 text-xs font-medium normal-case text-warning">
+                    Cancels at period end
+                  </span>
+                )}
               </dd>
             </div>
             {hasOverride && (

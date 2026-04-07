@@ -13,15 +13,25 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-07",
+    title: "Onboarding, mobile, and a free trial",
+    items: [
+      "Adding your first property is now a guided step-by-step flow, address autocomplete, mortgage details, and a completeness score that shows what's left to fill in.",
+      "Complete mobile redesign across deal analyzer, mortgage, modeling, projections, and refinance, tools are laid out for how you actually use them on a small screen.",
+      "New account includes 14 days of full Investor access, no card required. Downgrade to Free or upgrade anytime.",
+      "Lifecycle email reminders if you haven't finished setting up. Unsubscribe link in every email.",
+    ],
+  },
+  {
     date: "2026-04-04",
     title: "Refinance workspace, property Details & Edit, and payoff what-ifs",
     items: [
-      "Added Refinance under Tools — model a new rate and term against a saved loan with balance curves and interest comparison.",
+      "Added Refinance under Tools. Model a new rate and term against a saved loan with balance curves and interest comparison.",
       "Mortgage workspace now includes a Refinance link for the selected property and loan.",
-      "Property Details reorganized into card sections with Edit links; mortgage rows show payoff or balloon projection with shortcuts to Refinance.",
-      "Edit property includes a Mortgages section — add, update, or remove loans without leaving the page.",
+      "Property Details reorganized into card sections with Edit links. Mortgage rows show payoff or balloon projection with shortcuts to Refinance.",
+      "Edit property includes a Mortgages section. Add, update, or remove loans without leaving the page.",
       "Overview focuses on performance metrics with Modeling and Refinance workspace buttons.",
-      "Added a \"What if I refinanced?\" panel on Overview — enter a new rate, term, and closing costs to see monthly savings, interest comparison, and break-even.",
+      "Added a \"What if I refinanced?\" panel on Overview. Enter a new rate, term, and closing costs to see monthly savings, interest comparison, and break-even.",
     ],
   },
   {

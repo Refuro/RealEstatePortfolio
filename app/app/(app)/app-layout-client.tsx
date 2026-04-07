@@ -10,6 +10,7 @@ import { AppNav } from "./app-nav";
 import { DraftProvider, useDraft } from "./draft-context";
 import { OverLimitBanner } from "./components/over-limit-banner";
 import { PastDueBanner } from "./components/past-due-banner";
+import { TrialBanner } from "./components/trial-banner";
 import { OnboardingPanel } from "./onboarding-panel";
 import { Footer } from "@/components/footer";
 import { MobileBottomNav } from "@/components/mobile-bottom-nav";
@@ -62,6 +63,9 @@ export function AppLayoutClient({
     subscriptionStatus: string | null;
     stripeCustomerId: string | null;
     subscriptionTier: string;
+    isOnTrial: boolean;
+    hasTrialExpired: boolean;
+    trialDaysRemaining: number | null;
   };
   onboardingProps?: {
     welcomeSeenAt: string | null;
@@ -284,12 +288,18 @@ export function AppLayoutClient({
             {bannerProps && (
               <>
                 <PastDueBanner subscriptionStatus={bannerProps.subscriptionStatus} />
+                <TrialBanner
+                  isOnTrial={bannerProps.isOnTrial}
+                  trialDaysRemaining={bannerProps.trialDaysRemaining}
+                  propertyCount={bannerProps.propertyCount}
+                />
                 <OverLimitBanner
                   propertyCount={bannerProps.propertyCount}
                   dealCount={bannerProps.dealCount}
                   propertyLimit={bannerProps.propertyLimit}
                   dealLimit={bannerProps.dealLimit}
                   overLimit={bannerProps.overLimit}
+                  hasTrialExpired={bannerProps.hasTrialExpired}
                 />
               </>
             )}

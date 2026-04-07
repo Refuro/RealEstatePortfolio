@@ -49,10 +49,11 @@ export async function getSubscriptionDetails(
     const currentPeriodEnd = stripePeriodEnd
       ? new Date(stripePeriodEnd * 1000).toISOString()
       : dbCurrentPeriodEnd;
-    const cancelAtPeriodEnd =
-      stripeSub.cancel_at_period_end !== undefined
-        ? stripeSub.cancel_at_period_end
-        : willCancel;
+    // Stripe can schedule cancellations via either:
+    // - cancel_at_period_end=true
+    // - cancel_at=<unix timestamp>
+    // Always return the normalized computed value to avoid UI drift.
+    const cancelAtPeriodEnd = willCancel;
 
     return { currentPeriodEnd, cancelAtPeriodEnd };
   } catch {

@@ -1,6 +1,9 @@
 import { cache } from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { TRIAL_DURATION_DAYS } from "@/lib/plans";
+import { AnalyticsEvents } from "@/lib/analytics-events";
+import { captureServerEvent } from "@/lib/posthog-server";
 
 /**
  * Get the current user from Clerk and ensure they exist in our DB.
@@ -37,15 +40,29 @@ export const getAppUser = cache(async function getAppUser() {
     });
   }
 
-  return prisma.user.create({
+  const now = new Date();
+  const trialEnd = new Date(
+    now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000
+  );
+
+  const createdUser = await prisma.user.create({
     data: {
       clerkUserId: clerkUser.id,
       email: primaryEmail || `user-${clerkUser.id}@placeholder.local`,
       firstName,
       lastName,
       subscriptionTier: "free",
+      trialStartedAt: now,
+      trialEndsAt: trialEnd,
     },
   });
+
+  await captureServerEvent(createdUser.clerkUserId, AnalyticsEvents.TRIAL_STARTED, {
+    trial_duration_days: TRIAL_DURATION_DAYS,
+    trial_ends_at: createdUser.trialEndsAt?.toISOString() ?? null,
+  });
+
+  return createdUser;
 });
 
 /**
