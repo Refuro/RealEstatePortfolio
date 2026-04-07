@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Prisma } from "@prisma/client";
 import { getActiveAppUser, isAdmin } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { TRIAL_DURATION_DAYS } from "@/lib/plans";
@@ -69,17 +70,13 @@ export async function PATCH(
   const now = new Date();
   const { action } = parsed.data;
 
-  const data: {
-    trialStartedAt?: Date | null;
-    trialEndsAt?: Date | null;
-    trialEmailsSentAt?: object | null;
-  } = {};
+  const data: Prisma.UserUpdateInput = {};
 
   switch (action) {
     case "start_14d":
       data.trialStartedAt = now;
       data.trialEndsAt = new Date(now.getTime() + TRIAL_DURATION_DAYS * DAY_MS);
-      data.trialEmailsSentAt = null;
+      data.trialEmailsSentAt = Prisma.DbNull;
       break;
     case "set_4d_left":
       data.trialStartedAt = new Date(now.getTime() - 10 * DAY_MS);
@@ -94,12 +91,12 @@ export async function PATCH(
       data.trialEndsAt = new Date(now.getTime() - DAY_MS);
       break;
     case "reset_email_flags":
-      data.trialEmailsSentAt = null;
+      data.trialEmailsSentAt = Prisma.DbNull;
       break;
     case "clear_trial":
       data.trialStartedAt = null;
       data.trialEndsAt = null;
-      data.trialEmailsSentAt = null;
+      data.trialEmailsSentAt = Prisma.DbNull;
       break;
   }
 

@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
+import { Prisma } from "@prisma/client";
+import type Stripe from "stripe";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveTier } from "@/lib/plans";
@@ -58,7 +60,7 @@ export async function GET(request: NextRequest) {
 
     // Prefer retrieving the exact subscription on record so we don't read
     // a stale/different subscription from the list endpoint.
-    let sub: Awaited<ReturnType<typeof stripe.subscriptions.retrieve>> | null = null;
+    let sub: Stripe.Subscription | null = null;
     const dbSub = await prisma.subscription.findUnique({
       where: { userId: user.id },
       select: { stripeSubscriptionId: true },
@@ -122,7 +124,7 @@ export async function GET(request: NextRequest) {
 
       // Always upsert active/trialing subscription details so cancellation state,
       // period end, and subscription id self-heal even when tier is unchanged.
-      const writes = [
+      const writes: Prisma.PrismaPromise<unknown>[] = [
         prisma.subscription.upsert({
           where: { userId: user.id },
           update: {

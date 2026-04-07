@@ -7,6 +7,7 @@ import {
   recordRateLimit,
 } from "@/lib/rate-limit";
 import { billingIntervalFromPriceId, getStripe, planTierFromPriceId } from "@/lib/stripe-config";
+import type Stripe from "stripe";
 
 export async function POST(
   request: NextRequest,
@@ -65,7 +66,7 @@ export async function POST(
 
     // Prefer retrieving the exact subscription we have on record so we don't
     // accidentally read a stale/different subscription from the list endpoint.
-    let sub: Awaited<ReturnType<typeof stripe.subscriptions.retrieve>> | null = null;
+    let sub: Stripe.Subscription | null = null;
     if (dbSub?.stripeSubscriptionId) {
       try {
         sub = await stripe.subscriptions.retrieve(dbSub.stripeSubscriptionId);
