@@ -2351,7 +2351,13 @@ export function AddPropertyWizard({
                 value={data.purchasePrice}
                 onChange={(v) => {
                   setData((prev) => ({ ...prev, purchasePrice: v }));
-                  if (errors.purchasePrice) setErrors((prev) => { const { purchasePrice: _, ...rest } = prev; return rest; });
+                  if (errors.purchasePrice) {
+                    setErrors((prev) => {
+                      const next = { ...prev };
+                      delete next.purchasePrice;
+                      return next;
+                    });
+                  }
                 }}
                 required
                 className={inputClass}
@@ -2380,7 +2386,13 @@ export function AddPropertyWizard({
                         ...(lastSaleSuggestion.date ? { purchaseDate: lastSaleSuggestion.date.slice(0, 10) } : {}),
                       }));
                       setLastSaleSuggestion(null);
-                      if (errors.purchasePrice) setErrors((prev) => { const { purchasePrice: _, ...rest } = prev; return rest; });
+                      if (errors.purchasePrice) {
+                        setErrors((prev) => {
+                          const next = { ...prev };
+                          delete next.purchasePrice;
+                          return next;
+                        });
+                      }
                     }}
                   >
                     Use this

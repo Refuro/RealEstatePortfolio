@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { MobileModeSwitcher } from "@/components/mobile-mode-switcher";
 import {
   MobileStatStrip,
@@ -45,26 +45,13 @@ export function MobileToolShell({
   const defaultModeId = initialModeId ?? modes[0]?.id ?? "";
   const [activeModeId, setActiveModeId] = useState(defaultModeId);
 
-  useEffect(() => {
-    if (modes.length === 0) {
-      return;
-    }
-
-    // Preserve user's current tab whenever it still exists.
-    if (modes.some((mode) => mode.id === activeModeId)) {
-      return;
-    }
-
-    const fallbackModeId =
-      initialModeId && modes.some((mode) => mode.id === initialModeId)
-        ? initialModeId
-        : modes[0].id;
-    setActiveModeId(fallbackModeId);
-  }, [activeModeId, initialModeId, modes]);
-
   const activeMode = useMemo(
-    () => modes.find((mode) => mode.id === activeModeId) ?? modes[0] ?? null,
-    [activeModeId, modes]
+    () =>
+      modes.find((mode) => mode.id === activeModeId) ??
+      (initialModeId ? modes.find((mode) => mode.id === initialModeId) : undefined) ??
+      modes[0] ??
+      null,
+    [activeModeId, initialModeId, modes]
   );
   const useModes = modes.length > 0 && !children;
 

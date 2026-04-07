@@ -40,9 +40,6 @@ export type ResourceArticle = {
   relatedSlugs: string[];
 };
 
-const disclaimer =
-  "This page is educational only. It is not financial, tax, or lending advice. Confirm assumptions with qualified professionals before you rely on any metric.";
-
 export const RESOURCE_ARTICLES: ResourceArticle[] = [
   {
     slug: "dscr-explained",
