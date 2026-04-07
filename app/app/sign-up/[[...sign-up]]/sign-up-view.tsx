@@ -20,6 +20,9 @@ export function SignUpView() {
         signInUrl="/sign-in"
       />
       <p className="max-w-sm text-center text-sm text-muted">
+        Your account includes a 14-day free trial of the Investor plan. No credit card required.
+      </p>
+      <p className="max-w-sm text-center text-sm text-muted">
         By signing up you agree to our{" "}
         <Link href="/terms" className="underline hover:text-foreground">
           Terms of Service

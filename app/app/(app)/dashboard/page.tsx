@@ -17,6 +17,10 @@ import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
 import { PaidIntentCheckoutBanner } from "@/components/growth/paid-intent-checkout-banner";
+import {
+  DashboardEmptyStatePrimaryCta,
+  DashboardEmptyStateSecondaryLinks,
+} from "./dashboard-empty-state-ctas";
 
 export default async function DashboardPage({
   searchParams,
@@ -45,7 +49,7 @@ export default async function DashboardPage({
     daysSinceSignup <= 1
       ? "Your dashboard is waiting for its first property"
       : daysSinceSignup <= 6
-        ? "Still setting up? Most landlords add their first property in under 5 minutes"
+        ? "Still setting up? Most landlords add their first property in about 60 seconds"
         : "Your portfolio metrics are ready when you are";
   const emptyStateBody =
     daysSinceSignup <= 1
@@ -122,36 +126,9 @@ export default async function DashboardPage({
               {emptyStateHeading}
             </h1>
             <p className="mt-2 text-sm text-muted">{emptyStateBody}</p>
-            <div className="mt-5">
-              <Link
-                href="/properties/new?mode=quick"
-                className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-5 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
-              >
-                Add your first property
-              </Link>
-            </div>
+            <DashboardEmptyStatePrimaryCta />
           </div>
-
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Link
-              href="/analyze"
-              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md"
-            >
-              <p className="text-sm font-semibold text-foreground">Analyze a deal first</p>
-              <p className="text-xs text-muted">
-                Run the numbers on a property before you commit. No account data needed.
-              </p>
-            </Link>
-            <Link
-              href="/settings#export"
-              className="flex flex-col gap-1 rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md"
-            >
-              <p className="text-sm font-semibold text-foreground">Import from a spreadsheet</p>
-              <p className="text-xs text-muted">
-                Have your properties in CSV format? Import them all at once from Settings.
-              </p>
-            </Link>
-          </div>
+          <DashboardEmptyStateSecondaryLinks />
         </div>
       </>
     );

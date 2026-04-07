@@ -12,8 +12,19 @@ const { fetchMock } = vi.hoisted(() => {
   return { fetchMock };
 });
 
+const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
+  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
+  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/auth", () => ({
   getActiveAppUser: () => getActiveAppUserMock(),
+}));
+
+vi.mock("@/lib/rate-limit", () => ({
+  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
+  getRateLimitIdentifier: () => "user:test-id",
+  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
 }));
 
 vi.mock("@sentry/nextjs", () => ({

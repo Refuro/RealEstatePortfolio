@@ -3,7 +3,7 @@ import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { getAppUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { getDealLimit, getEffectiveTier } from "@/lib/plans";
+import { getDealLimit, getEffectiveTier, hasTrialExpired } from "@/lib/plans";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { DealsList } from "./deals-list";
 import { PlusCircle } from "lucide-react";
@@ -13,6 +13,7 @@ export default async function DealsPage() {
   if (!user) redirect("/sign-in");
 
   const dealLimit = getDealLimit(getEffectiveTier(user));
+  const trialExpired = hasTrialExpired(user);
   const [totalCount, deals] = await Promise.all([
     prisma.savedDeal.count({ where: { userId: user.id } }),
     prisma.savedDeal.findMany({
@@ -78,7 +79,7 @@ export default async function DealsPage() {
                   placement="deals_list_at_limit"
                   className="font-medium text-foreground hover:underline"
                 >
-                  Upgrade to save more
+                  {trialExpired ? "Your trial has ended. Upgrade to save more" : "Upgrade to save more"}
                 </UpgradePlanLink>
               </>
             )}
@@ -95,12 +96,14 @@ export default async function DealsPage() {
 
       {overLimit && (
         <p className="mt-1 text-sm text-muted">
-          Showing {deals.length} of {totalCount} saved deals (plan limit).{" "}
+          {trialExpired
+            ? `Your trial has ended. ${Math.max(totalCount - dealLimit, 0)} saved deals are locked. `
+            : `Showing ${deals.length} of ${totalCount} saved deals (plan limit). `}
           <UpgradePlanLink
             placement="deals_list_over_limit"
             className="font-medium text-foreground hover:underline"
           >
-            Upgrade to see all
+            {trialExpired ? "Upgrade to unlock all deals" : "Upgrade to see all"}
           </UpgradePlanLink>
         </p>
       )}

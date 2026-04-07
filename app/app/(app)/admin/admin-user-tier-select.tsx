@@ -55,7 +55,7 @@ export function AdminUserTierSelect({
       value={value}
       onChange={handleChange}
       disabled={loading}
-      className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground disabled:opacity-50"
+      className="min-h-[44px] rounded-md border border-border bg-background px-3 py-2 text-base text-foreground disabled:opacity-50 md:text-sm"
       aria-label={`Set tier for user (effective: ${currentTier})`}
     >
       {TIER_OPTIONS.map((opt) => (

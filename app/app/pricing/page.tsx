@@ -7,7 +7,7 @@ import { DealAnalyzerMockup } from "@/components/mockups/deal-analyzer-mockup";
 import { Suspense } from "react";
 import { getAppUser } from "@/lib/auth";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
-import { getEffectiveTier } from "@/lib/plans";
+import { getEffectiveTier, isOnTrial, trialDaysRemaining } from "@/lib/plans";
 import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
@@ -32,6 +32,8 @@ export const metadata: Metadata = {
 export default async function PricingPage() {
   const user = await getAppUser();
   const supportEmail = process.env.SUPPORT_EMAIL ?? null;
+  const userOnTrial = user ? isOnTrial(user) : false;
+  const daysRemaining = user ? trialDaysRemaining(user) : null;
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -48,7 +50,7 @@ export default async function PricingPage() {
             <p className="reveal-up reveal-up-d1 mx-auto mt-3 max-w-2xl text-base text-muted md:text-lg">
               {user
                 ? "Choose a plan based on how many properties you track."
-                : "Start free. Upgrade when you need more properties or deals."}
+                : "Every new account starts with 14 days of full Investor access. No credit card required."}
             </p>
             {user && (
               <p className="reveal-up reveal-up-d2 mx-auto mt-4 max-w-2xl text-center text-sm text-muted">
@@ -78,6 +80,8 @@ export default async function PricingPage() {
           </div>
           <PricingCards
             currentTier={user ? getEffectiveTier(user) : ""}
+            isOnTrial={userOnTrial}
+            trialDaysRemaining={daysRemaining}
             className="reveal-up reveal-up-d3 mt-10"
             showSignUp={!user}
             billingPortalReturnPath="/pricing"
@@ -327,7 +331,7 @@ export default async function PricingPage() {
                     planIntent="free"
                     className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover"
                   >
-                    Create free account
+                    Start your free trial
                   </FunnelCtaLink>
                   <p className="mt-4 text-sm font-medium text-foreground">
                     Returning user?

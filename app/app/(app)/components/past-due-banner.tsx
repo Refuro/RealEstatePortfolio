@@ -70,7 +70,7 @@ export function PastDueBanner({
         type="button"
         onClick={handleDismiss}
         aria-label="Dismiss"
-        className="shrink-0 rounded p-1 text-muted hover:bg-subtle hover:text-foreground"
+        className="shrink-0 flex min-h-[44px] min-w-[44px] items-center justify-center rounded text-muted transition-colors duration-150 hover:bg-subtle hover:text-foreground"
       >
         <X size={18} />
       </button>

@@ -104,17 +104,19 @@ export const day3Email = {
   buildText: (unsubscribeUrl: string, baseUrl: string) =>
     `You signed up for Veld Portfolio but haven't added a property yet.
 
-Add one in under 5 minutes and start tracking equity, cash flow, and cap rate:
-${baseUrl}/properties/new?mode=quick
+You still have 11 days of full Investor access in your free trial.
+
+Add one in about 60 seconds and start tracking equity, cash flow, and cap rate:
+${baseUrl}/properties/new?mode=quick&utm_source=email&utm_medium=email&utm_campaign=onboarding_day3
 
 —
 Veld Portfolio
 Unsubscribe: ${unsubscribeUrl}`.trim(),
   buildHtml: (unsubscribeUrl: string, baseUrl: string) =>
     buildHtml(
-      "You signed up for Veld Portfolio but haven&rsquo;t added a property yet. Add one in under 5 minutes and start tracking equity, cash flow, and cap rate.",
+      "You signed up for Veld Portfolio but haven&rsquo;t added a property yet. You still have 11 days of full Investor access in your free trial. Add one in about 60 seconds and start tracking equity, cash flow, and cap rate.",
       "Add your first property",
-      `${baseUrl}/properties/new?mode=quick`,
+      `${baseUrl}/properties/new?mode=quick&utm_source=email&utm_medium=email&utm_campaign=onboarding_day3`,
       unsubscribeUrl
     ),
 };
@@ -124,17 +126,19 @@ export const day7Email = {
   buildText: (unsubscribeUrl: string, baseUrl: string) =>
     `You're one property away from seeing your real estate portfolio in real time.
 
+You have 7 days of full portfolio access left in your free trial.
+
 Add your first property:
-${baseUrl}/properties/new?mode=quick
+${baseUrl}/properties/new?mode=quick&utm_source=email&utm_medium=email&utm_campaign=onboarding_day7
 
 —
 Veld Portfolio
 Unsubscribe: ${unsubscribeUrl}`.trim(),
   buildHtml: (unsubscribeUrl: string, baseUrl: string) =>
     buildHtml(
-      "You&rsquo;re one property away from seeing your real estate portfolio in real time.",
+      "You&rsquo;re one property away from seeing your real estate portfolio in real time. You have 7 days of full portfolio access left in your free trial.",
       "Add your first property",
-      `${baseUrl}/properties/new?mode=quick`,
+      `${baseUrl}/properties/new?mode=quick&utm_source=email&utm_medium=email&utm_campaign=onboarding_day7`,
       unsubscribeUrl
     ),
 };
@@ -196,9 +200,12 @@ export async function sendOnboardingEmail(
   const html = template.buildHtml(unsubscribeUrl, baseUrl);
 
   const resend = new Resend(resendKey);
+  const supportEmail = process.env.SUPPORT_EMAIL?.trim();
+
   const { data, error } = await resend.emails.send({
     from,
     to: [to],
+    ...(supportEmail ? { replyTo: [supportEmail] } : {}),
     subject: template.subject,
     text,
     html,

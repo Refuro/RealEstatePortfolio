@@ -30,17 +30,70 @@ export const RENTCAST_HOURLY_LIMITS = {
 } as const;
 
 export type PlanTier = keyof typeof PLAN_PROPERTY_LIMITS;
+const VALID_TIERS = ["free", "investor", "pro"] as const;
+export const TRIAL_DURATION_DAYS = 14;
 
-/** Effective tier = override when valid (free|investor|pro); else subscriptionTier ?? "free". */
+function toDate(value: Date | string | null | undefined): Date | null {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+}
+
+/**
+ * Effective tier priority:
+ * 1) valid admin override
+ * 2) paid Stripe tier
+ * 3) active app-managed trial => investor
+ * 4) free
+ */
 export function getEffectiveTier(user: {
   subscriptionTier: string | null;
   subscriptionTierOverride?: string | null;
+  trialEndsAt?: Date | string | null;
 }): string {
   const override = user.subscriptionTierOverride?.trim().toLowerCase();
-  if (override && ["free", "investor", "pro"].includes(override)) {
+  if (override && VALID_TIERS.includes(override as (typeof VALID_TIERS)[number])) {
     return override;
   }
-  return (user.subscriptionTier ?? "free").toLowerCase();
+
+  const tier = (user.subscriptionTier ?? "free").toLowerCase();
+  if (tier !== "free") {
+    return tier;
+  }
+
+  const trialEndsAt = toDate(user.trialEndsAt);
+  if (trialEndsAt && trialEndsAt > new Date()) {
+    return "investor";
+  }
+
+  return "free";
+}
+
+export function isOnTrial(user: {
+  trialEndsAt?: Date | null;
+  subscriptionTier?: string | null;
+  subscriptionTierOverride?: string | null;
+}): boolean {
+  if (!user.trialEndsAt) return false;
+  if (user.subscriptionTierOverride?.trim()) return false;
+  if ((user.subscriptionTier ?? "free").toLowerCase() !== "free") return false;
+  return user.trialEndsAt > new Date();
+}
+
+export function hasTrialExpired(user: {
+  trialEndsAt?: Date | null;
+  subscriptionTier?: string | null;
+  subscriptionTierOverride?: string | null;
+}): boolean {
+  if (!user.trialEndsAt) return false;
+  if (user.subscriptionTierOverride?.trim()) return false;
+  if ((user.subscriptionTier ?? "free").toLowerCase() !== "free") return false;
+  return user.trialEndsAt <= new Date();
+}
+
+export function trialDaysRemaining(user: { trialEndsAt?: Date | null }): number | null {
+  if (!user.trialEndsAt) return null;
+  const ms = user.trialEndsAt.getTime() - Date.now();
+  return ms <= 0 ? 0 : Math.ceil(ms / (1000 * 60 * 60 * 24));
 }
 
 /** Max `RentCastApiCall` rows in the rolling hour (all RentCast-backed routes share one counter). */

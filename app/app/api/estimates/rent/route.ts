@@ -92,7 +92,11 @@ export async function GET(req: NextRequest) {
       });
     }
     await prisma.rentCastApiCall.create({
-      data: { userId: user.id, propertyId: parsed.data.propertyId ?? null },
+      data: {
+        userId: user.id,
+        userEmail: user.email,
+        propertyId: parsed.data.propertyId ?? null,
+      },
     });
     const marketRentAsOfStr = now.toISOString().slice(0, 10);
     return NextResponse.json({

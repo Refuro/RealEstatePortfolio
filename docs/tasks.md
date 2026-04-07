@@ -272,4 +272,5 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 - **UX-SHIP-2 (QuickActions)** — Importing `quick-actions.tsx` on property detail overview. Component fully built; deferred by PM — will promote when ready. See `docs/audits/feature/2026-04-05-feature-ux-audit.md` §High for context.
 - **GRW-SHIP-1 (Social proof)** — Add real social proof to landing page. Deferred: no user testimonials or verified stats to use yet. Will promote when evidence is available. See `docs/audits/growth-funnel/2026-04-05-growth-funnel-audit.md` §Critical.
+- **GRW-1 (Mobile pricing accordion — Estimate pool row)** — **Permanently deferred / won't fix.** The Estimate pool (per hour) row is a RentCast API quota feature that most mobile landlord users will not understand and that would complicate the mobile accordion layout. Desktop table retains the row. Audit lanes should **not** re-flag this item. Decision owner: PM (2026-04-07).
 - **GRW-SHIP-2 (60-second copy)** — Not a task. Quick-add legitimately reduces first-property setup to ~60 seconds. Copy is accurate for that mode. No change needed.

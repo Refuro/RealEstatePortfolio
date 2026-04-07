@@ -274,6 +274,7 @@ export function DraftProvider({ children }: { children: ReactNode }) {
       if (pathname === "/properties/new" && hasDraftRef.current) {
         captureClientEvent(AnalyticsEvents.WIZARD_ABANDONED, {
           has_draft: true,
+          step: wizardGetStepRef.current?.(),
         });
         e.preventDefault();
       }

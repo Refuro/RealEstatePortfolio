@@ -269,8 +269,7 @@ export function OnboardingPanel({
               </div>
 
               <p className="mt-4 text-xs text-muted">
-                Takes about 5 minutes with your property details. You can start with just the
-                basics and fill in the rest later.
+                Takes about 60 seconds with Quick Add. You can fill in more details anytime.
               </p>
               {errorMessage ? (
                 <p className="mt-3 text-sm text-negative" role="status" aria-live="polite">

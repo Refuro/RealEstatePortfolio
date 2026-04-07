@@ -97,7 +97,9 @@ export async function POST(request: NextRequest) {
       customer: customerId,
       mode: "subscription",
       line_items: [{ price: priceId, quantity: 1 }],
-      success_url: `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}`,
+      // billing_return=1 tells app-layout-client to bypass the 5-min billing sync throttle
+      // and refresh entitlements immediately after checkout redirects back.
+      success_url: `${baseUrl}/billing/success?session_id={CHECKOUT_SESSION_ID}&billing_return=1`,
       cancel_url: `${baseUrl}/plans`,
       metadata: {
         appUserId: user.id,
