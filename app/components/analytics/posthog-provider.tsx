@@ -15,41 +15,54 @@ const POSTHOG_HOST =
   process.env.NEXT_PUBLIC_POSTHOG_HOST || "https://us.i.posthog.com";
 
 /**
- * Initializes PostHog only when `NEXT_PUBLIC_POSTHOG_KEY` is set **and** the user
- * accepts optional analytics (cookie consent). Children render either way.
+ * Always initializes PostHog in anonymous/memory-only mode (no cookies, no
+ * device storage) so basic page-view and funnel events fire for every visitor.
+ * When the user accepts analytics cookies the instance upgrades to full
+ * persistent + identified mode.
  */
 export function PostHogGate({ children }: { children: React.ReactNode }) {
-  const { hasAnalyticsConsent } = useCookieConsent();
+  const { hasAnalyticsConsent, ready } = useCookieConsent();
 
   useEffect(() => {
     if (!POSTHOG_KEY) return;
-    const g = globalThis as unknown as { __VELD_POSTHOG_INIT__?: boolean };
-    if (hasAnalyticsConsent) {
-      if (!g.__VELD_POSTHOG_INIT__) {
-        posthog.init(POSTHOG_KEY, {
-          api_host: POSTHOG_HOST,
-          person_profiles: "identified_only",
-          capture_pageview: false,
-          persistence: "localStorage+cookie",
-        });
-        g.__VELD_POSTHOG_INIT__ = true;
-      }
-    } else if (g.__VELD_POSTHOG_INIT__) {
-      posthog.reset();
-      g.__VELD_POSTHOG_INIT__ = false;
-    }
-  }, [hasAnalyticsConsent]);
+    const g = globalThis as unknown as {
+      __VELD_PH_MODE__?: "anon" | "full";
+    };
 
-  if (!POSTHOG_KEY || !hasAnalyticsConsent) {
+    if (!g.__VELD_PH_MODE__) {
+      posthog.init(POSTHOG_KEY, {
+        api_host: POSTHOG_HOST,
+        person_profiles: "identified_only",
+        capture_pageview: false,
+        persistence: "memory",
+      });
+      g.__VELD_PH_MODE__ = "anon";
+    }
+
+    if (hasAnalyticsConsent && g.__VELD_PH_MODE__ !== "full") {
+      posthog.set_config({ persistence: "localStorage+cookie" });
+      g.__VELD_PH_MODE__ = "full";
+    } else if (!hasAnalyticsConsent && ready && g.__VELD_PH_MODE__ === "full") {
+      posthog.reset();
+      posthog.set_config({ persistence: "memory" });
+      g.__VELD_PH_MODE__ = "anon";
+    }
+  }, [hasAnalyticsConsent, ready]);
+
+  if (!POSTHOG_KEY) {
     return <>{children}</>;
   }
 
   return (
     <PHProvider client={posthog}>
-      <PostHogIdentify />
-      <PostHogPersonProperties />
-      <PostHogPlanIntent />
-      <PostHogSignupOnce />
+      {hasAnalyticsConsent && (
+        <>
+          <PostHogIdentify />
+          <PostHogPersonProperties />
+          <PostHogPlanIntent />
+          <PostHogSignupOnce />
+        </>
+      )}
       <PostHogPageView />
       {children}
     </PHProvider>
