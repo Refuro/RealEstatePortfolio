@@ -186,7 +186,7 @@ export async function sendOnboardingEmail(
 
   const fromDomain = process.env.RESEND_FROM_DOMAIN?.trim();
   const from = fromDomain
-    ? `Veld Portfolio <noreply@${fromDomain}>`
+    ? `Veld Portfolio <hello@${fromDomain}>`
     : "Veld Portfolio <onboarding@resend.dev>";
 
   const unsubscribeUrl = buildUnsubscribeUrl(userId);
