@@ -3,12 +3,16 @@ import {
   PLAN_DEAL_LIMITS,
   PLAN_PROPERTY_LIMITS,
   RENTCAST_HOURLY_LIMITS,
+  TRIAL_DURATION_DAYS,
   canAddDeal,
   canAddProperty,
   getDealLimit,
   getEffectiveTier,
   getPropertyLimit,
   getRentCastHourlyLimit,
+  hasTrialExpired,
+  isOnTrial,
+  trialDaysRemaining,
 } from "./plans";
 
 describe("getEffectiveTier", () => {
@@ -33,12 +37,84 @@ describe("getEffectiveTier", () => {
       "investor",
       "invalid override ignored",
     ],
+    [
+      {
+        subscriptionTier: "free",
+        subscriptionTierOverride: null,
+        trialEndsAt: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
+      },
+      "investor",
+      "active trial maps free user to investor",
+    ],
+    [
+      {
+        subscriptionTier: "free",
+        subscriptionTierOverride: null,
+        trialEndsAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
+      },
+      "free",
+      "expired trial stays free",
+    ],
   ] as const)(
     "%s → %s (%s)",
     (user, expected) => {
       expect(getEffectiveTier(user)).toBe(expected);
     }
   );
+});
+
+describe("trial helpers", () => {
+  it("exports the 14-day trial duration", () => {
+    expect(TRIAL_DURATION_DAYS).toBe(14);
+  });
+
+  it("isOnTrial returns true only for free users with a future trial end", () => {
+    expect(
+      isOnTrial({
+        subscriptionTier: "free",
+        subscriptionTierOverride: null,
+        trialEndsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      })
+    ).toBe(true);
+    expect(
+      isOnTrial({
+        subscriptionTier: "investor",
+        subscriptionTierOverride: null,
+        trialEndsAt: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      })
+    ).toBe(false);
+  });
+
+  it("hasTrialExpired returns true only for expired free-tier trials", () => {
+    expect(
+      hasTrialExpired({
+        subscriptionTier: "free",
+        subscriptionTierOverride: null,
+        trialEndsAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      })
+    ).toBe(true);
+    expect(
+      hasTrialExpired({
+        subscriptionTier: "free",
+        subscriptionTierOverride: "pro",
+        trialEndsAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+      })
+    ).toBe(false);
+  });
+
+  it("trialDaysRemaining returns null/0/positive values correctly", () => {
+    expect(trialDaysRemaining({ trialEndsAt: null })).toBeNull();
+    expect(
+      trialDaysRemaining({
+        trialEndsAt: new Date(Date.now() - 5 * 60 * 1000),
+      })
+    ).toBe(0);
+    expect(
+      trialDaysRemaining({
+        trialEndsAt: new Date(Date.now() + 36 * 60 * 60 * 1000),
+      })
+    ).toBe(2);
+  });
 });
 
 describe("getPropertyLimit / getDealLimit", () => {

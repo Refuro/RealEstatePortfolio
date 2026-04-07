@@ -22,6 +22,7 @@ const { prismaMock } = vi.hoisted(() => ({
     subscription: {
       upsert: vi.fn().mockResolvedValue({}),
       updateMany: vi.fn().mockResolvedValue({}),
+      findUnique: vi.fn().mockResolvedValue(null),
     },
     user: {
       update: vi.fn().mockResolvedValue({}),
@@ -92,6 +93,7 @@ describe("GET /api/billing/sync", () => {
     vi.clearAllMocks();
     captureExceptionMock.mockClear();
     checkRateLimitMock.mockResolvedValue({ allowed: true });
+    prismaMock.subscription.findUnique.mockResolvedValue(null);
     prismaMock.$transaction.mockImplementation(async (ops: unknown) => {
       const arr = ops as Promise<unknown>[];
       if (Array.isArray(arr)) {
@@ -127,11 +129,13 @@ describe("GET /api/billing/sync", () => {
       ...mockActiveUser,
       stripeCustomerId: null,
       subscriptionTier: "free",
+      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
     });
     const { GET } = await import("./route");
     const res = await GET(makeRequest());
     const data = await res.json();
     expect(data.synced).toBe(false);
+    expect(data.tier).toBe("investor");
     expect(subscriptionsList).not.toHaveBeenCalled();
   });
 
@@ -183,19 +187,29 @@ describe("GET /api/billing/sync", () => {
     expect(data.tier).toBe("pro");
   });
 
-  it("returns synced:false when Stripe tier matches DB tier (no change needed)", async () => {
+  it("refreshes subscription metadata and returns synced:false when Stripe tier and billing state match DB", async () => {
     getActiveAppUserMock.mockResolvedValue({
       ...mockActiveUser,
       stripeCustomerId: "cus_test",
       subscriptionTier: "investor",
       subscriptionTierOverride: null,
     });
-    subscriptionsList.mockResolvedValue(activeSubscription("price_investor_monthly"));
+    const stripeData = activeSubscription("price_investor_monthly");
+    subscriptionsList.mockResolvedValue(stripeData);
+    const stripeSub = stripeData.data[0];
+    const stripePeriodEnd = stripeSub.items.data[0]?.current_period_end;
+    prismaMock.subscription.findUnique.mockResolvedValue({
+      stripeSubscriptionId: stripeSub.id,
+      status: stripeSub.status,
+      planName: "investor_monthly",
+      currentPeriodEnd: stripePeriodEnd ? new Date(stripePeriodEnd * 1000) : null,
+      cancelAtPeriodEnd: false,
+    });
     const { GET } = await import("./route");
     const res = await GET(makeRequest());
     const data = await res.json();
     expect(data.synced).toBe(false);
-    expect(prismaMock.$transaction).not.toHaveBeenCalled();
+    expect(prismaMock.$transaction).toHaveBeenCalled();
   });
 
   it("downgrades investor→free when Stripe subscription is canceled", async () => {

@@ -5,6 +5,10 @@
       "schedule": "0 14 * * *"
     },
     {
+      "path": "/api/cron/trial-emails",
+      "schedule": "10 14 * * *"
+    },
+    {
       "path": "/api/cron/rate-limit-cleanup",
       "schedule": "20 * * * *"
     }

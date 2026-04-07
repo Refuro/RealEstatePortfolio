@@ -25,6 +25,10 @@ export const RATE_LIMITS: Record<string, number> = {
   "billing:sync": 60,
   /** Stripe Customer Portal session creation — per user / hour. */
   "billing:portal": 30,
+  /** Google Places address autocomplete — per user / hour. */
+  "places:autocomplete": 120,
+  /** Google Places address details lookup — per user / hour. */
+  "places:details": 60,
 };
 
 export function getRateLimitIdentifier(userId: string | null, req: NextRequest): string {

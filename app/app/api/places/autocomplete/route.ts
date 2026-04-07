@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getActiveAppUser } from "@/lib/auth";
+import { checkRateLimit, getRateLimitIdentifier, recordRateLimit } from "@/lib/rate-limit";
 
 const querySchema = z.object({
   input: z.string().trim().min(3, "Enter at least 3 characters").max(200),
@@ -20,6 +21,12 @@ export async function GET(req: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, req);
+  const { allowed } = await checkRateLimit(identifier, "places:autocomplete");
+  if (!allowed) {
+    return NextResponse.json({ predictions: [] }, { status: 429 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -71,6 +78,7 @@ export async function GET(req: NextRequest) {
         placeId: p.place_id ?? "",
       }))
       .filter((p) => p.description && p.placeId);
+    await recordRateLimit(identifier, "places:autocomplete");
     return NextResponse.json({ predictions });
   } catch (err) {
     Sentry.captureException(err instanceof Error ? err : new Error("Autocomplete unavailable"), {

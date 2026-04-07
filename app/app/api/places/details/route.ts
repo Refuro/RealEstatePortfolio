@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 import { getActiveAppUser } from "@/lib/auth";
+import { checkRateLimit, getRateLimitIdentifier, recordRateLimit } from "@/lib/rate-limit";
 
 const querySchema = z.object({
   placeId: z.string().trim().min(1, "Place ID is required").max(255),
@@ -32,6 +33,12 @@ export async function GET(req: NextRequest) {
   const user = await getActiveAppUser();
   if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const identifier = getRateLimitIdentifier(user.id, req);
+  const { allowed } = await checkRateLimit(identifier, "places:details");
+  if (!allowed) {
+    return NextResponse.json({ error: "Rate limit exceeded. Try again later." }, { status: 429 });
   }
 
   const { searchParams } = new URL(req.url);
@@ -108,6 +115,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    await recordRateLimit(identifier, "places:details");
     return NextResponse.json({
       addressLine1,
       city,

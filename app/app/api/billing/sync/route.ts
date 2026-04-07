@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
+import { Prisma } from "@prisma/client";
+import type Stripe from "stripe";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getEffectiveTier } from "@/lib/plans";
@@ -55,13 +57,33 @@ export async function GET(request: NextRequest) {
 
   try {
     const stripe = getStripe();
-    const subscriptions = await stripe.subscriptions.list({
-      customer: user.stripeCustomerId,
-      limit: 1,
-      status: "all",
-    });
 
-    const sub = subscriptions.data[0];
+    // Prefer retrieving the exact subscription on record so we don't read
+    // a stale/different subscription from the list endpoint.
+    let sub: Stripe.Subscription | null = null;
+    const dbSub = await prisma.subscription.findUnique({
+      where: { userId: user.id },
+      select: { stripeSubscriptionId: true },
+    });
+    if (dbSub?.stripeSubscriptionId) {
+      try {
+        sub = await stripe.subscriptions.retrieve(dbSub.stripeSubscriptionId);
+      } catch {
+        sub = null;
+      }
+    }
+    if (!sub) {
+      const subscriptions = await stripe.subscriptions.list({
+        customer: user.stripeCustomerId,
+        limit: 5,
+        status: "all",
+      });
+      sub =
+        subscriptions.data.find((s) => s.status === "active" || s.status === "trialing") ??
+        subscriptions.data[0] ??
+        null;
+    }
+
     const status = sub?.status;
 
     if (status === "active" || status === "trialing") {
@@ -76,41 +98,66 @@ export async function GET(request: NextRequest) {
       const stripePlanName = stripeTier
         ? stripeInterval ? `${stripeTier}_${stripeInterval}` : stripeTier
         : null;
+      const periodEnd = firstItem?.current_period_end;
+      const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000) : null;
+      const nextCancelAtPeriodEnd =
+        sub.cancel_at_period_end === true ||
+        (typeof sub.cancel_at === "number" && sub.cancel_at * 1000 > Date.now());
+      const existingSub = await prisma.subscription.findUnique({
+        where: { userId: user.id },
+        select: {
+          stripeSubscriptionId: true,
+          status: true,
+          planName: true,
+          currentPeriodEnd: true,
+          cancelAtPeriodEnd: true,
+        },
+      });
+      const subscriptionChanged =
+        !existingSub ||
+        existingSub.stripeSubscriptionId !== sub.id ||
+        existingSub.status !== status ||
+        existingSub.planName !== (stripePlanName ?? stripeTier) ||
+        (existingSub.currentPeriodEnd?.getTime() ?? null) !==
+          (currentPeriodEnd?.getTime() ?? null) ||
+        (existingSub.cancelAtPeriodEnd ?? false) !== nextCancelAtPeriodEnd;
 
-      // If Stripe's tier differs from the DB (missed webhook, portal change),
-      // sync DB up so the app immediately reflects the correct entitlement.
+      // Always upsert active/trialing subscription details so cancellation state,
+      // period end, and subscription id self-heal even when tier is unchanged.
+      const writes: Prisma.PrismaPromise<unknown>[] = [
+        prisma.subscription.upsert({
+          where: { userId: user.id },
+          update: {
+            stripeSubscriptionId: sub.id,
+            status,
+            planName: stripePlanName ?? stripeTier,
+            currentPeriodEnd,
+            cancelAtPeriodEnd: nextCancelAtPeriodEnd,
+          },
+          create: {
+            userId: user.id,
+            stripeSubscriptionId: sub.id,
+            status,
+            planName: stripePlanName ?? stripeTier,
+            currentPeriodEnd,
+            cancelAtPeriodEnd: nextCancelAtPeriodEnd,
+          },
+        }),
+      ];
+      const tierChanged = Boolean(stripeTier && stripeTier !== tier);
       if (stripeTier && stripeTier !== tier) {
-        const periodEnd = firstItem?.current_period_end;
-        const currentPeriodEnd = periodEnd ? new Date(periodEnd * 1000) : null;
-        await prisma.$transaction([
-          prisma.subscription.upsert({
-            where: { userId: user.id },
-            update: {
-              stripeSubscriptionId: sub.id,
-              status,
-              planName: stripePlanName ?? stripeTier,
-              currentPeriodEnd,
-              cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
-            },
-            create: {
-              userId: user.id,
-              stripeSubscriptionId: sub.id,
-              status,
-              planName: stripePlanName ?? stripeTier,
-              currentPeriodEnd,
-              cancelAtPeriodEnd: sub.cancel_at_period_end ?? false,
-            },
-          }),
+        writes.push(
           prisma.user.update({
             where: { id: user.id },
             data: { subscriptionTier: stripeTier },
-          }),
-        ]);
-        return respondOk({ synced: true, tier: stripeTier });
+          })
+        );
       }
-
-      // Tier matches — no change needed.
-      return respondOk({ synced: false, tier: getEffectiveTier(user) });
+      await prisma.$transaction(writes);
+      return respondOk({
+        synced: tierChanged || subscriptionChanged,
+        tier: stripeTier ?? getEffectiveTier(user),
+      });
     }
 
     // No subscription, or definitively ended — downgrade to free.

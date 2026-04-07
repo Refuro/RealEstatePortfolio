@@ -23,6 +23,7 @@ const isPublicRoute = createRouteMatcher([
   "/contact",
   "/api/billing/webhook",
   "/api/cron/onboarding-emails",
+  "/api/cron/trial-emails",
   "/api/cron/rate-limit-cleanup",
   "/api/contact",
   "/api/csp-report",

@@ -155,4 +155,20 @@ describe("POST /api/billing/create-checkout-session", () => {
       data: { stripeCustomerId: "cus_new_123" },
     });
   });
+
+  it("allows checkout for a trial user with no subscription row", async () => {
+    getActiveAppUserMock.mockResolvedValue({
+      ...mockActiveUser,
+      subscriptionTier: "free",
+      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      stripeCustomerId: "cus_existing",
+    });
+    prismaMock.subscription.findUnique.mockResolvedValueOnce(null);
+    const { POST } = await import("./route");
+    const res = await POST(postJson({ plan: "investor", billingCycle: "monthly" }));
+    expect(res.status).toBe(200);
+    const data = await res.json();
+    expect(data.url).toBe("https://checkout.stripe.com/c/pay/cs_test_123");
+    expect(sessionsCreate).toHaveBeenCalled();
+  });
 });
