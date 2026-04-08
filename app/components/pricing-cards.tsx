@@ -46,7 +46,7 @@ const PLANS: {
     name: "Investor",
     propertyLimit: PLAN_PROPERTY_LIMITS.investor,
     dealLimit: PLAN_DEAL_LIMITS.investor,
-    description: "5 properties · 20 saved deals",
+    description: "",
     features: [
       "Track up to 5 properties",
       "Save up to 20 analyzed deals",
@@ -64,7 +64,7 @@ const PLANS: {
     name: "Pro",
     propertyLimit: PLAN_PROPERTY_LIMITS.pro,
     dealLimit: PLAN_DEAL_LIMITS.pro,
-    description: "20 properties · 50 saved deals",
+    description: "",
     features: [
       "Track up to 20 properties",
       "Save up to 50 analyzed deals",
@@ -328,7 +328,9 @@ export function PricingCards({
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h2 className="text-xl font-semibold text-foreground">{plan.name}</h2>
-                <p className="mt-1 text-xs text-muted">{plan.description}</p>
+                {plan.description && (
+                  <p className="mt-1 text-xs text-muted">{plan.description}</p>
+                )}
                 {showSignUp && (
                   <p className="mt-2 text-xs font-medium text-foreground/90">
                     {plan.publicBestFor}

@@ -45,6 +45,16 @@ Use the shared report template in `docs/process/audit-report-template.md`.
 
 ---
 
+## 5. Permanent deferrals (do not re-raise)
+
+Decisions made by the PM and recorded here. **Do not flag these as findings in any future audit.**
+
+| ID | Finding | Decision | Date |
+|----|---------|----------|------|
+| GRW-1 | Mobile pricing accordion missing "Estimate pool (per hour)" row | **Intentionally omitted.** The estimate pool row is excluded from the mobile accordion by design. Do not raise as a parity defect. | 2026-04-08 |
+
+---
+
 ## 4. Execution
 
 1. Review product, roadmap, and launch/business docs.
