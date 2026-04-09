@@ -11,14 +11,11 @@ const { captureServerEventMock } = vi.hoisted(() => ({
   captureServerEventMock: vi.fn(),
 }));
 
-vi.mock("@/lib/refresh", async () => {
-  const actual = await vi.importActual("@/lib/refresh");
-  return {
-    ...actual,
-    getRefreshEligibleUsers: (...args: unknown[]) => getRefreshEligibleUsersMock(...args),
-    processUserRefresh: (...args: unknown[]) => processUserRefreshMock(...args),
-  };
-});
+vi.mock("@/lib/refresh", () => ({
+  DEFAULT_REFRESH_BATCH_SIZE: 10,
+  getRefreshEligibleUsers: (...args: unknown[]) => getRefreshEligibleUsersMock(...args),
+  processUserRefresh: (...args: unknown[]) => processUserRefreshMock(...args),
+}));
 
 vi.mock("@/lib/posthog-server", () => ({
   captureServerEvent: (...args: unknown[]) => captureServerEventMock(...args),
