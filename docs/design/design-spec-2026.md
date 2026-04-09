@@ -89,7 +89,16 @@ The Veld brand accent is **indigo**. It replaces the former pure-black `--accent
 | `--positive` | `#059669` | `#34d399` | Financial gain, success |
 | `--negative` | `#dc2626` | `#f87171` | Financial loss, error |
 | `--warning` | `#d97706` | `#fbbf24` | Caution, near-limit |
-| `--chart-1` through `--chart-5` | as defined | as defined | Chart series — unchanged |
+| `--chart-1` | `#0ea5e9` | `#38bdf8` | Chart series |
+| `--chart-2` | `#14b8a6` | `#2dd4bf` | Chart series |
+| `--chart-3` | `#8b5cf6` | `#a78bfa` | Chart series (kept distinct from `--positive` in dark mode) |
+| `--chart-4` | `#3b82f6` | `#60a5fa` | Chart series |
+| `--chart-5` | `#06b6d4` | `#22d3ee` | Chart series |
+| `--chart-6` | `#a855f7` | `#c084fc` | Extended chart series |
+| `--chart-7` | `#ec4899` | `#f472b6` | Extended chart series |
+| `--chart-8` | `#f97316` | `#fb923c` | Extended chart series |
+| `--chart-9` | `#e11d48` | `#fb7185` | Extended chart series |
+| `--chart-10` | `#eab308` | `#facc15` | Extended chart series |
 
 **Additional tokens:**
 

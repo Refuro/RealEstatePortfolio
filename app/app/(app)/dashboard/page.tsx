@@ -12,18 +12,20 @@ import {
   getBenchmarkEligibility,
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
-import { type PortfolioPropertyInput } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
+import { PortfolioOverviewSection } from "./portfolio-overview-section";
 import { PaidIntentCheckoutBanner } from "@/components/growth/paid-intent-checkout-banner";
 import {
   DashboardEmptyStatePrimaryCta,
   DashboardEmptyStateSecondaryLinks,
 } from "./dashboard-empty-state-ctas";
 import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+import type { PropertyTableRow } from "./property-performance-table";
 
 function formatDeltaLabel(value: number | null | undefined): string | null {
   if (value == null) return null;
@@ -188,6 +190,14 @@ export default async function DashboardPage({
       vacancyPercent: p.vacancyPercent ?? 5,
     };
   });
+
+  // Single-pass: compute metrics once per property; reuse for charts + table.
+  const perPropertyMetrics = portfolioInput.map((p) => ({
+    id: p.id,
+    name: p.name,
+    ...computePropertyMetrics(p, displayMode),
+  }));
+
   const singleProperty = metrics.propertyCount === 1 ? properties[0] : null;
   const propertyHref = singleProperty ? `/properties/${singleProperty.id}` : "/properties";
   const modelingHref = singleProperty
@@ -197,15 +207,15 @@ export default async function DashboardPage({
     ? `/mortgage?propertyId=${encodeURIComponent(singleProperty.id)}`
     : "/mortgage";
 
-  type PortfolioInputItem = PortfolioPropertyInput & { name: string };
   const fullLiability = displayMode === "full_liability";
-  // Chart data from same metrics engine — use displayMode for consistency
+
   const chartData: DashboardChartData = {
-    equity: portfolioInput.map((p: PortfolioInputItem) => {
-      const m = computePropertyMetrics(p, displayMode);
-      return { name: p.name, equity: m.equity, propertyId: p.id };
-    }),
-    debtVsValue: portfolioInput.map((p: PortfolioInputItem) => {
+    equity: perPropertyMetrics.map((m) => ({
+      name: m.name,
+      equity: m.equity,
+      propertyId: m.id,
+    })),
+    debtVsValue: portfolioInput.map((p) => {
       const scale = (p.ownershipPercent ?? 100) / 100;
       return {
         name: p.name,
@@ -214,15 +224,85 @@ export default async function DashboardPage({
         propertyId: p.id,
       };
     }),
-    cashFlow: portfolioInput.map((p: PortfolioInputItem) => {
-      const m = computePropertyMetrics(p, displayMode);
-      return {
-        name: p.name,
-        monthlyCashFlow: m.monthlyCashFlow,
-        propertyId: p.id,
-      };
-    }),
+    cashFlow: perPropertyMetrics.map((m) => ({
+      name: m.name,
+      monthlyCashFlow: m.monthlyCashFlow,
+      propertyId: m.id,
+    })),
   };
+
+  // Attention flags per property (same logic as properties/page.tsx).
+  const perPropertyFlags = properties.map((p) => {
+    const m = perPropertyMetrics.find((pm) => pm.id === p.id)!;
+    const benchmarkEligibility = getBenchmarkEligibility({
+      isRented: p.isRented,
+      userRent: getPropertyTotalRent(p),
+      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+      marketRentAsOf: p.marketRentAsOf,
+    });
+    const benchmarkStale =
+      benchmarkEligibility === "benchmark_missing" ||
+      benchmarkEligibility === "benchmark_stale";
+    const noMortgage = p.mortgages.length === 0 && p.hasMortgage !== false;
+    const negativeCashFlow = m.monthlyCashFlow < 0;
+    const completeness = getPropertyCompleteness({
+      purchasePrice: Number(p.purchasePrice),
+      currentEstimatedValue: Number(p.currentEstimatedValue),
+      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+      mortgageCount: p.mortgages.length,
+      hasMortgage: p.hasMortgage ?? null,
+      bedrooms: p.bedrooms ?? null,
+      bathrooms: p.bathrooms != null ? Number(p.bathrooms) : null,
+      squareFeet: p.squareFeet ?? null,
+    });
+    const incompleteProfile = !completeness.isComplete;
+    return {
+      id: p.id,
+      noMortgage,
+      benchmarkStale,
+      negativeCashFlow,
+      incompleteProfile,
+      needsAttention: noMortgage || benchmarkStale || negativeCashFlow || incompleteProfile,
+    };
+  });
+
+  // Scale raw propertyValueDeltaMoM by ownership (snapshot value is unscaled).
+  const scaledValueDeltas: Record<string, number | null> = {};
+  for (const p of portfolioInput) {
+    const raw = trends.propertyValueDeltaMoM[p.id] ?? null;
+    const scale = (p.ownershipPercent ?? 100) / 100;
+    scaledValueDeltas[p.id] = raw != null ? raw * scale : null;
+  }
+
+  // Build table rows for PortfolioOverviewSection (6+ properties).
+  const tableRows: PropertyTableRow[] = properties.map((p) => {
+    const pInput = portfolioInput.find((pi) => pi.id === p.id)!;
+    const m = perPropertyMetrics.find((pm) => pm.id === p.id)!;
+    const flags = perPropertyFlags.find((f) => f.id === p.id)!;
+    const scale = (pInput.ownershipPercent ?? 100) / 100;
+    return {
+      id: p.id,
+      name: pInput.name,
+      addressLine1: p.addressLine1,
+      updatedAt: p.updatedAt,
+      value: pInput.estimatedValue * scale,
+      equity: m.equity,
+      monthlyCashFlow: m.monthlyCashFlow,
+      capRate: m.capRate,
+      valueDeltaMoM: scaledValueDeltas[p.id] ?? null,
+      equityDeltaMoM: trends.propertyEquityDeltaMoM[p.id] ?? null,
+      cashFlowDeltaMoM: trends.propertyCashFlowDeltaMoM[p.id] ?? null,
+      isRented: p.isRented,
+      userRent: getPropertyTotalRent(p),
+      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+      marketRentAsOf: p.marketRentAsOf,
+      noMortgage: flags.noMortgage,
+      benchmarkStale: flags.benchmarkStale,
+      negativeCashFlow: flags.negativeCashFlow,
+      incompleteProfile: flags.incompleteProfile,
+      needsAttention: flags.needsAttention,
+    };
+  });
 
   if (metrics.propertyCount === 0) {
     return (
@@ -366,7 +446,7 @@ export default async function DashboardPage({
           delta={trends.portfolio.cashFlowDeltaMoM}
           deltaLabel={formatDeltaLabel(trends.portfolio.cashFlowDeltaMoM)}
         />
-        <div className="hidden md:block">
+        <div className="hidden md:flex md:flex-col">
           <MetricCard
             label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
             value={
@@ -374,7 +454,6 @@ export default async function DashboardPage({
                 ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
                 : "—"
             }
-            primary={false}
             compact
           />
         </div>
@@ -392,7 +471,6 @@ export default async function DashboardPage({
                   ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
                   : "—"
               }
-              primary={false}
               compact
             />
           </div>
@@ -479,74 +557,83 @@ export default async function DashboardPage({
         </div>
       )}
 
-      {metrics.propertyCount > 1 && (
-        <RentVsMarketSection
-          properties={properties.map((p) => ({
-            id: p.id,
-            nickname: p.nickname,
-            addressLine1: p.addressLine1,
-            marketRent: p.marketRent != null ? Number(p.marketRent) : null,
-            marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
-            currentMonthlyRent: Number(p.currentMonthlyRent),
-            unitRents: p.unitRents,
-            isRented: p.isRented,
-          }))}
+      {metrics.propertyCount >= 6 ? (
+        <PortfolioOverviewSection
+          rows={tableRows}
+          chartData={chartData}
+          propertyCount={metrics.propertyCount}
         />
-      )}
-
-      <DashboardCharts
-        data={chartData}
-        propertyCount={metrics.propertyCount}
-        singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
-        singlePropertyEquityDeltaMoM={
-          metrics.propertyCount === 1 && properties[0]
-            ? trends.propertyEquityDeltaMoM[properties[0].id] ?? null
-            : null
-        }
-        singlePropertyMetrics={
-          metrics.propertyCount === 1
-            ? {
-                weightedCapRate: metrics.weightedCapRate,
-                portfolioLtv: metrics.portfolioLtv,
-                totalNoi: metrics.totalNoi,
-                portfolioCashOnCashReturn: metrics.portfolioCashOnCashReturn,
-                totalAnnualRent: metrics.totalAnnualRent,
-                dscr: metrics.dscr,
-              }
-            : undefined
-        }
-        benchmark={
-          metrics.propertyCount === 1 && properties[0]
-            ? (() => {
-                const p = properties[0];
-                const userRent = getPropertyTotalRent(p);
-                const marketRentNullable =
-                  p.marketRent != null ? Number(p.marketRent) : null;
-                const eligibility = getBenchmarkEligibility({
-                  isRented: p.isRented,
-                  userRent,
-                  marketRent: marketRentNullable,
-                  marketRentAsOf: p.marketRentAsOf,
-                });
-                if (eligibility === "eligible_fresh") {
-                  return {
-                    benchmarkLabel: getBenchmarkLabel(
+      ) : (
+        <>
+          {metrics.propertyCount > 1 && (
+            <RentVsMarketSection
+              properties={properties.map((p) => ({
+                id: p.id,
+                nickname: p.nickname,
+                addressLine1: p.addressLine1,
+                marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+                marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
+                currentMonthlyRent: Number(p.currentMonthlyRent),
+                unitRents: p.unitRents,
+                isRented: p.isRented,
+              }))}
+            />
+          )}
+          <DashboardCharts
+            data={chartData}
+            propertyCount={metrics.propertyCount}
+            singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
+            singlePropertyEquityDeltaMoM={
+              metrics.propertyCount === 1 && properties[0]
+                ? trends.propertyEquityDeltaMoM[properties[0].id] ?? null
+                : null
+            }
+            singlePropertyMetrics={
+              metrics.propertyCount === 1
+                ? {
+                    weightedCapRate: metrics.weightedCapRate,
+                    portfolioLtv: metrics.portfolioLtv,
+                    totalNoi: metrics.totalNoi,
+                    portfolioCashOnCashReturn: metrics.portfolioCashOnCashReturn,
+                    totalAnnualRent: metrics.totalAnnualRent,
+                    dscr: metrics.dscr,
+                  }
+                : undefined
+            }
+            benchmark={
+              metrics.propertyCount === 1 && properties[0]
+                ? (() => {
+                    const p = properties[0];
+                    const userRent = getPropertyTotalRent(p);
+                    const marketRentNullable =
+                      p.marketRent != null ? Number(p.marketRent) : null;
+                    const eligibility = getBenchmarkEligibility({
+                      isRented: p.isRented,
                       userRent,
-                      marketRentNullable ?? 0
-                    ),
-                  };
-                }
-                if (eligibility === "not_rented") {
-                  return { benchmarkMessage: BENCHMARK_UX_MESSAGES.notRented };
-                }
-                if (eligibility === "rent_missing") {
-                  return { benchmarkMessage: BENCHMARK_UX_MESSAGES.rentMissing };
-                }
-                return { propertyId: p.id };
-              })()
-            : undefined
-        }
-      />
+                      marketRent: marketRentNullable,
+                      marketRentAsOf: p.marketRentAsOf,
+                    });
+                    if (eligibility === "eligible_fresh") {
+                      return {
+                        benchmarkLabel: getBenchmarkLabel(
+                          userRent,
+                          marketRentNullable ?? 0
+                        ),
+                      };
+                    }
+                    if (eligibility === "not_rented") {
+                      return { benchmarkMessage: BENCHMARK_UX_MESSAGES.notRented };
+                    }
+                    if (eligibility === "rent_missing") {
+                      return { benchmarkMessage: BENCHMARK_UX_MESSAGES.rentMissing };
+                    }
+                    return { propertyId: p.id };
+                  })()
+                : undefined
+            }
+          />
+        </>
+      )}
 
       {metrics.propertyCount === 1 && (
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 shadow-sm">

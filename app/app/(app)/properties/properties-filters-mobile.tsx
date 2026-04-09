@@ -10,6 +10,7 @@ type Option = {
 type PropertiesFiltersMobileProps = {
   activeFilter: string;
   activeSort: string;
+  activeView: "grid" | "list";
   filterOptions: Option[];
   sortOptions: Option[];
 };
@@ -17,15 +18,17 @@ type PropertiesFiltersMobileProps = {
 export function PropertiesFiltersMobile({
   activeFilter,
   activeSort,
+  activeView,
   filterOptions,
   sortOptions,
 }: PropertiesFiltersMobileProps) {
   const router = useRouter();
 
-  function pushState(filter: string, sort: string) {
+  function pushState(filter: string, sort: string, view: "grid" | "list") {
     const params = new URLSearchParams();
     if (filter !== "all") params.set("filter", filter);
     if (sort !== "updated") params.set("sort", sort);
+    params.set("view", view);
     const query = params.toString();
     router.push(query ? `/properties?${query}` : "/properties");
   }
@@ -38,7 +41,7 @@ export function PropertiesFiltersMobile({
         </span>
         <select
           value={activeFilter}
-          onChange={(e) => pushState(e.target.value, activeSort)}
+          onChange={(e) => pushState(e.target.value, activeSort, activeView)}
           className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base md:text-sm font-medium text-foreground"
         >
           {filterOptions.map((option) => (
@@ -55,7 +58,7 @@ export function PropertiesFiltersMobile({
         </span>
         <select
           value={activeSort}
-          onChange={(e) => pushState(activeFilter, e.target.value)}
+          onChange={(e) => pushState(activeFilter, e.target.value, activeView)}
           className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-base md:text-sm font-medium text-foreground"
         >
           {sortOptions.map((option) => (

@@ -21,8 +21,9 @@ import {
 } from "@/lib/metrics/portfolio-metrics";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
-import { Building2, Search } from "lucide-react";
-import { PropertiesFiltersMobile } from "./properties-filters-mobile";
+import { Building2, ChevronRight, Search } from "lucide-react";
+import { PropertiesToolbar } from "./properties-toolbar";
+import { PropertiesCardGrid } from "./properties-card-grid";
 
 function BenchmarkLine({
   propertyId,
@@ -112,6 +113,7 @@ type PropertiesFilter =
   | "negative_cashflow"
   | "incomplete_profile";
 type PropertiesSort = "updated" | "worst_cashflow";
+type PropertiesView = "grid" | "list";
 
 const FILTER_OPTIONS: { key: PropertiesFilter; label: string }[] = [
   { key: "all", label: "All" },
@@ -127,10 +129,15 @@ const SORT_OPTIONS: { key: PropertiesSort; label: string }[] = [
   { key: "worst_cashflow", label: "Worst cash flow" },
 ];
 
-function buildPropertiesHref(filter: PropertiesFilter, sort: PropertiesSort): string {
+function buildPropertiesHref(
+  filter: PropertiesFilter,
+  sort: PropertiesSort,
+  view: PropertiesView
+): string {
   const params = new URLSearchParams();
   if (filter !== "all") params.set("filter", filter);
   if (sort !== "updated") params.set("sort", sort);
+  params.set("view", view);
   const query = params.toString();
   return query ? `/properties?${query}` : "/properties";
 }
@@ -138,11 +145,11 @@ function buildPropertiesHref(filter: PropertiesFilter, sort: PropertiesSort): st
 export default async function PropertiesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; sort?: string }>;
+  searchParams: Promise<{ filter?: string; sort?: string; view?: string }>;
 }) {
   const user = await getAppUser();
   if (!user) return null;
-  const { filter, sort } = await searchParams;
+  const { filter, sort, view } = await searchParams;
 
   const propertyLimit = getPropertyLimit(getEffectiveTier(user));
   const trialExpired = hasTrialExpired(user);
@@ -193,6 +200,12 @@ export default async function PropertiesPage({
     sort && SORT_OPTIONS.some((option) => option.key === sort as PropertiesSort)
       ? (sort as PropertiesSort)
       : "updated";
+  const activeView: PropertiesView =
+    view === "grid" || view === "list"
+      ? view
+      : totalCount >= 6
+        ? "list"
+        : "grid";
 
   const propertyCards = properties.map((p: PropertyWithMortgages) => {
     const totalMortgageBalance = p.mortgages.reduce(
@@ -225,7 +238,7 @@ export default async function PropertiesPage({
     const benchmarkStale =
       benchmarkEligibility === "benchmark_missing" ||
       benchmarkEligibility === "benchmark_stale";
-    const noMortgage = p.mortgages.length === 0;
+    const noMortgage = p.mortgages.length === 0 && p.hasMortgage !== false;
     const negativeCashFlow = metrics.monthlyCashFlow < 0;
     const completeness = getPropertyCompleteness({
       purchasePrice: Number(p.purchasePrice),
@@ -275,6 +288,159 @@ export default async function PropertiesPage({
       : filteredCards;
   const singlePropertyMode = properties.length === 1;
   const visibleCards = singlePropertyMode ? propertyCards : sortedCards;
+  const isMobileDisclosureEligible =
+    activeFilter === "all" && visibleCards.length >= 10;
+  const renderedCards = visibleCards.map((card) => {
+    const p = card.property;
+    const metrics = card.metrics;
+    return (
+      <li key={p.id} className="h-full">
+        <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40">
+          <div className="flex items-start justify-between gap-2">
+            <div>
+              <div className="font-medium text-foreground">
+                {p.nickname || p.addressLine1}
+              </div>
+              <div className="mt-1 min-h-[40px] text-sm text-muted">
+                {p.addressLine1}
+                {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
+              </div>
+              <p className="mt-1 min-h-4 text-xs text-muted">
+                Updated {formatTimeAgo(p.updatedAt)}
+              </p>
+            </div>
+            <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
+          </div>
+          <div className="mt-2 flex min-h-6 flex-wrap content-start gap-1.5">
+            {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
+            {card.noMortgage && <InsightTag label="No mortgage" />}
+            {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
+            {card.negativeCashFlow && (
+              <InsightTag label="Negative cash flow" tone="negative" />
+            )}
+            {isDataStale(
+              p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)
+            ) && <InsightTag label="Needs update" />}
+          </div>
+          <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
+            <div className="flex items-center justify-between sm:block">
+              <dt className="font-medium text-muted">Value</dt>
+              <dd className="font-medium text-foreground">
+                {formatCurrency(Number(p.currentEstimatedValue))}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between sm:block">
+              <dt className="font-medium text-muted">Equity</dt>
+              <dd className="font-medium text-foreground">
+                {formatCurrency(metrics.equity)}
+              </dd>
+            </div>
+            <div className="flex items-center justify-between sm:block">
+              <dt className="font-medium text-muted">Cash flow</dt>
+              <dd
+                className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+              >
+                {formatCurrency(metrics.monthlyCashFlow)}
+              </dd>
+            </div>
+          </dl>
+          <div className="mt-3 min-h-[32px]">
+            <BenchmarkLine
+              propertyId={p.id}
+              userRent={card.userRent}
+              isRented={p.isRented}
+              marketRent={p.marketRent != null ? Number(p.marketRent) : null}
+              marketRentAsOf={p.marketRentAsOf}
+            />
+          </div>
+          <div className="mt-auto pt-3 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/properties/${p.id}`}
+              className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
+            >
+              Open property
+            </Link>
+            <Link
+              href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
+              className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+            >
+              Open Modeling
+            </Link>
+            {p.mortgages.length > 0 ? (
+              <Link
+                href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
+                className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+              >
+                Open Mortgage
+              </Link>
+            ) : (
+              <Link
+                href={`/properties/${p.id}?tab=details#mortgages`}
+                className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
+              >
+                Add mortgage
+              </Link>
+            )}
+          </div>
+        </div>
+      </li>
+    );
+  });
+  const renderedListRows = visibleCards.map((card) => {
+    const p = card.property;
+    const metrics = card.metrics;
+
+    return (
+      <li key={p.id}>
+        <Link
+          href={`/properties/${p.id}`}
+          className="flex min-h-[44px] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-subtle/40"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium text-foreground">{p.nickname || p.addressLine1}</p>
+            <p className="truncate text-xs text-muted">
+              {p.addressLine1}
+              {p.city && `, ${p.city} ${p.state}`}
+            </p>
+          </div>
+
+          <div className="hidden sm:flex max-w-[220px] flex-wrap justify-end gap-1.5">
+            {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
+            {card.noMortgage && <InsightTag label="No mortgage" />}
+            {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
+            {card.negativeCashFlow && <InsightTag label="Negative cash flow" tone="negative" />}
+          </div>
+
+          <div className="hidden md:grid grid-cols-3 gap-3 text-right">
+            <div>
+              <p className="text-xs font-medium text-muted">Value</p>
+              <p className="tabular-nums text-sm font-medium text-foreground">
+                {formatCurrency(Number(p.currentEstimatedValue))}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Cash flow</p>
+              <p
+                className={`tabular-nums text-sm font-medium ${
+                  metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
+                }`}
+              >
+                {formatCurrency(metrics.monthlyCashFlow)}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted">Equity</p>
+              <p className="tabular-nums text-sm font-medium text-foreground">
+                {formatCurrency(metrics.equity)}
+              </p>
+            </div>
+          </div>
+
+          <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
+        </Link>
+      </li>
+    );
+  });
 
   return (
     <div>
@@ -356,69 +522,14 @@ export default async function PropertiesPage({
             </p>
           )}
           {!singlePropertyMode && (
-            <div className="mb-5 rounded-lg border border-border bg-card p-3">
-              <div className="mb-3 flex items-center justify-between gap-2 md:hidden">
-                <div>
-                  <p className="text-xs font-semibold text-muted">
-                    Portfolio view
-                  </p>
-                  <p className="mt-1 text-sm text-foreground">
-                    {visibleCards.length} {visibleCards.length === 1 ? "property" : "properties"} shown
-                  </p>
-                </div>
-                {(activeFilter !== "all" || activeSort !== "updated") && (
-                  <Link
-                    href="/properties"
-                    className="inline-flex min-h-[44px] items-center rounded-md border border-border px-2.5 py-1 text-xs font-medium text-foreground hover:bg-subtle"
-                  >
-                    Reset
-                  </Link>
-                )}
-              </div>
-              <PropertiesFiltersMobile
+            <div className="mb-5">
+              <PropertiesToolbar
                 activeFilter={activeFilter}
                 activeSort={activeSort}
+                activeView={activeView}
                 filterOptions={FILTER_OPTIONS}
                 sortOptions={SORT_OPTIONS}
               />
-              <div className="hidden items-center gap-2 overflow-x-auto md:flex">
-                <span className="shrink-0 text-xs font-semibold text-muted">Filter</span>
-                {FILTER_OPTIONS.map((option) => {
-                  const active = activeFilter === option.key;
-                  return (
-                    <Link
-                      key={option.key}
-                      href={buildPropertiesHref(option.key, activeSort)}
-                      className={`shrink-0 rounded-md border px-2.5 py-1 text-sm transition ${
-                        active
-                          ? "border-accent bg-accent/10 text-foreground"
-                          : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
-                      }`}
-                    >
-                      {option.label}
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="mt-2 hidden items-center gap-2 overflow-x-auto md:flex">
-                <span className="shrink-0 text-xs font-semibold text-muted">Sort</span>
-                {SORT_OPTIONS.map((option) => {
-                  const active = activeSort === option.key;
-                  return (
-                    <Link
-                      key={option.key}
-                      href={buildPropertiesHref(activeFilter, option.key)}
-                      className={`shrink-0 rounded-md border px-2.5 py-1 text-sm transition ${
-                        active
-                          ? "border-accent bg-accent/10 text-foreground"
-                          : "border-border bg-background text-muted hover:bg-subtle hover:text-foreground"
-                      }`}
-                    >
-                      {option.label}
-                    </Link>
-                  );
-                })}
-              </div>
             </div>
           )}
           {!singlePropertyMode && properties.length >= 1 && (
@@ -549,104 +660,13 @@ export default async function PropertiesPage({
               })()}
             </div>
           ) : (
-            <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-              {visibleCards.map((card) => {
-                const p = card.property;
-                const metrics = card.metrics;
-                return (
-                  <li key={p.id} className="h-full">
-                    <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40">
-                      <div className="flex items-start justify-between gap-2">
-                        <div>
-                          <div className="font-medium text-foreground">
-                            {p.nickname || p.addressLine1}
-                          </div>
-                          <div className="mt-1 min-h-[40px] text-sm text-muted">
-                            {p.addressLine1}
-                            {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
-                          </div>
-                          <p className="mt-1 min-h-4 text-xs text-muted">
-                            Updated {formatTimeAgo(p.updatedAt)}
-                          </p>
-                        </div>
-                        <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
-                      </div>
-                      <div className="mt-2 flex min-h-6 flex-wrap content-start gap-1.5">
-                        {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
-                        {card.noMortgage && <InsightTag label="No mortgage" />}
-                        {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
-                        {card.negativeCashFlow && (
-                          <InsightTag label="Negative cash flow" tone="negative" />
-                        )}
-                        {isDataStale(
-                          p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)
-                        ) && <InsightTag label="Needs update" />}
-                      </div>
-                      <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-                        <div className="flex items-center justify-between sm:block">
-                          <dt className="font-medium text-muted">Value</dt>
-                          <dd className="font-medium text-foreground">
-                            {formatCurrency(Number(p.currentEstimatedValue))}
-                          </dd>
-                        </div>
-                        <div className="flex items-center justify-between sm:block">
-                          <dt className="font-medium text-muted">Equity</dt>
-                          <dd className="font-medium text-foreground">
-                            {formatCurrency(metrics.equity)}
-                          </dd>
-                        </div>
-                        <div className="flex items-center justify-between sm:block">
-                          <dt className="font-medium text-muted">Cash flow</dt>
-                          <dd
-                            className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
-                          >
-                            {formatCurrency(metrics.monthlyCashFlow)}
-                          </dd>
-                        </div>
-                      </dl>
-                      <div className="mt-3 min-h-[32px]">
-                        <BenchmarkLine
-                          propertyId={p.id}
-                          userRent={card.userRent}
-                          isRented={p.isRented}
-                          marketRent={p.marketRent != null ? Number(p.marketRent) : null}
-                          marketRentAsOf={p.marketRentAsOf}
-                        />
-                      </div>
-                      <div className="mt-auto pt-3 flex flex-wrap items-center gap-2">
-                        <Link
-                          href={`/properties/${p.id}`}
-                          className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-                        >
-                          Open property
-                        </Link>
-                        <Link
-                          href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
-                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                        >
-                          Open Modeling
-                        </Link>
-                        {p.mortgages.length > 0 ? (
-                          <Link
-                            href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
-                            className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                          >
-                            Open Mortgage
-                          </Link>
-                        ) : (
-                          <Link
-                            href={`/properties/${p.id}?tab=details#mortgages`}
-                            className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                          >
-                            Add mortgage
-                          </Link>
-                        )}
-                      </div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
+            <PropertiesCardGrid
+              cards={renderedCards}
+              listRows={renderedListRows}
+              totalCount={visibleCards.length}
+              isMobileDisclosureEligible={isMobileDisclosureEligible}
+              viewMode={activeView}
+            />
           )}
         </>
       )}

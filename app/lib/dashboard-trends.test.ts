@@ -18,6 +18,8 @@ describe("buildDashboardTrends", () => {
     expect(result.portfolio.cashFlowDeltaMoM).toBeNull();
     expect(result.portfolio.equityDeltaSinceFirst).toBe(0);
     expect(result.propertyEquityDeltaMoM["p1"]).toBeNull();
+    expect(result.propertyValueDeltaMoM["p1"]).toBeNull();
+    expect(result.propertyCashFlowDeltaMoM["p1"]).toBeNull();
   });
 
   it("aggregates portfolio deltas across multiple properties", () => {
@@ -58,6 +60,10 @@ describe("buildDashboardTrends", () => {
     expect(result.portfolio.equityDeltaSinceFirst).toBe(34000);
     expect(result.propertyEquityDeltaMoM["p1"]).toBe(11000);
     expect(result.propertyEquityDeltaMoM["p2"]).toBe(23000);
+    expect(result.propertyValueDeltaMoM["p1"]).toBe(10000);
+    expect(result.propertyValueDeltaMoM["p2"]).toBe(20000);
+    expect(result.propertyCashFlowDeltaMoM["p1"]).toBe(30);
+    expect(result.propertyCashFlowDeltaMoM["p2"]).toBe(10);
     expect(result.portfolio.equitySeries).toHaveLength(2);
   });
 });
