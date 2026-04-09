@@ -43,9 +43,11 @@ export function TrialBanner({
 
   const days = Math.max(0, trialDaysRemaining ?? 0);
   const isFinalWindow = days <= 3;
+  const hasEmptyPortfolio = propertyCount === 0;
   const className = isFinalWindow
     ? "border-amber-500/30 bg-amber-500/10"
     : "border-accent/20 bg-accent/5";
+  const shouldShowUpgradeCta = !hasEmptyPortfolio || days <= 0;
 
   return (
     <div
@@ -56,18 +58,24 @@ export function TrialBanner({
         {isFinalWindow
           ? `Your free trial ends in ${days} ${days === 1 ? "day" : "days"}. Your data is safe, but portfolio access will be reduced. `
           : `You have ${days} ${days === 1 ? "day" : "days"} left on your free trial. `}
-        <Link
-          href="/plans"
-          className="font-medium text-accent transition-colors duration-150 hover:underline"
-          onClick={() =>
-            captureClientEvent(AnalyticsEvents.TRIAL_BANNER_UPGRADE_CLICKED, {
-              placement: "trial_banner",
-              days_remaining: days,
-            })
-          }
-        >
-          {isFinalWindow ? "Upgrade now" : "Upgrade to keep access"}
-        </Link>
+        {shouldShowUpgradeCta ? (
+          <Link
+            href="/plans"
+            className="font-medium text-accent transition-colors duration-150 hover:underline"
+            onClick={() =>
+              captureClientEvent(AnalyticsEvents.TRIAL_BANNER_UPGRADE_CLICKED, {
+                placement: "trial_banner",
+                days_remaining: days,
+              })
+            }
+          >
+            {isFinalWindow ? "Upgrade now" : "Upgrade to keep access"}
+          </Link>
+        ) : (
+          <span className="font-medium text-muted">
+            Add your first property to unlock the full trial experience.
+          </span>
+        )}
       </p>
       <button
         type="button"

@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  adjustSnapshotCashFlow,
   buildSnapshotData,
   computeSnapshotDelta,
   shouldApplyAvmRent,
@@ -77,6 +78,65 @@ describe("buildSnapshotData", () => {
     expect(snapshot.avmValueApplied).toBe(true);
     expect(snapshot.avmRentApplied).toBe(true);
     expect(snapshot.effectiveMortgageBalance).toBe(150_000);
+    // New basis-driver fields for display-mode re-derivation
+    expect(snapshot.ownershipPct).toBe(1.0); // 100 / 100
+    expect(snapshot.monthlyPayment).toBe(1_600);
+  });
+
+  it("stores ownershipPct as fraction for partial-ownership properties", () => {
+    const snapshot = buildSnapshotData(
+      {
+        id: "prop_partial",
+        currentEstimatedValue: 400_000,
+        currentMonthlyExpenses: 800,
+        currentMonthlyRent: 3_000,
+        ownershipPercent: 50,
+        vacancyPercent: 0,
+      },
+      [{ originalLoanAmount: 200_000, currentBalance: 180_000, interestRate: 0.065, termYears: 30, startDate: new Date("2022-01-01"), monthlyPayment: 1_400, balanceAsOfDate: null }],
+      { avmValueApplied: false, avmRentApplied: false }
+    );
+
+    expect(snapshot.ownershipPct).toBe(0.5);
+    expect(snapshot.monthlyPayment).toBe(1_400);
+    // monthlyCashFlow stored in proportional mode: (3000 - 800 - 1400) * 0.5 = 400
+    expect(snapshot.monthlyCashFlow).toBeCloseTo(400);
+  });
+});
+
+describe("adjustSnapshotCashFlow", () => {
+  it("returns stored cash flow unchanged for proportional mode", () => {
+    expect(adjustSnapshotCashFlow(400, 0.5, 1200, "proportional")).toBe(400);
+  });
+
+  it("returns stored cash flow unchanged when displayMode is null/undefined", () => {
+    expect(adjustSnapshotCashFlow(400, 0.5, 1200, null)).toBe(400);
+    expect(adjustSnapshotCashFlow(400, 0.5, 1200, undefined)).toBe(400);
+  });
+
+  it("applies full-liability adjustment for 50% ownership", () => {
+    // R=3000, E=1000, P=1200, s=0.5, vacancy=0
+    // mcf_prop = (3000 - 1000 - 1200) * 0.5 = 400
+    // mcf_full = 3000*0.5 - 1000*0.5 - 1200 = -200
+    // adjustment = -1200 * (1 - 0.5) = -600 → 400 - 600 = -200
+    expect(adjustSnapshotCashFlow(400, 0.5, 1200, "full_liability")).toBe(-200);
+  });
+
+  it("returns stored cash flow unchanged when ownershipPct is 1.0 (100%)", () => {
+    expect(adjustSnapshotCashFlow(400, 1.0, 1200, "full_liability")).toBe(400);
+  });
+
+  it("treats null ownershipPct as 1.0 (graceful degradation for legacy rows)", () => {
+    expect(adjustSnapshotCashFlow(400, null, 1200, "full_liability")).toBe(400);
+  });
+
+  it("treats null monthlyPayment as 0 (no mortgage)", () => {
+    expect(adjustSnapshotCashFlow(400, 0.5, null, "full_liability")).toBe(400);
+  });
+
+  it("applies correct adjustment for 25% ownership", () => {
+    // P=1200, s=0.25 → adjustment = -1200 * 0.75 = -900
+    expect(adjustSnapshotCashFlow(100, 0.25, 1200, "full_liability")).toBe(100 - 900);
   });
 });
 
@@ -96,6 +156,8 @@ describe("computeSnapshotDelta", () => {
     avmRentRaw: 2_700,
     avmValueApplied: true,
     avmRentApplied: true,
+    ownershipPct: 1.0,
+    monthlyPayment: 1_600,
   };
 
   it("returns zero/nullable deltas for first snapshot", () => {
@@ -116,6 +178,8 @@ describe("computeSnapshotDelta", () => {
       monthlyCashFlow: 160,
       capRate: 0.062,
       ltv: 0.484,
+      ownershipPct: 1.0,
+      monthlyPayment: 1_600,
     };
 
     const delta = computeSnapshotDelta(current, previous);

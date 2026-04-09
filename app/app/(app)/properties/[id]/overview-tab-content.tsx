@@ -4,11 +4,11 @@ import Link from "next/link";
 import { formatCurrency } from "@/lib/format-currency";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
-import { BenchmarkRefreshButton } from "../benchmark-refresh-button";
 import { PropertyHero } from "./property-hero";
 import { PropertyHealthStrip } from "./property-health-strip";
 import type { PropertyDetailTabsProps } from "./property-detail-types";
 import { PayoffCard } from "./payoff-card";
+import { QuickActions } from "./quick-actions";
 
 export type OverviewTabContentProps = PropertyDetailTabsProps & {
   showRefreshBenchmark: boolean;
@@ -82,13 +82,9 @@ export function OverviewTabContent({
         mortgageData={mortgageDataForHealth}
       />
 
-      {showRefreshBenchmark && (
-        <section className="flex flex-wrap items-center gap-2">
-          <span className="rounded-md border border-border px-3 py-1.5">
-            <BenchmarkRefreshButton propertyId={propertyId} label="Refresh benchmark" />
-          </span>
-        </section>
-      )}
+      <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
+        <QuickActions propertyId={propertyId} showRefreshBenchmark={showRefreshBenchmark} />
+      </section>
 
       <section className="rounded-xl border border-border bg-card shadow-sm">
         <div className="p-4">

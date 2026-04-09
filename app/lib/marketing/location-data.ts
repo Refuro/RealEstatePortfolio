@@ -27,15 +27,34 @@ export type LocationData = {
    * Source: State tax authorities.
    */
   stateIncomeTax?: string;
+  /**
+   * Median single-family/condo sale price, 2024–2025.
+   * Source: Redfin Research Center / Zillow Research, Q4 2024 statewide median.
+   * Used to pre-fill purchase price inputs on cap rate, cash-on-cash, DSCR, fix-and-flip, and wholesale calculators.
+   */
+  medianHomePrice?: number;
+  /**
+   * Typical residential investment cap rate, expressed as a decimal (e.g. 0.06 = 6%).
+   * Source: CBRE US Cap Rate Survey H2 2024 + local market data for residential SFR.
+   * Used to show a benchmark in the local context panel for cap rate calculator state pages.
+   */
+  avgCapRate?: number;
 };
 
 /**
  * All 50 US states — Phase 2B. Used for `/tools/[calculator]/[location]` and sitemap.
  *
+ * Data refreshed: April 9, 2026 — see docs/reference/location-data-update-april-2026.md
+ *
  * Data sources:
  * - avgMonthlyRent: HUD Fair Market Rents FY2025, 2-bedroom (huduser.gov)
  * - avgEffectivePropertyTaxRate: Tax Foundation, effective rate on owner-occupied housing, CY2022
  * - stateIncomeTax: State tax authorities, 2025 rates
+ * - medianHomePrice: Redfin Research Center / Zillow Research, Q4 2024 statewide median SFR/condo
+ * - avgCapRate: CBRE US Cap Rate Survey H2 2024 + residential SFR local market data
+ *
+ * Human review recommended before deploying: spot-check medianHomePrice and avgCapRate for
+ * TX, FL, CA, NY, GA, CO against a current source (Redfin, Zillow Research, CBRE) before shipping.
  */
 export const LOCATION_DATA_US_STATES: LocationData[] = [
   {
@@ -45,8 +64,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "AL",
     avgMonthlyRent: 1100,
-    avgEffectivePropertyTaxRate: 0.0036,
+    avgEffectivePropertyTaxRate: 0.0037,
     stateIncomeTax: "Up to 5%",
+    medianHomePrice: 282400,
+    avgCapRate: 0.052,
     investorContext:
       "Alabama investors often focus on yield and renovation scope across metros and smaller markets. Default inputs reflect typical Alabama rents from HUD Fair Market data—bracket your own numbers, then validate insurance and taxes for the specific county.",
     localContext:
@@ -59,8 +80,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "AK",
     avgMonthlyRent: 1550,
-    avgEffectivePropertyTaxRate: 0.0098,
+    avgEffectivePropertyTaxRate: 0.009,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 400500,
+    avgCapRate: 0.054,
     investorContext:
       "Alaska's rental markets are thin in places and seasonal in others. Default rent inputs are drawn from HUD FMR data for urban Alaska—adjust vacancy and expense loads conservatively for rural or seasonal markets.",
     localContext:
@@ -73,8 +96,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "AZ",
     avgMonthlyRent: 1400,
-    avgEffectivePropertyTaxRate: 0.0045,
+    avgEffectivePropertyTaxRate: 0.0043,
     stateIncomeTax: "2.5% flat",
+    medianHomePrice: 470200,
+    avgCapRate: 0.052,
     investorContext:
       "Phoenix-area and other Arizona markets see active SFR and build-to-rent interest. Default rent inputs reflect statewide HUD FMR estimates—seasonal demand and utility costs can matter, so adjust to what you expect.",
     localContext:
@@ -87,8 +112,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "AR",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0062,
-    stateIncomeTax: "Up to 4.4%",
+    avgEffectivePropertyTaxRate: 0.0054,
+    stateIncomeTax: "Up to 3.9%",
+    medianHomePrice: 255300,
+    avgCapRate: 0.068,
     investorContext:
       "Arkansas investors often weigh cash flow against appreciation expectations in smaller metros. Default inputs reflect typical Arkansas rents from HUD data—stress-test expenses including insurance and turnover on older stock.",
     localContext:
@@ -101,8 +128,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "CA",
     avgMonthlyRent: 2200,
-    avgEffectivePropertyTaxRate: 0.0075,
+    avgEffectivePropertyTaxRate: 0.0069,
     stateIncomeTax: "Up to 13.3%",
+    medianHomePrice: 866100,
+    avgCapRate: 0.04,
     investorContext:
       "California deals are often cap-rate tight but appreciation- and rent-growth sensitive. Default rent inputs are drawn from HUD FMR data—a statewide figure spans a wide range, so adjust to your specific market.",
     localContext:
@@ -115,8 +144,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "CO",
     avgMonthlyRent: 1700,
-    avgEffectivePropertyTaxRate: 0.0045,
+    avgEffectivePropertyTaxRate: 0.0052,
     stateIncomeTax: "4.4% flat",
+    medianHomePrice: 640000,
+    avgCapRate: 0.047,
     investorContext:
       "Colorado investors balance appreciation history with cash-flow reality at today's prices. Default rent inputs reflect HUD FMR estimates—altitude markets can vary, so use local comps to refine.",
     localContext:
@@ -129,8 +160,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "CT",
     avgMonthlyRent: 1650,
-    avgEffectivePropertyTaxRate: 0.0178,
+    avgEffectivePropertyTaxRate: 0.0136,
     stateIncomeTax: "Up to 6.99%",
+    medianHomePrice: 466000,
+    avgCapRate: 0.055,
     investorContext:
       "Connecticut investors often underwrite older housing and higher tax burdens carefully. Default rent inputs are based on HUD FMR data—compare scenarios here, then align assumptions with local mill rates and insurance quotes.",
     localContext:
@@ -143,8 +176,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "DE",
     avgMonthlyRent: 1500,
-    avgEffectivePropertyTaxRate: 0.0057,
+    avgEffectivePropertyTaxRate: 0.0051,
     stateIncomeTax: "Up to 6.6%",
+    medianHomePrice: 396100,
+    avgCapRate: 0.048,
     investorContext:
       "Delaware's small size still spans different rent and expense profiles by city. Default rent inputs reflect HUD FMR data—directional math belongs in the calculator, binding numbers belong in your diligence.",
     localContext:
@@ -157,8 +192,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "FL",
     avgMonthlyRent: 1700,
-    avgEffectivePropertyTaxRate: 0.0091,
+    avgEffectivePropertyTaxRate: 0.0076,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 433600,
+    avgCapRate: 0.057,
     investorContext:
       "Florida investors often weigh insurance and storm risk alongside rent and tourism-driven demand. Default rent inputs reflect HUD FMR data—align assumptions with carrier quotes and local landlord rules before committing.",
     localContext:
@@ -169,6 +206,16 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
         answer:
           "No. Add expected insurance and reserves in your expense inputs. The calculator does not model hazard zones or carrier requirements for you.",
       },
+      {
+        question: "What is a good cap rate in Florida?",
+        answer:
+          "Residential cap rates in Florida markets like Tampa, Orlando, and Jacksonville typically run 5–7% as of 2024–2025. South Florida and beach markets compress toward 4–5% due to appreciation expectations and higher prices. Wind and flood insurance costs reduce effective NOI—use your actual carrier quotes in the expenses line.",
+      },
+      {
+        question: "What DSCR do Florida lenders typically require?",
+        answer:
+          "Most DSCR lenders in Florida require a minimum of 1.0, with many preferring 1.20–1.25 for lower rates and better terms. Given Florida's higher insurance costs—especially in coastal counties—underwriting at 1.25 or above leaves room for insurance premium increases without failing coverage thresholds. Confirm requirements with your specific lender.",
+      },
     ],
   },
   {
@@ -178,8 +225,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "GA",
     avgMonthlyRent: 1300,
-    avgEffectivePropertyTaxRate: 0.0092,
-    stateIncomeTax: "5.39% flat",
+    avgEffectivePropertyTaxRate: 0.0077,
+    stateIncomeTax: "5.19% flat",
+    medianHomePrice: 374700,
+    avgCapRate: 0.06,
     investorContext:
       "Atlanta and other Georgia metros attract investors balancing cash flow with job growth. Default rent inputs are drawn from HUD FMR data—use conservative vacancy and maintenance when comparing scenarios across neighborhoods.",
     localContext:
@@ -192,8 +241,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "HI",
     avgMonthlyRent: 2500,
-    avgEffectivePropertyTaxRate: 0.0026,
+    avgEffectivePropertyTaxRate: 0.0031,
     stateIncomeTax: "Up to 11%",
+    medianHomePrice: 975500,
+    avgCapRate: 0.028,
     investorContext:
       "Hawaii investors face unique insurance, utility, and regulatory environments. Default rent inputs reflect HUD FMR data for Hawaii—use wide bands on expenses and confirm STR and landlord rules locally before acting on any estimate.",
     localContext:
@@ -206,8 +257,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "ID",
     avgMonthlyRent: 1150,
-    avgEffectivePropertyTaxRate: 0.0060,
-    stateIncomeTax: "Up to 5.8%",
+    avgEffectivePropertyTaxRate: 0.0043,
+    stateIncomeTax: "5.3% flat",
+    medianHomePrice: 474700,
+    avgCapRate: 0.048,
     investorContext:
       "Idaho markets have seen migration-driven demand in several cycles. Default rent inputs are based on HUD FMR data—model downside as well as upside, since job and rent paths can move faster than in slower-growth regions.",
     localContext:
@@ -220,8 +273,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "IL",
     avgMonthlyRent: 1200,
-    avgEffectivePropertyTaxRate: 0.0195,
+    avgEffectivePropertyTaxRate: 0.0179,
     stateIncomeTax: "4.95% flat",
+    medianHomePrice: 285600,
+    avgCapRate: 0.06,
     investorContext:
       "Illinois deals frequently hinge on property tax clarity and local economic trends. Default rent inputs reflect HUD FMR data—pair the calculator with counsel and local pros on legal and tax questions.",
     localContext:
@@ -234,8 +289,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "IN",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0085,
-    stateIncomeTax: "3.05% flat",
+    avgEffectivePropertyTaxRate: 0.0076,
+    stateIncomeTax: "2.95% flat",
+    medianHomePrice: 258900,
+    avgCapRate: 0.064,
     investorContext:
       "Indiana investors often chase yield in Midwest cash-flow markets. Default rent inputs are drawn from HUD FMR data—accuracy lives in rent comps and realistic rehab and capex lines, so test both best and stress cases.",
     localContext:
@@ -248,8 +305,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "IA",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0153,
-    stateIncomeTax: "Up to 5.7%",
+    avgEffectivePropertyTaxRate: 0.0125,
+    stateIncomeTax: "3.8% flat",
+    medianHomePrice: 230600,
+    avgCapRate: 0.07,
     investorContext:
       "Iowa rental performance varies widely by city size and employer base. Default rent inputs reflect HUD FMR data—compare financing and rent paths before locking assumptions.",
     localContext:
@@ -262,8 +321,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "KS",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0141,
-    stateIncomeTax: "Up to 5.7%",
+    avgEffectivePropertyTaxRate: 0.012,
+    stateIncomeTax: "Up to 5.58%",
+    medianHomePrice: 280900,
+    avgCapRate: 0.065,
     investorContext:
       "Kansas investors often balance stable long-term tenants against tornado and hail insurance costs. Default rent inputs are based on HUD FMR data—expense accuracy matters as much as headline rent.",
     localContext:
@@ -276,8 +337,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "KY",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0083,
-    stateIncomeTax: "4% flat",
+    avgEffectivePropertyTaxRate: 0.0072,
+    stateIncomeTax: "3.5% flat",
+    medianHomePrice: 270200,
+    avgCapRate: 0.062,
     investorContext:
       "Kentucky markets mix Appalachian smaller towns with larger regional hubs. Default rent inputs reflect HUD FMR data—underwrite to the submarket you are buying, not a statewide stereotype.",
     localContext:
@@ -290,8 +353,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "LA",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0052,
-    stateIncomeTax: "Up to 3%",
+    avgEffectivePropertyTaxRate: 0.0056,
+    stateIncomeTax: "3% flat",
+    medianHomePrice: 253200,
+    avgCapRate: 0.068,
     investorContext:
       "Louisiana investors often navigate insurance complexity and climate risk alongside rent. Default rent inputs are drawn from HUD FMR data—keep outputs directional until carrier quotes and local landlord rules are in hand.",
     localContext:
@@ -304,8 +369,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "ME",
     avgMonthlyRent: 1500,
-    avgEffectivePropertyTaxRate: 0.0136,
+    avgEffectivePropertyTaxRate: 0.009,
     stateIncomeTax: "Up to 7.15%",
+    medianHomePrice: 375800,
+    avgCapRate: 0.055,
     investorContext:
       "Maine's seasonal and year-round markets behave differently. Default rent inputs reflect HUD FMR data for Maine—model vacancy and expense seasonality honestly, since one annual rent figure can mislead.",
     localContext:
@@ -318,8 +385,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MD",
     avgMonthlyRent: 1900,
-    avgEffectivePropertyTaxRate: 0.0109,
-    stateIncomeTax: "Up to 5.75%",
+    avgEffectivePropertyTaxRate: 0.009,
+    stateIncomeTax: "Up to 6.5%",
+    medianHomePrice: 496500,
+    avgCapRate: 0.052,
     investorContext:
       "Maryland spans expensive metro suburbs and very different small markets. Default rent inputs are drawn from HUD FMR data—match rent and tax assumptions to the municipality, not the whole state.",
     localContext:
@@ -332,8 +401,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MA",
     avgMonthlyRent: 2200,
-    avgEffectivePropertyTaxRate: 0.0123,
+    avgEffectivePropertyTaxRate: 0.0095,
     stateIncomeTax: "5% flat",
+    medianHomePrice: 749900,
+    avgCapRate: 0.043,
     investorContext:
       "Massachusetts investors often underwrite older housing and strong tenant protections. Default rent inputs reflect HUD FMR data—use conservative rent growth and expense paths until local counsel confirms your strategy.",
     localContext:
@@ -346,8 +417,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MI",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0154,
+    avgEffectivePropertyTaxRate: 0.0113,
     stateIncomeTax: "4.25% flat",
+    medianHomePrice: 249300,
+    avgCapRate: 0.065,
     investorContext:
       "Michigan investors compare Rust Belt cash flow with metro job drivers. Default rent inputs are drawn from HUD FMR data—stress-test maintenance on pre-1980s stock and verify tax assessments for the specific city.",
     localContext:
@@ -360,8 +433,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MN",
     avgMonthlyRent: 1350,
-    avgEffectivePropertyTaxRate: 0.0111,
+    avgEffectivePropertyTaxRate: 0.0099,
     stateIncomeTax: "Up to 9.85%",
+    medianHomePrice: 370900,
+    avgCapRate: 0.056,
     investorContext:
       "Minnesota investors balance cold-climate operating costs with stable tenant demand in many metros. Default rent inputs reflect HUD FMR data—model utilities and maintenance with local specificity.",
     localContext:
@@ -374,8 +449,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MS",
     avgMonthlyRent: 850,
-    avgEffectivePropertyTaxRate: 0.0065,
-    stateIncomeTax: "5% flat",
+    avgEffectivePropertyTaxRate: 0.0054,
+    stateIncomeTax: "4% flat",
+    medianHomePrice: 255100,
+    avgCapRate: 0.056,
     investorContext:
       "Mississippi investors often focus on yield and renovation risk. Default rent inputs are based on HUD FMR data—insurance and storm exposure can move totals, so quote before trusting a best-case pro forma.",
     localContext:
@@ -388,8 +465,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MO",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0101,
-    stateIncomeTax: "Up to 4.95%",
+    avgEffectivePropertyTaxRate: 0.0085,
+    stateIncomeTax: "Up to 4.7%",
+    medianHomePrice: 263300,
+    avgCapRate: 0.064,
     investorContext:
       "Missouri mixes major metros with smaller cash-flow towns. Default rent inputs reflect HUD FMR data—the same price can imply different risk, so use ranges on rent and capex rather than a single point estimate.",
     localContext:
@@ -402,8 +481,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "MT",
     avgMonthlyRent: 1200,
-    avgEffectivePropertyTaxRate: 0.0084,
-    stateIncomeTax: "Up to 6.75%",
+    avgEffectivePropertyTaxRate: 0.0059,
+    stateIncomeTax: "Up to 5.65%",
+    medianHomePrice: 528000,
+    avgCapRate: 0.048,
     investorContext:
       "Montana markets can be thin on comps in rural areas. Default rent inputs are drawn from HUD FMR data for Montana's larger markets—widen uncertainty bands when your comp count is low.",
     localContext:
@@ -416,8 +497,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NE",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0173,
-    stateIncomeTax: "Up to 5.84%",
+    avgEffectivePropertyTaxRate: 0.0138,
+    stateIncomeTax: "Up to 4.55%",
+    medianHomePrice: 288800,
+    avgCapRate: 0.064,
     investorContext:
       "Nebraska investors often underwrite stable rents with weather and insurance variability. Default rent inputs reflect HUD FMR data—keep reserves visible in your scenario, not hidden in a low expense ratio.",
     localContext:
@@ -430,8 +513,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NV",
     avgMonthlyRent: 1550,
-    avgEffectivePropertyTaxRate: 0.0044,
+    avgEffectivePropertyTaxRate: 0.005,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 496000,
+    avgCapRate: 0.052,
     investorContext:
       "Las Vegas and Reno attract investors focused on tourism, migration, and job growth. Default rent inputs are drawn from HUD FMR data—volatility in rents and expenses means ranges beat single-point optimism, so test multiple scenarios.",
     localContext:
@@ -444,8 +529,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NH",
     avgMonthlyRent: 1700,
-    avgEffectivePropertyTaxRate: 0.0186,
-    stateIncomeTax: "No wage income tax",
+    avgEffectivePropertyTaxRate: 0.0135,
+    stateIncomeTax: "No state income tax",
+    medianHomePrice: 502300,
+    avgCapRate: 0.046,
     investorContext:
       "New Hampshire investors often compare high-tax-adjacent demand with rural cash flow. Default rent inputs reflect HUD FMR data—property tax bills can surprise, so model from actual assessments when possible.",
     localContext:
@@ -458,8 +545,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NJ",
     avgMonthlyRent: 1950,
-    avgEffectivePropertyTaxRate: 0.0208,
+    avgEffectivePropertyTaxRate: 0.0168,
     stateIncomeTax: "Up to 10.75%",
+    medianHomePrice: 526500,
+    avgCapRate: 0.05,
     investorContext:
       "New Jersey investors navigate high taxes and dense regulation in many markets. Default rent inputs are drawn from HUD FMR data—this calculator handles the math you enter, not legal or rent-control outcomes.",
     localContext:
@@ -472,8 +561,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NM",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0080,
+    avgEffectivePropertyTaxRate: 0.0061,
     stateIncomeTax: "Up to 5.9%",
+    medianHomePrice: 370600,
+    avgCapRate: 0.06,
     investorContext:
       "New Mexico investors weigh climate, water, and insurance costs alongside rent. Default rent inputs are based on HUD FMR data—desert markets are not monolithic, so underwrite to the city and property type.",
     localContext:
@@ -486,8 +577,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NY",
     avgMonthlyRent: 1600,
-    avgEffectivePropertyTaxRate: 0.0173,
+    avgEffectivePropertyTaxRate: 0.0123,
     stateIncomeTax: "Up to 10.9%",
+    medianHomePrice: 576100,
+    avgCapRate: 0.04,
     investorContext:
       "New York spans NYC-area complexity and very different upstate markets. Default rent inputs reflect statewide HUD FMR data, skewed toward non-NYC markets—narrow inputs to the submarket you are actually buying.",
     localContext:
@@ -500,8 +593,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "NC",
     avgMonthlyRent: 1250,
-    avgEffectivePropertyTaxRate: 0.0082,
-    stateIncomeTax: "4.5% flat",
+    avgEffectivePropertyTaxRate: 0.0062,
+    stateIncomeTax: "3.99% flat",
+    medianHomePrice: 380300,
+    avgCapRate: 0.058,
     investorContext:
       "North Carolina markets range from fast-growing metros to smaller landlord towns. Default rent inputs are drawn from HUD FMR data—the same purchase price can produce very different outcomes depending on taxes, rents, and financing.",
     localContext:
@@ -514,8 +609,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "ND",
     avgMonthlyRent: 1000,
-    avgEffectivePropertyTaxRate: 0.0085,
+    avgEffectivePropertyTaxRate: 0.0094,
     stateIncomeTax: "Up to 2.5%",
+    medianHomePrice: 350000,
+    avgCapRate: 0.064,
     investorContext:
       "North Dakota investors often face smaller comp sets and commodity-employment sensitivity. Default rent inputs reflect HUD FMR data—use conservative rent and vacancy when job concentration is high.",
     localContext:
@@ -528,8 +625,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "OH",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0159,
-    stateIncomeTax: "Up to 3.75%",
+    avgEffectivePropertyTaxRate: 0.0128,
+    stateIncomeTax: "2.75% flat",
+    medianHomePrice: 248600,
+    avgCapRate: 0.046,
     investorContext:
       "Midwest cash-flow markets like Ohio often hinge on purchase price discipline and accurate rent comps. Default rent inputs are drawn from HUD FMR data—stress-test maintenance and capex on older homes.",
     localContext:
@@ -542,8 +641,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "OK",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0090,
-    stateIncomeTax: "Up to 4.75%",
+    avgEffectivePropertyTaxRate: 0.0078,
+    stateIncomeTax: "Up to 4.5%",
+    medianHomePrice: 245900,
+    avgCapRate: 0.068,
     investorContext:
       "Oklahoma investors often balance yield with severe weather insurance costs. Default rent inputs reflect HUD FMR data—hail and wind losses can dominate long-term expense, so quote coverage before celebrating cash flow.",
     localContext:
@@ -556,8 +657,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "OR",
     avgMonthlyRent: 1550,
-    avgEffectivePropertyTaxRate: 0.0101,
+    avgEffectivePropertyTaxRate: 0.0079,
     stateIncomeTax: "Up to 9.9%",
+    medianHomePrice: 521500,
+    avgCapRate: 0.048,
     investorContext:
       "Oregon investors weigh West Coast regulation and rent-policy headlines against local fundamentals. Default rent inputs are drawn from HUD FMR data—enter the rent path you believe is achievable under real rules.",
     localContext:
@@ -570,8 +673,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "PA",
     avgMonthlyRent: 1250,
-    avgEffectivePropertyTaxRate: 0.0158,
+    avgEffectivePropertyTaxRate: 0.0114,
     stateIncomeTax: "3.07% flat",
+    medianHomePrice: 301000,
+    avgCapRate: 0.046,
     investorContext:
       "Pennsylvania investors often weigh older housing stock and city-specific landlord rules. Default rent inputs reflect HUD FMR data—conservative maintenance and vacancy assumptions usually age better than aggressive rent growth.",
     localContext:
@@ -584,8 +689,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "RI",
     avgMonthlyRent: 1700,
-    avgEffectivePropertyTaxRate: 0.0163,
+    avgEffectivePropertyTaxRate: 0.01,
     stateIncomeTax: "Up to 5.99%",
+    medianHomePrice: 484800,
+    avgCapRate: 0.05,
     investorContext:
       "Rhode Island's small footprint still has distinct submarkets. Default rent inputs reflect HUD FMR data—tight inventory can make comps noisy, so use ranges and document your rent assumption.",
     localContext:
@@ -598,8 +705,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "SC",
     avgMonthlyRent: 1200,
-    avgEffectivePropertyTaxRate: 0.0057,
-    stateIncomeTax: "Up to 6.2%",
+    avgEffectivePropertyTaxRate: 0.0044,
+    stateIncomeTax: "Up to 6%",
+    medianHomePrice: 403600,
+    avgCapRate: 0.058,
     investorContext:
       "Coastal and inland South Carolina markets differ on insurance and seasonal demand. Default rent inputs are drawn from HUD FMR data—enter expenses that match the property's actual risk profile and age.",
     localContext:
@@ -612,8 +721,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "SD",
     avgMonthlyRent: 950,
-    avgEffectivePropertyTaxRate: 0.0122,
+    avgEffectivePropertyTaxRate: 0.01,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 325700,
+    avgCapRate: 0.062,
     investorContext:
       "South Dakota investors often work with smaller tenant pools outside major hubs. Default rent inputs reflect HUD FMR data—conservative vacancy and expense assumptions usually hold up better than aggressive rent growth.",
     localContext:
@@ -626,8 +737,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "TN",
     avgMonthlyRent: 1150,
-    avgEffectivePropertyTaxRate: 0.0071,
+    avgEffectivePropertyTaxRate: 0.0046,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 389100,
+    avgCapRate: 0.058,
     investorContext:
       "Tennessee investors frequently compare urban core deals with suburban cash flow. Default rent inputs are drawn from HUD FMR data—keep expense lines realistic for your property age and local landlord norms.",
     localContext:
@@ -640,8 +753,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "TX",
     avgMonthlyRent: 1350,
-    avgEffectivePropertyTaxRate: 0.0168,
+    avgEffectivePropertyTaxRate: 0.0125,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 339500,
+    avgCapRate: 0.062,
     investorContext:
       "Texas remains one of the busiest states for buy-and-hold and value-add strategies. Default rent inputs reflect Texas-typical rents from HUD Fair Market data—always verify taxes, insurance, and rents for your specific submarket.",
     localContext:
@@ -652,6 +767,16 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
         answer:
           "Yes—and they matter. Texas has no state income tax but property taxes are among the highest in the country. Default inputs start with HUD-based rent estimates; enter your expected annual property tax and insurance load in the expenses field to model real cash flow.",
       },
+      {
+        question: "What is a good cap rate in Texas?",
+        answer:
+          "Residential investment cap rates in Texas vary by market. DFW and Houston investors typically see 5.5–7% on SFR and small multifamily as of 2024–2025, while Austin and premium suburban markets compress closer to 4.5–5.5%. Texas's high effective property tax (~1.6–2% of value depending on county) meaningfully reduces NOI—enter your actual tax bill rather than using a national default to get an accurate cap rate.",
+      },
+      {
+        question: "How do I estimate cash-on-cash return in Texas?",
+        answer:
+          "Cash-on-cash return in Texas depends heavily on your down payment, financing rate, and how accurately you model property taxes and insurance. With a 20% down payment and 7–8% mortgage rate, many Texas SFR deals run 4–8% CoC. High property taxes reduce NOI, which compresses CoC relative to lower-tax states—use local tax estimates, not a national rule of thumb.",
+      },
     ],
   },
   {
@@ -661,8 +786,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "UT",
     avgMonthlyRent: 1450,
-    avgEffectivePropertyTaxRate: 0.0062,
-    stateIncomeTax: "4.65% flat",
+    avgEffectivePropertyTaxRate: 0.0045,
+    stateIncomeTax: "4.5% flat",
+    medianHomePrice: 588500,
+    avgCapRate: 0.046,
     investorContext:
       "Utah investors often balance fast population growth history with affordability constraints. Default rent inputs are drawn from HUD FMR data—test downside rent and vacancy paths, not only upside cases.",
     localContext:
@@ -675,8 +802,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "VT",
     avgMonthlyRent: 1600,
-    avgEffectivePropertyTaxRate: 0.0190,
+    avgEffectivePropertyTaxRate: 0.014,
     stateIncomeTax: "Up to 8.75%",
+    medianHomePrice: 388000,
+    avgCapRate: 0.042,
     investorContext:
       "Vermont markets can be small and seasonal. Default rent inputs reflect HUD FMR data—thin comps mean you should widen uncertainty on rent and expense, since this calculator is only as good as your inputs.",
     localContext:
@@ -689,8 +818,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "VA",
     avgMonthlyRent: 1650,
-    avgEffectivePropertyTaxRate: 0.0093,
+    avgEffectivePropertyTaxRate: 0.0075,
     stateIncomeTax: "Up to 5.75%",
+    medianHomePrice: 457500,
+    avgCapRate: 0.052,
     investorContext:
       "Virginia spans expensive Northern Virginia corridors and smaller cash-flow markets. Default rent inputs are drawn from HUD FMR data—use location-specific rent and tax inputs rather than one-size assumptions.",
     localContext:
@@ -703,8 +834,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "WA",
     avgMonthlyRent: 1950,
-    avgEffectivePropertyTaxRate: 0.0102,
+    avgEffectivePropertyTaxRate: 0.0074,
     stateIncomeTax: "No personal income tax",
+    medianHomePrice: 658700,
+    avgCapRate: 0.043,
     investorContext:
       "Pacific Northwest investors often underwrite with tech-job-driven rent demand in mind. Default rent inputs reflect HUD FMR data—still model downside, as job mix shifts and regulation can change outcomes faster than a spreadsheet cell.",
     localContext:
@@ -717,8 +850,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "WV",
     avgMonthlyRent: 850,
-    avgEffectivePropertyTaxRate: 0.0059,
-    stateIncomeTax: "Up to 5.12%",
+    avgEffectivePropertyTaxRate: 0.0048,
+    stateIncomeTax: "Up to 4.82%",
+    medianHomePrice: 258800,
+    avgCapRate: 0.059,
     investorContext:
       "West Virginia investors often focus on yield and local employment drivers. Default rent inputs reflect HUD FMR data—underwrite maintenance and vacancy for older housing stock carefully.",
     localContext:
@@ -731,8 +866,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "WI",
     avgMonthlyRent: 1100,
-    avgEffectivePropertyTaxRate: 0.0185,
+    avgEffectivePropertyTaxRate: 0.0119,
     stateIncomeTax: "Up to 7.65%",
+    medianHomePrice: 318000,
+    avgCapRate: 0.06,
     investorContext:
       "Wisconsin investors balance cold-climate operating costs with stable demand in many metros. Default rent inputs are drawn from HUD FMR data—model utilities and snow removal where they move the needle.",
     localContext:
@@ -745,8 +882,10 @@ export const LOCATION_DATA_US_STATES: LocationData[] = [
     type: "state",
     stateCode: "WY",
     avgMonthlyRent: 1050,
-    avgEffectivePropertyTaxRate: 0.0061,
+    avgEffectivePropertyTaxRate: 0.0058,
     stateIncomeTax: "No state income tax",
+    medianHomePrice: 450000,
+    avgCapRate: 0.058,
     investorContext:
       "Wyoming markets can be thinly traded with boom–bust commodity exposure in some areas. Default rent inputs reflect HUD FMR data—use conservative ranges when comps are few.",
     localContext:

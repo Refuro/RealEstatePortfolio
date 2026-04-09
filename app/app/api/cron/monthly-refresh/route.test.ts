@@ -13,6 +13,10 @@ const { captureServerEventMock } = vi.hoisted(() => ({
 
 vi.mock("@/lib/refresh", () => ({
   DEFAULT_REFRESH_BATCH_SIZE: 10,
+  MAX_REFRESH_BATCH_SIZE: 100,
+  ESTIMATED_RENTCAST_CALLS_PER_PROPERTY: 2,
+  ASSUMED_PROPERTIES_PER_USER_FOR_CAPACITY: 20,
+  MAX_PROPERTIES_PER_USER_PER_RUN: Number.POSITIVE_INFINITY,
   getRefreshEligibleUsers: (...args: unknown[]) => getRefreshEligibleUsersMock(...args),
   processUserRefresh: (...args: unknown[]) => processUserRefreshMock(...args),
 }));
@@ -56,15 +60,17 @@ describe("GET /api/cron/monthly-refresh", () => {
     const { GET } = await import("./route");
     const res = await GET(makeRequest("Bearer cron-secret-test"));
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({
-      processed: 0,
-      remaining: 0,
-      snapshotsCreated: 0,
-      propertiesUpdated: 0,
-      valueAppliedCount: 0,
-      valueBelowThresholdCount: 0,
-      failedUsers: 0,
-    });
+    await expect(res.json()).resolves.toEqual(
+      expect.objectContaining({
+        processed: 0,
+        remaining: 0,
+        snapshotsCreated: 0,
+        propertiesUpdated: 0,
+        valueAppliedCount: 0,
+        valueBelowThresholdCount: 0,
+        failedUsers: 0,
+      })
+    );
   });
 
   it("processes users in batches and captures events", async () => {
@@ -91,15 +97,17 @@ describe("GET /api/cron/monthly-refresh", () => {
     const { GET } = await import("./route");
     const res = await GET(makeRequest("Bearer cron-secret-test", "batchSize=1"));
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({
-      processed: 1,
-      remaining: 1,
-      snapshotsCreated: 2,
-      propertiesUpdated: 1,
-      valueAppliedCount: 1,
-      valueBelowThresholdCount: 1,
-      failedUsers: 0,
-    });
+    await expect(res.json()).resolves.toEqual(
+      expect.objectContaining({
+        processed: 1,
+        remaining: 1,
+        snapshotsCreated: 2,
+        propertiesUpdated: 1,
+        valueAppliedCount: 1,
+        valueBelowThresholdCount: 1,
+        failedUsers: 0,
+      })
+    );
     expect(processUserRefreshMock).toHaveBeenCalledTimes(1);
     expect(captureServerEventMock).toHaveBeenCalledWith(
       "clerk_u1",
@@ -120,14 +128,16 @@ describe("GET /api/cron/monthly-refresh", () => {
     const { GET } = await import("./route");
     const res = await GET(makeRequest("Bearer cron-secret-test"));
     expect(res.status).toBe(200);
-    await expect(res.json()).resolves.toEqual({
-      processed: 1,
-      remaining: 0,
-      snapshotsCreated: 0,
-      propertiesUpdated: 0,
-      valueAppliedCount: 0,
-      valueBelowThresholdCount: 0,
-      failedUsers: 1,
-    });
+    await expect(res.json()).resolves.toEqual(
+      expect.objectContaining({
+        processed: 1,
+        remaining: 0,
+        snapshotsCreated: 0,
+        propertiesUpdated: 0,
+        valueAppliedCount: 0,
+        valueBelowThresholdCount: 0,
+        failedUsers: 1,
+      })
+    );
   });
 });

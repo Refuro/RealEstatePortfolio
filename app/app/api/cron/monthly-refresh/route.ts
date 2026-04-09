@@ -3,8 +3,12 @@ import * as Sentry from "@sentry/nextjs";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import { captureServerEvent } from "@/lib/posthog-server";
 import {
+  ASSUMED_PROPERTIES_PER_USER_FOR_CAPACITY,
   DEFAULT_REFRESH_BATCH_SIZE,
+  ESTIMATED_RENTCAST_CALLS_PER_PROPERTY,
   getRefreshEligibleUsers,
+  MAX_REFRESH_BATCH_SIZE,
+  MAX_PROPERTIES_PER_USER_PER_RUN,
   processUserRefresh,
 } from "@/lib/refresh";
 
@@ -25,12 +29,20 @@ export async function GET(req: NextRequest) {
   const batchSizeRaw = Number(searchParams.get("batchSize"));
   const batchSize =
     Number.isFinite(batchSizeRaw) && batchSizeRaw > 0
-      ? Math.min(100, Math.floor(batchSizeRaw))
+      ? Math.min(MAX_REFRESH_BATCH_SIZE, Math.floor(batchSizeRaw))
       : DEFAULT_REFRESH_BATCH_SIZE;
 
   const eligibleUsers = await getRefreshEligibleUsers(now);
   const toProcess = eligibleUsers.slice(0, batchSize);
   const apiKey = process.env.RENTCAST_API_KEY?.trim() || null;
+  const estimatedRentCastCalls =
+    batchSize *
+    ASSUMED_PROPERTIES_PER_USER_FOR_CAPACITY *
+    ESTIMATED_RENTCAST_CALLS_PER_PROPERTY;
+  const perUserPropertyCapText =
+    Number.isFinite(MAX_PROPERTIES_PER_USER_PER_RUN)
+      ? MAX_PROPERTIES_PER_USER_PER_RUN.toString()
+      : "unbounded";
 
   let snapshotsCreated = 0;
   let propertiesUpdated = 0;
@@ -77,5 +89,13 @@ export async function GET(req: NextRequest) {
     valueAppliedCount,
     valueBelowThresholdCount,
     failedUsers,
+    capacityPlanning: {
+      maxBatchSize: MAX_REFRESH_BATCH_SIZE,
+      defaultBatchSize: DEFAULT_REFRESH_BATCH_SIZE,
+      perUserPropertyCap: perUserPropertyCapText,
+      estimatedRentCastCallsPerRun: estimatedRentCastCalls,
+      runtimeNote:
+        "Estimate assumes 20 properties/user and 2 RentCast calls/property. For current Vercel timeout headroom, adjust batchSize if runtimes trend upward.",
+    },
   });
 }

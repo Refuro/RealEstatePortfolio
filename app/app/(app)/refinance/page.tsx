@@ -15,6 +15,9 @@ export default async function RefinancePage({
   const { propertyId, mortgageId } = await searchParams;
 
   const propertyLimit = getPropertyLimit(getEffectiveTier(user));
+  const totalPropertyCount = await prisma.property.count({
+    where: { userId: user.id },
+  });
   const properties = await prisma.property.findMany({
     where: { userId: user.id, mortgages: { some: {} } },
     include: { mortgages: true },
@@ -67,6 +70,7 @@ export default async function RefinancePage({
   return (
     <RefinanceWorkspaceLoader
       properties={items}
+      hasAnyProperties={totalPropertyCount > 0}
       initialSelectedPropertyId={initialSelectedPropertyId}
       initialSelectedMortgageId={initialSelectedMortgageId}
     />

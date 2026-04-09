@@ -18,6 +18,7 @@ const RefinanceWorkspace = dynamic(
 
 export function RefinanceWorkspaceLoader(props: {
   properties: RefinanceMortgageProperty[];
+  hasAnyProperties: boolean;
   initialSelectedPropertyId?: string;
   initialSelectedMortgageId?: string;
 }) {

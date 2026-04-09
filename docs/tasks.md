@@ -181,6 +181,162 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ---
 
+### Full audit remediation — 2026-04-09 synthesis — Ship + Schedule batch
+
+*Promoted from:* [`docs/audits/synthesis/2026-04-09-audit-synthesis.md`](audits/synthesis/2026-04-09-audit-synthesis.md). *Individual lane reports:* `docs/audits/*/2026-04-09-*`. *Completed items will be archived to [`docs/tasks-archived.md`](tasks-archived.md).*
+
+**Effort labels:** `🟢 Easy win` = surgical, low-risk, ≤2h. `🔴 Intense scrutiny` = product/architectural decision or broad surface; needs PM sign-off before builder runs.
+
+---
+
+#### Critical — must ship before next release
+
+- [x] **CRIT-0409-1 — Cron proxy allowlist (missing 4 routes)** 🟢 Easy win  
+  Add `/api/cron/milestone-emails`, `/api/cron/monthly-refresh`, `/api/cron/monthly-digest`, and `/api/cron/winback-emails` to `isPublicRoute` in `app/proxy.ts`. These routes exist in `vercel.json` but are not whitelisted, so Vercel Cron requests (which carry no Clerk session) hit `auth.protect()` and are blocked before the `CRON_SECRET` bearer check in each handler — meaning these jobs silently fail on every scheduled run. Match the existing pattern for `/api/cron/onboarding-emails`.  
+  - *Acceptance:*
+    - [ ] All four new paths present in `isPublicRoute` array in `app/proxy.ts`.
+    - [ ] Simulate each cron endpoint with `Authorization: Bearer $CRON_SECRET` and no Clerk session (curl or test invocation) — all four return **200** and execute handler logic (not 401/307).
+    - [ ] Existing protected routes still require auth (regression spot-check on `/api/properties`).
+    - [ ] `npm run check` passes.
+
+- [x] **CRIT-0409-2 — PostHog consent: update Privacy, cookie banner, and `analytics.md` to match actual behavior** 🔴 Intense scrutiny  
+  **PM decision (2026-04-09): fix the copy, not the code (Option B).** The code stays as-is (memory-persistence init + anonymous `$pageview` pre-consent). Update the three surfaces that make the false claim: (1) Privacy Policy PostHog bullet in `app/app/privacy/page.tsx` — rewrite to state that PostHog initialises in anonymous memory mode immediately and that pageviews are captured without a persistent ID before consent; (2) Cookie banner body in `app/components/consent/cookie-consent-banner.tsx` — soften "only if you accept" phrasing to accurately describe anonymous vs. identified capture; (3) `docs/launch/analytics.md` § Cookie consent — rewrite to match implementation. Keep all code paths unchanged.  
+  - *Acceptance:*
+    - [ ] Privacy Policy PostHog section accurately describes: init on load (memory mode), anonymous `$pageview` pre-consent, no persistent ID or cross-session tracking until accepted.
+    - [ ] Cookie banner no longer implies PostHog is completely gated on accept; describes anonymous vs. identified distinction.
+    - [ ] `docs/launch/analytics.md` § Cookie consent matches actual `posthog-provider.tsx` and `posthog-page-view.tsx` behavior.
+    - [ ] No changes to `posthog-provider.tsx`, `posthog-page-view.tsx`, or any analytics code.
+    - [ ] `npm run check` passes.
+
+---
+
+#### High — Security / Reliability
+
+- [x] **RELI-0409-1 — Sentry DSN: guard at deploy or document operational gap** 🟢 Easy win  
+  Sentry is conditionally initialized only when `NEXT_PUBLIC_SENTRY_DSN` is set (`app/sentry.server.config.ts`, `sentry.client.config.ts`). If unset, error boundaries (`global-error.tsx`, `(app)/error.tsx`) silently swallow errors. Add a startup warning (not hard failure) via `instrumentation.ts` when DSN is unset in production (`NODE_ENV === "production"`), similar to how `assertStripeWebhookSecretForVercelDeploy()` works, or document the explicit "logs-only" fallback decision in `docs/runbooks/incident-response.md`.  
+  - *Acceptance:*
+    - [ ] Either: `instrumentation.ts` logs a clear `[warn] NEXT_PUBLIC_SENTRY_DSN not set — errors will not be reported to Sentry` in production; OR a doc note is added to `docs/runbooks/incident-response.md` explicitly acknowledging logs-only fallback and what to watch.
+    - [ ] No behavior change when DSN is set.
+    - [ ] `npm run check` passes.
+
+- [x] **RELI-0409-2 — Incident runbook: migration rollback guidance + third-party triage** 🔴 Intense scrutiny  
+  `npm run build` runs `prisma migrate deploy`; promoting a previous Vercel deployment does not reverse applied migrations. `docs/runbooks/incident-response.md` documents Vercel rollback only — no migration rollback path. Additionally the runbook has no PostHog outage section and no RentCast / Resend / Google Places symptom matrix. Expand the runbook with: (1) migration rollback decision tree (revert migration? hotfix forward? coordinated downtime?), (2) PostHog degraded subsection, (3) one-paragraph each for Resend, RentCast, and Google Places outage triage.  
+  - *Acceptance:*
+    - [ ] `docs/runbooks/incident-response.md` includes a "Database migration rollback" section with at least: when to roll back vs. patch forward, the specific `prisma migrate resolve` command, and rollback coordination steps.
+    - [ ] PostHog, Resend, RentCast, and Google Places triage stubs present.
+    - [ ] No application code changes required.
+
+---
+
+#### High — Performance
+
+- [x] **PERF-0409-1 — Dynamic import calculators on marketing/SEO surfaces** 🔴 Intense scrutiny  
+  **PM decision (2026-04-09): full lazy-load (Option A).** `app/components/marketing/calculator-location-page.tsx` statically imports all calculators — including `RentVsBuyCalculator` which pulls Recharts — so every SEO/tool URL pays the full JS cost of all variants. Refactor all calculator imports in `calculator-location-page.tsx` to `next/dynamic` with `ssr: false` and a loading placeholder, following the existing pattern in `modeling-workspace.tsx`. Apply the same treatment to single-calculator tool pages (e.g. `app/app/tools/rent-vs-buy/page.tsx`) that also static-import their calculator. Only the active slug's calculator should be in the initial client bundle.  
+  - *Acceptance:*
+    - [ ] All calculator imports in `calculator-location-page.tsx` use `next/dynamic`; only the active branch loads at runtime.
+    - [ ] `/tools/rent-vs-buy` and other single-calculator tool routes dynamic-import their calculator component.
+    - [ ] A loading placeholder (spinner or skeleton) is visible while the calculator hydrates on first paint.
+    - [ ] Lighthouse or bundle analyzer diff on one calculator location URL in PR description shows measurable JS reduction vs. baseline.
+    - [ ] All existing calculator Vitest tests pass. `npm run check` passes.
+
+- [x] **PERF-0409-2 — RentCast monthly-refresh: cost gates as user base grows** 🔴 Intense scrutiny  
+  `app/app/api/cron/monthly-refresh/route.ts` iterates all eligible users and calls RentCast `fetchRentEstimate` / `fetchValueEstimate` per property. Cost and function duration grow linearly with users × properties. Review and document: current batch ceiling, per-user property cap, error handling on per-user loop failures, and at what user count the cron will exceed Vercel function timeout or RentCast budget. Add inline constants and a comment block with the scale assumptions so operational thresholds are visible without reading `lib/refresh.ts`.  
+  - *Acceptance:*
+    - [ ] `monthly-refresh/route.ts` and/or `lib/refresh.ts` have inline comments/constants documenting: max batch size, max properties per user, estimated RentCast calls per run, and the Vercel function timeout headroom.
+    - [ ] If the current ceiling is already sufficient, that is documented explicitly (no silent assumption).
+    - [ ] `npm run check` passes.
+
+- [x] **PERF-0409-3 — Stripe billing sync: tiered TTL by plan state** 🔴 Intense scrutiny  
+  **PM decision (2026-04-09): Option B — tiered TTL.** `app/app/(app)/app-layout-client.tsx` currently polls `GET /api/billing/sync` every 5 minutes for all users with a `stripeCustomerId`. Extend the sessionStorage TTL to **30 minutes** for users whose DB plan status is stable (`active` plan, not trial, not `past_due`, not within 7 days of period end). Keep the 5-minute TTL for trials, `past_due`, and subs expiring within 7 days — these states need low-latency convergence. The `billing/sync` route already reads the current `User.planTier` and `stripeSubscriptionStatus` from DB; use those fields to derive which TTL bucket to return in the response, and let `app-layout-client.tsx` store the appropriate TTL.  
+  - *Acceptance:*
+    - [ ] Stable paid users (active plan, not near expiry) see ≤1 Stripe API call per 30-minute session window.
+    - [ ] Trial users, `past_due` users, and users within 7 days of expiry still sync at ≤5-minute intervals.
+    - [ ] Manual smoke: trigger a subscription cancel via Stripe dashboard → app reflects plan change within the expected TTL window.
+    - [ ] Existing billing sync tests pass. `npm run check` passes.
+
+---
+
+#### High — Data Integrity
+
+- [x] **DI-0409-1 — PropertySnapshot: store raw basis inputs and render per user's current display mode** 🔴 Intense scrutiny  
+  **PM decision (2026-04-09):** Snapshots should be a complete record, displayed to the user per their current `ownershipDisplayMode` setting — i.e. the historical data is accurate and mode-agnostic; the *presentation* follows the user's preference. Current implementation calls `computePropertyMetrics` without `displayMode`, hardcoding proportional basis into the stored metrics. Fix by storing the mode-sensitive inputs (`ownershipPct` and the core raw metrics) so that the display layer can compute either basis at render time from the snapshot. Specifically: add `ownershipPct` (and any other basis-driver fields that `computePropertyMetrics` uses for mode switching) to `PropertySnapshot` schema or a derived payload; update `buildSnapshotData` in `app/lib/snapshots.ts` to record these; update snapshot chart/display components to re-derive display-mode metrics from the stored inputs using the user's current `ownershipDisplayMode`.  
+  - *Acceptance:*
+    - [ ] `PropertySnapshot` stores `ownershipPct` (and any other required raw inputs for mode-sensitive fields — confirm against `docs/policies/ownership-metrics.md`).
+    - [ ] `buildSnapshotData` records these inputs rather than only computed mode-locked outputs.
+    - [ ] Snapshot display components compute the correct mode-appropriate metrics at render time using `user.ownershipDisplayMode`.
+    - [ ] A user toggling between proportional and full-liability display modes sees consistent history (no unexplained divergence vs. live view).
+    - [ ] Existing `PropertySnapshot` rows without `ownershipPct` degrade gracefully (null treated as 100%, i.e. proportional = full-liability).
+    - [ ] Vitest tests cover both display modes for snapshot metric output. `npm run check` passes.
+
+---
+
+#### High — Growth / Activation
+
+- [x] **GRW-0409-1 — Trial banner: suppress upgrade prompt while portfolio is empty** 🟢 Easy win  
+  `app/app/(app)/components/trial-banner.tsx` shows "Upgrade now" while `propertyCount === 0`. Layout stacks the banner above the dashboard empty state, pulling users toward billing before they experience value. Add a condition to suppress (or demote to a lower-prominence variant) the upgrade CTA when `propertyCount === 0` and the user is within the trial window — prioritizing "Add your first property" as the primary action. Keep the banner visible for users with properties who are nearing trial end.  
+  - *Acceptance:*
+    - [ ] When `propertyCount === 0` and trial is active: trial banner either does not appear or shows a softer informational message without a primary "Upgrade" CTA.
+    - [ ] When `propertyCount > 0` and trial is active: banner shows upgrade CTA as normal.
+    - [ ] When trial has expired (regardless of property count): upgrade CTA shows as normal.
+    - [ ] No regression in `PaidIntentCheckoutBanner` or plan intent flows (`paid-intent-checkout-banner.tsx`).
+    - [ ] `npm run check` passes.
+
+---
+
+#### High — Feature / UX
+
+- [x] **UX-0409-1 — Mount `QuickActions` on property detail** 🟢 Easy win  
+  `app/app/(app)/properties/[id]/quick-actions.tsx` exports a `QuickActions` component (Edit property, Add mortgage, Refresh benchmark) but is not consumed anywhere in the property detail route — not in `property-detail-tabs.tsx`, `overview-tab-content.tsx`, or `properties/[id]/page.tsx`. Users must hunt for these actions. Mount `QuickActions` on the property detail overview (above or below the completeness banner is a natural location). Review mobile layout — component may need `MobileToolShell`-aware positioning.  
+  - *Acceptance:*
+    - [ ] `QuickActions` renders on the property detail overview at ≥768px and at mobile widths.
+    - [ ] Each action (Edit, Add mortgage, Refresh benchmark) is reachable and functional.
+    - [ ] Touch targets for mobile quick-action buttons meet ≥44px height.
+    - [ ] `npm run check` passes.
+
+- [x] **UX-0409-2 — Refinance empty state: correct CTA for no-mortgage vs no-property scenarios** 🟢 Easy win  
+  `app/app/(app)/refinance/refinance-workspace.tsx` shows "Add a property with a mortgage to model refi scenarios" with a button labeled **"Add your first property"** linking to `/properties/new` when `properties.length === 0`. Users who have properties but no mortgages also hit an empty workspace via the page's filtering logic — same copy/CTA mislabels their situation. Split into two states: (1) no properties at all → current CTA; (2) properties exist but none have a mortgage → copy says "Add a mortgage to one of your properties" with a link to `/properties` (so they can pick one).  
+  - *Acceptance:*
+    - [ ] State 1 (no properties): copy and CTA unchanged from current.
+    - [ ] State 2 (properties exist, no mortgages): copy says "Add a mortgage to an existing property" or equivalent; primary CTA routes to `/properties` or `/properties/[id]` (not `/properties/new`).
+    - [ ] Tested manually with 0 properties and with 1+ un-mortgaged property.
+    - [ ] `npm run check` passes.
+
+---
+
+#### High — SEO
+
+- [x] **SEO-0409-1 — Sitemap `lastModified`: use real dates instead of `new Date()`** 🟢 Easy win  
+  Every URL in `app/app/sitemap.ts` sets `lastModified: new Date()`, so the sitemap signals everything was updated on every crawl. This distorts crawl prioritization and freshness signals. Replace with static dates (at minimum the date content was last meaningfully changed) or remove `lastModified` entirely for URLs that don't change frequently. Dynamic content routes (e.g. location pages if they pull live data) may keep a computed date.  
+  - *Acceptance:*
+    - [ ] `sitemap.ts` no longer uses `new Date()` globally; either static ISO strings or a per-route logic that reflects actual content change dates.
+    - [ ] Fetch `/sitemap.xml` in preview/production and confirm `<lastmod>` values are not all identical to today's date.
+    - [ ] `npm run check` passes.
+
+- **SEO-0409-2 — Per-route OG/Twitter images — ~~deferred~~ (PM 2026-04-09)**  
+  Not worth the effort at current traffic levels. Revisit when organic traffic justifies custom social assets. Verify `/logo.png` existence in production is a manual spot-check only.
+
+---
+
+#### Effort summary
+
+| ID | Title | Effort label | PM decision |
+|----|-------|-------------|-------------|
+| CRIT-0409-1 | Add 4 missing cron paths to `proxy.ts` | 🟢 Easy win | ✅ Ready |
+| CRIT-0409-2 | PostHog: update Privacy, banner, and analytics.md copy | 🔴 Intense scrutiny | ✅ Fix copy, not code |
+| RELI-0409-1 | Sentry DSN: startup warning or documented fallback | 🟢 Easy win | ✅ Ready |
+| RELI-0409-2 | Runbook: migration rollback + third-party triage | 🔴 Intense scrutiny | ✅ Ready (doc-only) |
+| PERF-0409-1 | Dynamic import all calculators on SEO/marketing routes | 🔴 Intense scrutiny | ✅ Full lazy-load |
+| PERF-0409-2 | RentCast monthly-refresh: document cost gates | 🔴 Intense scrutiny | ✅ Ready (doc + comments) |
+| PERF-0409-3 | Stripe billing sync: tiered TTL by plan state | 🔴 Intense scrutiny | ✅ 30 min stable / 5 min edge |
+| DI-0409-1 | Snapshot: store raw inputs, render per display mode | 🔴 Intense scrutiny | ✅ Store inputs, render per setting |
+| GRW-0409-1 | Trial banner: suppress upgrade when portfolio empty | 🟢 Easy win | ✅ Ready |
+| UX-0409-1 | Mount `QuickActions` on property detail | 🟢 Easy win | ✅ Ready |
+| UX-0409-2 | Refinance empty state: fix CTA for no-mortgage case | 🟢 Easy win | ✅ Ready |
+| SEO-0409-1 | Sitemap `lastModified`: real dates | 🟢 Easy win | ✅ Ready |
+| SEO-0409-2 | Per-route OG/Twitter images | — | ⏸ Deferred |
+
+---
+
 ### Admin email tooling — onboarding email preview + re-subscribe
 
 *Added 2026-04-05. Builder can run both items in one pass.*

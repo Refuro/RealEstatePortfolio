@@ -4,13 +4,14 @@ import { CalculatorsHubCards } from "@/components/calculators/calculators-hub-ca
 
 export const metadata: Metadata = {
   title: "Calculators",
-  description: "BRRRR, rental, and flip calculators inside your portfolio workspace.",
+  description:
+    "Investment property, STR vs LTR, cap rate, cash-on-cash, DSCR, BRRRR, fix and flip, wholesale/MAO, and rent vs buy calculators inside your portfolio workspace.",
   robots: { index: false, follow: true },
 };
 
 export default function AppCalculatorsHubPage() {
   return (
-    <div>
+    <div className="mx-auto max-w-6xl">
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Real estate calculators</h1>
         <p className="mt-3 max-w-2xl text-base text-muted">

@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
-import { FixAndFlipCalculator } from "@/components/marketing/fix-and-flip-calculator";
+import { FixAndFlipSlot as FixAndFlipCalculator } from "@/components/marketing/calculator-page-slots";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import {
   CalculatorFaqJsonLd,
@@ -112,6 +112,14 @@ export default async function FixAndFlipCalculatorPage() {
               className="font-medium text-foreground hover:underline"
             >
               Investment property calculator
+            </Link>
+            {" · "}
+            <Link href="/tools/wholesale" className="font-medium text-foreground hover:underline">
+              Wholesale / MAO
+            </Link>
+            {" · "}
+            <Link href="/tools/cash-on-cash" className="font-medium text-foreground hover:underline">
+              Cash-on-cash return
             </Link>
             . State pages:{" "}
             <Link

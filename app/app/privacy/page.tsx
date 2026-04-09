@@ -40,7 +40,7 @@ export default async function PrivacyPage() {
           Privacy Policy
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 31, 2026
+          Last updated: April 9, 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">
@@ -84,11 +84,23 @@ export default async function PrivacyPage() {
               </li>
               <li>
                 <strong>PostHog</strong> — Product analytics (e.g. page views, signup events).{" "}
-                <strong>In the browser:</strong> we initialize PostHog only after you accept optional analytics via the in-app cookie banner; until then, no PostHog scripts load and no client analytics events are sent.{" "}
-                <strong>On the server:</strong> when billing or account events occur, we may send a small number of product events to PostHog from our backend (e.g. after Stripe subscription updates) using your user id — these do not rely on the browser cookie banner. See also our cookie section below for client-side tracking.
+                <strong>In the browser:</strong> we initialize PostHog in anonymous memory mode on page load to support basic product analytics (for example page views). Before optional cookies are accepted, we do not persist a cross-session identifier in browser storage and do not associate browser analytics with your signed-in identity. If you accept optional cookies, PostHog can persist identifiers across sessions and we may attach user identity for richer product analytics.{" "}
+                <strong>On the server:</strong> we send product and lifecycle events to PostHog from our backend using your stable user ID, independent of the browser cookie banner. This includes events such as subscription changes, trial lifecycle, account creation, cron-driven monthly reports, and email engagement outcomes. These events are used for product analytics and operational monitoring; they are not used for advertising.
               </li>
               <li>
-                <strong>Google</strong> — When Google Ads is configured and you accept optional analytics/ads cookies, we load Google&apos;s tag (gtag.js) for measurement and conversion reporting. If you reject optional cookies, we do not load this tag. Google may use cookies or similar storage when the tag runs; see{" "}
+                <strong>Google Maps Platform (Places)</strong> — When you type a property address, we send partial address text and place lookups to Google&apos;s Places API to provide address autocomplete suggestions. We send only the characters you type; we do not send your account identity to Google for this feature. See{" "}
+                <a
+                  href="https://policies.google.com/privacy"
+                  className="text-primary underline underline-offset-2 hover:text-foreground"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Google&apos;s Privacy Policy
+                </a>
+                .
+              </li>
+              <li>
+                <strong>Google Ads</strong> — When Google Ads is configured and you accept optional analytics/ads cookies, we load Google&apos;s tag (gtag.js) for measurement and conversion reporting. If you reject optional cookies, we do not load this tag. Google may use cookies or similar storage when the tag runs; see{" "}
                 <a
                   href="https://policies.google.com/privacy"
                   className="text-primary underline underline-offset-2 hover:text-foreground"
@@ -117,7 +129,7 @@ export default async function PrivacyPage() {
               <strong>Essential.</strong> Our auth provider (Clerk) sets session cookies when you sign in so you remain signed in. These are required for the service and are not used for advertising analytics.
             </p>
             <p className="mt-4">
-              <strong>Optional (analytics and ads measurement).</strong> We may set a first-party cookie recording your choice (accept or reject optional tracking). If you accept, we load PostHog, Vercel Web Analytics, and when configured, Google Ads measurement scripts as described above. If you reject, those scripts do not load. You can change your choice anytime via the cookie banner (footer or Settings).
+              <strong>Optional (analytics and ads measurement).</strong> We may set a first-party cookie recording your choice (accept or reject optional tracking). PostHog can run in anonymous memory mode before consent, but optional acceptance enables persistent identifiers and richer attribution/identity analytics. If you accept, we also load Vercel Web Analytics and, when configured, Google Ads measurement scripts as described above. If you reject optional tracking, Vercel and Google scripts do not load, and PostHog remains non-persistent in memory mode only. You can change your choice anytime via the cookie banner (footer or Settings).
             </p>
           </section>
 

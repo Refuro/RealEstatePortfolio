@@ -13,6 +13,19 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-10",
+    title: "Five new calculators, state pages, and rent vs buy chart",
+    items: [
+      "Added cap rate, cash-on-cash return, DSCR, wholesale / MAO, and rent vs buy calculators. All five are available on the public tools hub and in the sidebar under Calculators when signed in.",
+      "Each new calculator has state-specific pages for all 50 states with pre-filled inputs from local market data and a state-aware FAQ.",
+      "Rent vs buy includes a line chart showing cumulative renting vs owning cost over time, a break-even year marker, and a 5, 10, and 20-year cost comparison table.",
+      "DSCR calculator back-solves for the maximum qualifying loan at both 1.0 and 1.25 thresholds, with an interest-only toggle.",
+      "Wholesale / MAO uses an adjustable ARV multiplier so you can move off the 70% rule for your specific market.",
+      "Cost comparison table on rent vs buy redesigned so the delta column no longer wraps on narrow screens.",
+      "Calculator hub cards updated to equal height rows across all screen sizes.",
+    ],
+  },
+  {
     date: "2026-04-09",
     title: "Portfolio table, list view, and instant filters",
     items: [

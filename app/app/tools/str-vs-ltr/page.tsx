@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
-import { StrLtrCalculator } from "@/components/marketing/str-ltr-calculator";
+import { StrLtrSlot as StrLtrCalculator } from "@/components/marketing/calculator-page-slots";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import {
   CalculatorFaqJsonLd,
@@ -113,6 +113,14 @@ export default async function StrVsLtrCalculatorPage() {
             {" · "}
             <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
               Fix and flip
+            </Link>
+            {" · "}
+            <Link href="/tools/dscr" className="font-medium text-foreground hover:underline">
+              DSCR
+            </Link>
+            {" · "}
+            <Link href="/tools/cap-rate" className="font-medium text-foreground hover:underline">
+              Cap rate calculator
             </Link>
             . State pages:{" "}
             <Link
