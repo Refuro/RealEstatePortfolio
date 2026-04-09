@@ -131,12 +131,14 @@ export function DashboardCharts({
   benchmark,
   singlePropertyId,
   singlePropertyMetrics,
+  singlePropertyEquityDeltaMoM,
 }: {
   data: DashboardChartData;
   propertyCount: number;
   benchmark?: BenchmarkAtGlance;
   singlePropertyId?: string;
   singlePropertyMetrics?: SinglePropertyMetrics;
+  singlePropertyEquityDeltaMoM?: number | null;
 }) {
   const isSingleProperty = propertyCount === 1;
   const singleProperty = isSingleProperty ? data.equity[0] : null;
@@ -182,6 +184,20 @@ export function DashboardCharts({
               <p className="mt-0.5 text-lg font-semibold text-foreground">
                 {formatCurrency(singleProperty.equity)}
               </p>
+              {singlePropertyEquityDeltaMoM != null && (
+                <p
+                  className={`mt-0.5 text-xs tabular-nums ${
+                    singlePropertyEquityDeltaMoM > 0
+                      ? "text-positive"
+                      : singlePropertyEquityDeltaMoM < 0
+                        ? "text-negative"
+                        : "text-muted"
+                  }`}
+                >
+                  {singlePropertyEquityDeltaMoM > 0 ? "+" : ""}
+                  {formatCurrency(singlePropertyEquityDeltaMoM)} vs last month
+                </p>
+              )}
             </div>
             {/* Income */}
             <div>

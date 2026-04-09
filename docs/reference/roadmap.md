@@ -33,6 +33,28 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 **Distinct from:** **Benchmarking** and **data staleness nudges** (shipped) — this layer **interprets** and **prioritizes**. Complements **Refinance / payoff insights**.
 
+**Acknowledge / snooze mechanism (backlog, not scheduled):** Persistent insight alerts (e.g. "negative cash flow", "rent below market") can become nagging in real estate where resolution timelines are measured in months (lease renewals, refinancing, market shifts). Before shipping any persistent health summary or alert banner, build an **acknowledge / snooze** system: per-property, per-alert-type dismiss state stored in the DB, with optional snooze duration ("Remind me at lease renewal" / "Snooze 3 months") and optional user note ("Renovation in progress, rent increase planned for June"). Auto-resurface when the underlying data changes or the snooze expires. Without this mechanism, persistent alerts hurt the premium experience rather than help it. See also: **Lease renewal tracking** below.
+
+---
+
+### Lease renewal tracking & rent adjustment reminders
+
+**Priority:** 9–10
+
+**Purpose:** Track lease dates per property (start, end, term type — month-to-month vs fixed, per unit for multi-family) and proactively surface rent adjustment opportunities tied to renewal timing. Transforms the existing rent-vs-market benchmark from a static observation ("your rent is 4% below market") into a time-bound, actionable prompt ("lease renews in 45 days — market rent is 4.2% above your current rate, consider adjusting").
+
+**Why it matters for Pro users:** A landlord with 20 properties can't act on rent benchmarks at arbitrary times — rent changes happen at lease renewal. Knowing *when* each property's lease renews and *what the market says* at that moment is the bridge between "information" and "action." This is a natural Pro-tier differentiator: "Veld tells you when to raise rent and by how much."
+
+**Schema:** `leaseStartDate`, `leaseEndDate`, `leaseTermType` (enum: `month_to_month`, `fixed`) per property or per unit (for multi-family). Optional: `leaseRenewalNotes`.
+
+**Connection to existing features:**
+- **Property Performance Table** (dashboard, 6+ properties): "Next renewal" becomes a sortable column — "sort by soonest renewal" is a one-click workflow
+- **Retention data hooks** (§2): Renewal reminders are a natural Phase 6 email hook — "3 leases renewing next month, review rent benchmarks"
+- **Portfolio insights** (§1a): Lease-aware alerts are more actionable than static benchmark alerts; connects to the acknowledge/snooze mechanism
+- **Benchmarking** (shipped): Market rent data already exists; this feature adds the *timing* dimension
+
+**Distinct from:** Tenant management (rent collection, lease document storage, maintenance) — this stays in the **investor intelligence** lane, not property management.
+
 ---
 
 ### Deal-to-portfolio continuity

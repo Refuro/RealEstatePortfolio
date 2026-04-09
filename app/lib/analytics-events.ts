@@ -32,6 +32,12 @@ export const AnalyticsEvents = {
   REFINANCE_WORKSPACE_VIEWED: "refinance_workspace_viewed",
   PROPERTY_ENRICHMENT_STARTED: "property_enrichment_started",
   PROPERTY_ENRICHMENT_COMPLETED: "property_enrichment_completed",
+  MORTGAGE_MILESTONE_EMAIL_SENT: "mortgage_milestone_email_sent",
+  MONTHLY_REFRESH_COMPLETED: "monthly_refresh_completed",
+  MONTHLY_DIGEST_SENT: "monthly_digest_sent",
+  WINBACK_EMAIL_SENT: "winback_email_sent",
+  AVM_VALUE_UPDATED: "avm_value_updated",
+  AVM_VALUE_BELOW_THRESHOLD: "avm_value_below_threshold",
   COMPLETION_GUIDANCE_JUMP_CLICKED: "completion_guidance_jump_clicked",
   // --- Auth funnel ---
   SIGNUP_PAGE_RENDERED: "signup_page_rendered",

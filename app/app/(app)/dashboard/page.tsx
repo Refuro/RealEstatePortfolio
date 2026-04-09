@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/format-currency";
 import { MetricCard } from "@/components/metric-card";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import { buildDashboardPortfolioPayload } from "@/lib/server/portfolio-summary-payload";
+import { buildDashboardTrends } from "@/lib/dashboard-trends";
 import {
   BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
@@ -21,6 +23,85 @@ import {
   DashboardEmptyStatePrimaryCta,
   DashboardEmptyStateSecondaryLinks,
 } from "./dashboard-empty-state-ctas";
+import { Minus, TrendingDown, TrendingUp } from "lucide-react";
+
+function formatDeltaLabel(value: number | null | undefined): string | null {
+  if (value == null) return null;
+  if (value === 0) return "No change vs last month";
+  const sign = value > 0 ? "+" : "";
+  return `${sign}${formatCurrency(value)} vs last month`;
+}
+
+function TrendDirectionIcon({ value }: { value: number | null | undefined }) {
+  if (value == null || value === 0) {
+    return <Minus className="size-4 text-muted" aria-hidden />;
+  }
+  if (value > 0) {
+    return <TrendingUp className="size-4 text-positive" aria-hidden />;
+  }
+  return <TrendingDown className="size-4 text-negative" aria-hidden />;
+}
+
+function EquitySparkline({
+  values,
+  labels,
+}: {
+  values: number[];
+  labels: string[];
+}) {
+  if (values.length < 2) return null;
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const range = max - min || 1;
+  const width = 220;
+  const height = 48;
+  const points = values.map((value, index) => {
+    const x = (index / (values.length - 1)) * width;
+    const y = height - ((value - min) / range) * height;
+    return `${x},${y}`;
+  });
+  const latest = values.at(-1) ?? 0;
+  const previous = values.at(-2) ?? latest;
+  const positive = latest >= previous;
+
+  const strokeColor = positive ? "var(--positive)" : "var(--negative)";
+  const areaPoints = `0,${height} ${points.join(" ")} ${width},${height}`;
+
+  return (
+    <div className="mt-3">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        className="h-12 w-full md:h-auto md:aspect-[6/1]"
+        preserveAspectRatio="none"
+        role="img"
+        aria-label={`Equity trend from ${labels[0]} to ${labels[labels.length - 1]}`}
+      >
+        <defs>
+          <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.3" />
+            <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
+          </linearGradient>
+        </defs>
+        <polygon
+          fill="url(#equityGradient)"
+          points={areaPoints}
+        />
+        <polyline
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="2"
+          points={points.join(" ")}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <div className="mt-1 flex items-center justify-between text-xs text-muted">
+        <span>{labels[0]}</span>
+        <span>{labels[labels.length - 1]}</span>
+      </div>
+    </div>
+  );
+}
 
 export default async function DashboardPage({
   searchParams,
@@ -37,6 +118,33 @@ export default async function DashboardPage({
     displayMode,
     effectiveTier,
   } = await buildDashboardPortfolioPayload(user);
+
+  const propertyIds = properties.map((property) => property.id);
+  const recentSnapshots =
+    propertyIds.length > 0
+      ? await prisma.propertySnapshot.findMany({
+          where: {
+            propertyId: { in: propertyIds },
+          },
+          select: {
+            propertyId: true,
+            snapshotMonth: true,
+            estimatedValue: true,
+            equity: true,
+            monthlyCashFlow: true,
+          },
+          orderBy: { snapshotMonth: "asc" },
+        })
+      : [];
+  const trends = buildDashboardTrends(
+    recentSnapshots.map((snapshot) => ({
+      propertyId: snapshot.propertyId,
+      snapshotMonth: snapshot.snapshotMonth,
+      estimatedValue: Number(snapshot.estimatedValue),
+      equity: Number(snapshot.equity),
+      monthlyCashFlow: Number(snapshot.monthlyCashFlow),
+    }))
+  );
 
   const nowMs = new Date().getTime();
   const daysSinceSignup = Math.max(
@@ -233,6 +341,8 @@ export default async function DashboardPage({
           value={formatCurrency(metrics.totalMarketValue)}
           primary
           compact
+          delta={trends.portfolio.valueDeltaMoM}
+          deltaLabel={formatDeltaLabel(trends.portfolio.valueDeltaMoM)}
         />
         <MetricCard
           label={metrics.propertyCount > 1 ? "Total debt" : "Debt"}
@@ -245,12 +355,16 @@ export default async function DashboardPage({
           value={formatCurrency(metrics.totalEquity)}
           primary
           compact
+          delta={trends.portfolio.equityDeltaMoM}
+          deltaLabel={formatDeltaLabel(trends.portfolio.equityDeltaMoM)}
         />
         <MetricCard
           label="Monthly cash flow"
           value={formatCurrency(metrics.totalMonthlyCashFlow)}
           cashFlow={metrics.totalMonthlyCashFlow}
           compact
+          delta={trends.portfolio.cashFlowDeltaMoM}
+          deltaLabel={formatDeltaLabel(trends.portfolio.cashFlowDeltaMoM)}
         />
         <div className="hidden md:block">
           <MetricCard
@@ -339,6 +453,32 @@ export default async function DashboardPage({
         <MetricHelpLink />
       </div>
 
+      {trends.portfolio.equitySeries.length >= 2 && (
+        <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Portfolio trend</h2>
+              <p className="text-sm text-muted">
+                Snapshot-based view of how your equity changed over time.
+              </p>
+            </div>
+            <div className="flex items-center gap-1 text-sm">
+              <TrendDirectionIcon value={trends.portfolio.equityDeltaSinceFirst} />
+              <span className="font-medium text-foreground tabular-nums">
+                {formatDeltaLabel(trends.portfolio.equityDeltaSinceFirst)?.replace(
+                  " vs last month",
+                  " since first snapshot"
+                ) ?? "No change since first snapshot"}
+              </span>
+            </div>
+          </div>
+          <EquitySparkline
+            values={trends.portfolio.equitySeries}
+            labels={trends.portfolio.monthLabels}
+          />
+        </div>
+      )}
+
       {metrics.propertyCount > 1 && (
         <RentVsMarketSection
           properties={properties.map((p) => ({
@@ -358,6 +498,11 @@ export default async function DashboardPage({
         data={chartData}
         propertyCount={metrics.propertyCount}
         singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
+        singlePropertyEquityDeltaMoM={
+          metrics.propertyCount === 1 && properties[0]
+            ? trends.propertyEquityDeltaMoM[properties[0].id] ?? null
+            : null
+        }
         singlePropertyMetrics={
           metrics.propertyCount === 1
             ? {

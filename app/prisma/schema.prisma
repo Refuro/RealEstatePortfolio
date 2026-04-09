@@ -32,6 +32,11 @@ model User {
   onboardingModeledAt     DateTime?
   onboardingEmailsSentAt      Json?     // { day3: ISOString | null, day7: ISOString | null }
   onboardingEmailsOptedOutAt  DateTime? // null = subscribed, date = unsubscribed
+  lastActiveAt                DateTime?
+  digestEmailsSentAt          Json?     // { "2026-05": ISOString, ... }
+  digestEmailsOptedOutAt      DateTime? // null = subscribed, date = unsubscribed from digest/milestones
+  mortgageMilestonesSentAt    Json?     // milestone sentinel map: { "<propertyId>__ltv_50": ISOString, "<propertyId>__<mortgageId>__payoff_5yr": ISOString }
+  winbackEmailsSentAt         Json?     // { "6mo": ISOString, "12mo": ISOString, "__unsubscribedAt": ISOString }
   deletedAt             DateTime?
   createdAt             DateTime  @default(now())
   updatedAt             DateTime  @updatedAt
@@ -103,13 +108,39 @@ model Property {
   notes                  String?
   marketRent             Decimal? @db.Decimal(12, 2)
   marketRentAsOf         DateTime? @db.Date
+  estimatedValueAsOf     DateTime? @db.Date
   createdAt              DateTime @default(now())
   updatedAt              DateTime @updatedAt
 
   user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   mortgages Mortgage[]
+  snapshots PropertySnapshot[]
 
   @@index([userId])
+}
+
+model PropertySnapshot {
+  id                       String   @id @default(cuid())
+  propertyId               String
+  snapshotMonth            DateTime @db.Date
+  estimatedValue           Decimal  @db.Decimal(14, 2)
+  effectiveMortgageBalance Decimal  @db.Decimal(14, 2)
+  equity                   Decimal  @db.Decimal(14, 2)
+  marketRent               Decimal? @db.Decimal(12, 2)
+  monthlyRent              Decimal  @db.Decimal(12, 2)
+  monthlyCashFlow          Decimal  @db.Decimal(12, 2)
+  capRate                  Decimal? @db.Decimal(8, 6)
+  ltv                      Decimal? @db.Decimal(8, 6)
+  avmValueRaw              Decimal? @db.Decimal(14, 2)
+  avmRentRaw               Decimal? @db.Decimal(12, 2)
+  avmValueApplied          Boolean  @default(false)
+  avmRentApplied           Boolean  @default(false)
+  createdAt                DateTime @default(now())
+
+  property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, snapshotMonth])
+  @@index([propertyId])
 }
 
 model Mortgage {

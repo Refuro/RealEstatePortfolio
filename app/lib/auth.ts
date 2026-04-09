@@ -5,6 +5,8 @@ import { TRIAL_DURATION_DAYS } from "@/lib/plans";
 import { AnalyticsEvents } from "@/lib/analytics-events";
 import { captureServerEvent } from "@/lib/posthog-server";
 
+const LAST_ACTIVE_UPDATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
+
 // Retry a Prisma operation up to maxAttempts times on transient failures
 // (connection pool exhaustion, cold-start timeouts, brief network blips).
 async function withPrismaRetry<T>(
@@ -55,6 +57,7 @@ export const getAppUser = cache(async function getAppUser() {
 
   const firstName = clerkUser.firstName ?? null;
   const lastName = clerkUser.lastName ?? null;
+  const now = new Date();
 
   const existing = await withPrismaRetry(() =>
     prisma.user.findUnique({
@@ -63,22 +66,40 @@ export const getAppUser = cache(async function getAppUser() {
   );
 
   if (existing) {
+    const shouldTouchLastActiveAt =
+      !existing.lastActiveAt ||
+      now.getTime() - existing.lastActiveAt.getTime() >=
+        LAST_ACTIVE_UPDATE_INTERVAL_MS;
+
     if (
       existing.email === primaryEmail &&
       existing.firstName === firstName &&
-      existing.lastName === lastName
+      existing.lastName === lastName &&
+      !shouldTouchLastActiveAt
     ) {
       return existing;
     }
+
+    const updateData: {
+      email?: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      lastActiveAt?: Date;
+    } = {};
+
+    if (existing.email !== primaryEmail) updateData.email = primaryEmail;
+    if (existing.firstName !== firstName) updateData.firstName = firstName;
+    if (existing.lastName !== lastName) updateData.lastName = lastName;
+    if (shouldTouchLastActiveAt) updateData.lastActiveAt = now;
+
     return withPrismaRetry(() =>
       prisma.user.update({
         where: { id: existing.id },
-        data: { email: primaryEmail, firstName, lastName },
+        data: updateData,
       })
     );
   }
 
-  const now = new Date();
   const trialEnd = new Date(
     now.getTime() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000
   );
@@ -92,6 +113,7 @@ export const getAppUser = cache(async function getAppUser() {
           email: primaryEmail || `user-${clerkUser.id}@placeholder.local`,
           firstName,
           lastName,
+          lastActiveAt: now,
           subscriptionTier: "free",
           trialStartedAt: now,
           trialEndsAt: trialEnd,

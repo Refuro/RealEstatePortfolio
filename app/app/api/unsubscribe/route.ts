@@ -3,6 +3,22 @@ import * as Sentry from "@sentry/nextjs";
 import { prisma } from "@/lib/db";
 import { verifyUnsubscribeToken } from "@/lib/emails/onboarding-reengagement";
 
+const WINBACK_UNSUBSCRIBED_KEY = "__unsubscribedAt";
+
+const unsubscribeTypeMap = {
+  onboarding: {
+    data: () => ({ onboardingEmailsOptedOutAt: new Date() }),
+    message: "You have been unsubscribed from Veld Portfolio onboarding emails.",
+  },
+  digest: {
+    data: () => ({ digestEmailsOptedOutAt: new Date() }),
+    message: "You have been unsubscribed from Veld Portfolio digest and milestone emails.",
+  },
+  winback: {
+    message: "You have been unsubscribed from Veld Portfolio winback emails.",
+  },
+} as const;
+
 // GET /api/unsubscribe?userId=<id>&token=<hmac>
 // Validates the HMAC token, marks the user as opted out, returns a plain HTML
 // confirmation page so it works directly from an email client browser.
@@ -11,6 +27,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
   const token = searchParams.get("token");
+  const typeRaw = searchParams.get("type");
+  const type =
+    typeRaw === "digest" || typeRaw === "winback" ? typeRaw : "onboarding";
 
   if (!userId || !token) {
     return htmlResponse("Invalid unsubscribe link.", 400);
@@ -31,20 +50,42 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    await prisma.user.update({
-      where: { id: userId },
-      data: { onboardingEmailsOptedOutAt: new Date() },
-    });
+    if (type === "winback") {
+      const existing = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { winbackEmailsSentAt: true },
+      });
+
+      const previous =
+        existing?.winbackEmailsSentAt &&
+        typeof existing.winbackEmailsSentAt === "object" &&
+        !Array.isArray(existing.winbackEmailsSentAt)
+          ? (existing.winbackEmailsSentAt as Record<string, string | null>)
+          : {};
+
+      await prisma.user.update({
+        where: { id: userId },
+        data: {
+          winbackEmailsSentAt: {
+            ...previous,
+            [WINBACK_UNSUBSCRIBED_KEY]: new Date().toISOString(),
+          },
+        },
+      });
+    } else {
+      const config = unsubscribeTypeMap[type];
+      await prisma.user.update({
+        where: { id: userId },
+        data: config.data(),
+      });
+    }
   } catch (err) {
     console.error("Unsubscribe DB error:", err);
     Sentry.captureException(err, { tags: { area: "unsubscribe" } });
     return htmlResponse("Something went wrong. Please try again later.", 500);
   }
 
-  return htmlResponse(
-    "You have been unsubscribed from Veld Portfolio onboarding emails.",
-    200
-  );
+  return htmlResponse(unsubscribeTypeMap[type].message, 200);
 }
 
 function htmlResponse(message: string, status: number): NextResponse {
