@@ -13,6 +13,14 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-09",
+    title: "Portfolio trend chart",
+    items: [
+      "Dashboard now shows a portfolio equity trend over time with month-over-month changes.",
+      "Trend chart scales properly on larger screens with an area fill for readability.",
+    ],
+  },
+  {
     date: "2026-04-07",
     title: "Onboarding, mobile, and a free trial",
     items: [

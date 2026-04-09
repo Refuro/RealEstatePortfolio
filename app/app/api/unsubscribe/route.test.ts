@@ -5,6 +5,7 @@ const { prismaMock } = vi.hoisted(() => {
   const prismaMock = {
     user: {
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
   };
   return { prismaMock };
@@ -33,6 +34,7 @@ describe("GET /api/unsubscribe", () => {
     vi.clearAllMocks();
     verifyUnsubscribeTokenMock.mockReturnValue(true);
     prismaMock.user.update.mockResolvedValue({} as never);
+    prismaMock.user.findUnique.mockResolvedValue({ winbackEmailsSentAt: null } as never);
   });
 
   it("returns 400 when token is missing", async () => {
@@ -68,6 +70,22 @@ describe("GET /api/unsubscribe", () => {
     expect(html).toContain("You have been unsubscribed");
   });
 
+  it("sets digestEmailsOptedOutAt when type=digest", async () => {
+    const { GET } = await import("./route");
+    const res = await GET(
+      makeRequest("http://localhost/api/unsubscribe?userId=user-1&token=good&type=digest")
+    );
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: {
+        digestEmailsOptedOutAt: expect.any(Date),
+      },
+    });
+    const html = await res.text();
+    expect(html).toContain("digest and milestone emails");
+  });
+
   it("returns 400 when token has wrong length (malformed)", async () => {
     verifyUnsubscribeTokenMock.mockReturnValue(false);
     const { GET } = await import("./route");
@@ -91,5 +109,33 @@ describe("GET /api/unsubscribe", () => {
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
     expect(prismaMock.user.update).toHaveBeenCalledTimes(2);
+  });
+
+  it("sets winback unsubscribe sentinel when type=winback", async () => {
+    prismaMock.user.findUnique.mockResolvedValue({
+      winbackEmailsSentAt: { "6mo": "2026-01-01T00:00:00.000Z" },
+    } as never);
+
+    const { GET } = await import("./route");
+    const res = await GET(
+      makeRequest("http://localhost/api/unsubscribe?userId=user-1&token=good&type=winback")
+    );
+
+    expect(res.status).toBe(200);
+    expect(prismaMock.user.findUnique).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      select: { winbackEmailsSentAt: true },
+    });
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: {
+        winbackEmailsSentAt: expect.objectContaining({
+          "6mo": "2026-01-01T00:00:00.000Z",
+          __unsubscribedAt: expect.any(String),
+        }),
+      },
+    });
+    const html = await res.text();
+    expect(html).toContain("winback emails");
   });
 });

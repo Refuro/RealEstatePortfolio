@@ -167,10 +167,13 @@ export function verifyUnsubscribeToken(userId: string, token: string): boolean {
   return crypto.timingSafeEqual(expectedBuf, tokenBuf);
 }
 
-export function buildUnsubscribeUrl(userId: string): string {
+export function buildUnsubscribeUrl(
+  userId: string,
+  type: "onboarding" | "digest" | "winback" = "onboarding"
+): string {
   const token = buildUnsubscribeToken(userId);
   const base = getAppBaseUrl();
-  return `${base}/api/unsubscribe?userId=${encodeURIComponent(userId)}&token=${token}`;
+  return `${base}/api/unsubscribe?userId=${encodeURIComponent(userId)}&token=${token}&type=${type}`;
 }
 
 // ---------------------------------------------------------------------------

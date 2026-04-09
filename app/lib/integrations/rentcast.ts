@@ -7,6 +7,7 @@
 const RENTCAST_RENT_BASE = "https://api.rentcast.io/v1/avm/rent/long-term";
 const RENTCAST_VALUE_BASE = "https://api.rentcast.io/v1/avm/value";
 const TIMEOUT_MS = 15_000;
+const RENTCAST_OVERRIDE_FIELDS = ["bedrooms", "bathrooms", "squareFootage", "squareFeet"] as const;
 
 export type RentCastParams = {
   address: string;
@@ -39,6 +40,16 @@ function toRentCastPropertyType(
   return RENTCAST_PROPERTY_TYPE_MAP[propertyType] ?? "Single Family";
 }
 
+function assertNoOverrideFields(params: Record<string, unknown>): void {
+  for (const field of RENTCAST_OVERRIDE_FIELDS) {
+    if (field in params) {
+      throw new Error(
+        `Unsupported RentCast override field "${field}". Use address-based AVM defaults only.`
+      );
+    }
+  }
+}
+
 /**
  * Fetch rent estimate from RentCast API.
  * Returns { rent: number } or throws on error.
@@ -47,6 +58,7 @@ export async function fetchRentEstimate(
   params: RentCastParams,
   apiKey: string
 ): Promise<RentCastResult> {
+  assertNoOverrideFields(params as Record<string, unknown>);
   const fullAddress = [params.address, params.addressLine2]
     .filter(Boolean)
     .join(", ");
@@ -142,6 +154,7 @@ export async function fetchValueEstimate(
   params: ValueEstimateParams,
   apiKey: string
 ): Promise<ValueEstimateResult> {
+  assertNoOverrideFields(params as Record<string, unknown>);
   const fullAddress = [params.address, params.addressLine2]
     .filter(Boolean)
     .join(", ");

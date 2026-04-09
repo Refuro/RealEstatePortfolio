@@ -1,4 +1,6 @@
 import { prisma } from "../lib/db";
+import { buildSnapshotData } from "../lib/snapshots";
+import { getEffectiveBalance } from "../lib/amortization";
 
 /**
  * Seed data: 3 test accounts with distinct use cases.
@@ -9,7 +11,7 @@ import { prisma } from "../lib/db";
  * (npm run db:studio) to browse the data.
  */
 
-const SEED_CLERK_IDS = ["seed_solo_starter", "seed_growth_investor", "seed_pro_portfolio"] as const;
+const SEED_CLERK_IDS = ["user_3C6InYM1m3T3Iw2gwn3TlUgtAqv", "user_3C6IjWn0sEsFUo0vwkmjwCM3D92", "user_3C6IrE2VutbSXJji5bHnKi5pNfK"] as const;
 
 async function main() {
   // Clear existing seed data so re-running is idempotent
@@ -21,7 +23,7 @@ async function main() {
   // Use case: New landlord, one single-family rental, testing the waters.
   const solo = await prisma.user.create({
     data: {
-      clerkUserId: "seed_solo_starter",
+      clerkUserId: "user_3C6InYM1m3T3Iw2gwn3TlUgtAqv",
       email: "dev@example.com",
       firstName: "Sam",
       lastName: "Starter",
@@ -57,7 +59,7 @@ async function main() {
   // one partial-ownership deal.
   const investor = await prisma.user.create({
     data: {
-      clerkUserId: "seed_growth_investor",
+      clerkUserId: "user_3C6IjWn0sEsFUo0vwkmjwCM3D92",
       email: "investor@example.com",
       firstName: "Jordan",
       lastName: "Investor",
@@ -179,7 +181,7 @@ async function main() {
   // with per-unit rents, mix of mortgages.
   const pro = await prisma.user.create({
     data: {
-      clerkUserId: "seed_pro_portfolio",
+      clerkUserId: "user_3C6IrE2VutbSXJji5bHnKi5pNfK",
       email: "pro@example.com",
       firstName: "Alex",
       lastName: "Portfolio",
@@ -330,10 +332,233 @@ async function main() {
     },
   });
 
+  // ─── PropertySnapshot history for trend indicators (Phase 5) ─────────────
+  // Generate 6 months of snapshots for investor and pro accounts so the
+  // dashboard trend panel, MoM delta labels, and sparkline are visible.
+
+  type SnapshotPropertyInput = {
+    id: string;
+    currentEstimatedValue: number;
+    currentMonthlyExpenses: number;
+    currentMonthlyRent: number;
+    unitRents?: number[];
+    cashInvested?: number | null;
+    ownershipPercent?: number;
+    vacancyPercent?: number;
+    marketRent?: number | null;
+  };
+
+  type SnapshotMortgageInput = {
+    originalLoanAmount: number;
+    currentBalance: number;
+    interestRate: number;
+    termYears: number;
+    startDate: Date;
+    monthlyPayment: number;
+    balanceAsOfDate?: Date | null;
+    paymentEffectiveDate?: Date | null;
+    escrowIncluded?: boolean;
+    escrowAmount?: number | null;
+  };
+
+  function makeMonthStart(year: number, month: number): Date {
+    return new Date(Date.UTC(year, month, 1));
+  }
+
+  async function seedSnapshots(
+    property: SnapshotPropertyInput,
+    mortgages: SnapshotMortgageInput[],
+    months: Date[],
+    // small value nudge per month to simulate appreciation
+    valueNudgePerMonth = 1_500
+  ) {
+    let runningValue = property.currentEstimatedValue - valueNudgePerMonth * months.length;
+
+    for (const month of months) {
+      runningValue += valueNudgePerMonth;
+      const snapshotProperty = { ...property, currentEstimatedValue: runningValue };
+      const avmApplied = months.indexOf(month) % 2 === 0;
+
+      const data = buildSnapshotData(
+        snapshotProperty,
+        mortgages.map((m) => ({
+          ...m,
+          originalLoanAmount: m.originalLoanAmount,
+          currentBalance: m.currentBalance,
+          balanceAsOfDate: m.balanceAsOfDate ?? null,
+          paymentEffectiveDate: m.paymentEffectiveDate ?? null,
+          escrowIncluded: m.escrowIncluded ?? false,
+          escrowAmount: m.escrowAmount ?? null,
+        })),
+        {
+          valueEstimate: avmApplied ? runningValue + 2_000 : null,
+          rentEstimate: null,
+          avmValueApplied: avmApplied,
+          avmRentApplied: false,
+        },
+        month
+      );
+
+      await prisma.propertySnapshot.upsert({
+        where: {
+          propertyId_snapshotMonth: {
+            propertyId: property.id,
+            snapshotMonth: data.snapshotMonth,
+          },
+        },
+        update: {},
+        create: data,
+      });
+    }
+  }
+
+  const today = new Date();
+  const snapshotMonths = Array.from({ length: 6 }, (_, i) =>
+    makeMonthStart(today.getUTCFullYear(), today.getUTCMonth() - 5 + i)
+  );
+
+  // Investor — Maple Street SFH (with mortgage)
+  await seedSnapshots(
+    {
+      id: invProp1.id,
+      currentEstimatedValue: 355_000,
+      currentMonthlyExpenses: 580,
+      currentMonthlyRent: 2_650,
+      unitRents: [2650],
+      cashInvested: 64_000,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+      marketRent: 2_700,
+    },
+    [
+      {
+        originalLoanAmount: 256_000,
+        currentBalance: 238_000,
+        interestRate: 0.0625,
+        termYears: 30,
+        startDate: new Date("2021-08-01"),
+        monthlyPayment: 1_578,
+        paymentEffectiveDate: new Date("2024-01-15"),
+        escrowIncluded: true,
+      },
+    ],
+    snapshotMonths
+  );
+
+  // Investor — Pine Duplex (with mortgage)
+  await seedSnapshots(
+    {
+      id: invProp2.id,
+      currentEstimatedValue: 420_000,
+      currentMonthlyExpenses: 720,
+      currentMonthlyRent: 3_400,
+      unitRents: [1650, 1750],
+      cashInvested: 77_000,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+    },
+    [
+      {
+        originalLoanAmount: 308_000,
+        currentBalance: 298_000,
+        interestRate: 0.0675,
+        termYears: 30,
+        startDate: new Date("2022-11-01"),
+        monthlyPayment: 1_992,
+        escrowIncluded: true,
+      },
+    ],
+    snapshotMonths,
+    2_000
+  );
+
+  // Pro — Riverside SFH (with mortgage, larger appreciation)
+  await seedSnapshots(
+    {
+      id: proProp1.id,
+      currentEstimatedValue: 340_000,
+      currentMonthlyExpenses: 480,
+      currentMonthlyRent: 2_400,
+      unitRents: [2400],
+      cashInvested: 55_000,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+    },
+    [
+      {
+        originalLoanAmount: 220_000,
+        currentBalance: 198_000,
+        interestRate: 0.0375,
+        termYears: 30,
+        startDate: new Date("2020-01-15"),
+        monthlyPayment: 1_018,
+        paymentEffectiveDate: new Date("2024-06-01"),
+        escrowIncluded: true,
+      },
+    ],
+    snapshotMonths,
+    2_500
+  );
+
+  // Pro — Elm 4-plex (with mortgage)
+  await seedSnapshots(
+    {
+      id: proProp3.id,
+      currentEstimatedValue: 595_000,
+      currentMonthlyExpenses: 1_240,
+      currentMonthlyRent: 5_800,
+      unitRents: [1400, 1500, 1450, 1450],
+      cashInvested: 104_000,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+    },
+    [
+      {
+        originalLoanAmount: 416_000,
+        currentBalance: 392_000,
+        interestRate: 0.0425,
+        termYears: 30,
+        startDate: new Date("2021-09-01"),
+        monthlyPayment: 2_048,
+        escrowIncluded: true,
+      },
+    ],
+    snapshotMonths,
+    3_500
+  );
+
+  // Pro — Downtown Condo (with mortgage, modest appreciation)
+  await seedSnapshots(
+    {
+      id: proProp4.id,
+      currentEstimatedValue: 445_000,
+      currentMonthlyExpenses: 620,
+      currentMonthlyRent: 3_200,
+      unitRents: [3200],
+      cashInvested: 85_000,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+    },
+    [
+      {
+        originalLoanAmount: 340_000,
+        currentBalance: 332_000,
+        interestRate: 0.065,
+        termYears: 30,
+        startDate: new Date("2023-02-01"),
+        monthlyPayment: 2_148,
+        escrowIncluded: true,
+      },
+    ],
+    snapshotMonths,
+    1_000
+  );
+
   console.log("Seed complete. Created 3 test accounts:");
-  console.log("  1. Solo Starter (dev@example.com) — 1 property, free tier");
-  console.log("  2. Growth Investor (investor@example.com) — 3 properties, investor tier");
-  console.log("  3. Professional Portfolio (pro@example.com) — 5 properties, pro tier");
+  console.log("  1. Solo Starter (dev@example.com) — 1 property, free tier, no snapshots");
+  console.log("  2. Growth Investor (investor@example.com) — 3 properties, investor tier, 6 months of snapshots");
+  console.log("  3. Professional Portfolio (pro@example.com) — 5 properties, pro tier, 6 months of snapshots");
+  console.log(`  Snapshots seeded for months: ${snapshotMonths.map((m) => m.toISOString().slice(0, 7)).join(", ")}`);
 }
 
 main()

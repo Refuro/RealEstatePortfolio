@@ -11,6 +11,22 @@
     {
       "path": "/api/cron/rate-limit-cleanup",
       "schedule": "20 * * * *"
+    },
+    {
+      "path": "/api/cron/milestone-emails",
+      "schedule": "0 15 1 * *"
+    },
+    {
+      "path": "/api/cron/monthly-refresh",
+      "schedule": "30 6 1-6 * *"
+    },
+    {
+      "path": "/api/cron/monthly-digest",
+      "schedule": "0 15 7-8 * *"
+    },
+    {
+      "path": "/api/cron/winback-emails",
+      "schedule": "0 15 * * *"
     }
   ]
 }
