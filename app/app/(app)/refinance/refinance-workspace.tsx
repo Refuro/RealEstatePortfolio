@@ -138,10 +138,12 @@ function buildRefiBalances(
 
 export function RefinanceWorkspace({
   properties,
+  hasAnyProperties,
   initialSelectedPropertyId,
   initialSelectedMortgageId,
 }: {
   properties: RefinanceMortgageProperty[];
+  hasAnyProperties: boolean;
   initialSelectedPropertyId?: string;
   initialSelectedMortgageId?: string;
 }) {
@@ -571,6 +573,7 @@ export function RefinanceWorkspace({
   ) : null;
 
   if (properties.length === 0) {
+    const hasPropertiesWithoutMortgages = hasAnyProperties;
     return (
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Refinance</h1>
@@ -580,17 +583,22 @@ export function RefinanceWorkspace({
         </p>
         <div className="mt-8 rounded-xl border border-border bg-card p-8 text-center shadow-sm">
           <h2 className="text-lg font-medium text-foreground">
-            Add a property with a mortgage to model refi scenarios
+            {hasPropertiesWithoutMortgages
+              ? "Add a mortgage to one of your properties to model refi scenarios"
+              : "Add a property with a mortgage to model refi scenarios"}
           </h2>
           <p className="mt-2 text-base text-muted">
-            Once a mortgage exists, you can enter a new rate, term, and closing
-            costs here.
+            {hasPropertiesWithoutMortgages
+              ? "Once one property has a mortgage, you can enter a new rate, term, and closing costs here."
+              : "Once a mortgage exists, you can enter a new rate, term, and closing costs here."}
           </p>
           <Link
-            href="/properties/new"
-            className="mt-4 inline-block rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground hover:bg-accent-hover"
+            href={hasPropertiesWithoutMortgages ? "/properties" : "/properties/new"}
+            className="mt-4 inline-flex min-h-[44px] items-center rounded-md bg-accent px-4 py-2 text-base font-medium text-accent-foreground transition-colors duration-150 hover:bg-accent-hover"
           >
-            Add your first property
+            {hasPropertiesWithoutMortgages
+              ? "Open properties"
+              : "Add your first property"}
           </Link>
         </div>
       </div>

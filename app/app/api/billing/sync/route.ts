@@ -12,6 +12,24 @@ import {
 } from "@/lib/rate-limit";
 import { getStripe, planTierFromPriceId, billingIntervalFromPriceId } from "@/lib/stripe-config";
 
+/** 30 min — stable subscription state (paid, active, >7 days from period end). */
+const SYNC_TTL_STABLE_MS = 30 * 60 * 1000;
+/** 5 min — edge states: trial, past_due, expiring soon, or errors. */
+const SYNC_TTL_EDGE_MS = 5 * 60 * 1000;
+
+/**
+ * Derive how long the client should wait before re-syncing.
+ * - Stable paid subscription with >7 days remaining: 30 min.
+ * - Trial, past_due, expiring ≤7 days, or unknown: 5 min.
+ */
+function syncTtlMs(status: string | undefined, currentPeriodEnd: Date | null): number {
+  if (status !== "active") return SYNC_TTL_EDGE_MS;
+  if (!currentPeriodEnd) return SYNC_TTL_EDGE_MS;
+  const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
+  if (currentPeriodEnd.getTime() - Date.now() <= sevenDaysMs) return SYNC_TTL_EDGE_MS;
+  return SYNC_TTL_STABLE_MS;
+}
+
 /**
  * Re-sync subscription state from Stripe.
  * Called on app load when user has stripeCustomerId (regardless of DB tier).
@@ -23,6 +41,7 @@ import { getStripe, planTierFromPriceId, billingIntervalFromPriceId } from "@/li
  *     sync DB tier up to match Stripe.
  *
  * When subscriptionTierOverride is set, skip — admin override wins.
+ * Response always includes `ttlMs` so the client can use tiered polling intervals.
  */
 export async function GET(request: NextRequest) {
   const user = await getActiveAppUser();
@@ -45,12 +64,13 @@ export async function GET(request: NextRequest) {
   }
 
   if (user.subscriptionTierOverride) {
-    return respondOk({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user), ttlMs: SYNC_TTL_STABLE_MS });
   }
 
   // No Stripe customer at all — never initiated billing; nothing to sync.
+  // Checkout flows redirect back with billing_return=1 which clears the throttle key.
   if (!user.stripeCustomerId) {
-    return respondOk({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user), ttlMs: SYNC_TTL_STABLE_MS });
   }
 
   const tier = (user.subscriptionTier ?? "free").toLowerCase();
@@ -157,6 +177,7 @@ export async function GET(request: NextRequest) {
       return respondOk({
         synced: tierChanged || subscriptionChanged,
         tier: stripeTier ?? getEffectiveTier(user),
+        ttlMs: syncTtlMs(status, currentPeriodEnd),
       });
     }
 
@@ -174,11 +195,11 @@ export async function GET(request: NextRequest) {
           }),
         ]);
       }
-      return respondOk({ synced: tier !== "free", tier: "free" });
+      return respondOk({ synced: tier !== "free", tier: "free", ttlMs: SYNC_TTL_STABLE_MS });
     }
 
     // past_due / incomplete: keep current tier; past_due banner handles user-facing messaging.
-    return respondOk({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user), ttlMs: SYNC_TTL_EDGE_MS });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     const name = err instanceof Error ? err.name : "Error";
@@ -199,6 +220,6 @@ export async function GET(request: NextRequest) {
         stripeCustomerId: user.stripeCustomerId ?? null,
       },
     });
-    return respondOk({ synced: false, tier: getEffectiveTier(user) });
+    return respondOk({ synced: false, tier: getEffectiveTier(user), ttlMs: SYNC_TTL_EDGE_MS });
   }
 }

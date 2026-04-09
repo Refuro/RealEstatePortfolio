@@ -20,7 +20,11 @@ If `NEXT_PUBLIC_POSTHOG_KEY` is **unset**, the app does not load PostHog (no con
 
 ### Cookie consent
 
-PostHog is initialized only when **optional analytics** is accepted in the cookie consent UI (`PostHogGate` in `app/components/analytics/posthog-provider.tsx`). If the user declines, `posthog` is not initialized and client captures are effectively no-ops.
+PostHog initializes on page load when `NEXT_PUBLIC_POSTHOG_KEY` is present, but defaults to **anonymous memory mode** until optional analytics consent is accepted (`PostHogGate` in `app/components/analytics/posthog-provider.tsx`).
+
+- **Before optional consent:** client events like `$pageview` may still be captured in-session, but identifiers are not persisted across browser sessions and no authenticated identity should be attached.
+- **After optional consent:** persistent identifiers and richer analytics behavior are enabled.
+- **Vercel Web Analytics / Google Ads scripts:** still gated on optional consent and load only after acceptance.
 
 ---
 
@@ -241,7 +245,7 @@ Prioritize **onboarding progress** (`onboarding_step_completed`, `add_property_m
 
 Use after deploy to staging or production with PostHog key enabled and analytics cookies accepted.
 
-- [ ] **Consent:** With analytics **off**, no PostHog network calls after page load (or only non-analytics traffic as expected). With analytics **on**, events appear in PostHog Live.
+- [ ] **Consent:** With optional analytics **rejected**, PostHog remains anonymous/non-persistent (no cross-session ID persistence); Vercel/Google scripts do not load. With optional analytics **accepted**, full analytics behavior appears in PostHog Live.
 - [ ] **Plan intent URL:** Visit `/sign-up?intent=pro` → storage / registered properties show `pro` and `url`; `plan_intent_applied` fires once for a test user with `plan_intent_source` = `url`.
 - [ ] **Pricing cards:** From `/pricing`, click a tier → `checkout_started` includes `plan_intent` / `plan_intent_source`; sign-up links include `?intent=` and `setPlanIntent` on click.
 - [ ] **Landing CTAs:** `funnel_cta_clicked` fires once per session per CTA (repeat click same session does not duplicate).

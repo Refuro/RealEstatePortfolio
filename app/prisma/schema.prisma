@@ -135,6 +135,10 @@ model PropertySnapshot {
   avmRentRaw               Decimal? @db.Decimal(12, 2)
   avmValueApplied          Boolean  @default(false)
   avmRentApplied           Boolean  @default(false)
+  /// Ownership fraction at snapshot time (ownershipPercent / 100). Null = legacy row; treat as 1.0.
+  ownershipPct             Float?
+  /// Total monthly mortgage payment at snapshot time. Required to re-derive full-liability cash flow.
+  monthlyPayment           Decimal? @db.Decimal(12, 2)
   createdAt                DateTime @default(now())
 
   property Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)

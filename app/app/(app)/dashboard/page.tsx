@@ -13,6 +13,7 @@ import {
   getBenchmarkLabel,
 } from "@/lib/benchmark-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { adjustSnapshotCashFlow } from "@/lib/snapshots";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
@@ -134,6 +135,8 @@ export default async function DashboardPage({
             estimatedValue: true,
             equity: true,
             monthlyCashFlow: true,
+            ownershipPct: true,
+            monthlyPayment: true,
           },
           orderBy: { snapshotMonth: "asc" },
         })
@@ -144,7 +147,12 @@ export default async function DashboardPage({
       snapshotMonth: snapshot.snapshotMonth,
       estimatedValue: Number(snapshot.estimatedValue),
       equity: Number(snapshot.equity),
-      monthlyCashFlow: Number(snapshot.monthlyCashFlow),
+      monthlyCashFlow: adjustSnapshotCashFlow(
+        Number(snapshot.monthlyCashFlow),
+        snapshot.ownershipPct,
+        snapshot.monthlyPayment != null ? Number(snapshot.monthlyPayment) : null,
+        displayMode
+      ),
     }))
   );
 

@@ -17,7 +17,8 @@ import { MobileBottomNav } from "@/components/mobile-bottom-nav";
 import * as Sentry from "@sentry/nextjs";
 
 const BILLING_SYNC_KEY = "billing-sync-last";
-const BILLING_SYNC_INTERVAL_MS = 5 * 60 * 1000; // 5 min
+const BILLING_SYNC_TTL_KEY = "billing-sync-ttl";
+const BILLING_SYNC_DEFAULT_MS = 5 * 60 * 1000; // 5 min — used when no TTL has been stored yet
 function LogoLink() {
   const pathname = usePathname();
   const draft = useDraft();
@@ -84,14 +85,16 @@ export function AppLayoutClient({
     if (!bannerProps?.stripeCustomerId) return;
 
     // Portal redirects back with ?billing_return=1 — bypass the session-storage
-    // throttle so the tier updates immediately rather than waiting up to 5 minutes.
+    // throttle so the tier updates immediately rather than waiting up to 30 minutes.
     if (typeof window !== "undefined" && window.location.search.includes("billing_return=1")) {
       sessionStorage.removeItem(BILLING_SYNC_KEY);
     }
 
     const last = sessionStorage.getItem(BILLING_SYNC_KEY);
     const lastTs = last ? parseInt(last, 10) : 0;
-    if (Date.now() - lastTs < BILLING_SYNC_INTERVAL_MS) return;
+    const storedTtl = sessionStorage.getItem(BILLING_SYNC_TTL_KEY);
+    const ttlMs = storedTtl ? parseInt(storedTtl, 10) : BILLING_SYNC_DEFAULT_MS;
+    if (Date.now() - lastTs < ttlMs) return;
 
     let cancelled = false;
     fetch("/api/billing/sync")
@@ -104,11 +107,15 @@ export function AppLayoutClient({
           });
           return null;
         }
-        return res.json() as Promise<{ synced?: boolean; tier?: string }>;
+        return res.json() as Promise<{ synced?: boolean; tier?: string; ttlMs?: number }>;
       })
       .then((data) => {
         if (cancelled || data == null) return;
         sessionStorage.setItem(BILLING_SYNC_KEY, String(Date.now()));
+        // Store the server-derived TTL so the next poll uses the right interval.
+        if (typeof data.ttlMs === "number") {
+          sessionStorage.setItem(BILLING_SYNC_TTL_KEY, String(data.ttlMs));
+        }
         // Refresh on any sync (upgrade free→paid, plan change, or downgrade to free).
         if (data.synced) {
           router.refresh();

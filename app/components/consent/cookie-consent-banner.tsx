@@ -33,7 +33,9 @@ export function CookieConsentBanner() {
           </p>
           <p className="mt-1 text-muted">
             We use essential cookies to keep you signed in. Optional analytics and
-            ads measurement load only if you accept. See our{" "}
+            ads measurement are richer if you accept. Before optional consent,
+            PostHog runs in anonymous non-persistent mode; Vercel and Google
+            measurement scripts load only after acceptance. See our{" "}
             <a href="/privacy" className="font-medium text-foreground underline">
               Privacy Policy
             </a>

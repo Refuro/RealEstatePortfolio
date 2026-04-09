@@ -1,5 +1,5 @@
 import { getEffectiveBalance, type MortgageRecord } from "@/lib/amortization";
-import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+import { computePropertyMetrics, type OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 
 const VALUE_PERCENT_THRESHOLD = 0.03;
@@ -36,6 +36,7 @@ export type SnapshotData = {
   equity: number;
   marketRent: number | null;
   monthlyRent: number;
+  /** Stored in proportional mode (ownershipPercent-scaled). Use adjustSnapshotCashFlow to re-derive for full_liability. */
   monthlyCashFlow: number;
   capRate: number | null;
   ltv: number | null;
@@ -43,6 +44,10 @@ export type SnapshotData = {
   avmRentRaw: number | null;
   avmValueApplied: boolean;
   avmRentApplied: boolean;
+  /** Ownership fraction at snapshot time (ownershipPercent / 100). Null = legacy row; treat as 1.0. */
+  ownershipPct: number | null;
+  /** Total monthly mortgage payment at snapshot time. Required to re-derive full-liability cash flow. */
+  monthlyPayment: number | null;
 };
 
 export type SnapshotDelta = {
@@ -132,7 +137,31 @@ export function buildSnapshotData(
     avmRentRaw: avmResult.rentEstimate ?? null,
     avmValueApplied: avmResult.avmValueApplied,
     avmRentApplied: avmResult.avmRentApplied,
+    ownershipPct: (property.ownershipPercent ?? 100) / 100,
+    monthlyPayment: totalMonthlyPayment,
   };
+}
+
+/**
+ * Re-derive the correct monthlyCashFlow from a stored snapshot for the user's display mode.
+ *
+ * Stored monthlyCashFlow is always in proportional mode: (R − E − P) × s
+ * Full-liability mode:                                   (R × s) − (E × s) − P
+ * Difference:                                            −P × (1 − s)
+ *
+ * Graceful degradation: null ownershipPct → treat as 1.0 (100% ownership → modes are identical).
+ */
+export function adjustSnapshotCashFlow(
+  storedCashFlow: number,
+  ownershipPct: number | null,
+  monthlyPayment: number | null,
+  displayMode: OwnershipDisplayMode | null | undefined
+): number {
+  if (displayMode !== "full_liability") return storedCashFlow;
+  const s = ownershipPct ?? 1.0;
+  if (s >= 1.0) return storedCashFlow;
+  const payment = monthlyPayment ?? 0;
+  return storedCashFlow - payment * (1 - s);
 }
 
 export function computeSnapshotDelta(

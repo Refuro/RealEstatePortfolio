@@ -11,6 +11,10 @@ import {
 import { getPropertyTotalRent } from "@/lib/property-utils";
 
 export const DEFAULT_REFRESH_BATCH_SIZE = 10;
+export const MAX_REFRESH_BATCH_SIZE = 100;
+export const ESTIMATED_RENTCAST_CALLS_PER_PROPERTY = 2; // value + rent estimate
+export const ASSUMED_PROPERTIES_PER_USER_FOR_CAPACITY = 20;
+export const MAX_PROPERTIES_PER_USER_PER_RUN = Number.POSITIVE_INFINITY; // no explicit per-user cap today
 
 type RefreshUser = Awaited<ReturnType<typeof getRefreshEligibleUsers>>[number];
 type RefreshProperty = RefreshUser["properties"][number];
@@ -208,8 +212,9 @@ export async function processUserRefresh(
   let propertiesUpdated = 0;
   let valueAppliedCount = 0;
   let valueBelowThresholdCount = 0;
+  const propertiesToProcess = user.properties.slice(0, MAX_PROPERTIES_PER_USER_PER_RUN);
 
-  for (const property of user.properties) {
+  for (const property of propertiesToProcess) {
     if (property.snapshots.length > 0) continue;
     processedProperties += 1;
 

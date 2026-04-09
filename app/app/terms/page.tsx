@@ -40,7 +40,7 @@ export default async function TermsPage() {
           Terms of Service
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Last updated: March 2026
+          Last updated: April 2026
         </p>
 
         <div className="mt-8 space-y-6 text-base text-foreground">
@@ -87,6 +87,13 @@ export default async function TermsPage() {
             <h2 className="text-lg font-semibold">Subscriptions and Payments</h2>
             <p>
               Paid plans are billed through Stripe. You authorize us to charge your payment method (e.g., card) on a recurring basis according to your chosen plan. Prices are displayed in the app before checkout.
+            </p>
+          </section>
+
+          <section id="free-trial">
+            <h2 className="text-lg font-semibold">Free Trial</h2>
+            <p>
+              New accounts receive a <strong>14-day free trial</strong> of the Investor plan with no credit card required. At the end of the trial period, your account automatically reverts to the free tier. To continue with a paid plan, you must subscribe from the Plans page. We do not automatically charge you at the end of a trial. Trial duration is subject to change for new signups; existing trials are honored for their stated period.
             </p>
           </section>
 

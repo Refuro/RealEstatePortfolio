@@ -5,7 +5,7 @@ import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
-import { BrrrCalculator } from "@/components/marketing/brrr-calculator";
+import { BrrrSlot as BrrrCalculator } from "@/components/marketing/calculator-page-slots";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import {
   CalculatorFaqJsonLd,
@@ -111,6 +111,18 @@ export default async function BrrrCalculatorPage() {
             {" · "}
             <Link href="/tools/fix-and-flip" className="font-medium text-foreground hover:underline">
               Fix and flip
+            </Link>
+            {" · "}
+            <Link href="/tools/wholesale" className="font-medium text-foreground hover:underline">
+              Wholesale / MAO
+            </Link>
+            {" · "}
+            <Link href="/tools/cash-on-cash" className="font-medium text-foreground hover:underline">
+              Cash-on-cash return
+            </Link>
+            {" · "}
+            <Link href="/tools/cap-rate" className="font-medium text-foreground hover:underline">
+              Cap rate calculator
             </Link>
             . State pages:{" "}
             <Link href="/tools/brrr/texas" className="font-medium text-foreground hover:underline">

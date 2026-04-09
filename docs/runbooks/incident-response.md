@@ -26,6 +26,27 @@ vercel --prod
 # Or: link to a specific commit and deploy
 ```
 
+### Database migration rollback (when schema changed)
+
+Vercel deployment rollback does **not** automatically roll back database migrations. If an incident involves a bad migration, choose one path:
+
+1. **Hotfix forward (preferred):** if data is intact and fix is quick, ship a follow-up migration + code fix.
+2. **Mark migration rolled back + restore app compatibility:** use Prisma resolve when rollback is required.
+
+```bash
+# Example: mark a failed/bad migration as rolled back
+cd app
+npx prisma migrate resolve --rolled-back "<migration_name>"
+```
+
+Rollback decision checklist:
+
+- Confirm incident is schema-related (errors start after migration).
+- Freeze risky writes if needed (maintenance notice or temporary feature flag).
+- Choose **forward fix** vs **rolled back** based on blast radius and data safety.
+- Pair DB action with app deploy action so runtime and schema stay compatible.
+- Record exact commands and migration name in post-incident notes.
+
 ---
 
 ## 2. Monitoring and logs
@@ -76,6 +97,34 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 1. Check Stripe Dashboard → Logs for failed webhooks or API errors.
 2. Verify `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET` in Vercel match Stripe Dashboard.
 3. If webhook URL changed: update in Stripe and redeploy.
+
+### PostHog degraded / analytics missing
+
+1. Verify `NEXT_PUBLIC_POSTHOG_KEY` and `NEXT_PUBLIC_POSTHOG_HOST` in Vercel env.
+2. Confirm cookie consent behavior in browser (optional accepted vs rejected).
+3. Check PostHog Live Events for incoming data from production.
+4. If client capture is down, rely on server-side billing/account captures for partial signal and log the outage window.
+
+### Resend degraded / email delivery failures
+
+1. Check Resend dashboard for API outages, bounce spikes, or rate limits.
+2. Verify `RESEND_API_KEY` in Vercel env and recent deploy history.
+3. Test a support/contact email flow and a transactional email path.
+4. If outage persists, post a user-facing support note and retry once provider status is green.
+
+### RentCast degraded / estimate refresh failures
+
+1. Check `monthly-refresh` and estimate route logs for upstream errors.
+2. Verify `RENTCAST_API_KEY` and hourly quota usage.
+3. Confirm fallback behavior: app should keep previous estimates/metrics without crashing.
+4. Communicate stale-estimate window if outage spans scheduled refresh runs.
+
+### Google Places degraded / address autocomplete failures
+
+1. Check API route logs for `/api/places/autocomplete` and `/api/places/details`.
+2. Verify `GOOGLE_MAPS_API_KEY` and Google project quota limits.
+3. Confirm users can still enter addresses manually as fallback.
+4. Re-test autocomplete once key/quota/status is restored.
 
 ### Auth / Clerk errors
 

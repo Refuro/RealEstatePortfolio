@@ -17,6 +17,7 @@ type FixAndFlipCalculatorProps = {
   showCta?: boolean;
   landingVariant?: string;
   surface?: "marketing" | "app";
+  initialPurchasePrice?: number;
 };
 
 function numberOrFallback(value: string, fallback: number): number {
@@ -46,12 +47,15 @@ export function FixAndFlipCalculator({
   showCta = false,
   landingVariant,
   surface = "marketing",
+  initialPurchasePrice,
 }: FixAndFlipCalculatorProps) {
   const { user } = useUser();
   const isSignedIn = Boolean(user?.id);
   const isAppShell = surface === "app";
 
-  const [purchasePrice, setPurchasePrice] = useState(DEFAULTS.purchasePrice);
+  const [purchasePrice, setPurchasePrice] = useState(
+    initialPurchasePrice != null ? String(initialPurchasePrice) : DEFAULTS.purchasePrice
+  );
   const [rehabCost, setRehabCost] = useState(DEFAULTS.rehabCost);
   const [holdMonths, setHoldMonths] = useState(DEFAULTS.holdMonths);
   const [downPaymentPercent, setDownPaymentPercent] = useState(DEFAULTS.downPaymentPercent);

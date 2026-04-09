@@ -142,6 +142,9 @@ export async function GET(req: NextRequest) {
             equity: Number(snapshot.equity),
             marketRent: toNumber(snapshot.marketRent),
             monthlyRent: Number(snapshot.monthlyRent),
+            // Intentionally uses stored proportional value. Digest emails are
+            // batch/background and don't apply per-user ownershipDisplayMode.
+            // See DI-0409-1 — only chart/history views apply adjustSnapshotCashFlow.
             monthlyCashFlow: Number(snapshot.monthlyCashFlow),
             capRate: toNumber(snapshot.capRate),
             ltv: toNumber(snapshot.ltv),

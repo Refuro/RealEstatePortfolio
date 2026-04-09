@@ -5,7 +5,7 @@ import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import { auth } from "@clerk/nextjs/server";
 import { LandingNav } from "@/components/landing-nav";
 import { Footer } from "@/components/footer";
-import { PublicCalculator } from "@/components/marketing/public-calculator";
+import { PublicCalculatorSlot as PublicCalculator } from "@/components/marketing/calculator-page-slots";
 import { PlanIntentUrlSync } from "@/components/analytics/plan-intent-url-sync";
 import {
   CalculatorFaqJsonLd,
@@ -78,6 +78,18 @@ export default async function InvestmentPropertyCalculatorPage() {
             ; or run a BRRRR scenario with the{" "}
             <Link href="/tools/brrr" className="font-medium text-foreground hover:underline">
               BRRRR calculator
+            </Link>
+            ; analyze return metrics with the{" "}
+            <Link href="/tools/cap-rate" className="font-medium text-foreground hover:underline">
+              cap rate calculator
+            </Link>
+            {" and "}
+            <Link href="/tools/cash-on-cash" className="font-medium text-foreground hover:underline">
+              cash-on-cash calculator
+            </Link>
+            ; and test lender coverage using the{" "}
+            <Link href="/tools/dscr" className="font-medium text-foreground hover:underline">
+              DSCR calculator
             </Link>
             . Calculator inputs are not transferred when you sign up—re-enter key numbers in the app.
             Comparing products? See the{" "}

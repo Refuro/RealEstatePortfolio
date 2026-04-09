@@ -15,11 +15,12 @@ const APP_URL = getAppOrigin();
 export const metadata: Metadata = {
   title: "Free real estate calculators",
   description:
-    "BRRRR, fix-and-flip, STR vs LTR, rental cash flow, cap rate, and more. Use Veld’s calculators for quick estimates, then save your work in the portfolio workspace.",
+    "Investment property, STR vs LTR, cap rate, cash-on-cash, DSCR, BRRRR, fix and flip, wholesale/MAO, and rent vs buy calculators. Use Veld to run quick estimates and save deals.",
   alternates: { canonical: `${APP_URL}/tools` },
   openGraph: {
     title: "Calculators | Veld Portfolio",
-    description: "Free calculators for rental, STR vs LTR, BRRRR, and fix-and-flip analysis.",
+    description:
+      "Free calculators for investment property, STR vs LTR, cap rate, cash-on-cash, DSCR, BRRRR, fix and flip, wholesale/MAO, and rent vs buy.",
     url: "/tools",
   },
 };
@@ -73,7 +74,7 @@ export default async function ToolsHubPage() {
 
           <CalculatorsHubCards variant="public" />
 
-          <p className="reveal-up reveal-up-d5 mt-10 text-center text-sm text-muted">
+          <p className="reveal-up mt-10 text-center text-sm text-muted" style={{ animationDelay: "300ms" }}>
             <Link href="/resources" className="font-medium text-foreground hover:underline">
               Investor resources
             </Link>
