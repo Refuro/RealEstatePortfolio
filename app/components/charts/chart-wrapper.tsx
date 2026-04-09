@@ -12,6 +12,8 @@ type ChartWrapperProps = {
   children: React.ReactNode;
   /** When true, no card chrome — parent supplies the panel (e.g. dashboard portfolio charts). */
   embedded?: boolean;
+  /** Optional explicit chart content height in pixels for large datasets. */
+  heightPx?: number;
 };
 
 export function ChartWrapper({
@@ -20,6 +22,7 @@ export function ChartWrapper({
   emptyMessage = "No data to display",
   children,
   embedded = false,
+  heightPx,
 }: ChartWrapperProps) {
   return (
     <div
@@ -41,7 +44,12 @@ export function ChartWrapper({
           {emptyMessage}
         </div>
       ) : (
-        <div className="mt-4 h-[200px] w-full sm:h-[240px]">{children}</div>
+        <div
+          className="mt-4 h-[200px] w-full sm:h-[240px]"
+          style={heightPx ? { height: `${heightPx}px` } : undefined}
+        >
+          {children}
+        </div>
       )}
     </div>
   );

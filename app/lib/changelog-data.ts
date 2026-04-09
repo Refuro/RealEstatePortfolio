@@ -14,6 +14,16 @@ export type ChangelogEntry = {
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
     date: "2026-04-09",
+    title: "Portfolio table, list view, and instant filters",
+    items: [
+      "Dashboard now shows a sortable table when your portfolio reaches 6 or more properties, with month-over-month changes for value, equity, and cash flow alongside each property.",
+      "Added a list view on the properties page for a compact, scannable layout. Toggle between grid and list while keeping your active filter and sort.",
+      "Filter and sort chips respond the moment you click them. Results update in the background with a subtle fade so it's always clear something is happening.",
+      "Filter, sort, and view controls reorganized into a lightweight toolbar with no surrounding card, keeping focus on your properties.",
+    ],
+  },
+  {
+    date: "2026-04-08",
     title: "Portfolio trend chart",
     items: [
       "Dashboard now shows a portfolio equity trend over time with month-over-month changes.",

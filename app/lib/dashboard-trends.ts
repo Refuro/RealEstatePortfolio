@@ -16,6 +16,8 @@ export type DashboardTrends = {
     monthLabels: string[];
   };
   propertyEquityDeltaMoM: Record<string, number | null>;
+  propertyValueDeltaMoM: Record<string, number | null>;
+  propertyCashFlowDeltaMoM: Record<string, number | null>;
 };
 
 type AggregatedMonth = {
@@ -75,6 +77,8 @@ export function buildDashboardTrends(snapshots: SnapshotTrendInput[]): Dashboard
   const first = months.at(0);
 
   const propertyEquityDeltaMoM: Record<string, number | null> = {};
+  const propertyValueDeltaMoM: Record<string, number | null> = {};
+  const propertyCashFlowDeltaMoM: Record<string, number | null> = {};
   for (const [propertyId, propertyRows] of byProperty.entries()) {
     const ordered = [...propertyRows].sort(
       (a, b) => a.snapshotMonth.getTime() - b.snapshotMonth.getTime()
@@ -84,6 +88,14 @@ export function buildDashboardTrends(snapshots: SnapshotTrendInput[]): Dashboard
     propertyEquityDeltaMoM[propertyId] = getDelta(
       current?.equity,
       prior?.equity
+    );
+    propertyValueDeltaMoM[propertyId] = getDelta(
+      current?.estimatedValue,
+      prior?.estimatedValue
+    );
+    propertyCashFlowDeltaMoM[propertyId] = getDelta(
+      current?.monthlyCashFlow,
+      prior?.monthlyCashFlow
     );
   }
 
@@ -97,5 +109,7 @@ export function buildDashboardTrends(snapshots: SnapshotTrendInput[]): Dashboard
       monthLabels: months.map((m) => m.monthLabel),
     },
     propertyEquityDeltaMoM,
+    propertyValueDeltaMoM,
+    propertyCashFlowDeltaMoM,
   };
 }

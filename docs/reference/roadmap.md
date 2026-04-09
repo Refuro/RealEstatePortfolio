@@ -395,7 +395,41 @@ Future product direction (from mvp-spec). Overlaps **§1a** where noted.
 
 ---
 
-## 6. Deferred (Validate First)
+## 6. White-label / PM portal (Property Management Channel)
+
+**Priority:** Backlog — validate demand before building
+
+**Origin:** Property management software (AppFolio, Buildium, etc.) is built for the manager's workflow, not the property owner's visibility. Owners get rent statements but no performance intelligence — no equity tracking, no cash flow trends, no market benchmarking. A white-labeled Veld portal gives a PM firm a branded owner-facing dashboard they can hand to clients, making the PM look more professional while Veld runs invisibly underneath.
+
+**Why this is a strong angle:**
+- B2B sale to the PM firm (one contract, recurring per-property pricing) is a better unit economics model than D2C at low traffic volumes
+- PM firms have direct motivation to differentiate: owner satisfaction drives referrals and contract renewals
+- AppFolio and similar tools have no incentive to build owner intelligence — that would require exposing data the PM may not want exposed
+- Warm intro potential: a PM managing 100+ properties is a meaningful first customer
+
+**The product gap it fills:**
+The owner-facing portal already exists — it's Veld with the direct-to-consumer tools (deal analyzer, calculators, BRRRR) removed and a PM's branding applied. The monthly equity trends, portfolio dashboard, rent vs market benchmarks, and trend charts we already built are exactly what an owner wants to see about their managed property. The net-new work is the PM management layer, not the owner experience.
+
+**Minimum to approach a PM firm:**
+
+1. `Company` model in schema — one row per PM firm with branding config (logo URL, primary color, display name, slug)
+2. Subdomain routing — `[slug].veldportfolio.com` injects their branding; owner sees their PM's logo
+3. PM admin page — invite clients by email, each client gets a pre-configured account linked to their company, see who is active
+4. Owner view scoping — owners see their managed properties only; deal analyzer and calculators are hidden; read-only mode optional
+
+**What does NOT change for owners:** The dashboard, trend charts, equity tracking, rent benchmarks, and property metrics are identical — they just render under the PM's brand.
+
+**Key risk — feature parity treadmill:** Every new feature shipped to direct users needs a decision: does it go to white-label owner views? The mitigation is architecture: a feature-flag layer per `Company` that explicitly opts each white-label org into new surfaces. Direct-to-consumer features default on; PM client views default off until the PM opts in. This prevents the white-label product from becoming a maintenance fork.
+
+**Pricing model:** Per property per month charged to the PM firm (e.g. $3–5/property/month). At 100 properties that is $300–500/month from a single PM firm. PM does not pay per owner account.
+
+**Validation step before building:** Show the current product to 2-3 PM firms. If multiple express willingness to pay and articulate the owner-visibility gap, the build is justified. The technical lift (Company model, subdomain routing, PM admin page) is a focused scope — the owner-facing UI is already done.
+
+**Distinct from:** Tenant management, rent collection, maintenance tracking, full GL accounting. This stays in investor intelligence — the owner's financial view of their asset, not the operational PM workflow.
+
+---
+
+## 7. Deferred (Validate First)
 
 Defer until validated or user base justifies:
 
@@ -412,7 +446,7 @@ Defer until validated or user base justifies:
 
 ## Workflow
 
-1. **New idea** → Add to **§1a** if strategic, or the appropriate detailed section; avoid duplicating the same scope in two places.
+1. **New idea** → Add to **§1a** if strategic, §6 if it needs a PM channel or partner model, or §7 if deferring; avoid duplicating the same scope in two places.
 2. **Ready to build** → PM promotes item to `docs/tasks.md` with concrete tasks and acceptance criteria.
 3. **Builder** → Works from `docs/tasks.md`; references this doc for full scope when a task references a roadmap item.
 4. **When done** → Mark item done in this doc (e.g. add to Completed table) and check off in `docs/tasks.md`.

@@ -20,12 +20,18 @@ export type CashFlowDatum = {
   propertyId: string;
 };
 
+function formatAxisLabel(value: string): string {
+  return value.length > 11 ? `${value.slice(0, 10)}...` : value;
+}
+
 export function CashFlowChart({
   data,
   embedded,
+  heightPx,
 }: {
   data: CashFlowDatum[];
   embedded?: boolean;
+  heightPx?: number;
 }) {
   const isEmpty = data.length === 0;
   const allZero = data.length > 0 && data.every((d) => d.monthlyCashFlow === 0);
@@ -44,6 +50,7 @@ export function CashFlowChart({
       isEmpty={isEmpty}
       emptyMessage="Add properties with rent, expenses, and mortgage to see cash flow."
       embedded={embedded}
+      heightPx={heightPx}
     >
       {!isEmpty && (
         <ResponsiveContainer width="100%" height="100%">
@@ -59,7 +66,13 @@ export function CashFlowChart({
               tick={{ fontSize: 11 }}
               domain={domain}
             />
-            <YAxis type="category" dataKey="name" tick={{ fontSize: 11 }} width={80} />
+            <YAxis
+              type="category"
+              dataKey="name"
+              tick={{ fontSize: 11 }}
+              width={80}
+              tickFormatter={(value) => formatAxisLabel(String(value))}
+            />
             <Tooltip
               formatter={(value: number) => formatCurrency(value)}
               contentStyle={{ fontSize: 12 }}

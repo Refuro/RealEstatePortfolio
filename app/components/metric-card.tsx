@@ -51,7 +51,7 @@ export function MetricCard({
 
   return (
     <div
-      className={`min-w-0 rounded-lg border border-border bg-card shadow-sm ${
+      className={`h-full min-w-0 rounded-lg border border-border bg-card shadow-sm ${
         compact ? "p-3" : "p-5"
       }`}
     >

@@ -16,9 +16,14 @@
   /* Chart palette: restrained blues/teals/greens */
   --chart-1: #0ea5e9;
   --chart-2: #14b8a6;
-  --chart-3: #10b981;
+  --chart-3: #8b5cf6;
   --chart-4: #3b82f6;
   --chart-5: #06b6d4;
+  --chart-6: #a855f7;
+  --chart-7: #ec4899;
+  --chart-8: #f97316;
+  --chart-9: #e11d48;
+  --chart-10: #eab308;
   /* Brand accent tints for badges and icon backgrounds */
   --accent-subtle: #eef2ff;
   --accent-subtle-foreground: #4338ca;
@@ -73,9 +78,14 @@ textarea:hover:not(:focus) {
     --warning: #fbbf24;
     --chart-1: #38bdf8;
     --chart-2: #2dd4bf;
-    --chart-3: #34d399;
+    --chart-3: #a78bfa;
     --chart-4: #60a5fa;
     --chart-5: #22d3ee;
+    --chart-6: #c084fc;
+    --chart-7: #f472b6;
+    --chart-8: #fb923c;
+    --chart-9: #fb7185;
+    --chart-10: #facc15;
     --accent-subtle: #1e1b4b;
     --accent-subtle-foreground: #a5b4fc;
   }
@@ -97,9 +107,14 @@ textarea:hover:not(:focus) {
   --warning: #d97706;
   --chart-1: #0ea5e9;
   --chart-2: #14b8a6;
-  --chart-3: #10b981;
+  --chart-3: #8b5cf6;
   --chart-4: #3b82f6;
   --chart-5: #06b6d4;
+  --chart-6: #a855f7;
+  --chart-7: #ec4899;
+  --chart-8: #f97316;
+  --chart-9: #e11d48;
+  --chart-10: #eab308;
   /* Brand accent tints for badges and icon backgrounds */
   --accent-subtle: #eef2ff;
   --accent-subtle-foreground: #4338ca;
@@ -121,9 +136,14 @@ textarea:hover:not(:focus) {
   --warning: #fbbf24;
   --chart-1: #38bdf8;
   --chart-2: #2dd4bf;
-  --chart-3: #34d399;
+  --chart-3: #a78bfa;
   --chart-4: #60a5fa;
   --chart-5: #22d3ee;
+  --chart-6: #c084fc;
+  --chart-7: #f472b6;
+  --chart-8: #fb923c;
+  --chart-9: #fb7185;
+  --chart-10: #facc15;
   --accent-subtle: #1e1b4b;
   --accent-subtle-foreground: #a5b4fc;
 }
@@ -147,6 +167,11 @@ textarea:hover:not(:focus) {
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-9: var(--chart-9);
+  --color-chart-10: var(--chart-10);
   --color-accent-subtle: var(--accent-subtle);
   --color-accent-subtle-foreground: var(--accent-subtle-foreground);
   --font-sans: var(--font-geist-sans);
