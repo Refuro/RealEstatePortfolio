@@ -1,6 +1,5 @@
 import { prisma } from "../lib/db";
 import { buildSnapshotData } from "../lib/snapshots";
-import { getEffectiveBalance } from "../lib/amortization";
 
 /**
  * Seed data: 3 test accounts with distinct use cases.

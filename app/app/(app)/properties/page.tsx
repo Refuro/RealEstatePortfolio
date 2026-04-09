@@ -129,18 +129,6 @@ const SORT_OPTIONS: { key: PropertiesSort; label: string }[] = [
   { key: "worst_cashflow", label: "Worst cash flow" },
 ];
 
-function buildPropertiesHref(
-  filter: PropertiesFilter,
-  sort: PropertiesSort,
-  view: PropertiesView
-): string {
-  const params = new URLSearchParams();
-  if (filter !== "all") params.set("filter", filter);
-  if (sort !== "updated") params.set("sort", sort);
-  params.set("view", view);
-  const query = params.toString();
-  return query ? `/properties?${query}` : "/properties";
-}
 
 export default async function PropertiesPage({
   searchParams,

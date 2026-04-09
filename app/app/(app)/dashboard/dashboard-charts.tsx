@@ -10,6 +10,31 @@ import type { DebtValueDatum } from "@/components/charts/debt-vs-value-chart";
 import type { CashFlowDatum } from "@/components/charts/cash-flow-chart";
 import { formatCurrency } from "@/lib/format-currency";
 
+type ChartKey = "equity" | "debt_vs_value" | "cash_flow";
+
+function ExpandButton({
+  chartKey,
+  slice,
+  onToggle,
+}: {
+  chartKey: ChartKey;
+  slice: { total: number; isExpanded: boolean; shouldSlice: boolean };
+  onToggle: (key: ChartKey) => void;
+}) {
+  if (!slice.shouldSlice) return null;
+  return (
+    <div className="mt-3 text-center">
+      <button
+        type="button"
+        onClick={() => onToggle(chartKey)}
+        className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition-all duration-150 hover:bg-subtle hover:text-foreground"
+      >
+        {slice.isExpanded ? "Show less" : `Show all ${slice.total}`}
+      </button>
+    </div>
+  );
+}
+
 function ChartLoadingPlaceholder() {
   return (
     <div className="animate-pulse space-y-3">
@@ -125,8 +150,6 @@ function InlineValueBar({
     </div>
   );
 }
-
-type ChartKey = "equity" | "debt_vs_value" | "cash_flow";
 
 export function DashboardCharts({
   data,
@@ -376,27 +399,6 @@ export function DashboardCharts({
     });
   }
 
-  function ExpandButton({
-    chartKey,
-    slice,
-  }: {
-    chartKey: ChartKey;
-    slice: { total: number; isExpanded: boolean; shouldSlice: boolean };
-  }) {
-    if (!slice.shouldSlice) return null;
-    return (
-      <div className="mt-3 text-center">
-        <button
-          type="button"
-          onClick={() => toggleExpand(chartKey)}
-          className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition-all duration-150 hover:bg-subtle hover:text-foreground"
-        >
-          {slice.isExpanded ? "Show less" : `Show all ${slice.total}`}
-        </button>
-      </div>
-    );
-  }
-
   const activeChartKey = activeChart;
   const activeSlice =
     activeChartKey === "equity"
@@ -414,7 +416,7 @@ export function DashboardCharts({
       ) : (
         <CashFlowChart data={cashFlowSlice.visible} embedded heightPx={getHeightPx(cashFlowSlice.visible.length)} />
       )}
-      <ExpandButton chartKey={activeChartKey} slice={activeSlice} />
+      <ExpandButton chartKey={activeChartKey} slice={activeSlice} onToggle={toggleExpand} />
     </>
   );
 
