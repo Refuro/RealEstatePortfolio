@@ -15,12 +15,16 @@ function captureGoogleAdsConversion(event: string): void {
   const signupLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL;
   const activationLabel =
     process.env.NEXT_PUBLIC_GOOGLE_ADS_PROPERTY_CREATED_CONVERSION_LABEL;
+  const ctaLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CTA_CLICKED_CONVERSION_LABEL;
 
   if (event === AnalyticsEvents.USER_SIGNED_UP && signupLabel) {
     window.gtag("event", "conversion", { send_to: signupLabel });
   }
   if (event === AnalyticsEvents.PROPERTY_CREATED && activationLabel) {
     window.gtag("event", "conversion", { send_to: activationLabel });
+  }
+  if (event === AnalyticsEvents.FUNNEL_CTA_CLICKED && ctaLabel) {
+    window.gtag("event", "conversion", { send_to: ctaLabel });
   }
 }
 
