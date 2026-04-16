@@ -5,18 +5,15 @@ import {
   parseCspReportPayload,
   shouldForwardCspReport,
 } from "@/lib/csp-report";
-import {
-  checkRateLimit,
-  getRateLimitIdentifier,
-  recordRateLimit,
-} from "@/lib/rate-limit";
+import { getRateLimitIdentifier } from "@/lib/rate-limit";
+import { checkCspRateLimit } from "@/lib/csp-rate-limit";
 
 /** Max JSON body size for CSP reports (bytes). Typical browser reports are small (under ~2KB). */
 export const CSP_REPORT_MAX_BODY_BYTES = 8192;
 
 export async function POST(request: NextRequest) {
   const identifier = getRateLimitIdentifier(null, request);
-  const { allowed } = await checkRateLimit(identifier, "csp-report:post");
+  const { allowed } = checkCspRateLimit(identifier);
   if (!allowed) {
     return new NextResponse(null, { status: 429 });
   }
@@ -44,13 +41,11 @@ export async function POST(request: NextRequest) {
     const payload = JSON.parse(text) as unknown;
     const report = parseCspReportPayload(payload);
     if (!report) {
-      await recordRateLimit(identifier, "csp-report:post");
       return new NextResponse(null, { status: 204 });
     }
 
     if (process.env.NODE_ENV === "development") {
       console.warn("[CSP violation report]", JSON.stringify(payload));
-      await recordRateLimit(identifier, "csp-report:post");
       return new NextResponse(null, { status: 204 });
     }
 
@@ -74,6 +69,5 @@ export async function POST(request: NextRequest) {
     /* ignore malformed body */
   }
 
-  await recordRateLimit(identifier, "csp-report:post");
   return new NextResponse(null, { status: 204 });
 }

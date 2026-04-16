@@ -13,8 +13,6 @@ export const RATE_LIMITS: Record<string, number> = {
   "deals:patch": 60,
   "deals:delete": 60,
   "admin:tier-patch": 30,
-  /** Anonymous CSP violation reports — per IP, rolling 1h. */
-  "csp-report:post": 240,
   "import:portfolio": 5,
   "export:portfolio": 15,
   "export:portfolio_summary": 15,
