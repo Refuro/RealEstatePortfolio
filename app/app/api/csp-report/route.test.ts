@@ -1,14 +1,15 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { checkRateLimitMock, recordRateLimitMock } = vi.hoisted(() => ({
-  checkRateLimitMock: vi.fn().mockResolvedValue({ allowed: true }),
-  recordRateLimitMock: vi.fn().mockResolvedValue(undefined),
+const { checkCspRateLimitMock } = vi.hoisted(() => ({
+  checkCspRateLimitMock: vi.fn().mockReturnValue({ allowed: true }),
+}));
+
+vi.mock("@/lib/csp-rate-limit", () => ({
+  checkCspRateLimit: (...args: unknown[]) => checkCspRateLimitMock(...args),
 }));
 
 vi.mock("@/lib/rate-limit", () => ({
-  checkRateLimit: (...args: unknown[]) => checkRateLimitMock(...args),
-  recordRateLimit: (...args: unknown[]) => recordRateLimitMock(...args),
   getRateLimitIdentifier: vi.fn(() => "ip:127.0.0.1"),
 }));
 
@@ -41,7 +42,7 @@ function postRequest(payload: unknown) {
 describe("POST /api/csp-report", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    checkRateLimitMock.mockResolvedValue({ allowed: true });
+    checkCspRateLimitMock.mockReturnValue({ allowed: true });
     vi.unstubAllEnvs();
     vi.resetModules();
   });
@@ -98,7 +99,7 @@ describe("POST /api/csp-report", () => {
   });
 
   it("returns 429 when rate limit is exceeded", async () => {
-    checkRateLimitMock.mockResolvedValue({ allowed: false });
+    checkCspRateLimitMock.mockReturnValue({ allowed: false });
     const { POST } = await import("./route");
     const res = await POST(
       new NextRequest("http://localhost/api/csp-report", {
@@ -108,7 +109,6 @@ describe("POST /api/csp-report", () => {
       })
     );
     expect(res.status).toBe(429);
-    expect(recordRateLimitMock).not.toHaveBeenCalled();
   });
 
   it("returns 413 when Content-Length exceeds max body size", async () => {
