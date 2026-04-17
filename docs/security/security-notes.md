@@ -24,7 +24,7 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 - **Google Ads (gtag)** — When `NEXT_PUBLIC_GOOGLE_ADS_ID` is set, the app is *able* to load `gtag.js` from Google for ads measurement, but only **after** the user accepts optional analytics/ads cookies via the cookie banner (`GoogleAdsGtagClient` gates the script on consent). If the env var is set and the user has not consented, `gtag.js` does not load. ID is public; no secret. See privacy policy for disclosure.
 - **CSP reporting** — `POST /api/csp-report` remains public for anonymous browser submissions. In development it logs compact reports to the server console; in production it forwards grouped, sampled CSP violations to Sentry (tag `signal=csp`) so rollout monitoring is visible without flooding events. **Abuse guard:** request body is capped at **8192 bytes** (`CSP_REPORT_MAX_BODY_BYTES`); oversized bodies return **413**. **Rate limit:** `csp-report:post` (per IP, rolling 1h) via `ApiRateLimitEntry` — see [security-audit.md](./security-audit.md) §6.
 
-- **GET `/api/health`** — **Public** (no auth) by design for load balancers and uptime checks. Returns only `status` + `database` connectivity — see [security-audit.md](./security-audit.md) §7.
+- **GET `/api/health`** — **Public** (no auth) by design for load balancers and uptime checks. Returns only `{ status: "ok" }` — lightweight liveness check with no DB probe. See [security-audit.md](./security-audit.md) §7.
 
 - Audit lane reference: `docs/process/security-audit-process.md` and `docs/audits/security/`.
 

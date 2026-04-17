@@ -1,6 +1,6 @@
 # Health check smoke (staging / production)
 
-**Purpose:** Optional reliability check that `GET /api/health` returns **200** when the database is reachable — for CI or external monitors.
+**Purpose:** Optional liveness check that `GET /api/health` returns **200** — for CI or external monitors. Note: this endpoint does not probe the database; use the Neon dashboard to verify DB connectivity.
 
 ## Manual
 
@@ -10,7 +10,7 @@ From a machine that can reach the deployment:
 curl -sS -o /dev/null -w "%{http_code}" "https://YOUR_DOMAIN/api/health"
 ```
 
-Expect `200` and JSON including a healthy DB indicator (see `app/app/api/health/route.ts`).
+Expect `200` and JSON `{ "status": "ok" }` (see `app/app/api/health/route.ts`).
 
 ## CI (optional)
 

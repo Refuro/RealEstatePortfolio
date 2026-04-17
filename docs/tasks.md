@@ -181,6 +181,39 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ---
 
+### Owner QA — post-trial experience validation
+
+*Added 2026-04-16. Manual owner task — not a builder task.*
+
+A real user has signed up and added 3 properties on a trial. Before her trial ends, the owner should walk through the full post-trial experience to ensure everything is smooth and correct.
+
+- [ ] **QA-TRIAL-1 — Full post-trial end smoke test (owner)**
+  Create or use a test account with at least 2–3 properties added. Manually advance or simulate trial expiry (use admin tier override to flip to `free` tier) and verify:
+  - Trial expiry email arrives correctly and reads well (subject, body, unsubscribe link)
+  - In-app trial-ended state: correct banner/messaging, no broken UI
+  - Feature gating: pro features correctly restricted on free tier with properties present
+  - Upgrade prompt is prominent and the checkout flow completes cleanly
+  - After upgrading (test mode Stripe), plan is restored and UI reflects the correct tier immediately
+  - Downgrade/access: verify user can still view (not edit beyond limits) existing properties after trial end
+  - *Acceptance:* No broken states, confusing copy, or silent failures across the full trial-end → upgrade flow.
+
+---
+
+### Owner QA — validate real user's property view
+
+*Added 2026-04-16. Manual owner task — not a builder task.*
+
+- [ ] **QA-USER-1 — Copy real user's properties into test account and validate (owner)**
+  The first real user has added 3 properties. Before doing this, confirm with the user or check the DB for her property/mortgage configuration. Copy her property and mortgage data into your own test account via the Neon SQL editor (copy rows, reassign `userId` to your account). Then:
+  - Walk through her exact dashboard view
+  - Verify all metrics (equity, cash flow, cap rate, LTV, rent vs. market) look correct and display properly
+  - Check mortgage amortization if she added mortgages
+  - Verify RentCast AVM/rent estimates surface correctly on her property types
+  - Check mobile view at 375px
+  - *Acceptance:* No visual bugs, broken metrics, or confusing empty states given her specific data configuration.
+
+---
+
 ### Full audit remediation — 2026-04-09 synthesis — Ship + Schedule batch
 
 *Promoted from:* [`docs/audits/synthesis/2026-04-09-audit-synthesis.md`](audits/synthesis/2026-04-09-audit-synthesis.md). *Individual lane reports:* `docs/audits/*/2026-04-09-*`. *Completed items will be archived to [`docs/tasks-archived.md`](tasks-archived.md).*
