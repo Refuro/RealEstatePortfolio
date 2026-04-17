@@ -142,8 +142,23 @@ Replace spreadsheet chaos with one clear view of your rental portfolio.
 ### Acquisition sources
 - Organic SEO (calculator pages, competitor alternative pages, blog/changelog)
 - Reddit (r/realestateinvesting, r/landlord, r/buildinpublic)
-- Google/Bing ads (targeted, small scale)
+- Google Ads (search — "portfolio tracker intent" angle is the proven winner; see below)
 - Direct/word of mouth
+
+### Google Ads — what's working (as of April 2026)
+
+**Campaign:** "Search | Portfolio Tracker Intent" — targets users actively searching for rental property portfolio tracking tools.
+
+**Performance (Apr 12–16, 2026, $35/day budget):**
+- 743 impressions, 30 clicks, 4.04% CTR
+- $0.66 avg CPC, $19.89 total spend
+- 3 conversions at 10% conv. rate — **$6.63 cost per conversion**
+
+**Why this angle wins:** People searching for a portfolio tracker have immediate intent — they already own properties and are frustrated with their current setup (usually a spreadsheet). This matches the primary persona exactly. They convert at 10% vs. typical SaaS 2–5%.
+
+**Budget:** Increasing from $35 → ~$60–70/day while still in learning mode (campaign needs ~50 conversions to exit learning). Scale further once learning mode exits and conv. rate holds.
+
+**Do not confuse this angle with deal-analysis intent** (BRRRR, fix-and-flip, DSCR searches) — those attract the aspiring/analyst persona who may not yet own properties. Portfolio tracker intent = existing owners ready to replace their spreadsheet.
 
 ### Top-of-funnel assets (free tools)
 Public calculators drive SEO traffic from people actively evaluating deals:
