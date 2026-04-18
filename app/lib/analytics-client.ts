@@ -9,22 +9,30 @@ declare global {
   }
 }
 
-function captureGoogleAdsConversion(event: string): void {
-  if (typeof window === "undefined" || typeof window.gtag !== "function") return;
+function fireConversionWhenReady(label: string, attempt = 0): void {
+  if (typeof window === "undefined") return;
+  if (typeof window.gtag === "function") {
+    window.gtag("event", "conversion", { send_to: label });
+    return;
+  }
+  if (attempt < 30) {
+    setTimeout(() => fireConversionWhenReady(label, attempt + 1), 100);
+  }
+}
 
-  const signupLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_SIGNUP_CONVERSION_LABEL;
+function captureGoogleAdsConversion(event: string): void {
+  if (typeof window === "undefined") return;
+
   const activationLabel =
     process.env.NEXT_PUBLIC_GOOGLE_ADS_PROPERTY_CREATED_CONVERSION_LABEL;
   const ctaLabel = process.env.NEXT_PUBLIC_GOOGLE_ADS_CTA_CLICKED_CONVERSION_LABEL;
 
-  if (event === AnalyticsEvents.USER_SIGNED_UP && signupLabel) {
-    window.gtag("event", "conversion", { send_to: signupLabel });
-  }
+  // USER_SIGNED_UP is handled by GoogleAdsSignupConversion (has gtag-ready retry + own dedup).
   if (event === AnalyticsEvents.PROPERTY_CREATED && activationLabel) {
-    window.gtag("event", "conversion", { send_to: activationLabel });
+    fireConversionWhenReady(activationLabel);
   }
   if (event === AnalyticsEvents.FUNNEL_CTA_CLICKED && ctaLabel) {
-    window.gtag("event", "conversion", { send_to: ctaLabel });
+    fireConversionWhenReady(ctaLabel);
   }
 }
 

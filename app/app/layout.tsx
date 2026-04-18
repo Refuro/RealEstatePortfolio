@@ -5,6 +5,8 @@ import { PostHogGate } from "@/components/analytics/posthog-provider";
 import { CookieConsentProvider } from "@/components/consent/cookie-consent-provider";
 import { CookieConsentBanner } from "@/components/consent/cookie-consent-banner";
 import { GoogleAdsGtagClient } from "@/components/analytics/google-ads-gtag";
+import { GoogleAdsSignupConversion } from "@/components/analytics/google-ads-signup-conversion";
+import { GoogleAdsUserData } from "@/components/analytics/google-ads-user-data";
 import { VercelAnalyticsClient } from "@/components/analytics/vercel-analytics";
 import { ThemeProvider } from "./(app)/settings/theme-provider";
 import { getAppOrigin } from "@/lib/app-url";
@@ -185,6 +187,8 @@ export default function RootLayout({
               <ThemeProvider>{children}</ThemeProvider>
             </PostHogGate>
             <GoogleAdsGtagClient />
+            <GoogleAdsSignupConversion />
+            <GoogleAdsUserData />
             <VercelAnalyticsClient />
             <CookieConsentBanner />
           </CookieConsentProvider>
