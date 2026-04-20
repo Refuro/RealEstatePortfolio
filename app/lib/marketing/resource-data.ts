@@ -1,4 +1,5 @@
 import type { CalculatorFaqItem } from "@/lib/marketing/calculator-faqs";
+import type { DefinedTermPayload } from "@/components/marketing/defined-term-jsonld";
 
 export type ResourceSection =
   | {
@@ -38,6 +39,12 @@ export type ResourceArticle = {
   calculatorEmbed: ResourceCalculatorEmbed;
   landingVariant: string;
   relatedSlugs: string[];
+  /**
+   * Optional DefinedTerm payload for metric-explainer articles. When present the
+   * resource page emits schema.org DefinedTerm JSON-LD pointing at this article as
+   * the canonical definition for the term.
+   */
+  definedTerm?: Omit<DefinedTermPayload, "path">;
 };
 
 export const RESOURCE_ARTICLES: ResourceArticle[] = [
@@ -126,6 +133,12 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
     calculatorEmbed: "public",
     landingVariant: "resource_dscr_v1",
     relatedSlugs: ["cap-rate-explained", "cash-on-cash-return", "rental-property-metrics"],
+    definedTerm: {
+      name: "DSCR",
+      alternateName: "Debt Service Coverage Ratio",
+      description:
+        "The ratio of net operating income to scheduled debt service on a rental property. A DSCR above 1.0 means NOI exceeds debt payments; lenders often require 1.20 to 1.25 for rental loans.",
+    },
   },
   {
     slug: "cap-rate-explained",
@@ -205,6 +218,12 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
     calculatorEmbed: "public",
     landingVariant: "resource_cap_v1",
     relatedSlugs: ["dscr-explained", "cash-on-cash-return", "rental-property-metrics"],
+    definedTerm: {
+      name: "Cap rate",
+      alternateName: "Capitalization rate",
+      description:
+        "Annual net operating income divided by the purchase price or current value of a rental property, expressed as a percentage. Measures unlevered yield on the asset; used to compare income-producing real estate.",
+    },
   },
   {
     slug: "cash-on-cash-return",
@@ -268,6 +287,11 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
     calculatorEmbed: "public",
     landingVariant: "resource_coc_v1",
     relatedSlugs: ["cap-rate-explained", "dscr-explained", "rental-property-metrics"],
+    definedTerm: {
+      name: "Cash-on-cash return",
+      description:
+        "Annual pre-tax cash flow divided by total cash invested in a rental property, expressed as a percentage. Measures the levered yield on an investor's out-of-pocket cash for a given year.",
+    },
   },
   {
     slug: "brrrr-method-explained",
@@ -388,6 +412,11 @@ export const RESOURCE_ARTICLES: ResourceArticle[] = [
     calculatorEmbed: "public",
     landingVariant: "resource_glossary_v1",
     relatedSlugs: ["dscr-explained", "cap-rate-explained", "cash-on-cash-return"],
+    definedTerm: {
+      name: "Rental property metrics",
+      description:
+        "The core financial metrics used to evaluate rental real estate: cap rate, cash-on-cash return, DSCR, cash flow, GRM, and LTV. Each metric frames a different aspect of unlevered yield, levered yield, debt coverage, or capital structure.",
+    },
   },
 ];
 

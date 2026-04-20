@@ -8,6 +8,7 @@ import {
   CalculatorFaqJsonLd,
   CalculatorFaqSection,
 } from "@/components/marketing/calculator-faq";
+import { BreadcrumbJsonLd } from "@/components/marketing/breadcrumb-jsonld";
 import { CalculatorLocationSlot } from "@/components/marketing/calculator-location-slot";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import type { LocationData } from "@/lib/marketing/location-data";
@@ -151,6 +152,16 @@ export async function CalculatorLocationPage({
       <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={faqItems} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Calculators", path: "/tools" },
+              { name: def.metaTitleShort, path: def.basePath },
+              {
+                name: location.name,
+                path: `/tools/${calculator}/${location.slug}`,
+              },
+            ]}
+          />
 
           <nav
             className="flex overflow-x-auto whitespace-nowrap text-sm text-muted"
