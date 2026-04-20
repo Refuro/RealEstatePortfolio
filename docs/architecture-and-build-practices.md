@@ -215,11 +215,15 @@ Apply these when the task matches the context:
 
 **When adding a new page:**
 - [ ] **Public page (guest-accessible):** Add route to `proxy.ts` `isPublicRoute` so unauthenticated users can access it.
-- [ ] **SEO:** Add `metadata` with `title`, `description`, `alternates.canonical`, and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Add to `sitemap.ts` if it should be indexed. Broader checks: [SEO audit process](process/seo-audit-process.md).
-- [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered.
+- [ ] **SEO metadata:** Add `metadata` with `title`, `description`, `alternates.canonical` (via `getAppOrigin()`), and `openGraph` (title, description, url). Use "Veld Portfolio" in titles. Never hard-code the origin; always use `getAppOrigin()` from `lib/app-url.ts`.
+- [ ] **Sitemap:** If the route lives under a data-driven family — `/alternatives/[slug]`, `/vs/[slug]`, `/resources/[slug]`, `/tools/[calculator]/[location]`, or any of the `CALCULATOR_LOCATION_DEFS` calculator base paths — adding the entry to the underlying data file auto-includes it in `sitemap.ts` and `/llms.txt`. For top-level standalone pages, add an entry to `app/app/sitemap.ts` directly.
+- [ ] **Structured data:** If the page has a visible breadcrumb nav, also emit `BreadcrumbJsonLd` (from `components/marketing/breadcrumb-jsonld.tsx`) with the same items as the visible nav. If the page has an FAQ section, emit `CalculatorFaqJsonLd` with a shared data source so the visible FAQ and JSON-LD match verbatim. Resource articles that canonically define a metric should set `definedTerm` on the article so `DefinedTermJsonLd` auto-emits.
+- [ ] **Changelog:** Add a user-facing entry to `lib/changelog-data.ts` at the top of the array. Sitemap freshness dates are derived from the most recent changelog entry, so this is how search engines see real content activity.
+- [ ] **Auth/utility page** (sign-in, sign-up, billing success, etc.): Add `robots: { index: false, follow: false }` and add path to `robots.ts` `disallow` if not already covered. Do NOT add to sitemap.
 - [ ] **Design:** Use semantic tokens from `docs/policies/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
 - [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).
 - [ ] **Mobile-also:** Test on both desktop and narrow viewport (375px) or real device. Nav should not be squished on mobile; use hamburger or simplified nav if many links. Touch targets at least 44px. Avoid horizontal overflow.
+- [ ] **Broader checks:** [SEO audit process](process/seo-audit-process.md) and [SEO release checklist](qa/seo-release-checklist.md).
 
 **When adding plan-gated features (properties, deals, etc.):**
 - [ ] Update `lib/plans.ts` if adding new limits or tiers.

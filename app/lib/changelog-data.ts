@@ -13,6 +13,18 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-19",
+    title: "Guides in the nav, search result breadcrumbs, and sitemap freshness",
+    items: [
+      "Added Guides to the top nav, linking to reference articles for DSCR, cap rate, cash-on-cash return, BRRRR, and rental property metrics under /resources.",
+      "Mobile menu now includes Alternatives and Compare shortcuts alongside the main nav items.",
+      "Pricing FAQ content now comes from a single source, keeping the visible questions and answers aligned with the structured data search engines read.",
+      "Sitemap now uses the latest changelog date for active surfaces instead of a fixed site-wide timestamp, so search engines see real content activity per section.",
+      "Added breadcrumb structured data to calculators, state-specific calculator pages, resources, alternatives, and comparison pages. Search results can show the page's place in the site hierarchy instead of the raw URL.",
+      "Added an llms.txt index at the site root and DefinedTerm structured data on the DSCR, cap rate, cash-on-cash return, and rental property metrics guides, so AI search tools have a clean map of Veld's highest-quality content.",
+    ],
+  },
+  {
     date: "2026-04-10",
     title: "Five new calculators, state pages, and rent vs buy chart",
     items: [

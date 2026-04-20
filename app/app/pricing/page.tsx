@@ -12,6 +12,8 @@ import { PricingCards } from "@/components/pricing-cards";
 import { Footer } from "@/components/footer";
 import { LandingNav } from "@/components/landing-nav";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
+import { CalculatorFaqJsonLd } from "@/components/marketing/calculator-faq";
+import { PRICING_FAQ } from "@/lib/marketing/pricing-faqs";
 import { getAppOrigin } from "@/lib/app-url";
 
 const APP_URL = getAppOrigin();
@@ -43,6 +45,7 @@ export default async function PricingPage() {
       <LandingNav userId={user?.id ?? null} />
       <main className="flex-1 px-4 py-12 md:py-16 lg:py-20">
         <div className="mx-auto max-w-6xl">
+          <CalculatorFaqJsonLd items={PRICING_FAQ} />
           <div className="text-center">
             <h1 className="reveal-up text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
               Pricing
@@ -223,32 +226,15 @@ export default async function PricingPage() {
               Common questions
             </h2>
             <div className="mx-auto max-w-3xl space-y-2">
-              {[
-                {
-                  q: "Does the Free plan require a credit card?",
-                  a: "No. The Free plan is completely free with no card required. You only need a card when upgrading to Investor or Pro.",
-                },
-                {
-                  q: "Can I switch plans later?",
-                  a: "Yes. All your data — properties, deals, and settings — carries over automatically when you upgrade or downgrade.",
-                },
-                {
-                  q: "What happens when I reach my property limit?",
-                  a: "You can view all your existing properties but cannot add new ones until you upgrade or remove a property.",
-                },
-                {
-                  q: "Can I cancel anytime?",
-                  a: "Yes. Cancel anytime from Settings or the billing portal. Your plan reverts to Free at the end of the billing period and your data stays intact.",
-                },
-              ].map(({ q, a }, i) => (
+              {PRICING_FAQ.map(({ question, answer }) => (
                 <details
-                  key={i}
+                  key={question}
                   className="rounded-xl border border-border bg-card"
                 >
                   <summary className="cursor-pointer px-5 py-4 text-sm font-medium text-foreground transition-colors duration-150 hover:text-foreground/80">
-                    {q}
+                    {question}
                   </summary>
-                  <p className="px-5 pb-4 text-sm text-muted">{a}</p>
+                  <p className="px-5 pb-4 text-sm text-muted">{answer}</p>
                 </details>
               ))}
             </div>

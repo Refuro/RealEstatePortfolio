@@ -9,6 +9,8 @@ import {
   CalculatorFaqJsonLd,
   CalculatorFaqSection,
 } from "@/components/marketing/calculator-faq";
+import { BreadcrumbJsonLd } from "@/components/marketing/breadcrumb-jsonld";
+import { DefinedTermJsonLd } from "@/components/marketing/defined-term-jsonld";
 import type { ResourceArticle } from "@/lib/marketing/resource-data";
 import { getResourceArticle } from "@/lib/marketing/resource-data";
 
@@ -111,6 +113,18 @@ export async function ResourceArticlePage({ article }: { article: ResourceArticl
       <main className="flex-1 px-4 py-12">
         <div className="mx-auto max-w-3xl">
           <CalculatorFaqJsonLd items={article.faqs} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Home", path: "/" },
+              { name: "Resources", path: "/resources" },
+              { name: article.metaTitle, path: `/resources/${article.slug}` },
+            ]}
+          />
+          {article.definedTerm && (
+            <DefinedTermJsonLd
+              term={{ ...article.definedTerm, path: `/resources/${article.slug}` }}
+            />
+          )}
 
           <nav className="text-sm text-muted" aria-label="Breadcrumb">
             <Link href="/" className="hover:text-foreground hover:underline">

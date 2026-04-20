@@ -11,6 +11,7 @@ import {
   CalculatorFaqJsonLd,
   CalculatorFaqSection,
 } from "@/components/marketing/calculator-faq";
+import { BreadcrumbJsonLd } from "@/components/marketing/breadcrumb-jsonld";
 import { CASH_ON_CASH_CALCULATOR_FAQ } from "@/lib/marketing/calculator-faqs";
 import { getAppOrigin } from "@/lib/app-url";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
@@ -42,6 +43,12 @@ export default async function CashOnCashCalculatorPage() {
       <main className="flex-1 px-4 py-12 md:py-14">
         <div className="mx-auto max-w-6xl">
           <CalculatorFaqJsonLd items={CASH_ON_CASH_CALCULATOR_FAQ} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Calculators", path: "/tools" },
+              { name: "Cash-on-cash", path: "/tools/cash-on-cash" },
+            ]}
+          />
           <nav className="flex items-center gap-1.5 text-sm text-muted" aria-label="Breadcrumb">
             <Link href="/tools" className="transition-colors duration-150 hover:text-foreground">
               Calculators

@@ -58,45 +58,31 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
     };
   }, [mobileMenuOpen]);
 
-  const navLinks = (
+  const linkClass = "text-muted transition-colors duration-150 hover:text-foreground";
+  const handleLinkClick = () => setMobileMenuOpen(false);
+
+  const sharedLinks = (
     <>
       {userId && (
-        <Link
-          href="/dashboard"
-          className="text-muted transition-colors duration-150 hover:text-foreground"
-          onClick={() => setMobileMenuOpen(false)}
-        >
+        <Link href="/dashboard" className={linkClass} onClick={handleLinkClick}>
           Dashboard
         </Link>
       )}
-      <Link
-        href="/tools"
-        className="text-muted transition-colors duration-150 hover:text-foreground"
-        onClick={() => setMobileMenuOpen(false)}
-      >
+      <Link href="/tools" className={linkClass} onClick={handleLinkClick}>
         Calculators
       </Link>
-      <Link
-        href="/pricing"
-        className="text-muted transition-colors duration-150 hover:text-foreground"
-        onClick={() => setMobileMenuOpen(false)}
-      >
+      <Link href="/resources" className={linkClass} onClick={handleLinkClick}>
+        Guides
+      </Link>
+      <Link href="/pricing" className={linkClass} onClick={handleLinkClick}>
         Pricing
       </Link>
-      <Link
-        href="/changelog"
-        className="text-muted transition-colors duration-150 hover:text-foreground"
-        onClick={() => setMobileMenuOpen(false)}
-      >
+      <Link href="/changelog" className={linkClass} onClick={handleLinkClick}>
         Changelog
       </Link>
       {!userId && (
         <>
-          <Link
-            href="/sign-in"
-            className="text-muted transition-colors duration-150 hover:text-foreground"
-            onClick={() => setMobileMenuOpen(false)}
-          >
+          <Link href="/sign-in" className={linkClass} onClick={handleLinkClick}>
             Sign in
           </Link>
           <FunnelCtaLink
@@ -106,12 +92,28 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
             planIntent="free"
             landingVariant={landingVariant}
             className="block w-full rounded-lg bg-accent px-4 py-3 text-center text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover md:inline-block md:w-auto md:py-2"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={handleLinkClick}
           >
             Sign up
           </FunnelCtaLink>
         </>
       )}
+    </>
+  );
+
+  /**
+   * Mobile-only links. Surfaced in the slide-out drawer so small-screen visitors can
+   * discover `/alternatives` and `/vs` without overflowing the compact desktop nav.
+   * These pages remain crawlable from the footer on all viewports.
+   */
+  const mobileOnlyLinks = (
+    <>
+      <Link href="/alternatives" className={linkClass} onClick={handleLinkClick}>
+        Alternatives
+      </Link>
+      <Link href="/vs" className={linkClass} onClick={handleLinkClick}>
+        Compare
+      </Link>
     </>
   );
 
@@ -131,7 +133,7 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
         </Link>
 
         {/* Desktop: horizontal nav */}
-        <div className="hidden items-center gap-6 text-sm md:flex">{navLinks}</div>
+        <div className="hidden items-center gap-6 text-sm md:flex">{sharedLinks}</div>
 
         {/* Mobile: hamburger or close */}
         <button
@@ -178,7 +180,10 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
             <X className="size-5" />
           </button>
         </div>
-        <div className="flex flex-col gap-5 px-6 py-6 text-base">{navLinks}</div>
+        <div className="flex flex-col gap-5 px-6 py-6 text-base">
+          {sharedLinks}
+          {mobileOnlyLinks}
+        </div>
       </div>
     </nav>
   );

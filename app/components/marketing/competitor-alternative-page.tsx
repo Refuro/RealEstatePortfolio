@@ -12,6 +12,7 @@ import {
   CalculatorFaqJsonLd,
   CalculatorFaqSection,
 } from "@/components/marketing/calculator-faq";
+import { BreadcrumbJsonLd } from "@/components/marketing/breadcrumb-jsonld";
 import type { CompetitorPageConfig } from "@/lib/marketing/competitor-data";
 
 const PublicCalculator = dynamic(
@@ -51,6 +52,16 @@ export async function CompetitorAlternativePage({ config }: { config: Competitor
       <main className="flex-1">
         <div className="mx-auto max-w-6xl px-4 py-12">
           <CalculatorFaqJsonLd items={config.faqs} />
+          <BreadcrumbJsonLd
+            items={[
+              { name: "Home", path: "/" },
+              { name: breadcrumbParent, path: breadcrumbParentHref },
+              {
+                name: config.competitorColumnLabel,
+                path: `${breadcrumbParentHref}/${config.slug}`,
+              },
+            ]}
+          />
 
           {/* Breadcrumb */}
           <nav className="text-sm text-muted" aria-label="Breadcrumb">
