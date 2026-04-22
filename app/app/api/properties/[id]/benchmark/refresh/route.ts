@@ -5,7 +5,7 @@ import { prisma } from "@/lib/db";
 import { fetchRentEstimate } from "@/lib/integrations/rentcast";
 import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { getPropertyTotalRent } from "@/lib/property-utils";
-import { rentCastErrorResponse } from "@/lib/rentcast-route-errors";
+import { rentCastErrorResponse, isRentCastNoDataError } from "@/lib/rentcast-route-errors";
 import { getBenchmarkPct } from "@/lib/benchmark-utils";
 
 export async function POST(
@@ -81,6 +81,9 @@ export async function POST(
   } catch (err) {
     // Quota: only successful upstream calls record RentCastApiCall (see try block).
     const message = err instanceof Error ? err.message : "Benchmark unavailable";
+    if (isRentCastNoDataError(message)) {
+      return rentCastErrorResponse(message, 422);
+    }
     Sentry.captureException(err instanceof Error ? err : new Error(message), {
       tags: { area: "rentcast", route: "benchmark/refresh" },
       extra: { propertyId },

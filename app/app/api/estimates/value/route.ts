@@ -6,7 +6,7 @@ import { prisma } from "@/lib/db";
 import { fetchValueEstimate } from "@/lib/integrations/rentcast";
 import { getRentCastHourlyLimit, getEffectiveTier } from "@/lib/plans";
 import { US_STATES } from "@/lib/us-states";
-import { rentCastErrorResponse } from "@/lib/rentcast-route-errors";
+import { rentCastErrorResponse, isRentCastNoDataError } from "@/lib/rentcast-route-errors";
 
 const valueEstimateQuerySchema = z.object({
   addressLine1: z.string().min(1, "Address is required").max(300),
@@ -93,6 +93,9 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     // Hourly quota counts only successful provider calls (recorded above).
     const message = err instanceof Error ? err.message : "Estimate unavailable";
+    if (isRentCastNoDataError(message)) {
+      return rentCastErrorResponse(message, 422);
+    }
     Sentry.captureException(err instanceof Error ? err : new Error(message), {
       tags: { area: "rentcast", route: "estimates/value" },
     });

@@ -44,4 +44,34 @@ describe("rentcast integration params", () => {
 
     expect(fetchSpy).not.toHaveBeenCalled();
   });
+
+  it("strips ZIP+4 suffix before sending to RentCast (rent estimate)", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ rent: 1200 }), { status: 200 })
+    );
+
+    await fetchRentEstimate(
+      { address: "123 Main St", city: "Colquitt", state: "GA", zipCode: "39845-1546" },
+      "api-key"
+    );
+
+    const calledUrl = (fetchSpy.mock.calls[0][0] as string);
+    expect(calledUrl).toContain("zipCode=39845");
+    expect(calledUrl).not.toContain("39845-1546");
+  });
+
+  it("strips ZIP+4 suffix before sending to RentCast (value estimate)", async () => {
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ value: 150000 }), { status: 200 })
+    );
+
+    await fetchValueEstimate(
+      { address: "123 Main St", city: "Colquitt", state: "GA", zipCode: "39845-1546" },
+      "api-key"
+    );
+
+    const calledUrl = (fetchSpy.mock.calls[0][0] as string);
+    expect(calledUrl).toContain("zipCode=39845");
+    expect(calledUrl).not.toContain("39845-1546");
+  });
 });

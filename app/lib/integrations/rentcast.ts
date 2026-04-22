@@ -50,6 +50,11 @@ function assertNoOverrideFields(params: Record<string, unknown>): void {
   }
 }
 
+/** RentCast only accepts 5-digit ZIP codes. Strip ZIP+4 suffix if present. */
+function normalizeZip(zip: string): string {
+  return zip.replace(/-\d{1,4}$/, "").trim();
+}
+
 /**
  * Fetch rent estimate from RentCast API.
  * Returns { rent: number } or throws on error.
@@ -66,7 +71,7 @@ export async function fetchRentEstimate(
     address: fullAddress,
     city: params.city,
     state: params.state,
-    zipCode: params.zipCode,
+    zipCode: normalizeZip(params.zipCode),
   });
   if (params.propertyType) {
     searchParams.set("propertyType", toRentCastPropertyType(params.propertyType));
@@ -162,7 +167,7 @@ export async function fetchValueEstimate(
     address: fullAddress,
     city: params.city,
     state: params.state,
-    zipCode: params.zipCode,
+    zipCode: normalizeZip(params.zipCode),
   });
   if (params.propertyType) {
     searchParams.set("propertyType", toRentCastPropertyType(params.propertyType));
