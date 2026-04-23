@@ -13,6 +13,16 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-22",
+    title: "Landing page polish, cron fix, and analytics cleanup",
+    items: [
+      "Tightened testimonial copy on the social proof section for clarity without changing meaning.",
+      "Fixed a gap in the estimate cron jobs where routes were running as continuous compute functions instead of serverless.",
+      "Fixed Google Ads gtag initialization and wired up enhanced conversion data so signup events carry hashed user signals for better match rates.",
+      "CSP violation reports no longer hit the database on every health status check causing 100% compute uptime, and rate limiting applied upstream before any DB write.",
+    ],
+  },
+  {
     date: "2026-04-19",
     title: "Guides in the nav, search result breadcrumbs, and sitemap freshness",
     items: [

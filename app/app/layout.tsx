@@ -88,7 +88,7 @@ function JsonLdScript() {
         "@id": `${APP_URL}/#organization`,
         name: "Veld Portfolio",
         url: APP_URL,
-        logo: `${APP_URL}/logo.png`,
+        logo: `${APP_URL}/favicon.svg`,
         description:
           "Portfolio analytics for real estate investors. Track equity, cash flow, and metrics. Replace spreadsheets.",
       },

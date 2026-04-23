@@ -10,6 +10,8 @@ type MockupFrameProps = {
   fitToHeight?: boolean;
   /** Show browser-style chrome dots at the top. */
   chrome?: boolean;
+  /** Optional faux address bar (only when `chrome` is true). */
+  chromeUrl?: string;
   className?: string;
   ariaLabel: string;
 };
@@ -24,6 +26,7 @@ export function MockupFrame({
   internalWidth = 960,
   fitToHeight = false,
   chrome = false,
+  chromeUrl,
   className = "",
   ariaLabel,
 }: MockupFrameProps) {
@@ -66,10 +69,23 @@ export function MockupFrame({
       aria-label={ariaLabel}
     >
       {chrome && (
-        <div className="flex items-center gap-1.5 border-b border-border bg-subtle px-3 py-2">
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
-          <span className="size-2.5 rounded-full bg-border" aria-hidden />
+        <div className="flex items-center gap-2 border-b border-border bg-subtle px-3 py-2">
+          <div className="flex shrink-0 items-center gap-1.5" aria-hidden>
+            <span className="size-2.5 rounded-full bg-red-400/65" />
+            <span className="size-2.5 rounded-full bg-amber-300/65" />
+            <span className="size-2.5 rounded-full bg-green-400/65" />
+          </div>
+          {chromeUrl ? (
+            <div className="flex min-w-0 flex-1 justify-center px-1">
+              <div className="flex h-[18px] w-full max-w-[200px] items-center justify-center rounded bg-border px-2">
+                <span className="truncate font-mono text-[9.5px] text-muted-foreground">
+                  {chromeUrl}
+                </span>
+              </div>
+            </div>
+          ) : (
+            <div className="min-w-0 flex-1" aria-hidden />
+          )}
         </div>
       )}
       <div
