@@ -7,6 +7,7 @@ import { Suspense } from "react";
 import { auth } from "@clerk/nextjs/server";
 import {
   Building2,
+  MapPin,
   Calculator,
   Check,
   ChevronRight,
@@ -41,12 +42,12 @@ export const metadata: Metadata = {
     absolute: "Veld Portfolio — Track Your Rental Properties in One Place",
   },
   description:
-    "Track equity, cash flow, and rent estimates across your rental portfolio. Analyze deals before you buy. Replace your spreadsheet with Veld.",
+    "Live portfolio numbers and deal analysis for landlords — without spreadsheet upkeep. Track equity, cash flow, and rent estimates in one place.",
   alternates: { canonical: APP_URL + "/" },
   openGraph: {
     title: "Veld Portfolio — Track Your Rental Properties in One Place",
     description:
-      "Track equity, cash flow, and rent estimates across your rental portfolio. Analyze deals before you buy.",
+      "Live portfolio numbers and deal analysis in one place — equity, cash flow, rent estimates, and underwriting.",
     url: "/",
   },
 };
@@ -54,19 +55,22 @@ export const metadata: Metadata = {
 const HERO_STEPS = [
   {
     title: "Add each property once",
-    description:
-      "Purchase price, value, rent, expenses, and mortgage — one profile per property.",
+    description: "Price, rent, expenses and mortgage in one profile.",
     icon: Building2,
   },
   {
-    title: "Track portfolio performance",
-    description:
-      "Equity, cash flow, cap rate, and LTV — always current, no formula maintenance.",
+    title: "Track performance",
+    description: "Equity, cash flow, cap rate and LTV. Always current.",
     icon: LayoutGrid,
   },
   {
+    title: "Benchmark your rent",
+    description: "Live estimates show if your rent is above or below market.",
+    icon: TrendingUp,
+  },
+  {
     title: "Underwrite your next deal",
-    description: "Cash flow, cap rate, DSCR, and CoC return before you commit.",
+    description: "Cash flow, DSCR and cash-on-cash before you commit.",
     icon: Target,
   },
 ];
@@ -164,10 +168,10 @@ export default async function HomePage({
 
       <main className="flex flex-1 flex-col">
         {/* Hero */}
-        <section className="bg-gradient-to-b from-accent/[0.04] to-transparent px-4 py-10 sm:py-14">
+        <section className="bg-gradient-to-b from-accent/[0.04] to-transparent px-4 py-8 sm:py-12">
           <div className="mx-auto max-w-6xl">
-            <div className="grid gap-10 lg:grid-cols-[3fr_2fr] lg:items-center">
-              <div className="space-y-5">
+            <div className="grid gap-10 lg:grid-cols-[5fr_6fr] lg:items-center">
+              <div className="space-y-4">
                 {deletedParam === "1" && (
                   <p className="max-w-md rounded-lg border border-border bg-card px-4 py-3 text-sm text-foreground shadow-sm">
                     Your account has been deactivated. You can sign in again to
@@ -181,20 +185,18 @@ export default async function HomePage({
                 )}
 
                 <h1
-                  className="hero-animate max-w-2xl text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl"
+                  className="hero-animate max-w-xl text-4xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-5xl"
                   style={{ transitionDelay: "0ms" }}
                 >
-                  Replace spreadsheet chaos with one clear view of your rental
-                  portfolio
+                  Replace spreadsheet chaos with one clear view.
                 </h1>
 
                 <p
                   className="hero-animate max-w-xl text-base text-muted sm:text-lg"
                   style={{ transitionDelay: "80ms" }}
                 >
-                  Add your properties once and get equity, cash flow, rent
-                  estimates, and deal analysis — always current, without
-                  spreadsheet maintenance.
+                  Track equity, cash flow, and rent estimates. Always current,
+                  no manual updates.
                 </p>
 
                 <div
@@ -233,7 +235,7 @@ export default async function HomePage({
                         landingVariant={LANDING_VARIANT}
                         className="cta-accent-glow inline-flex min-h-[44px] w-full items-center justify-center rounded-md bg-accent px-5 py-2.5 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover sm:w-auto"
                       >
-                        Start your free trial
+                        Get started free
                       </FunnelCtaLink>
                       <FunnelCtaLink
                         href="/pricing"
@@ -254,51 +256,59 @@ export default async function HomePage({
                     className="hero-animate text-sm text-muted"
                     style={{ transitionDelay: "220ms" }}
                   >
-                    <span className="font-medium text-foreground">No credit card required.</span>{" "}
-                    Your first property in about 60 seconds.
+                    Free plan —{" "}
+                    <span className="font-medium text-foreground">
+                      no card required
+                    </span>
+                    . First property in about 60 seconds.
                   </p>
                 )}
 
                 <div
-                  className="hero-animate sm:hidden"
-                  style={{ transitionDelay: "280ms" }}
-                >
-                  <MockupFrame
-                    className="rounded-xl border border-border shadow-lg"
-                    ariaLabel="Veld Portfolio dashboard showing property equity, cash flow, and portfolio metrics"
-                  >
-                    <DashboardMockup />
-                  </MockupFrame>
-                </div>
-
-                <div
-                  className="hero-animate hidden gap-2 sm:grid sm:grid-cols-3"
+                  className="hero-animate grid grid-cols-2 gap-3"
                   style={{ transitionDelay: "300ms" }}
                 >
                   {HERO_STEPS.map((step) => (
                     <div
                       key={step.title}
-                      className="rounded-lg border border-border bg-card p-3 shadow-sm"
+                      className="rounded-lg border border-border bg-card p-4 shadow-sm [border-top:2px_solid_color-mix(in_srgb,var(--accent)_30%,transparent)]"
                     >
                       <div className="mb-2 flex items-center gap-2">
-                        <step.icon
-                          className="size-4 text-accent"
-                          aria-hidden
-                        />
+                        <span className="flex shrink-0 items-center justify-center rounded-md bg-accent/10 p-1.5">
+                          <step.icon
+                            className="size-3.5 text-accent"
+                            aria-hidden
+                          />
+                        </span>
                         <p className="text-sm font-semibold text-foreground">
                           {step.title}
                         </p>
                       </div>
-                      <p className="text-xs text-muted">{step.description}</p>
+                      <p className="text-xs leading-relaxed text-muted">
+                        {step.description}
+                      </p>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="hidden md:block">
+              <div
+                className="hero-animate relative hidden md:block"
+                style={{ transitionDelay: "360ms" }}
+              >
+                <div
+                  className="pointer-events-none absolute -inset-10 rounded-full"
+                  style={{
+                    background:
+                      "radial-gradient(ellipse 80% 70% at 55% 45%, color-mix(in srgb, var(--accent) 32%, transparent) 0%, color-mix(in srgb, var(--accent) 10%, transparent) 45%, transparent 70%)",
+                  }}
+                  aria-hidden
+                />
                 <MockupFrame
                   chrome
-                  className="rounded-xl border border-border shadow-xl"
+                  chromeUrl="veldportfolio.com/dashboard"
+                  internalWidth={920}
+                  className="relative z-10 rounded-xl border border-border shadow-xl"
                   ariaLabel="Veld Portfolio dashboard showing property equity, cash flow, cap rate, and portfolio metrics"
                 >
                   <DashboardMockup />
@@ -315,37 +325,114 @@ export default async function HomePage({
         >
           <div className="mx-auto max-w-5xl">
             <div
-              className="hero-animate flex flex-col items-center gap-3 text-center sm:flex-row sm:justify-center sm:gap-8"
+              className="hero-animate flex flex-col items-center gap-2.5 text-center sm:flex-row sm:gap-8"
               style={{ transitionDelay: "400ms" }}
             >
-              <p className="text-sm text-muted">
-                Built for landlords with{" "}
-                <span className="font-medium text-foreground">
-                  1–10 properties
+              <p className="flex items-center gap-1.5 text-sm text-muted">
+                <Building2 className="size-3.5 shrink-0 text-accent" aria-hidden />
+                <span>
+                  Built for landlords with{" "}
+                  <span className="font-medium text-foreground">1–10 properties</span>
                 </span>
               </p>
               <span
                 className="hidden h-4 w-px bg-border sm:block"
                 aria-hidden
               />
-              <p className="text-sm text-muted">
-                Track your portfolio and{" "}
-                <span className="font-medium text-foreground">
-                  analyze new deals
+              <p className="flex items-center gap-1.5 text-sm text-muted">
+                <LayoutGrid className="size-3.5 shrink-0 text-accent" aria-hidden />
+                <span>
+                  Track your portfolio and{" "}
+                  <span className="font-medium text-foreground">analyze new deals</span>
                 </span>
               </p>
               <span
                 className="hidden h-4 w-px bg-border sm:block"
                 aria-hidden
               />
-              <p className="text-sm text-muted">
-                Free plan —{" "}
-                <span className="font-medium text-foreground">
-                  no card required
+              <p className="flex items-center gap-1.5 whitespace-nowrap text-sm text-muted">
+                <MapPin className="size-3.5 shrink-0 text-accent" aria-hidden />
+                <span>
+                  Used across{" "}
+                  <span className="font-medium text-foreground">20+ states</span>
                 </span>
               </p>
             </div>
           </div>
+        </section>
+
+        {/* Testimonials */}
+        <section
+          aria-label="User reviews"
+          className="border-b border-border bg-background px-4 py-8 sm:py-10"
+        >
+          <AnimatedSection>
+            <div className="mx-auto max-w-5xl">
+              <div className="mb-6">
+                <div className="flex justify-center sm:justify-start">
+                  <span className="inline-flex items-center rounded-full border border-accent/20 bg-accent/5 px-3 py-1 text-xs font-medium text-accent">
+                    What users say
+                  </span>
+                </div>
+                <p className="mt-2 text-center text-xs text-muted sm:text-left">
+                  From verified Fazier reviews
+                </p>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-3">
+                {[
+                  {
+                    quote:
+                      "When they reached out to have me try this, I was pretty sure I wasn't going to use this, but it's actually pretty great, everything just works.",
+                    name: "Nardi Braho",
+                    credential: "Landlord, 3 properties",
+                  },
+                  {
+                    quote:
+                      "This app has saved me so much time messing with my spreadsheets. I've been using it to track my single-units and it's been great.",
+                    name: "Elli Tanner",
+                    credential: "Landlord, 11 properties",
+                  },
+                  {
+                    quote:
+                      "The deal analysis feature is great. I plan to use it as I track more rentals.",
+                    name: "Daniel Kjellén",
+                    credential: "Landlord, 1 property",
+                  },
+                ].map(({ quote, name, credential }) => (
+                  <figure
+                    key={name}
+                    className="flex flex-col gap-4 rounded-xl border border-border bg-card p-5 shadow-sm transition-all duration-150 hover:-translate-y-0.5 hover:shadow-md [border-top:2px_solid_color-mix(in_srgb,var(--accent)_30%,transparent)]"
+                  >
+                    <div className="flex flex-1 flex-col gap-1.5">
+                      <div
+                        className="text-2xl font-semibold leading-none text-accent/35"
+                        aria-hidden
+                      >
+                        &ldquo;
+                      </div>
+                      <blockquote className="flex-1 text-sm leading-relaxed text-foreground">
+                        {quote}
+                      </blockquote>
+                    </div>
+                    <figcaption className="flex items-center gap-2.5">
+                      <span
+                        className="flex size-8 shrink-0 items-center justify-center rounded-full bg-accent/10 text-xs font-semibold text-accent"
+                        aria-hidden
+                      >
+                        {name[0]}
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {name}
+                        </p>
+                        <p className="text-xs text-muted">{credential}</p>
+                      </div>
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </AnimatedSection>
         </section>
 
         {/* Calculator */}

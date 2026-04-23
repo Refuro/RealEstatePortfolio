@@ -36,10 +36,10 @@ function MockMetricCard({
   tone?: "positive" | "negative" | "warning";
 }) {
   return (
-    <div className="min-w-0 rounded-lg border border-border bg-card p-3 shadow-sm">
-      <dt className="text-xs font-medium text-muted">{label}</dt>
+    <div className="min-w-0 rounded-lg border border-border bg-card px-3 py-3.5 shadow-sm">
+      <dt className="text-sm font-medium leading-snug text-muted">{label}</dt>
       <dd
-        className={`mt-1 truncate text-base font-semibold ${
+        className={`mt-1.5 truncate text-lg font-semibold tabular-nums tracking-tight ${
           tone ? TONE_CLASS[tone] : "text-foreground"
         }`}
       >
@@ -53,26 +53,28 @@ const WORKSPACE_TABS = ["Properties", "Modeling", "Mortgage", "Print summary"];
 
 export function DashboardMockup() {
   return (
-    <div className="space-y-4 p-5">
+    <div className="space-y-5 p-6">
       {/* Title */}
-      <h2 className="text-2xl font-semibold text-foreground">Dashboard</h2>
+      <h2 className="text-3xl font-semibold tracking-tight text-foreground">
+        Dashboard
+      </h2>
 
       {/* Action buttons */}
-      <div className="flex items-center gap-2">
-        <span className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <span className="rounded-md bg-accent px-3.5 py-2 text-base font-medium text-accent-foreground">
           Add property
         </span>
-        <span className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground">
+        <span className="rounded-md border border-border px-3.5 py-2 text-base font-medium text-foreground">
           Analyze a deal
         </span>
       </div>
 
       {/* Workspace tabs */}
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {WORKSPACE_TABS.map((tab) => (
           <span
             key={tab}
-            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground"
+            className="rounded-md border border-border bg-transparent px-3.5 py-2 text-base font-medium text-foreground"
           >
             {tab}
           </span>
@@ -80,8 +82,8 @@ export function DashboardMockup() {
       </div>
 
       {/* Metric row 1 */}
-      <div className="rounded-xl bg-subtle/30 p-2">
-        <dl className="grid grid-cols-5 gap-2">
+      <div className="rounded-xl bg-subtle/30 p-3">
+        <dl className="grid grid-cols-5 gap-2.5">
           {METRICS_ROW_1.map((m) => (
             <MockMetricCard key={m.label} {...m} />
           ))}
@@ -89,8 +91,8 @@ export function DashboardMockup() {
       </div>
 
       {/* Metric row 2 */}
-      <div className="rounded-xl bg-subtle/30 p-2">
-        <dl className="grid grid-cols-5 gap-2">
+      <div className="rounded-xl bg-subtle/30 p-3">
+        <dl className="grid grid-cols-5 gap-2.5">
           {METRICS_ROW_2.map((m) => (
             <MockMetricCard key={m.label} {...m} />
           ))}
@@ -98,42 +100,44 @@ export function DashboardMockup() {
       </div>
 
       {/* "What do these mean?" link */}
-      <p className="text-sm text-accent">What do these mean?</p>
+      <p className="text-base text-accent">What do these mean?</p>
 
       {/* Rent vs. market */}
-      <section className="rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <section className="rounded-xl border border-border bg-card p-5 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3 className="text-base font-semibold text-foreground">
               Rent vs. market
             </h3>
-            <p className="mt-1 text-sm text-muted">3 fresh benchmarks</p>
+            <p className="mt-1.5 text-sm text-muted">3 fresh benchmarks</p>
           </div>
-          <div className="flex gap-2 text-xs">
-            <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+          <div className="flex flex-wrap gap-2 text-sm">
+            <span className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-muted">
               Above:{" "}
               <span className="font-semibold text-foreground">2</span>
             </span>
-            <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+            <span className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-muted">
               Below:{" "}
               <span className="font-semibold text-foreground">1</span>
             </span>
-            <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
+            <span className="rounded-full border border-border bg-background/60 px-3 py-1.5 text-muted">
               Aligned:{" "}
               <span className="font-semibold text-foreground">0</span>
             </span>
           </div>
         </div>
-        <ul className="mt-4 space-y-2">
+        <ul className="mt-5 space-y-2.5">
           {RENT_ROWS.map((r) => (
             <li
               key={r.name}
-              className="flex items-center justify-between rounded-lg border border-border bg-subtle/40 px-3 py-2"
+              className="flex items-center justify-between gap-3 rounded-lg border border-border bg-subtle/40 px-4 py-3"
             >
-              <span className="text-sm font-medium text-foreground">
+              <span className="text-base font-medium text-foreground">
                 {r.name}
               </span>
-              <span className={`text-sm font-semibold ${TONE_CLASS[r.tone]}`}>
+              <span
+                className={`shrink-0 text-right text-base font-semibold ${TONE_CLASS[r.tone]}`}
+              >
                 {r.label}
               </span>
             </li>
