@@ -74,6 +74,9 @@ export function LandingNav({ userId, landingVariant }: LandingNavProps) {
       <Link href="/resources" className={linkClass} onClick={handleLinkClick}>
         Guides
       </Link>
+      <Link href="/about" className={linkClass} onClick={handleLinkClick}>
+        About
+      </Link>
       <Link href="/pricing" className={linkClass} onClick={handleLinkClick}>
         Pricing
       </Link>

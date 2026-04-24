@@ -15,6 +15,7 @@ export function Footer({ supportEmail }: FooterProps) {
             {/* Nav links: desktop only — mobile has sidebar/landing nav */}
             <div className="hidden flex-wrap justify-end gap-x-6 gap-y-1.5 md:flex">
               <Link href="/tools" className="hover:text-foreground">Calculators</Link>
+              <Link href="/about" className="hover:text-foreground">About</Link>
               <Link href="/changelog" className="hover:text-foreground">Changelog</Link>
               <Link href="/alternatives" className="hover:text-foreground">Alternatives</Link>
               <Link href="/vs" className="hover:text-foreground">Compare</Link>

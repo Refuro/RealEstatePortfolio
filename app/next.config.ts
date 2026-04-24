@@ -24,6 +24,7 @@ const cspDirectives =
   "connect-src 'self' https:; " +
   "frame-src 'self' https://*.clerk.accounts.dev https://clerk.veldportfolio.com https://challenges.cloudflare.com https://*.js.stripe.com https://js.stripe.com https://hooks.stripe.com; " +
   "worker-src 'self' blob:; " +
+  "manifest-src 'self'; " +
   "frame-ancestors 'none'; base-uri 'self'; form-action 'self'";
 
 const cspValue = reportUri ? `${cspDirectives}; report-uri ${reportUri}` : cspDirectives;
