@@ -21,6 +21,7 @@ const isPublicRoute = createRouteMatcher([
   "/resources(.*)", // hub + /resources/[slug] reference articles
   "/lp/investment-property-calculator",
   "/changelog",
+  "/about",
   "/contact",
   "/api/billing/webhook",
   "/api/cron/onboarding-emails",
