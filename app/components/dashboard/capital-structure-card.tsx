@@ -19,7 +19,7 @@ export type MortgageDetail = {
   loanCount: number;
 };
 
-/** Sampled balance trajectory from origination → payoff. Pre-scaled for ownership/display mode. */
+/** Sampled balance trajectory from origination → payoff. Pre-scaled for ownership share. */
 export type PaydownProjection = {
   /** Sampled points along the schedule. Ordered by date ascending. */
   points: { date: Date; balance: number }[];

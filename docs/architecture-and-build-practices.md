@@ -73,7 +73,7 @@ UI (pages, components)
 
 ### 2.2 Single Source of Truth
 - **Metrics:** `lib/metrics/portfolio-metrics.ts` and `lib/metrics/property-metrics.ts` — all calculations here. Dashboard, property detail, export, etc. use these. Do not duplicate formulas.
-- **Ownership semantics policy:** `docs/policies/ownership-metrics.md` — canonical formulas and copy expectations for `proportional` vs `full_liability`.
+- **Ownership semantics policy:** `docs/policies/ownership-metrics.md` — canonical formulas and copy expectations for partial-ownership scaling.
 - **Analytics math policy:** `docs/policies/analytics-math-policy.md` — canonical contracts for time windows, debt-service source, and UI/API/export reconciliation.
 - **Portfolio CSV (import/export):** `docs/reference/portfolio-csv-export.md` — column semantics, multi-mortgage labeling, canonical property types.
 - **Plans/limits:** `lib/plans.ts` — property limits, tier names.

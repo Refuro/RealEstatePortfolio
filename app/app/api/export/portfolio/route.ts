@@ -75,7 +75,6 @@ export async function GET(request: NextRequest) {
     "vacancy %",
     "cash invested",
     "ownership %",
-    "display mode",
     "mortgage lien count",
     "mortgage stored balances (pipe)",
     "mortgage balance (effective)",
@@ -96,9 +95,6 @@ export async function GET(request: NextRequest) {
   ];
 
     const rows: string[][] = [];
-    const displayMode = (user.ownershipDisplayMode ?? "proportional") as
-      | "proportional"
-      | "full_liability";
 
     for (const p of properties) {
     const orderedMortgages = [...p.mortgages].sort(
@@ -147,19 +143,16 @@ export async function GET(request: NextRequest) {
       firstMortgage?.escrowAmount != null ? Number(firstMortgage.escrowAmount) : null;
     const lender = firstMortgage?.lenderName ?? null;
 
-    const metrics = computePropertyMetrics(
-      {
-        monthlyRent: getPropertyTotalRent(p),
-        monthlyExpenses: Number(p.currentMonthlyExpenses),
-        estimatedValue: Number(p.currentEstimatedValue),
-        cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-        totalMortgageBalance,
-        totalMonthlyPayment,
-        ownershipPercent: p.ownershipPercent ?? 100,
-        vacancyPercent: p.vacancyPercent ?? 5,
-      },
-      displayMode
-    );
+    const metrics = computePropertyMetrics({
+      monthlyRent: getPropertyTotalRent(p),
+      monthlyExpenses: Number(p.currentMonthlyExpenses),
+      estimatedValue: Number(p.currentEstimatedValue),
+      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+      totalMortgageBalance,
+      totalMonthlyPayment,
+      ownershipPercent: p.ownershipPercent ?? 100,
+      vacancyPercent: p.vacancyPercent ?? 5,
+    });
 
     const address = [p.addressLine1, p.addressLine2, p.city, p.state, p.zipCode]
       .filter(Boolean)
@@ -189,7 +182,6 @@ export async function GET(request: NextRequest) {
       escapeCsvCell(p.vacancyPercent ?? 5),
       escapeCsvCell(p.cashInvested != null ? Number(p.cashInvested) : ""),
       escapeCsvCell(p.ownershipPercent ?? 100),
-      escapeCsvCell(displayMode),
       escapeCsvCell(lienCount),
       escapeCsvCell(storedBalancesPipe),
       escapeCsvCell(lienCount === 0 ? "" : String(totalMortgageBalance)),

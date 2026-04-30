@@ -79,25 +79,18 @@ export function computeBrrrCalculatorResult(input: BrrrCalculatorInput): BrrrCal
     refinanceTermYears
   );
 
-  const metricsAfterRefi = computePropertyMetrics(
-    {
-      monthlyRent,
-      monthlyExpenses,
-      estimatedValue: arv,
-      cashInvested: netCashLeftInDeal > 0 ? netCashLeftInDeal : null,
-      totalMortgageBalance: newLoanAmount,
-      totalMonthlyPayment: monthlyPaymentAfterRefi,
-      ownershipPercent: 100,
-      vacancyPercent,
-    },
-    "proportional"
-  );
+  const metricsAfterRefi = computePropertyMetrics({
+    monthlyRent,
+    monthlyExpenses,
+    estimatedValue: arv,
+    cashInvested: netCashLeftInDeal > 0 ? netCashLeftInDeal : null,
+    totalMortgageBalance: newLoanAmount,
+    totalMonthlyPayment: monthlyPaymentAfterRefi,
+    ownershipPercent: 100,
+    vacancyPercent,
+  });
 
-  const annualDebtService = getAnnualDebtService(
-    monthlyPaymentAfterRefi,
-    100,
-    "proportional"
-  );
+  const annualDebtService = getAnnualDebtService(monthlyPaymentAfterRefi, 100);
   const dscrAfterRefi =
     annualDebtService > 0 ? metricsAfterRefi.noi / annualDebtService : null;
 

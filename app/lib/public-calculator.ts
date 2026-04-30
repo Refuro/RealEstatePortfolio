@@ -53,21 +53,18 @@ export function computePublicCalculatorResult(input: PublicCalculatorInput): Pub
   const loanAmount = Math.max(0, purchasePrice - downPaymentAmount);
   const monthlyPayment = computeMonthlyPayment(loanAmount, interestRatePercent, termYears);
 
-  const metrics = computePropertyMetrics(
-    {
-      monthlyRent,
-      monthlyExpenses,
-      estimatedValue: purchasePrice,
-      cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
-      totalMortgageBalance: loanAmount,
-      totalMonthlyPayment: monthlyPayment,
-      ownershipPercent: 100,
-      vacancyPercent,
-    },
-    "proportional"
-  );
+  const metrics = computePropertyMetrics({
+    monthlyRent,
+    monthlyExpenses,
+    estimatedValue: purchasePrice,
+    cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
+    totalMortgageBalance: loanAmount,
+    totalMonthlyPayment: monthlyPayment,
+    ownershipPercent: 100,
+    vacancyPercent,
+  });
 
-  const annualDebtService = getAnnualDebtService(monthlyPayment, 100, "proportional");
+  const annualDebtService = getAnnualDebtService(monthlyPayment, 100);
   const dscr = annualDebtService > 0 ? metrics.noi / annualDebtService : null;
 
   return {

@@ -12,7 +12,6 @@ import {
   computeAnnualCashFlowFromAnnualInputs,
   scaleLiabilityAmount,
   type AnalyticsDebtServiceSource,
-  type OwnershipDisplayMode,
 } from "@/lib/metrics/property-metrics";
 import { formatCurrency } from "@/lib/format-currency";
 import {
@@ -41,7 +40,6 @@ type ProjectionsTabContentProps = {
   totalMonthlyPayment: number;
   ownershipPercent: number;
   vacancyPercent: number;
-  displayMode: OwnershipDisplayMode | null;
   mortgageData: MortgageForTabs[];
 };
 
@@ -245,7 +243,6 @@ export function ProjectionsTabContent({
   totalMonthlyPayment,
   ownershipPercent,
   vacancyPercent,
-  displayMode,
   mortgageData,
 }: ProjectionsTabContentProps) {
   const isMobile = useIsMobile();
@@ -296,7 +293,6 @@ export function ProjectionsTabContent({
         annualExpensesFull,
         annualDebtServiceFull,
         ownershipPercent,
-        displayMode,
       });
 
       const reinvestedContribution =
@@ -317,11 +313,7 @@ export function ProjectionsTabContent({
 
       const propertyValueFull = estimatedValue * Math.pow(1 + valueGrowth / 100, year);
       const propertyValue = propertyValueFull * scale;
-      const loanBalance = scaleLiabilityAmount(
-        loanBalanceFull,
-        ownershipPercent,
-        displayMode
-      );
+      const loanBalance = scaleLiabilityAmount(loanBalanceFull, ownershipPercent);
       const equity = Math.max(0, (propertyValueFull - loanBalanceFull) * scale);
 
       rows.push({
@@ -350,7 +342,6 @@ export function ProjectionsTabContent({
     projectedLoanSeries,
     projectionVacancy,
     scale,
-    displayMode,
     ownershipPercent,
     reinvestCashFlow,
     reinvestPct,
@@ -389,7 +380,6 @@ export function ProjectionsTabContent({
         annualExpensesFull,
         annualDebtServiceFull,
         ownershipPercent,
-        displayMode,
       });
       if (year > 0) runningCashFlow += annualCashFlow;
 
@@ -400,11 +390,7 @@ export function ProjectionsTabContent({
         totalMortgageBalance;
 
       const propertyValue = estimatedValue * Math.pow(1 + PRESETS.base.valueGrowth / 100, year) * scale;
-      const loanBalance = scaleLiabilityAmount(
-        loanBalanceFull,
-        ownershipPercent,
-        displayMode
-      );
+      const loanBalance = scaleLiabilityAmount(loanBalanceFull, ownershipPercent);
       const equity = Math.max(0, propertyValue - loanBalanceFull * scale);
 
       rows.push({
@@ -432,7 +418,6 @@ export function ProjectionsTabContent({
     totalMonthlyPayment,
     totalMortgageBalance,
     scale,
-    displayMode,
     ownershipPercent,
     cashFlowDebtServiceSource,
   ]);
@@ -446,8 +431,7 @@ export function ProjectionsTabContent({
     totalMortgageBalance;
   const projectedDebtExposure = scaleLiabilityAmount(
     finalLoanBalanceFull,
-    ownershipPercent,
-    displayMode
+    ownershipPercent
   );
   const grossSaleValue = finalRow?.propertyValue ?? 0;
   const sellingCosts = includeSaleAnalysis ? grossSaleValue * (sellingCostPct / 100) : 0;
@@ -527,9 +511,6 @@ export function ProjectionsTabContent({
           <p className="mt-1 text-lg font-semibold text-foreground">
             {formatCurrency(projectedDebtExposure)}
           </p>
-          {displayMode === "full_liability" && (
-            <p className="mt-1 text-xs text-muted">Full-liability lens applied</p>
-          )}
         </div>
 
         <div className="rounded-md border border-border bg-card p-3">

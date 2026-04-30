@@ -14,6 +14,7 @@ export type PropertyFactsCardProps = {
   squareFeet: number | null;
   purchaseDate: Date | string;
   purchasePrice: number;
+  ownershipPercent: number;
   /** Opens the drawer at the property-facts section. */
   onEdit: () => void;
 };
@@ -46,6 +47,7 @@ export function PropertyFactsCard({
   squareFeet,
   purchaseDate,
   purchasePrice,
+  ownershipPercent,
   onEdit,
 }: PropertyFactsCardProps) {
   const isMobile = useIsMobile();
@@ -78,6 +80,7 @@ export function PropertyFactsCard({
             placeholder="Not set"
           />
         )}
+        <Cell label="Ownership" value={`${ownershipPercent}%`} />
       </dl>
     </section>
   );

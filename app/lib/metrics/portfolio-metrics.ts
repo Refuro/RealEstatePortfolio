@@ -7,7 +7,6 @@ import {
   computePropertyMetrics,
   getAnnualDebtService,
   type PropertyMetricsInput,
-  type OwnershipDisplayMode,
 } from "./property-metrics";
 
 export type PortfolioPropertyInput = PropertyMetricsInput & {
@@ -36,8 +35,7 @@ export type PortfolioMetrics = {
 };
 
 export function computePortfolioMetrics(
-  properties: PortfolioPropertyInput[],
-  displayMode?: OwnershipDisplayMode | null
+  properties: PortfolioPropertyInput[]
 ): PortfolioMetrics {
   if (properties.length === 0) {
     return {
@@ -59,8 +57,6 @@ export function computePortfolioMetrics(
     };
   }
 
-  const fullLiability = displayMode === "full_liability";
-
   let totalMarketValue = 0;
   let totalDebt = 0;
   let totalEquity = 0;
@@ -73,11 +69,10 @@ export function computePortfolioMetrics(
   let totalAnnualRent = 0;
 
   for (const p of properties) {
-    const metrics = computePropertyMetrics(p, displayMode);
+    const metrics = computePropertyMetrics(p);
     const scale = (p.ownershipPercent ?? 100) / 100;
 
     totalMarketValue += p.estimatedValue * scale;
-    // Vacancy-adjusted monthly rent (ownership-scaled); same effective R as NOI / cap rate.
     totalMonthlyRent += metrics.grossAnnualRent / 12;
     totalMonthlyExpenses += p.monthlyExpenses * scale;
     totalMonthlyCashFlow += metrics.monthlyCashFlow;
@@ -86,18 +81,12 @@ export function computePortfolioMetrics(
     totalEquity += metrics.equity;
     totalAnnualDebtService += getAnnualDebtService(
       p.totalMonthlyPayment,
-      p.ownershipPercent,
-      displayMode
+      p.ownershipPercent
     );
-
-    if (fullLiability) {
-      totalDebt += p.totalMortgageBalance; // 100% debt
-    } else {
-      totalDebt += p.totalMortgageBalance * scale;
-    }
+    totalDebt += p.totalMortgageBalance * scale;
 
     if (p.cashInvested != null && p.cashInvested > 0) {
-      totalCashInvested += p.cashInvested * scale;
+      totalCashInvested += p.cashInvested;
     }
   }
 

@@ -43,15 +43,11 @@ async function loadPortfolioSummaryCore(user: User) {
     };
   });
 
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
-    | "proportional"
-    | "full_liability";
-  const metrics = computePortfolioMetrics(portfolioInput, displayMode);
+  const metrics = computePortfolioMetrics(portfolioInput);
 
   return {
     metrics,
     properties,
-    displayMode,
     effectiveTier: tier,
     slice: {
       propertyCountTotal,

@@ -35,26 +35,21 @@ export default async function PropertyDetailPage({
   );
   const ownershipPercent = property.ownershipPercent ?? 100;
   const totalRent = getPropertyTotalRent(property);
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
-  const ownershipScale = ownershipPercent / 100;
 
-  const computed = computePropertyMetrics(
-    {
-      monthlyRent: totalRent,
-      monthlyExpenses: Number(property.currentMonthlyExpenses),
-      estimatedValue: Number(property.currentEstimatedValue),
-      cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
-      totalMortgageBalance,
-      totalMonthlyPayment,
-      ownershipPercent,
-      vacancyPercent: property.vacancyPercent ?? 5,
-    },
-    displayMode
-  );
+  const computed = computePropertyMetrics({
+    monthlyRent: totalRent,
+    monthlyExpenses: Number(property.currentMonthlyExpenses),
+    estimatedValue: Number(property.currentEstimatedValue),
+    cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
+    totalMortgageBalance,
+    totalMonthlyPayment,
+    ownershipPercent,
+    vacancyPercent: property.vacancyPercent ?? 5,
+  });
 
-  const propertyValue = Number(property.currentEstimatedValue) * ownershipScale;
+  const propertyValue = Number(property.currentEstimatedValue);
 
-  const annualDebtService = getAnnualDebtService(totalMonthlyPayment, ownershipPercent, displayMode);
+  const annualDebtService = getAnnualDebtService(totalMonthlyPayment, ownershipPercent);
   const dscr = annualDebtService > 0 ? computed.noi / annualDebtService : null;
 
   const address = [
@@ -168,6 +163,7 @@ export default async function PropertyDetailPage({
       bedrooms: property.bedrooms != null ? property.bedrooms.toString() : "",
       bathrooms: property.bathrooms != null ? Number(property.bathrooms).toString() : "",
       squareFeet: property.squareFeet != null ? property.squareFeet.toString() : "",
+      ownershipPercent: ownershipPercent.toString(),
     },
     rent: {
       isRented: property.isRented,
@@ -209,6 +205,7 @@ export default async function PropertyDetailPage({
         isRented: property.isRented,
         unitRents,
         vacancyPercent: property.vacancyPercent,
+        ownershipPercent,
         cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
         marketRent: property.marketRent != null ? Number(property.marketRent) : null,
         marketRentAsOf: property.marketRentAsOf,

@@ -69,7 +69,6 @@ export function FinancialInputsCard({
           value={cashInvested != null ? formatCurrency(cashInvested) : null}
           placeholder="Not set"
         />
-        {!isMobile && <Cell label="Ownership" value="100%" />}
       </dl>
     </section>
   );

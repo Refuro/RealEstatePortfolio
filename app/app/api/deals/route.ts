@@ -50,19 +50,16 @@ function serializeDeal(deal: {
   const monthlyPayment = parseFloat(deal.totalMonthlyPayment.toString());
   const cashInvested = deal.cashInvested ? parseFloat(deal.cashInvested.toString()) : null;
 
-  const metrics = computePropertyMetrics(
-    {
-      monthlyRent: rent,
-      monthlyExpenses: expenses,
-      estimatedValue: value,
-      cashInvested,
-      totalMortgageBalance: mortgageBalance,
-      totalMonthlyPayment: monthlyPayment,
-      ownershipPercent: deal.ownershipPercent ?? 100,
-      vacancyPercent: deal.vacancyPercent ?? 5,
-    },
-    "proportional"
-  );
+  const metrics = computePropertyMetrics({
+    monthlyRent: rent,
+    monthlyExpenses: expenses,
+    estimatedValue: value,
+    cashInvested,
+    totalMortgageBalance: mortgageBalance,
+    totalMonthlyPayment: monthlyPayment,
+    ownershipPercent: deal.ownershipPercent ?? 100,
+    vacancyPercent: deal.vacancyPercent ?? 5,
+  });
 
   return {
     id: deal.id,

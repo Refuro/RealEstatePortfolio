@@ -97,6 +97,8 @@ export type EditDrawerProps = {
   initial: EditDrawerInitialData;
   /** Latest completeness — drives wizard step queue + advance logic. */
   completeness: { score: number; missingFields: string[] };
+  /** Drives "(total)" vs "(your share)" labeling on rent/expenses fields. */
+  ownershipPercent: number;
 };
 
 function parseSection(value: string | null): EditSection | null {
@@ -107,7 +109,7 @@ function parseSection(value: string | null): EditSection | null {
 type Intent = "continue" | "close";
 type IndicatorPhase = "idle" | "saving" | "saved";
 
-export function EditDrawer({ propertyId, initial, completeness }: EditDrawerProps) {
+export function EditDrawer({ propertyId, initial, completeness, ownershipPercent }: EditDrawerProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const editParam = searchParams.get("edit");
@@ -419,6 +421,7 @@ export function EditDrawer({ propertyId, initial, completeness }: EditDrawerProp
           key={formKey}
           {...subformProps}
           initial={initial.financialInputs}
+          ownershipPercent={ownershipPercent}
           onSaved={handleSaved}
         />
       );
@@ -428,10 +431,11 @@ export function EditDrawer({ propertyId, initial, completeness }: EditDrawerProp
         key={formKey}
         {...subformProps}
         initial={initial.rent}
+        ownershipPercent={ownershipPercent}
         onSaved={handleSaved}
       />
     );
-  }, [section, formKey, subformProps, initial, handleSaved]);
+  }, [section, formKey, subformProps, initial, ownershipPercent, handleSaved]);
 
   // ─── Wizard header (progress + unlock preview) ───────────────────────────
   const wizardHeader =

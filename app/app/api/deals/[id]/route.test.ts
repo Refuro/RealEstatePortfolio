@@ -125,19 +125,16 @@ describe("GET /api/deals/[id]", () => {
     const value = 230000;
     const mortgageBalance = 120000;
     const monthlyPayment = 900;
-    const expectedMetrics = computePropertyMetrics(
-      {
-        monthlyRent: rent,
-        monthlyExpenses: expenses,
-        estimatedValue: value,
-        cashInvested: 40000,
-        totalMortgageBalance: mortgageBalance,
-        totalMonthlyPayment: monthlyPayment,
-        ownershipPercent: 100,
-        vacancyPercent: 5,
-      },
-      "proportional"
-    );
+    const expectedMetrics = computePropertyMetrics({
+      monthlyRent: rent,
+      monthlyExpenses: expenses,
+      estimatedValue: value,
+      cashInvested: 40000,
+      totalMortgageBalance: mortgageBalance,
+      totalMonthlyPayment: monthlyPayment,
+      ownershipPercent: 100,
+      vacancyPercent: 5,
+    });
     expect(data.metrics).toEqual(expectedMetrics);
     expect(data.id).toBe("deal-1");
     expect(data.portfolioContext).toMatchObject({

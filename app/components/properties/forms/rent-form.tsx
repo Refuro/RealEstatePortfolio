@@ -17,6 +17,8 @@ export type RentInitial = {
 export type RentFormProps = SubformBaseProps & {
   propertyId: string;
   initial: RentInitial;
+  /** Drives "total" vs "your share" labeling. Defaults to 100. */
+  ownershipPercent?: number;
 };
 
 const MULTI_TYPES = ["multi_family", "apartment"];
@@ -30,6 +32,7 @@ function parseCurrencyNum(s: string): number {
 export function RentForm({
   propertyId,
   initial,
+  ownershipPercent = 100,
   onSaved,
   onCancel,
   onStateChange,
@@ -37,6 +40,7 @@ export function RentForm({
   className = "",
   formId,
 }: RentFormProps) {
+  const partialOwnership = ownershipPercent < 100;
   const [isRented, setIsRented] = useState(initial.isRented);
   const [currentMonthlyRent, setCurrentMonthlyRent] = useState(initial.currentMonthlyRent);
   const [unitRents, setUnitRents] = useState<string[]>(() => {
@@ -208,7 +212,8 @@ export function RentForm({
       ) : (
         <div>
           <label htmlFor="rent-currentMonthlyRent" className={labelClass}>
-            {isMulti ? "Total monthly rent" : "Monthly rent"} {isRented ? "*" : ""}
+            {isMulti ? "Total monthly rent" : "Monthly rent"}
+            {partialOwnership && !isMulti ? " (total)" : ""} {isRented ? "*" : ""}
           </label>
           <CurrencyInput
             id="rent-currentMonthlyRent"
@@ -220,6 +225,11 @@ export function RentForm({
           {isMulti && isRented && (
             <p className="mt-0.5 text-xs text-muted">
               Will be split evenly across {initial.units} units on save.
+            </p>
+          )}
+          {partialOwnership && (
+            <p className="mt-0.5 text-xs text-muted">
+              Enter the property&apos;s full rent — your {ownershipPercent}% share is calculated automatically.
             </p>
           )}
           {fieldErrors.currentMonthlyRent && (

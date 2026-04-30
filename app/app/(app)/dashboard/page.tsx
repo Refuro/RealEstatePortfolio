@@ -17,7 +17,6 @@ import {
   getBenchmarkTone,
 } from "@/lib/benchmark-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
-import { adjustSnapshotCashFlow } from "@/lib/snapshots";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
 import { RentVsMarketSection } from "./rent-vs-market-section";
@@ -102,7 +101,6 @@ export default async function DashboardPage({
   const {
     metrics,
     properties,
-    displayMode,
     effectiveTier,
   } = await buildDashboardPortfolioPayload(user);
 
@@ -117,8 +115,6 @@ export default async function DashboardPage({
             estimatedValue: true,
             equity: true,
             monthlyCashFlow: true,
-            ownershipPct: true,
-            monthlyPayment: true,
           },
           orderBy: { snapshotMonth: "asc" },
         })
@@ -129,12 +125,7 @@ export default async function DashboardPage({
       snapshotMonth: snapshot.snapshotMonth,
       estimatedValue: Number(snapshot.estimatedValue),
       equity: Number(snapshot.equity),
-      monthlyCashFlow: adjustSnapshotCashFlow(
-        Number(snapshot.monthlyCashFlow),
-        snapshot.ownershipPct,
-        snapshot.monthlyPayment != null ? Number(snapshot.monthlyPayment) : null,
-        displayMode
-      ),
+      monthlyCashFlow: Number(snapshot.monthlyCashFlow),
     }))
   );
 
@@ -185,10 +176,8 @@ export default async function DashboardPage({
   const perPropertyMetrics = portfolioInput.map((p) => ({
     id: p.id,
     name: p.name,
-    ...computePropertyMetrics(p, displayMode),
+    ...computePropertyMetrics(p),
   }));
-
-  const fullLiability = displayMode === "full_liability";
 
   // Chart data shared by Phase 4 components.
   const chartData: DashboardChartData = {
@@ -202,7 +191,7 @@ export default async function DashboardPage({
       return {
         name: p.name,
         value: p.estimatedValue * scale,
-        debt: fullLiability ? p.totalMortgageBalance : p.totalMortgageBalance * scale,
+        debt: p.totalMortgageBalance * scale,
         propertyId: p.id,
       };
     }),
@@ -321,14 +310,8 @@ export default async function DashboardPage({
       snapshotMonth: s.snapshotMonth,
       estimatedValue: Number(s.estimatedValue),
       equity: Number(s.equity),
-      monthlyCashFlow: adjustSnapshotCashFlow(
-        Number(s.monthlyCashFlow),
-        s.ownershipPct,
-        s.monthlyPayment != null ? Number(s.monthlyPayment) : null,
-        displayMode
-      ),
+      monthlyCashFlow: Number(s.monthlyCashFlow),
     })),
-    displayMode,
     nowMs,
   });
 
@@ -382,10 +365,13 @@ export default async function DashboardPage({
     const pInput = portfolioInput[0]!;
     const ownershipScale = (pInput.ownershipPercent ?? 100) / 100;
 
-    const propertyValue = pInput.estimatedValue * ownershipScale;
+    const propertyValue = pInput.estimatedValue;
     const propertyEquity = m.equity;
+    const equityDenom = propertyValue * ownershipScale;
     const equityPct =
-      propertyValue > 0 ? (propertyEquity / propertyValue) * 100 : 0;
+      equityDenom > 0 ? (propertyEquity / equityDenom) * 100 : 0;
+    const equitySub =
+      ownershipScale < 1 ? `${equityPct.toFixed(1)}% of your share` : `${equityPct.toFixed(1)}% of property value`;
     const monthlyCashFlow = m.monthlyCashFlow;
 
     // Total return components (used by hero + breakdown card)
@@ -432,7 +418,7 @@ export default async function DashboardPage({
       {
         label: "Your equity",
         value: formatCurrency(propertyEquity),
-        sub: `${equityPct.toFixed(1)}% of property value`,
+        sub: equitySub,
         valueColor: "neutral",
         delta: buildAmountDelta(equityDeltaMoM),
       },
@@ -599,18 +585,14 @@ export default async function DashboardPage({
     ];
 
     // Capital structure inputs
-    const propertyDebt = fullLiability
-      ? pInput.totalMortgageBalance
-      : pInput.totalMortgageBalance * ownershipScale;
+    const propertyDebt = pInput.totalMortgageBalance * ownershipScale;
     const gainOnValue =
       Number(p.currentEstimatedValue) - Number(p.purchasePrice);
 
     // Cash flow breakdown inputs (use scaled monthly numbers from metrics)
     const monthlyRentVacancyAdjusted = m.grossAnnualRent / 12;
     const monthlyExpensesScaled = m.annualExpenses / 12;
-    const monthlyMortgage = fullLiability
-      ? pInput.totalMonthlyPayment
-      : pInput.totalMonthlyPayment * ownershipScale;
+    const monthlyMortgage = pInput.totalMonthlyPayment * ownershipScale;
 
     // ─── Mortgage detail (folded into Capital Structure card; hidden when no mortgage) ───
     let mortgageDetail: MortgageDetail | undefined;
@@ -647,10 +629,8 @@ export default async function DashboardPage({
         }
       }
 
-      const scaledPi = fullLiability ? totalPiFull : totalPiFull * ownershipScale;
-      const scaledPayment = fullLiability
-        ? totalPaymentFull
-        : totalPaymentFull * ownershipScale;
+      const scaledPi = totalPiFull * ownershipScale;
+      const scaledPayment = totalPaymentFull * ownershipScale;
       const avgRate =
         totalBalanceFull > 0 ? weightedRateBalance / totalBalanceFull : 0;
 
@@ -715,13 +695,11 @@ export default async function DashboardPage({
           }
           points.push({
             date,
-            balance: fullLiability ? balance : balance * ownershipScale,
+            balance: balance * ownershipScale,
           });
         }
 
-        const originalScaled = fullLiability
-          ? totalOriginalFull
-          : totalOriginalFull * ownershipScale;
+        const originalScaled = totalOriginalFull * ownershipScale;
 
         paydownProjection = {
           points,
@@ -733,9 +711,7 @@ export default async function DashboardPage({
 
     // ─── Since-purchase panel inputs ───
     const purchaseValueScaled = Number(p.purchasePrice) * ownershipScale;
-    const originalDebtScaled = fullLiability
-      ? totalOriginalFull
-      : totalOriginalFull * ownershipScale;
+    const originalDebtScaled = totalOriginalFull * ownershipScale;
     const downPaymentAtPurchase = purchaseValueScaled - originalDebtScaled;
 
     const sincePurchasePanel = (
@@ -748,10 +724,25 @@ export default async function DashboardPage({
       />
     );
 
+    const partialOwnership = (pInput.ownershipPercent ?? 100) < 100;
+
     return (
       <div>
         <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
         {titleBar}
+        {partialOwnership && (
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <Link
+              href={`/properties/${p.id}`}
+              className="inline-flex items-center rounded-full border border-accent/30 bg-accent/10 px-2.5 py-0.5 text-xs font-medium text-accent transition-colors hover:bg-accent/15"
+            >
+              {pInput.ownershipPercent}% ownership
+            </Link>
+            <p className="text-xs text-muted">
+              Cash flow, equity, NOI, and rent reflect your {pInput.ownershipPercent}% share. Property value, cap rate, LTV, and DSCR are property-level.
+            </p>
+          </div>
+        )}
         {onboardingBanner}
 
         <div className="mt-5 flex flex-col gap-5">

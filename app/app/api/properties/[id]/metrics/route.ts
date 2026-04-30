@@ -34,20 +34,16 @@ export async function GET(
   );
 
   const ownershipPercent = property.ownershipPercent ?? 100;
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
-  const metrics = computePropertyMetrics(
-    {
-      monthlyRent: getPropertyTotalRent(property),
-      monthlyExpenses: Number(property.currentMonthlyExpenses),
-      estimatedValue: Number(property.currentEstimatedValue),
-      cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
-      totalMortgageBalance,
-      totalMonthlyPayment,
-      ownershipPercent,
-      vacancyPercent: property.vacancyPercent ?? 5,
-    },
-    displayMode
-  );
+  const metrics = computePropertyMetrics({
+    monthlyRent: getPropertyTotalRent(property),
+    monthlyExpenses: Number(property.currentMonthlyExpenses),
+    estimatedValue: Number(property.currentEstimatedValue),
+    cashInvested: property.cashInvested != null ? Number(property.cashInvested) : null,
+    totalMortgageBalance,
+    totalMonthlyPayment,
+    ownershipPercent,
+    vacancyPercent: property.vacancyPercent ?? 5,
+  });
 
   return NextResponse.json(metrics);
 }

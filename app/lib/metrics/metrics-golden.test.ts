@@ -9,8 +9,8 @@ import {
 } from "@/lib/test/fixtures/metrics-golden";
 
 describe("metrics golden fixtures (ownership-metrics policy)", () => {
-  it("matches canonical single-property proportional outputs", () => {
-    const m = computePropertyMetrics(goldenPropertyAlpha, "proportional");
+  it("matches canonical single-property outputs", () => {
+    const m = computePropertyMetrics(goldenPropertyAlpha);
     const e = goldenPropertyAlphaExpectedProportional;
     expect(m.grossAnnualRent).toBeCloseTo(e.grossAnnualRent, 5);
     expect(m.annualExpenses).toBeCloseTo(e.annualExpenses, 5);
@@ -21,8 +21,8 @@ describe("metrics golden fixtures (ownership-metrics policy)", () => {
     expect(m.ltv).toBeCloseTo(e.ltv, 5);
   });
 
-  it("matches multi-property portfolio aggregates (proportional)", () => {
-    const p = computePortfolioMetrics(goldenPortfolioTwo, "proportional");
+  it("matches multi-property portfolio aggregates", () => {
+    const p = computePortfolioMetrics(goldenPortfolioTwo);
     const e = goldenPortfolioTwoExpectedProportional;
     expect(p.propertyCount).toBe(e.propertyCount);
     expect(p.totalMarketValue).toBeCloseTo(e.totalMarketValue, 5);

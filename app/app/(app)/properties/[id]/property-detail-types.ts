@@ -1,5 +1,3 @@
-import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
-
 export type MortgageForTabs = {
   id: string;
   originalLoanAmount: string;
@@ -66,5 +64,4 @@ export type PropertyDetailTabsProps = {
   totalMonthlyPayment: number;
   ownershipPercent: number;
   vacancyPercent: number;
-  displayMode: OwnershipDisplayMode | null;
 };
