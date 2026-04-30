@@ -116,20 +116,17 @@ describe("GET /api/properties/[id]/metrics", () => {
         sum + Number(m.monthlyPayment),
       0
     );
-    const expected = computePropertyMetrics(
-      {
-        monthlyRent: getPropertyTotalRent(p as never),
-        monthlyExpenses: Number(p.currentMonthlyExpenses),
-        estimatedValue: Number(p.currentEstimatedValue),
-        cashInvested:
-          p.cashInvested != null ? Number(p.cashInvested) : null,
-        totalMortgageBalance,
-        totalMonthlyPayment,
-        ownershipPercent: p.ownershipPercent ?? 100,
-        vacancyPercent: p.vacancyPercent ?? 5,
-      },
-      "proportional"
-    );
+    const expected = computePropertyMetrics({
+      monthlyRent: getPropertyTotalRent(p as never),
+      monthlyExpenses: Number(p.currentMonthlyExpenses),
+      estimatedValue: Number(p.currentEstimatedValue),
+      cashInvested:
+        p.cashInvested != null ? Number(p.cashInvested) : null,
+      totalMortgageBalance,
+      totalMonthlyPayment,
+      ownershipPercent: p.ownershipPercent ?? 100,
+      vacancyPercent: p.vacancyPercent ?? 5,
+    });
     expect(data).toEqual(expected);
   });
 });

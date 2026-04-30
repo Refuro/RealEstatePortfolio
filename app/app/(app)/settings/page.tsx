@@ -14,7 +14,6 @@ import { SubscriptionBillingDisplay } from "@/app/(app)/settings/subscription-bi
 import { DeleteAccountSection } from "./delete-account-section";
 import { DownloadCsvButton } from "./download-csv-button";
 import { ImportCsvSection } from "./import-csv-section";
-import { OwnershipDisplayToggle } from "./ownership-display-toggle";
 import { ThemeToggle } from "./theme-toggle";
 import { CookiePreferencesSection } from "./cookie-preferences-section";
 
@@ -114,12 +113,6 @@ export default async function SettingsPage() {
         <div className="px-4 py-4 md:px-6 md:py-5">
           <p className="mb-3 text-sm font-medium text-muted">Appearance</p>
           <ThemeToggle />
-        </div>
-        <div className="border-t border-border px-4 py-4 md:px-6 md:py-5">
-          <p className="mb-3 text-sm font-medium text-muted">Portfolio display</p>
-          <OwnershipDisplayToggle
-            initialMode={((user as { ownershipDisplayMode?: string | null }).ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability"}
-          />
         </div>
         <div className="border-t border-border px-4 py-4 md:px-6 md:py-5">
           <p className="mb-3 text-sm font-medium text-muted">Profile</p>

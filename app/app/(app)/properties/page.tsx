@@ -26,6 +26,7 @@ import { PropertiesCardGrid } from "./properties-card-grid";
 import { TaskCenter } from "@/components/properties/task-center";
 import { PropertyStatusDot } from "@/components/properties/directory/property-status-dot";
 import { BelowMarketIndicator } from "@/components/properties/directory/below-market-indicator";
+import { OwnershipChip } from "@/components/ownership/ownership-chip";
 import type { IncompleteProfileRow } from "@/components/properties/task-center/incomplete-profiles-card";
 import type { CashFlowNegativeRow } from "@/components/properties/task-center/cash-flow-health-card";
 import type { RefiReadyRow } from "@/components/properties/task-center/refi-ready-card";
@@ -132,9 +133,6 @@ export default async function PropertiesPage({
   }
 
   type PropertyWithMortgages = (typeof properties)[number];
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
-    | "proportional"
-    | "full_liability";
 
   const activeFilter: PropertiesFilter =
     filter && FILTER_OPTIONS.some((o) => o.key === (filter as PropertiesFilter))
@@ -175,19 +173,16 @@ export default async function PropertiesPage({
         0
       );
       const userRent = getPropertyTotalRent(p);
-      const metrics = computePropertyMetrics(
-        {
-          monthlyRent: userRent,
-          monthlyExpenses: Number(p.currentMonthlyExpenses),
-          estimatedValue: Number(p.currentEstimatedValue),
-          cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-          totalMortgageBalance,
-          totalMonthlyPayment,
-          ownershipPercent: p.ownershipPercent ?? 100,
-          vacancyPercent: p.vacancyPercent ?? 5,
-        },
-        displayMode
-      );
+      const metrics = computePropertyMetrics({
+        monthlyRent: userRent,
+        monthlyExpenses: Number(p.currentMonthlyExpenses),
+        estimatedValue: Number(p.currentEstimatedValue),
+        cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+        totalMortgageBalance,
+        totalMonthlyPayment,
+        ownershipPercent: p.ownershipPercent ?? 100,
+        vacancyPercent: p.vacancyPercent ?? 5,
+      });
       const benchmarkInputs = {
         isRented: p.isRented,
         userRent,
@@ -211,8 +206,7 @@ export default async function PropertiesPage({
       );
       const annualDebtService = getAnnualDebtService(
         totalMonthlyPayment,
-        p.ownershipPercent ?? 100,
-        displayMode
+        p.ownershipPercent ?? 100
       );
       const dscr =
         p.mortgages.length > 0 && annualDebtService > 0
@@ -370,7 +364,10 @@ export default async function PropertiesPage({
                 {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
               </div>
             </div>
-            <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <OwnershipChip ownershipPercent={p.ownershipPercent} size="xs" />
+              <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
+            </div>
           </div>
 
           <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
@@ -430,9 +427,12 @@ export default async function PropertiesPage({
           <div className="flex min-w-0 items-center gap-2">
             <PropertyStatusDot status={card.status} />
             <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">
-                {p.nickname || p.addressLine1}
-              </p>
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {p.nickname || p.addressLine1}
+                </p>
+                <OwnershipChip ownershipPercent={p.ownershipPercent} size="xs" />
+              </div>
               <p className="truncate text-xs text-muted">
                 {p.addressLine1}
                 {p.city && `, ${p.city} ${p.state}`}

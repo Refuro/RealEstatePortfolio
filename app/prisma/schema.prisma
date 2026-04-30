@@ -26,7 +26,6 @@ model User {
   trialEndsAt           DateTime?
   trialEmailsSentAt     Json?     // { day10: ISOString | null, day13: ISOString | null, expired: ISOString | null }
   stripeCustomerId      String?
-  ownershipDisplayMode  String?   // proportional (default) | full_liability
   onboardingWelcomeSeenAt DateTime?
   onboardingDismissedAt   DateTime?
   onboardingModeledAt     DateTime?

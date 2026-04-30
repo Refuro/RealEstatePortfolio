@@ -595,7 +595,7 @@ function StepPurchase({
         </div>
         <div>
           <label htmlFor="cashInvested" className={labelClass}>
-            Cash invested (optional)
+            Cash invested — your share (optional)
           </label>
           <CurrencyInput
             id="cashInvested"
@@ -604,8 +604,8 @@ function StepPurchase({
             className={inputClass}
           />
           <p className="mt-0.5 text-xs text-muted">
-            Down payment + closing costs + any upfront rehab costs. Used to calculate
-            cash-on-cash return.
+            What you personally put in: down payment + closing costs + any upfront
+            rehab. Used to calculate cash-on-cash return on your money.
           </p>
         </div>
       </div>
@@ -769,7 +769,7 @@ function StepIncomeExpenses({
         ) : (
           <div>
             <label htmlFor="currentMonthlyRent" className={labelClass}>
-              Monthly rent *
+              Monthly rent{Number(data.ownershipPercent || 100) < 100 ? " (total)" : ""} *
             </label>
             <div className="flex gap-2">
               <div className="min-w-0 flex-1">
@@ -803,6 +803,11 @@ function StepIncomeExpenses({
             )}
             {errors.currentMonthlyRent && (
               <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyRent}</p>
+            )}
+            {Number(data.ownershipPercent || 100) < 100 && (
+              <p className="mt-0.5 text-xs text-muted">
+                Enter the property&apos;s full rent — your {data.ownershipPercent}% share is calculated automatically.
+              </p>
             )}
             {!addressComplete && (
               <p className="mt-1 text-xs text-muted">
@@ -850,7 +855,7 @@ function StepIncomeExpenses({
 
       <div>
         <label htmlFor="currentMonthlyExpenses" className={labelClass}>
-          Monthly expenses *
+          Monthly expenses{Number(data.ownershipPercent || 100) < 100 ? " (total)" : ""} *
         </label>
         <CurrencyInput
           id="currentMonthlyExpenses"
@@ -859,6 +864,11 @@ function StepIncomeExpenses({
           required
           className={fieldClass("currentMonthlyExpenses", errors)}
         />
+        {Number(data.ownershipPercent || 100) < 100 && (
+          <p className="mt-0.5 text-xs text-muted">
+            Enter the property&apos;s full expenses — your {data.ownershipPercent}% share is calculated automatically.
+          </p>
+        )}
         {errors.currentMonthlyExpenses && (
           <p className="mt-0.5 text-sm text-negative">{errors.currentMonthlyExpenses}</p>
         )}
@@ -1072,12 +1082,12 @@ function StepReview({
               <dd className="font-medium tabular-nums text-foreground">{formatCurrencyVal(data.cashInvested)}</dd>
             </div>
           )}
-          {data.ownershipPercent && Number(data.ownershipPercent) !== 100 && (
-            <div>
-              <dt className="text-muted">Ownership</dt>
-              <dd className="font-medium tabular-nums text-foreground">{data.ownershipPercent}%</dd>
-            </div>
-          )}
+          <div>
+            <dt className="text-muted">Ownership</dt>
+            <dd className="font-medium tabular-nums text-foreground">
+              {data.ownershipPercent || "100"}%
+            </dd>
+          </div>
         </dl>
       </div>
 
@@ -2190,21 +2200,18 @@ export function AddPropertyWizard({
 
   if (canComputePreviewMetrics) {
     try {
-      const computedMetrics = computePropertyMetrics(
-        {
-          monthlyRent: previewMonthlyRent,
-          monthlyExpenses: parseCurrencyNum(data.currentMonthlyExpenses),
-          estimatedValue: parseCurrencyNum(data.currentEstimatedValue),
-          cashInvested: data.cashInvested.trim()
-            ? parseCurrencyNum(data.cashInvested)
-            : null,
-          totalMortgageBalance: 0,
-          totalMonthlyPayment: 0,
-          ownershipPercent: Number(data.ownershipPercent) || 100,
-          vacancyPercent: Number(data.vacancyPercent) || 5,
-        },
-        "proportional"
-      );
+      const computedMetrics = computePropertyMetrics({
+        monthlyRent: previewMonthlyRent,
+        monthlyExpenses: parseCurrencyNum(data.currentMonthlyExpenses),
+        estimatedValue: parseCurrencyNum(data.currentEstimatedValue),
+        cashInvested: data.cashInvested.trim()
+          ? parseCurrencyNum(data.cashInvested)
+          : null,
+        totalMortgageBalance: 0,
+        totalMonthlyPayment: 0,
+        ownershipPercent: Number(data.ownershipPercent) || 100,
+        vacancyPercent: Number(data.vacancyPercent) || 5,
+      });
       previewMetrics = {
         equity: Number.isFinite(computedMetrics.equity)
           ? computedMetrics.equity

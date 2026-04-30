@@ -27,7 +27,6 @@ import {
 } from "@/lib/insights/context";
 import { getEffectiveBalance, getPiForAmortization, type MortgageRecord } from "@/lib/amortization";
 import { getPropertyTotalRent } from "@/lib/property-utils";
-import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 
 // Minimal Prisma-shaped types — only what we read here.
 // Using `any` for unitRents because it's a Prisma JSON column that
@@ -97,8 +96,7 @@ type SnapshotInput = {
  */
 function annualPaydownForProperty(
   mortgages: Mortgage[],
-  ownershipPercent: number,
-  displayMode: OwnershipDisplayMode | null | undefined
+  ownershipPercent: number
 ): number {
   let totalPaydown = 0;
   for (const m of mortgages) {
@@ -111,18 +109,15 @@ function annualPaydownForProperty(
     for (let i = 0; i < 12 && bal > 0; i++) {
       const interest = bal * monthlyRate;
       let principal = monthlyPayment - interest;
-      if (principal <= 0) break; // negative am — no paydown
+      if (principal <= 0) break;
       if (principal > bal) principal = bal;
       totalPaydown += principal;
       bal -= principal;
     }
   }
 
-  // Ownership scaling: in proportional mode, paydown follows the owner's share.
-  // In full_liability mode the user "carries" the full debt, so we still report
-  // their share of the principal reduction (paydown is an asset return, scaled).
   const scale = (ownershipPercent ?? 100) / 100;
-  return displayMode === "full_liability" ? totalPaydown : totalPaydown * scale;
+  return totalPaydown * scale;
 }
 
 function toContextProperty(p: DashboardPropertyRecord): InsightsContextProperty {
@@ -162,21 +157,17 @@ function toContextProperty(p: DashboardPropertyRecord): InsightsContextProperty 
 
 function toContextMetrics(
   p: DashboardPropertyRecord,
-  m: PerPropertyMetric,
-  displayMode: OwnershipDisplayMode | null | undefined
+  m: PerPropertyMetric
 ): InsightsContextMetrics {
   const ownershipPercent = p.ownershipPercent ?? 100;
   const totalMonthlyPayment = p.mortgages.reduce(
     (sum, mort) => sum + Number(mort.monthlyPayment),
     0
   );
-  const fullLiability = displayMode === "full_liability";
   const annualDebtService =
     p.mortgages.length === 0
       ? null
-      : fullLiability
-        ? totalMonthlyPayment * 12
-        : totalMonthlyPayment * 12 * (ownershipPercent / 100);
+      : totalMonthlyPayment * 12 * (ownershipPercent / 100);
 
   const dscr =
     annualDebtService != null && annualDebtService > 0
@@ -193,7 +184,7 @@ function toContextMetrics(
     noi: m.noi,
     dscr,
     annualDebtService,
-    annualPaydown: annualPaydownForProperty(p.mortgages, ownershipPercent, displayMode),
+    annualPaydown: annualPaydownForProperty(p.mortgages, ownershipPercent),
   };
 }
 
@@ -202,7 +193,6 @@ export type BuildInsightsPayloadInput = {
   perPropertyMetrics: PerPropertyMetric[];
   portfolioMetrics: DashboardPortfolioMetrics;
   snapshots: SnapshotInput[];
-  displayMode: OwnershipDisplayMode | null | undefined;
   /** Defaults to Date.now(); parameterized for testability. */
   nowMs?: number;
 };
@@ -240,7 +230,7 @@ export function buildDashboardInsightsPayload(
         annualPaydown: 0,
       };
     }
-    return toContextMetrics(p, metric, input.displayMode);
+    return toContextMetrics(p, metric);
   });
 
   const ctxPortfolio: InsightsContextPortfolio = {

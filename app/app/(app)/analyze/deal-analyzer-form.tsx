@@ -90,8 +90,7 @@ function DealPortfolioCompareBlock({
       <MobilePageSection title="Compared to your portfolio" variant="grouped">
         <div className="space-y-3 p-4">
           <p className="text-xs text-muted">
-            Portfolio uses your ownership display mode and up to {portfolio.propertyCount} included
-            properties
+            Portfolio uses up to {portfolio.propertyCount} included properties
             {portfolio.truncated ? " (plan limit applies)" : ""}.
           </p>
           <div className="overflow-x-auto">
@@ -145,8 +144,7 @@ function DealPortfolioCompareBlock({
           Compared to your portfolio
         </h3>
         <p className="mt-1 text-xs text-muted">
-          Portfolio uses your ownership display mode and up to {portfolio.propertyCount} included
-          properties
+          Portfolio uses up to {portfolio.propertyCount} included properties
           {portfolio.truncated ? " (plan limit applies)" : ""}.
         </p>
       </div>
@@ -457,20 +455,17 @@ export function DealAnalyzerForm({
   const saveDisabled =
     !canSave || (atLimit && !activeDealId) || saveStatus === "saving";
 
-  const metrics = computePropertyMetrics(
-    {
-      monthlyRent: effectiveMonthlyRentNum,
-      monthlyExpenses: effectiveMonthlyExpensesNum,
-      estimatedValue: currentValueNum,
-      cashInvested: cashInvestedNum,
-      totalMortgageBalance: mortgageBalanceNum,
-      totalMonthlyPayment: monthlyPaymentNum,
-      ownershipPercent: ownershipNum,
-      vacancyPercent: vacancyNum,
-    },
-    "proportional"
-  );
-  const annualDebtService = getAnnualDebtService(monthlyPaymentNum, ownershipNum, "proportional");
+  const metrics = computePropertyMetrics({
+    monthlyRent: effectiveMonthlyRentNum,
+    monthlyExpenses: effectiveMonthlyExpensesNum,
+    estimatedValue: currentValueNum,
+    cashInvested: cashInvestedNum,
+    totalMortgageBalance: mortgageBalanceNum,
+    totalMonthlyPayment: monthlyPaymentNum,
+    ownershipPercent: ownershipNum,
+    vacancyPercent: vacancyNum,
+  });
+  const annualDebtService = getAnnualDebtService(monthlyPaymentNum, ownershipNum);
   const dscr = annualDebtService > 0 ? metrics.noi / annualDebtService : null;
   const needsInputGuidance =
     currentValueNum <= 0 || (monthlyRentNum <= 0 && monthlyExpensesNum <= 0);
@@ -1362,8 +1357,7 @@ export function DealAnalyzerForm({
                 className={`${inputClass} max-w-xs`}
               />
               <p className="mt-1 text-xs text-muted">
-                Analyze uses proportional ownership semantics (your share of rent, expenses,
-                and debt service). Full liability mode does not apply in this workspace.
+                Analyze uses your ownership share for rent, expenses, and debt service.
               </p>
             </div>
           </div>

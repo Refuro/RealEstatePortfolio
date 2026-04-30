@@ -27,6 +27,8 @@ export type PropertyFactsInitial = {
   bedrooms: string;
   bathrooms: string;
   squareFeet: string;
+  /** Integer 1–100. Defaults to 100. */
+  ownershipPercent: string;
 };
 
 export type PropertyFactsFormProps = SubformBaseProps & {
@@ -63,6 +65,7 @@ export function PropertyFactsForm({
   const [bedrooms, setBedrooms] = useState(initial.bedrooms);
   const [bathrooms, setBathrooms] = useState(initial.bathrooms);
   const [squareFeet, setSquareFeet] = useState(initial.squareFeet);
+  const [ownershipPercent, setOwnershipPercent] = useState(initial.ownershipPercent);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [formState, setFormState] = useState<SubformState>(initialSubformState);
 
@@ -155,6 +158,12 @@ export function PropertyFactsForm({
         errors.squareFeet = "Square feet must be between 100 and 500,000.";
       }
     }
+    if (ownershipPercent.trim()) {
+      const o = Number(ownershipPercent);
+      if (!Number.isInteger(o) || o < 1 || o > 100) {
+        errors.ownershipPercent = "Ownership must be a whole number between 1 and 100.";
+      }
+    }
     return errors;
   }
 
@@ -182,6 +191,9 @@ export function PropertyFactsForm({
       squareFeet: squareFeet.trim()
         ? parseInt(squareFeet.trim().replace(/[^\d]/g, ""), 10)
         : null,
+      ownershipPercent: ownershipPercent.trim()
+        ? Math.round(Number(ownershipPercent))
+        : 100,
     };
 
     try {
@@ -455,6 +467,29 @@ export function PropertyFactsForm({
       {fieldErrors.squareFeet && (
         <p className="mt-0.5 text-sm text-negative">{fieldErrors.squareFeet}</p>
       )}
+
+      <div className="max-w-xs">
+        <label htmlFor="facts-ownershipPercent" className={labelClass}>
+          Ownership %
+        </label>
+        <input
+          id="facts-ownershipPercent"
+          type="number"
+          min={1}
+          max={100}
+          step={1}
+          inputMode="numeric"
+          value={ownershipPercent}
+          onChange={(e) => setOwnershipPercent(e.target.value)}
+          className={fieldErrors.ownershipPercent ? inputErrorClass : inputClass}
+        />
+        <p className="mt-0.5 text-xs text-muted">
+          Your share of this property. Scales rent, expenses, equity, and debt service.
+        </p>
+        {fieldErrors.ownershipPercent && (
+          <p className="mt-0.5 text-sm text-negative">{fieldErrors.ownershipPercent}</p>
+        )}
+      </div>
 
       {formState.error && (
         <p className="rounded-md px-3 py-2 text-sm text-negative">{formState.error}</p>

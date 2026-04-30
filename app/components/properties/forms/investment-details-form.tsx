@@ -121,7 +121,7 @@ export function InvestmentDetailsForm({
         </div>
         <div>
           <label htmlFor="investment-cashInvested" className={labelClass}>
-            Cash invested
+            Cash invested — your share
           </label>
           <CurrencyInput
             id="investment-cashInvested"
@@ -139,7 +139,8 @@ export function InvestmentDetailsForm({
             className={fieldErrors.cashInvested ? inputErrorClass : inputClass}
           />
           <p className="mt-0.5 text-xs text-muted">
-            Down payment, closing costs, and renovations. Drives cash-on-cash return.
+            What you personally put in: down payment, closing costs, renovations.
+            Drives cash-on-cash return on your money.
           </p>
           {fieldErrors.cashInvested && (
             <p className="mt-0.5 text-sm text-negative">{fieldErrors.cashInvested}</p>

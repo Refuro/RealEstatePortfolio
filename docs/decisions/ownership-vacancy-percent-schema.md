@@ -38,3 +38,7 @@
 3. Update forms to accept decimal input; validate range.
 4. Update `lib/metrics` and `lib/plans` to handle Decimal or parsed numbers.
 5. Backfill: existing Int values migrate as-is (100 → 100.00).
+
+## Revisit trigger (2026-04-30)
+
+`ownershipPercent` is now editable post-create via the property edit drawer (previously wizard-only — see `docs/policies/ownership-metrics.md` and `docs/plans/2026-04-29-ownership-percent-resurfacing-plan.md`). With ownership now a first-class, editable field, expect syndication users at fractional splits (33.33%, 16.67%, etc.) to surface the rounding limit. Reopen this decision when the first such request lands.

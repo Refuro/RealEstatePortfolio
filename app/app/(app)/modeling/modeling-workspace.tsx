@@ -6,7 +6,6 @@ import { useMemo, useState } from "react";
 import { ChevronRight } from "lucide-react";
 import { MobileContextBar } from "@/components/mobile-context-bar";
 import type { MortgageForTabs } from "../properties/[id]/property-detail-types";
-import type { OwnershipDisplayMode } from "@/lib/metrics/property-metrics";
 
 const ProjectionsTabContent = dynamic(
   () =>
@@ -44,11 +43,9 @@ function getPropertyLabel(property: ModelingProperty): string {
 export function ModelingWorkspace({
   properties,
   initialSelectedPropertyId,
-  displayMode,
 }: {
   properties: ModelingProperty[];
   initialSelectedPropertyId?: string;
-  displayMode: OwnershipDisplayMode;
 }) {
   const [selectedPropertyId, setSelectedPropertyId] = useState(
     initialSelectedPropertyId && properties.some((property) => property.id === initialSelectedPropertyId)
@@ -169,7 +166,6 @@ export function ModelingWorkspace({
             totalMonthlyPayment={selectedMortgageTotals.totalPayment}
             ownershipPercent={selectedProperty.ownershipPercent}
             vacancyPercent={selectedProperty.vacancyPercent}
-            displayMode={displayMode}
             mortgageData={selectedProperty.mortgageData}
           />
         </div>

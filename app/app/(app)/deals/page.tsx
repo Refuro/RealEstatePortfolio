@@ -31,19 +31,16 @@ export default async function DealsPage() {
       : d.purchasePrice
         ? Number(d.purchasePrice)
         : 0;
-    const metrics = computePropertyMetrics(
-      {
-        monthlyRent: Number(d.currentMonthlyRent),
-        monthlyExpenses: Number(d.currentMonthlyExpenses),
-        estimatedValue: value,
-        cashInvested: d.cashInvested ? Number(d.cashInvested) : null,
-        totalMortgageBalance: Number(d.totalMortgageBalance),
-        totalMonthlyPayment: Number(d.totalMonthlyPayment),
-        ownershipPercent: d.ownershipPercent ?? 100,
-        vacancyPercent: d.vacancyPercent ?? 5,
-      },
-      "proportional"
-    );
+    const metrics = computePropertyMetrics({
+      monthlyRent: Number(d.currentMonthlyRent),
+      monthlyExpenses: Number(d.currentMonthlyExpenses),
+      estimatedValue: value,
+      cashInvested: d.cashInvested ? Number(d.cashInvested) : null,
+      totalMortgageBalance: Number(d.totalMortgageBalance),
+      totalMonthlyPayment: Number(d.totalMonthlyPayment),
+      ownershipPercent: d.ownershipPercent ?? 100,
+      vacancyPercent: d.vacancyPercent ?? 5,
+    });
     return {
       id: d.id,
       nickname: d.nickname,
@@ -68,7 +65,7 @@ export default async function DealsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Saved deals</h1>
           <p className="mt-1 text-base text-muted">
-            Deals you&apos;ve analyzed and saved for comparison. Metrics use the same proportional math as elsewhere (they do not follow portfolio &quot;full liability&quot; display mode).
+            Deals you&apos;ve analyzed and saved for comparison. Metrics use your ownership share.
           </p>
           <p className="mt-1 text-sm text-muted">
             {deals.length} of {dealLimit} saved deals

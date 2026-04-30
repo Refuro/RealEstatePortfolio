@@ -99,40 +99,33 @@ export function computeStrLtrResult(raw: StrLtrCalculatorInput): StrLtrCalculato
   const strNetAnnual = annualGrossStrBookings * (1 - input.platformFeePercent / 100);
   const effectiveMonthlyStr = strNetAnnual / 12;
 
-  const strMetrics = computePropertyMetrics(
-    {
-      monthlyRent: effectiveMonthlyStr,
-      monthlyExpenses: input.monthlyStrExpenses + input.monthlySharedExpenses,
-      estimatedValue: purchasePrice,
-      cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
-      totalMortgageBalance: loanAmount,
-      totalMonthlyPayment: input.monthlyMortgagePayment,
-      ownershipPercent: input.ownershipPercent,
-      vacancyPercent: 0,
-    },
-    "proportional"
-  );
+  const strMetrics = computePropertyMetrics({
+    monthlyRent: effectiveMonthlyStr,
+    monthlyExpenses: input.monthlyStrExpenses + input.monthlySharedExpenses,
+    estimatedValue: purchasePrice,
+    cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
+    totalMortgageBalance: loanAmount,
+    totalMonthlyPayment: input.monthlyMortgagePayment,
+    ownershipPercent: input.ownershipPercent,
+    vacancyPercent: 0,
+  });
 
   const annualDebtService = getAnnualDebtService(
     input.monthlyMortgagePayment,
-    input.ownershipPercent,
-    "proportional"
+    input.ownershipPercent
   );
   const strDscr = annualDebtService > 0 ? strMetrics.noi / annualDebtService : null;
 
-  const ltrMetrics = computePropertyMetrics(
-    {
-      monthlyRent: input.monthlyLtrRent,
-      monthlyExpenses: input.monthlyLtrExpenses + input.monthlySharedExpenses,
-      estimatedValue: purchasePrice,
-      cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
-      totalMortgageBalance: loanAmount,
-      totalMonthlyPayment: input.monthlyMortgagePayment,
-      ownershipPercent: input.ownershipPercent,
-      vacancyPercent: input.monthlyLtrVacancyPercent,
-    },
-    "proportional"
-  );
+  const ltrMetrics = computePropertyMetrics({
+    monthlyRent: input.monthlyLtrRent,
+    monthlyExpenses: input.monthlyLtrExpenses + input.monthlySharedExpenses,
+    estimatedValue: purchasePrice,
+    cashInvested: downPaymentAmount > 0 ? downPaymentAmount : null,
+    totalMortgageBalance: loanAmount,
+    totalMonthlyPayment: input.monthlyMortgagePayment,
+    ownershipPercent: input.ownershipPercent,
+    vacancyPercent: input.monthlyLtrVacancyPercent,
+  });
   const ltrDscr = annualDebtService > 0 ? ltrMetrics.noi / annualDebtService : null;
 
   const ltrEffectiveMonthly =

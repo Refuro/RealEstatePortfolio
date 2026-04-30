@@ -50,6 +50,7 @@ export type PropertyDetailContentProps = {
     isRented: boolean;
     unitRents: number[] | null;
     vacancyPercent: number | null;
+    ownershipPercent: number;
     cashInvested: number | null;
     marketRent: number | null;
     marketRentAsOf: Date | string | null;
@@ -123,7 +124,12 @@ export function PropertyDetailContent({
     router.push(`?${params.toString()}`, { scroll: false });
   }, [router, searchParams, completeness.missingFields]);
 
-  const kpis = buildKpis({ metrics, dscr, hasMortgage: property.hasMortgage });
+  const kpis = buildKpis({
+    metrics,
+    dscr,
+    hasMortgage: property.hasMortgage,
+    ownershipPercent: property.ownershipPercent,
+  });
 
   return (
     <div>
@@ -133,6 +139,8 @@ export function PropertyDetailContent({
         propertyType={property.propertyType}
         units={property.units}
         status={status}
+        ownershipPercent={property.ownershipPercent}
+        onEditOwnership={() => openSection("property-facts")}
         actions={<BreadcrumbActions propertyId={propertyId} />}
       />
 
@@ -165,6 +173,7 @@ export function PropertyDetailContent({
             squareFeet={property.squareFeet}
             purchaseDate={property.purchaseDate}
             purchasePrice={property.purchasePrice}
+            ownershipPercent={property.ownershipPercent}
             onEdit={() => openSection("property-facts")}
           />
           <FinancialInputsCard
@@ -213,6 +222,7 @@ export function PropertyDetailContent({
         propertyId={propertyId}
         initial={drawerInitial}
         completeness={completeness}
+        ownershipPercent={property.ownershipPercent}
       />
     </div>
   );
@@ -260,11 +270,21 @@ function buildKpis({
   metrics,
   dscr,
   hasMortgage,
+  ownershipPercent,
 }: {
   metrics: PropertyDetailContentProps["metrics"];
   dscr: number | null;
   hasMortgage: boolean | null;
+  ownershipPercent: number;
 }): KpiMetric[] {
+  const scale = ownershipPercent / 100;
+  const equityDenom = metrics.propertyValue * scale;
+  const equityHint =
+    equityDenom > 0
+      ? ownershipPercent < 100
+        ? `${((metrics.equity / equityDenom) * 100).toFixed(1)}% of your share`
+        : `${((metrics.equity / equityDenom) * 100).toFixed(1)}% of value`
+      : "—";
   const cf = metrics.monthlyCashFlow;
 
   let dscrValue: string;
@@ -297,10 +317,7 @@ function buildKpis({
     {
       label: "Equity",
       value: formatCurrency(metrics.equity),
-      hint:
-        metrics.propertyValue > 0
-          ? `${((metrics.equity / metrics.propertyValue) * 100).toFixed(1)}% of value`
-          : "—",
+      hint: equityHint,
     },
     {
       label: "Property value",

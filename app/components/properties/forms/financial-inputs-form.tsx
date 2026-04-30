@@ -21,6 +21,8 @@ export type FinancialInputsInitial = {
 export type FinancialInputsFormProps = SubformBaseProps & {
   propertyId: string;
   initial: FinancialInputsInitial;
+  /** Drives "total" vs "your share" labeling. Defaults to 100. */
+  ownershipPercent?: number;
 };
 
 function parseCurrencyNum(s: string): number {
@@ -32,6 +34,7 @@ function parseCurrencyNum(s: string): number {
 export function FinancialInputsForm({
   propertyId,
   initial,
+  ownershipPercent = 100,
   onSaved,
   onCancel,
   onStateChange,
@@ -39,6 +42,7 @@ export function FinancialInputsForm({
   className = "",
   formId,
 }: FinancialInputsFormProps) {
+  const partialOwnership = ownershipPercent < 100;
   const [isRented, setIsRented] = useState(initial.isRented);
   const [currentMonthlyRent, setCurrentMonthlyRent] = useState(initial.currentMonthlyRent);
   const [unitRents, setUnitRents] = useState<string[]>(() => {
@@ -227,7 +231,8 @@ export function FinancialInputsForm({
       ) : (
         <div>
           <label htmlFor="fi-currentMonthlyRent" className={labelClass}>
-            {isMulti ? "Total monthly rent" : "Monthly rent"} {isRented ? "*" : ""}
+            {isMulti ? "Total monthly rent" : "Monthly rent"}
+            {partialOwnership && !isMulti ? " (total)" : ""} {isRented ? "*" : ""}
           </label>
           <CurrencyInput
             id="fi-currentMonthlyRent"
@@ -241,6 +246,11 @@ export function FinancialInputsForm({
               Will be split evenly across {initial.units} units on save.
             </p>
           )}
+          {partialOwnership && (
+            <p className="mt-0.5 text-xs text-muted">
+              Enter the property&apos;s full rent — your {ownershipPercent}% share is calculated automatically.
+            </p>
+          )}
           {fieldErrors.currentMonthlyRent && (
             <p className="mt-0.5 text-sm text-negative">{fieldErrors.currentMonthlyRent}</p>
           )}
@@ -250,7 +260,7 @@ export function FinancialInputsForm({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
           <label htmlFor="fi-currentMonthlyExpenses" className={labelClass}>
-            Monthly expenses
+            Monthly expenses{partialOwnership ? " (total)" : ""}
           </label>
           <CurrencyInput
             id="fi-currentMonthlyExpenses"
@@ -262,6 +272,7 @@ export function FinancialInputsForm({
           />
           <p className="mt-0.5 text-xs text-muted">
             Taxes, insurance, HOA, maintenance reserve.
+            {partialOwnership && ` Enter the property's full expenses — your ${ownershipPercent}% share is calculated automatically.`}
           </p>
           {fieldErrors.currentMonthlyExpenses && (
             <p className="mt-0.5 text-sm text-negative">
@@ -292,7 +303,7 @@ export function FinancialInputsForm({
 
       <div>
         <label htmlFor="fi-cashInvested" className={labelClass}>
-          Cash invested
+          Cash invested — your share
         </label>
         <CurrencyInput
           id="fi-cashInvested"
@@ -301,7 +312,8 @@ export function FinancialInputsForm({
           className={fieldErrors.cashInvested ? inputErrorClass : inputClass}
         />
         <p className="mt-0.5 text-xs text-muted">
-          Down payment, closing costs, and renovations. Drives cash-on-cash return.
+          What you personally put in: down payment, closing costs, renovations.
+          Drives cash-on-cash return on your money.
         </p>
         {fieldErrors.cashInvested && (
           <p className="mt-0.5 text-sm text-negative">{fieldErrors.cashInvested}</p>

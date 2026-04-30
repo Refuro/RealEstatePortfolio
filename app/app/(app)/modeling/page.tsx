@@ -55,13 +55,11 @@ export default async function ModelingPage({
   }));
 
   const initialSelectedPropertyId = items.some((item) => item.id === propertyId) ? propertyId : undefined;
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
 
   return (
     <ModelingWorkspace
       properties={items}
       initialSelectedPropertyId={initialSelectedPropertyId}
-      displayMode={displayMode}
     />
   );
 }

@@ -177,8 +177,8 @@ export default function PortfolioSummaryPrintPage() {
             <p className="font-semibold text-foreground">Assumptions</p>
             <ul className="mt-2 list-inside list-disc space-y-1">
               <li>
-                Figures match your dashboard portfolio aggregates (ownership display mode, vacancy on
-                rent, effective mortgage balances).
+                Figures match your dashboard portfolio aggregates (ownership share applied to rent,
+                expenses, and debt; vacancy on rent; effective mortgage balances).
               </li>
               <li>
                 Not tax, legal, or investment advice. Reconcile with your records before sharing.
