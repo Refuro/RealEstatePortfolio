@@ -26,7 +26,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MortgageForTabs } from "./property-detail-tabs";
+import type { MortgageForTabs } from "./property-detail-types";
 
 type ProjectionsTabContentProps = {
   propertyId?: string;

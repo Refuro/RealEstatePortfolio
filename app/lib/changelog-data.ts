@@ -13,6 +13,19 @@ export type ChangelogEntry = {
 
 export const CHANGELOG_ENTRIES: ChangelogEntry[] = [
   {
+    date: "2026-04-29",
+    title: "Portfolio insights, redesigned dashboard, and refreshed property views",
+    items: [
+      "Added portfolio insights: short cards on the dashboard that surface what's working, what's at risk, and where to focus across your properties. Available on Investor and Pro, included in the free trial.",
+      "Dashboard now leads with a four-column metric strip (value, equity, cash flow, cap rate) and a secondary row for cash-on-cash return, DSCR, NOI, and annual rent.",
+      "Single-property view adds a property header card with three live signals: monthly cash flow vs. break-even, LTV vs. the 80% refi threshold, and rent vs. market.",
+      "Added a capital structure card and cash flow breakdown card showing debt, equity, gain on value, and estimated annual total return.",
+      "Multi-property view shows alert pills for negative cash flow, high LTV, below-market rent, and DSCR above 1.25, each linking to the filtered property table.",
+      "Properties page now leads with a task center: actionable cards for incomplete profiles, cash flow negative properties, and refi-ready properties.",
+      "Property detail is now a single scrollable page. Edit any section via a side drawer without leaving the page.",
+    ],
+  },
+  {
     date: "2026-04-22",
     title: "Landing page polish, cron fix, and analytics cleanup",
     items: [

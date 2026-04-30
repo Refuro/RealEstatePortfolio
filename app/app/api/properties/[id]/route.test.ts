@@ -46,6 +46,10 @@ vi.mock("@/lib/rate-limit", () => ({
   ),
 }));
 
+vi.mock("next/cache", () => ({
+  revalidateTag: vi.fn(),
+}));
+
 const baseProperty = {
   id: "prop-1",
   userId: mockActiveUser.id,

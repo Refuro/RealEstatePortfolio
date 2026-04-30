@@ -37,6 +37,30 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 ---
 
+### Portfolio health score
+
+**Priority:** 9
+
+**Purpose:** Composite score summarizing portfolio health across LTV, DSCR, cash flow trend, and vacancy exposure. Transparent and explainable — not a black box. Each score surfaces the **primary driver** behind the rating so users understand what's pulling their score down and what action addresses it.
+
+**Key dimensions:**
+- **LTV** — leverage risk signal; low LTV = strong equity cushion
+- **DSCR** — debt service coverage; sub-1.0 = cash flow absorbed by debt
+- **Cash flow trend** — direction and velocity of net cash flow over time
+- **Vacancy exposure** — proportion of portfolio at risk from vacancies
+
+**Weighting validation requirement:** Validate weights against realistic portfolio compositions before shipping. A strong composite score masking a critical single-metric failure (e.g. high DSCR on most properties hiding a severely overleveraged outlier) is worse than no score. The primary-driver call-out must match the actual score movement; edge cases (vacant property, no mortgage) must not produce nonsensical scores.
+
+**UI treatment:** Dashboard-level summary card with score + primary-driver label. Property-level breakdown optional.
+
+**Connection to existing features:**
+- **Portfolio insights & prioritized alerts** (§1a) — score is the "at a glance" diagnostic; the insights layer is the "what to do" layer. The two complement each other; do not collapse them into one component.
+- **Acknowledge / snooze** (§1a insights): if the health score surfaces a persistent low rating, the same snooze mechanism applies.
+
+**Distinct from:** **Portfolio insights & prioritized alerts** (ranked action queue) — health score is a **summary diagnostic**, not an action list.
+
+---
+
 ### Lease renewal tracking & rent adjustment reminders
 
 **Priority:** 9–10
@@ -66,6 +90,48 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 **Distinct from:** **Analyze deal** (workspace), **Modeling** (owned-only projections), **Tools** (no portfolio context). Replaces the loose “property evaluation tool” notion — any Evaluate flow should serve **this**, not a second deal analyzer.
 
 **Shipped (v1):** `GET /api/deals/[id]` includes `portfolioContext` (snapshot: weighted cap, portfolio cash-on-cash, DSCR, total monthly cash flow, property counts). **Analyze deal** shows a **Compared to your portfolio** panel when a saved deal is loaded (empty portfolio → add-property CTA).
+
+---
+
+### Hold vs. sell analysis
+
+**Priority:** 10
+
+**Purpose:** Models the opportunity cost of holding a property versus liquidating and redeploying freed equity. The user inputs an assumed alternative return rate; the tool compares projected 5/10/20-year outcomes between the hold scenario and the sell scenario using existing cash flow, equity, and appreciation data. Answers the question every investor eventually faces with actual numbers rather than intuition.
+
+**Inputs:**
+- Hold scenario: existing cash flow, equity, appreciation assumptions from property data + Modeling presets
+- Sell scenario: current estimated value, selling costs (configurable), net proceeds reinvested at user-specified alternative return rate
+- Time horizons: 5 / 10 / 20 years (or user-configurable)
+
+**Outputs:** Side-by-side projected equity, cumulative cash flow, and total return for hold vs. sell. Crossover point — the year at which one scenario overtakes the other.
+
+**Connection to existing features:**
+- **Modeling** (`/modeling`) provides the hold-scenario projection engine — this adds the sell scenario and comparison layer on top of it
+- **Scenario & deal comparison** (§1a) — if side-by-side comparison UI ships first, hold vs. sell reuses it
+- **Investor outputs** (§1a) — hold vs. sell summary is a natural export for advisor/partner conversations
+
+**Distinct from:** **Modeling** (hold-only, single-property projections), **Deal analyzer** (new acquisitions). Explicitly for the sell-or-hold decision on **owned** properties.
+
+---
+
+### Equity deployment modeling
+
+**Priority:** 10
+
+**Purpose:** Surfaces idle or underleveraged equity across the portfolio and models what deploying it into a new acquisition would do to overall portfolio returns. Creates a direct workflow connection between the portfolio view and the deal analyzer — "you have $X in deployable equity, here's what a deal at current market rates does to your portfolio-level cash-on-cash and NOI." Turns existing portfolio data into a forward-looking acquisition decision engine, completing the loop between what you own and what you could own.
+
+**Core workflow:**
+1. **Identify deployable equity:** portfolio view surfaces total equity and estimated cash-out available per property at configurable LTV limits (e.g. 75% LTV cash-out refi)
+2. **Model deployment:** user selects equity amount and target acquisition assumptions, or links to a saved deal in **Analyze deal**
+3. **Output:** new deal metrics (cash-on-cash, NOI, DSCR) plus updated portfolio-level aggregates with the hypothetical acquisition included
+
+**Connection to existing features:**
+- **Deal-to-portfolio continuity** (§1a, shipped v1) — inverse flow: portfolio → new deal vs. deal → portfolio. These two features close the loop.
+- **Analyze deal** (`/analyze`) — equity deployment flows into the deal analyzer as a prefilled starting point ("using $X from Oak Street cash-out")
+- **Portfolio insights** (§1a) — "underleveraged equity" is a natural insight trigger ("You have ~$80K in idle equity — here's what deploying it does to your returns")
+
+**Distinct from:** **Deal-to-portfolio continuity** (answers "how does this deal change my portfolio?") — equity deployment answers "what can my portfolio fund, and what does that look like?"
 
 ---
 

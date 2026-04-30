@@ -18,11 +18,16 @@ export const PRICING_FAQ: CalculatorFaqItem[] = [
   {
     question: "What happens when I reach my property limit?",
     answer:
-      "You can view all your existing properties but cannot add new ones until you upgrade or remove a property.",
+      "You can't add new properties until you upgrade or remove one. If you already have more on file than your current plan allows—for example after downgrading or when a trial ends—the Properties list shows up to your plan cap and the rest stay locked until you upgrade.",
   },
   {
     question: "Can I cancel anytime?",
     answer:
       "Yes. Cancel anytime from Settings or the billing portal. Your plan reverts to Free at the end of the billing period and your data stays intact.",
+  },
+  {
+    question: "What are portfolio insights, and which plans include them?",
+    answer:
+      "Portfolio insights highlight what's working, what's at risk, and where to focus. Insights like rent below market, cash flow drag, or refinance opportunities. Investor and Pro include them. During the 14-day trial on a free subscription you get Investor-level access, including insights. If you stay on Free after the trial ends, portfolio insights are not included.",
   },
 ];

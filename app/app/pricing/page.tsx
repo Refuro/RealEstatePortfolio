@@ -14,6 +14,10 @@ import { LandingNav } from "@/components/landing-nav";
 import { FunnelCtaLink } from "@/components/marketing/funnel-cta-link";
 import { CalculatorFaqJsonLd } from "@/components/marketing/calculator-faq";
 import { PRICING_FAQ } from "@/lib/marketing/pricing-faqs";
+import {
+  PRICING_COMPARE_ROWS,
+  pricingCompareCellMobile,
+} from "@/lib/marketing/pricing-compare-rows";
 import { getAppOrigin } from "@/lib/app-url";
 
 const APP_URL = getAppOrigin();
@@ -137,25 +141,14 @@ export default async function PricingPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(
-                    [
-                      ["Properties tracked", "1", "5", "20"],
-                      ["Saved deals", "5", "20", "50"],
-                      ["Rent &amp; value estimates", true, true, true],
-                      ["Estimate pool (per hour)", "5/hr", "10/hr", "20/hr"],
-                      ["Deal analyzer", true, true, true],
-                      ["Scenario modeling", true, true, true],
-                      ["Mortgage simulator", true, true, true],
-                      ["Portfolio charts", true, true, true],
-                    ] as [string, string | boolean, string | boolean, string | boolean][]
-                  ).map(([feature, free, investor, pro], i) => (
+                  {PRICING_COMPARE_ROWS.map(({ labelHtml, free, investor, pro }, i) => (
                     <tr
-                      key={i}
+                      key={labelHtml}
                       className={`border-b border-border last:border-0 ${i % 2 !== 0 ? "bg-subtle/30" : ""}`}
                     >
                       <td
                         className="px-4 py-3 text-foreground"
-                        dangerouslySetInnerHTML={{ __html: feature }}
+                        dangerouslySetInnerHTML={{ __html: labelHtml }}
                       />
                       {([free, investor, pro] as (string | boolean)[]).map((val, j) => (
                         <td key={j} className="px-4 py-3 text-center">
@@ -184,33 +177,37 @@ export default async function PricingPage() {
                 Compare all features
               </summary>
               <div className="divide-y divide-border px-4 pb-4">
-                {[
-                  ["Properties tracked", "1", "5", "20"],
-                  ["Saved deals", "5", "20", "50"],
-                  ["Rent & value estimates", "✓", "✓", "✓"],
-                  ["Deal analyzer", "✓", "✓", "✓"],
-                  ["Scenario modeling", "✓", "✓", "✓"],
-                  ["Mortgage simulator", "✓", "✓", "✓"],
-                  ["Portfolio charts", "✓", "✓", "✓"],
-                ].map(([feature, free, investor, pro], i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between gap-4 py-2.5 text-sm"
-                  >
-                    <span className="text-foreground">{feature}</span>
-                    <div className="flex shrink-0 gap-4 text-xs text-muted">
-                      <span>
-                        Free: <span className="font-medium text-foreground">{free}</span>
-                      </span>
-                      <span>
-                        Inv: <span className="font-medium text-foreground">{investor}</span>
-                      </span>
-                      <span>
-                        Pro: <span className="font-medium text-foreground">{pro}</span>
-                      </span>
+                {PRICING_COMPARE_ROWS.map(({ labelPlain, free, investor, pro }) => {
+                  const mFree = pricingCompareCellMobile(free);
+                  const mInv = pricingCompareCellMobile(investor);
+                  const mPro = pricingCompareCellMobile(pro);
+                  return (
+                    <div
+                      key={labelPlain}
+                      className="flex items-center justify-between gap-4 py-2.5 text-sm"
+                    >
+                      <span className="text-foreground">{labelPlain}</span>
+                      <div className="flex shrink-0 gap-4 text-xs text-muted">
+                        {(
+                          [
+                            ["Free", mFree],
+                            ["Inv", mInv],
+                            ["Pro", mPro],
+                          ] as [string, string][]
+                        ).map(([label, val]) => (
+                          <span key={label}>
+                            {label}:{" "}
+                            <span
+                              className={`font-medium ${val === "✓" ? "text-positive" : val === "—" ? "text-muted/40" : "text-foreground"}`}
+                            >
+                              {val}
+                            </span>
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </details>
           </section>

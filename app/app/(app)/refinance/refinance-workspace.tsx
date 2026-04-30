@@ -25,7 +25,7 @@ import {
 } from "@/lib/amortization";
 import type { CalculatorMetricTone } from "@/lib/calculator-metric-tones";
 import { formatCurrency } from "@/lib/format-currency";
-import type { MortgageForTabs } from "../properties/[id]/property-detail-tabs";
+import type { MortgageForTabs } from "../properties/[id]/property-detail-types";
 
 export type RefinanceMortgageProperty = {
   id: string;
@@ -607,7 +607,6 @@ export function RefinanceWorkspace({
 
   return (
     <div>
-      <h1 className="hidden text-2xl font-semibold text-foreground md:block">Refinance</h1>
       <p className="mt-2 text-base text-muted md:hidden">
         What-if refinance for your portfolio loans.
       </p>
@@ -657,68 +656,64 @@ export function RefinanceWorkspace({
         </MobileToolShell>
       </div>
 
-      <div className="mt-4 hidden md:block">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
+      <div className="hidden md:block">
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="text-2xl font-semibold text-foreground">Refinance</h1>
             <p className="text-sm text-muted">
-              Model a new rate and term against your current balance and
-              payment.
+              Model a new rate and term against your current balance and payment.
             </p>
             {selectedProperty ? (
-              <span className="mt-1.5 inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted shadow-sm">
+              <span className="inline-flex items-center rounded-full border border-border bg-card px-2.5 py-0.5 text-xs text-muted shadow-sm">
                 {totalMortgages} {totalMortgages === 1 ? "mortgage" : "mortgages"}
               </span>
             ) : null}
           </div>
-          <label className="block w-full text-xs font-medium text-muted lg:w-80">
-            Property
-            <select
-              value={selectedProperty?.id ?? ""}
-              onChange={(e) => {
-                const nextPropertyId = e.target.value;
-                setSelectedPropertyId(nextPropertyId);
-                const next = properties.find((p) => p.id === nextPropertyId);
-                const firstM = next?.mortgages[0]?.id ?? "";
-                setSelectedMortgageId(firstM);
-                syncRefinanceWorkspaceQuery(nextPropertyId, firstM || null);
-              }}
-              disabled={properties.length <= 1}
-              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {properties.map((property) => (
-                <option key={property.id} value={property.id}>
-                  {getPropertyLabel(property)}
-                </option>
-              ))}
-            </select>
-            {properties.length <= 1 ? (
-              <span className="mt-1 block text-xs text-muted">
-                Add more properties to switch context here.
-              </span>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+            <label className="flex items-center gap-2 text-xs font-medium text-muted">
+              <span>Property</span>
+              <select
+                value={selectedProperty?.id ?? ""}
+                onChange={(e) => {
+                  const nextPropertyId = e.target.value;
+                  setSelectedPropertyId(nextPropertyId);
+                  const next = properties.find((p) => p.id === nextPropertyId);
+                  const firstM = next?.mortgages[0]?.id ?? "";
+                  setSelectedMortgageId(firstM);
+                  syncRefinanceWorkspaceQuery(nextPropertyId, firstM || null);
+                }}
+                disabled={properties.length <= 1}
+                className="block w-64 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                {properties.map((property) => (
+                  <option key={property.id} value={property.id}>
+                    {getPropertyLabel(property)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {selectedProperty && selectedProperty.mortgages.length > 1 ? (
+              <label className="flex items-center gap-2 text-xs font-medium text-muted">
+                <span>Mortgage</span>
+                <select
+                  value={selectedMortgageId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    setSelectedMortgageId(id);
+                    syncRefinanceWorkspaceQuery(selectedProperty.id, id);
+                  }}
+                  className="block w-56 rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
+                >
+                  {selectedProperty.mortgages.map((m, i) => (
+                    <option key={m.id} value={m.id}>
+                      {getMortgageLabel(m, i)}
+                    </option>
+                  ))}
+                </select>
+              </label>
             ) : null}
-          </label>
+          </div>
         </div>
-
-        {selectedProperty && selectedProperty.mortgages.length > 1 ? (
-          <label className="mt-4 block max-w-md text-xs font-medium text-muted">
-            Mortgage
-            <select
-              value={selectedMortgageId}
-              onChange={(e) => {
-                const id = e.target.value;
-                setSelectedMortgageId(id);
-                syncRefinanceWorkspaceQuery(selectedProperty.id, id);
-              }}
-              className="mt-1.5 block w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-accent/20"
-            >
-              {selectedProperty.mortgages.map((m, i) => (
-                <option key={m.id} value={m.id}>
-                  {getMortgageLabel(m, i)}
-                </option>
-              ))}
-            </select>
-          </label>
-        ) : null}
 
         {selectedProperty && selectedMortgage ? (
           <div className="mt-4 space-y-4">

@@ -41,6 +41,8 @@
 
 ## Internal (engineering)
 
+- [Properties vertical slice](onboarding/properties-vertical-slice.md) — CRUD → metrics → CSV export map for onboarding
+- [Vitest vs route handlers](onboarding/vitest-vs-route-handlers.md) — co-located API tests vs `route.ts` inventory
 - [Billing matrix](internal/billing-matrix.md) — tiers, Stripe env vars, auxiliary billing routes
 - [`past_due` user path](internal/past-due-user-path.md) — subscription status → banner → portal
 - [Stripe webhook — production verification](internal/stripe-webhook-production-verification.md)

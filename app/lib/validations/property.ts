@@ -86,6 +86,7 @@ const propertySchemaBase = z.object({
     .nullable()
     .transform((s) => (s === undefined ? undefined : s == null || s.trim() === "" ? null : s)),
   hasMortgage: z.boolean().nullable().optional(),
+  mortgagePaidOff: z.boolean().optional(),
   notes: z.string().max(2000).optional().nullable(),
   marketRent: z.union([z.string(), z.number()]).optional().nullable().transform((v) => {
     if (v === undefined) return undefined;

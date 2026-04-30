@@ -6,6 +6,8 @@ import {
   isOnTrial,
   trialDaysRemaining,
 } from "@/lib/plans";
+import { getActivityTier } from "@/lib/activity-tier";
+import { ESTIMATED_RENTCAST_CALLS_PER_PROPERTY } from "@/lib/refresh";
 import { redirect } from "next/navigation";
 import { PRICING_DISPLAY } from "@/lib/pricing-display";
 import { LocalDateTime } from "@/components/local-date-time";
@@ -15,6 +17,22 @@ import { AdminTabs } from "./admin-tabs";
 import { AdminUsersTab, type AdminUserRow } from "./admin-users-tab";
 
 export const dynamic = "force-dynamic";
+
+function getNextRefreshFireDate(now: Date): Date {
+  const day = now.getUTCDate();
+  const hour = now.getUTCHours();
+  const minute = now.getUTCMinutes();
+  const firedToday = hour > 6 || (hour === 6 && minute >= 30);
+  if (day >= 1 && day <= 6) {
+    if (!firedToday) {
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day, 6, 30, 0, 0));
+    }
+    if (day < 6) {
+      return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day + 1, 6, 30, 0, 0));
+    }
+  }
+  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1, 6, 30, 0, 0));
+}
 
 async function getRentCastCount(where: object): Promise<number> {
   try {
@@ -32,6 +50,8 @@ export default async function AdminPage() {
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const snapshotMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const nextRefreshFireDate = getNextRefreshFireDate(now);
 
   const [
     userCount,
@@ -47,6 +67,7 @@ export default async function AdminPage() {
     subscriptionStatusCounts,
     lastRentCastCall,
     usersWithPropertiesForAvg,
+    usersForRefreshEstimate,
   ] = await Promise.all([
     prisma.user.count({ where: { deletedAt: null } }),
     prisma.property.count(),
@@ -105,6 +126,20 @@ export default async function AdminPage() {
       select: { subscriptionTier: true, _count: { select: { properties: true } } },
       take: 500,
     }),
+    prisma.user.findMany({
+      where: { deletedAt: null },
+      select: {
+        subscriptionTier: true,
+        subscriptionTierOverride: true,
+        trialEndsAt: true,
+        createdAt: true,
+        lastActiveAt: true,
+        properties: {
+          where: { snapshots: { none: { snapshotMonth } } },
+          select: { id: true },
+        },
+      },
+    }),
   ]);
 
   const planBreakdown = planCounts.reduce(
@@ -138,6 +173,19 @@ export default async function AdminPage() {
       v.count > 0 ? (v.sum / v.count).toFixed(1) : "0",
     ])
   );
+
+  let estimatedNextRunUsers = 0;
+  let estimatedNextRunProperties = 0;
+  for (const u of usersForRefreshEstimate) {
+    const tier = getEffectiveTier(u);
+    if (tier === "free") continue;
+    const activityTier = getActivityTier(u.lastActiveAt, u.createdAt, now);
+    if (activityTier !== "active" && activityTier !== "cooling") continue;
+    if (u.properties.length === 0) continue;
+    estimatedNextRunUsers += 1;
+    estimatedNextRunProperties += u.properties.length;
+  }
+  const estimatedNextRunCalls = estimatedNextRunProperties * ESTIMATED_RENTCAST_CALLS_PER_PROPERTY;
 
   const userIdsForRentCast = [
     ...new Set(
@@ -282,6 +330,18 @@ export default async function AdminPage() {
                 >
                   Download users CSV
                 </a>
+              </dd>
+            </div>
+            <div className="min-w-0 rounded-lg border border-border bg-card p-3 shadow-sm">
+              <dt className="text-xs font-medium text-muted">Next refresh (est.)</dt>
+              <dd className="mt-1 text-sm font-medium tabular-nums text-foreground">
+                {estimatedNextRunCalls} calls
+              </dd>
+              <dd className="mt-0.5 text-xs tabular-nums text-muted">
+                {estimatedNextRunUsers} users · {estimatedNextRunProperties} properties
+              </dd>
+              <dd className="mt-1 truncate text-xs text-muted">
+                <LocalDateTime value={nextRefreshFireDate.toISOString()} />
               </dd>
             </div>
           </div>

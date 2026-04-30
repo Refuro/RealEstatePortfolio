@@ -11,9 +11,9 @@ export function MetricHelpLink() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="text-sm text-muted underline hover:text-foreground"
+        className="text-[12px] text-muted underline hover:text-foreground"
       >
-        What do these mean?
+        What do these terms mean?
       </button>
       <MetricHelpModal open={open} onClose={() => setOpen(false)} />
     </>

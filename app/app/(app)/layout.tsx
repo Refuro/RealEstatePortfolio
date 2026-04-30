@@ -40,7 +40,7 @@ async function getLayoutBannerData(userId: string) {
       };
     },
     ["layout-banner", userId],
-    { revalidate: LAYOUT_CACHE_REVALIDATE }
+    { revalidate: LAYOUT_CACHE_REVALIDATE, tags: [`layout-banner:${userId}`] }
   )();
 }
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -194,15 +195,17 @@ export async function POST(request: NextRequest) {
     });
 
     if (mortgageData) {
-      await prisma.mortgage.create({
-        data: {
-          propertyId: property.id,
-          ...mortgageData,
-        },
-      });
-      await prisma.property.update({
-        where: { id: property.id },
-        data: { hasMortgage: true },
+      await prisma.$transaction(async (tx) => {
+        await tx.mortgage.create({
+          data: {
+            propertyId: property.id,
+            ...mortgageData,
+          },
+        });
+        await tx.property.update({
+          where: { id: property.id },
+          data: { hasMortgage: true, mortgagePaidOff: false },
+        });
       });
     }
 
@@ -215,6 +218,8 @@ export async function POST(request: NextRequest) {
     if (!full) {
       return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
     }
+
+    revalidateTag(`layout-banner:${user.id}`, "default");
 
     return NextResponse.json({
       ...serializePropertyForApi(full),

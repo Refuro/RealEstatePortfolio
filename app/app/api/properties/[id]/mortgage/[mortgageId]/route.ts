@@ -145,16 +145,33 @@ export async function PATCH(
     );
   }
 
+  // Form no longer collects "as of" dates — server stamps them with the
+  // submission time when the corresponding value field changes. Explicit
+  // dates from clients still win when sent.
+  const now = new Date();
   const updatePayload: Record<string, unknown> = {};
   if (data.originalLoanAmount !== undefined) updatePayload.originalLoanAmount = data.originalLoanAmount;
-  if (data.currentBalance !== undefined) updatePayload.currentBalance = data.currentBalance;
+  if (data.currentBalance !== undefined) {
+    updatePayload.currentBalance = data.currentBalance;
+    if (data.balanceAsOfDate === undefined) updatePayload.balanceAsOfDate = now;
+  }
   if (data.interestRate !== undefined) updatePayload.interestRate = data.interestRate;
   if (data.termYears !== undefined) updatePayload.termYears = data.termYears;
   if (data.startDate !== undefined) updatePayload.startDate = data.startDate;
-  if (data.monthlyPayment !== undefined) updatePayload.monthlyPayment = data.monthlyPayment;
+  if (data.monthlyPayment !== undefined) {
+    updatePayload.monthlyPayment = data.monthlyPayment;
+    if (data.paymentEffectiveDate === undefined) updatePayload.paymentEffectiveDate = now;
+  }
   if (data.paymentEffectiveDate !== undefined) updatePayload.paymentEffectiveDate = data.paymentEffectiveDate;
+  if (data.escrowAmount !== undefined) {
+    updatePayload.escrowAmount = data.escrowAmount;
+    // Always derive `escrowIncluded` from amount on the same write so the
+    // boolean and the amount can never disagree. Explicit `escrowIncluded`
+    // from the client (back-compat) overrides below.
+    updatePayload.escrowIncluded =
+      data.escrowAmount != null && parseFloat(data.escrowAmount) > 0;
+  }
   if (data.escrowIncluded !== undefined) updatePayload.escrowIncluded = data.escrowIncluded;
-  if (data.escrowAmount !== undefined) updatePayload.escrowAmount = data.escrowAmount;
   if (data.lenderName !== undefined) updatePayload.lenderName = data.lenderName;
   if (data.loanType !== undefined) updatePayload.loanType = data.loanType;
   if (data.balanceAsOfDate !== undefined) updatePayload.balanceAsOfDate = data.balanceAsOfDate;

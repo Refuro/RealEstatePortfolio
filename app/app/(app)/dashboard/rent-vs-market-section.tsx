@@ -31,6 +31,27 @@ type PropertyForBenchmark = {
 
 type RefreshStatus = "idle" | "refreshing" | "success" | "failed";
 
+/** Initial rows shown before “Show all”; full list order preserved (worst gap first). */
+const INITIAL_VISIBLE_ROWS = 6;
+
+const BADGE_STYLES = {
+  pos: {
+    background: "var(--positive-dim)",
+    color: "var(--positive)",
+    border: "1px solid rgba(52,211,153,0.2)",
+  },
+  neg: {
+    background: "var(--negative-dim)",
+    color: "var(--negative)",
+    border: "1px solid rgba(248,113,113,0.2)",
+  },
+  neutral: {
+    background: "rgba(255,255,255,0.05)",
+    color: "var(--foreground-muted)",
+    border: "1px solid var(--border)",
+  },
+} as const;
+
 export function RentVsMarketSection({
   properties,
 }: {
@@ -39,6 +60,7 @@ export function RentVsMarketSection({
   const router = useRouter();
   const [refreshStatus, setRefreshStatus] = useState<Record<string, RefreshStatus>>({});
   const [rentCastQuotaTick, setRentCastQuotaTick] = useState(0);
+  const [listExpanded, setListExpanded] = useState(false);
   const hasTriggeredRefreshes = useRef(false);
 
   const propsById = new Map(properties.map((p) => [p.id, p]));
@@ -72,6 +94,12 @@ export function RentVsMarketSection({
     });
 
   const ordered = [...fresh, ...staleOrMissing];
+  const visibleOrdered =
+    listExpanded || ordered.length <= INITIAL_VISIBLE_ROWS
+      ? ordered
+      : ordered.slice(0, INITIAL_VISIBLE_ROWS);
+  const showListDisclosure = ordered.length > INITIAL_VISIBLE_ROWS;
+
   const aboveCount = fresh.filter(
     (p) => getBenchmarkPct(getPropertyTotalRent(p), marketRentNum(p)) > 0
   ).length;
@@ -125,31 +153,52 @@ export function RentVsMarketSection({
 
   if (ordered.length === 0) {
     return (
-      <div className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <h2 className="text-sm font-semibold text-foreground">
-          Rent vs. market
-        </h2>
-        <p className="mt-2 text-sm text-muted">
-          <Link
-            href="/properties"
-            className="font-medium text-foreground hover:underline"
+      <section
+        className="rounded-xl border overflow-hidden"
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      >
+        <div className="px-[18px] py-[14px]">
+          <h2
+            className="text-[13px] font-semibold"
+            style={{ color: "var(--foreground)" }}
           >
-            See how your rent compares to market
-          </Link>
-        </p>
-      </div>
+            Rent vs. market
+          </h2>
+          <p className="mt-2 text-[12px]" style={{ color: "var(--foreground-muted)" }}>
+            <Link
+              href="/properties"
+              className="font-medium hover:underline"
+              style={{ color: "var(--foreground)" }}
+            >
+              See how your rent compares to market
+            </Link>
+          </p>
+        </div>
+      </section>
     );
   }
 
   return (
-    <section className="mt-6 rounded-xl border border-border bg-card p-4 shadow-sm">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-foreground">
+    <section
+      className="rounded-xl border overflow-hidden"
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+    >
+      {/* Header */}
+      <div
+        className="flex flex-wrap items-start justify-between gap-3 px-[18px] py-[14px]"
+        style={{ borderBottom: "1px solid var(--border)" }}
+      >
+        <div className="min-w-0">
+          <h2
+            className="text-[13px] font-semibold"
+            style={{ color: "var(--foreground)" }}
+          >
             Rent vs. market
           </h2>
-          <RentCastQuotaHint refreshKey={rentCastQuotaTick} className="mt-1" />
-          <p className="mt-1 text-sm text-muted">
+          <p
+            className="text-[11.5px] mt-0.5"
+            style={{ color: "var(--foreground-muted)" }}
+          >
             {fresh.length} fresh benchmark{fresh.length === 1 ? "" : "s"}
             {refreshCandidates.length > 0 && (
               <>
@@ -162,47 +211,86 @@ export function RentVsMarketSection({
               </>
             )}
           </p>
+          <RentCastQuotaHint refreshKey={rentCastQuotaTick} className="mt-1" />
         </div>
-        <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
-            Above: <span className="font-semibold text-foreground">{aboveCount}</span>
+        <div className="flex flex-wrap gap-1.5">
+          <span
+            className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full font-medium"
+            style={BADGE_STYLES.pos}
+          >
+            Above: {aboveCount}
           </span>
-          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
-            Below: <span className="font-semibold text-foreground">{belowCount}</span>
+          <span
+            className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full font-medium"
+            style={BADGE_STYLES.neg}
+          >
+            Below: {belowCount}
           </span>
-          <span className="rounded-full border border-border bg-background/60 px-2.5 py-1 text-muted">
-            Aligned: <span className="font-semibold text-foreground">{alignedCount}</span>
+          <span
+            className="inline-flex items-center text-[11px] px-2 py-0.5 rounded-full font-medium"
+            style={BADGE_STYLES.neutral}
+          >
+            Aligned: {alignedCount}
           </span>
         </div>
       </div>
-      <ul className="mt-4 space-y-2">
-        {ordered.map((p) => {
+
+      {/* Rows */}
+      <ul id="rent-vs-market-property-list">
+        {visibleOrdered.map((p, i) => {
           const status = refreshStatus[p.id];
           const eligibility = getEligibility(p);
           const isFresh = eligibility === "eligible_fresh";
           const name = p.nickname || p.addressLine1;
+          const isLast = i === visibleOrdered.length - 1;
 
           if (isFresh) {
             const pct = getBenchmarkPct(getPropertyTotalRent(p), marketRentNum(p));
-            const badge =
+            const statusColor =
               pct > 0
-                ? "text-positive"
+                ? "var(--positive)"
                 : pct < 0
-                  ? "text-negative"
-                  : "text-foreground";
+                  ? "var(--negative)"
+                  : "var(--foreground-muted)";
+
             return (
               <li
                 key={p.id}
-                className="rounded-lg border border-border bg-subtle/40 px-3 py-2 transition-colors duration-150 hover:bg-subtle/70"
+                style={{
+                  borderBottom: isLast ? "none" : "1px solid var(--border-subtle)",
+                }}
               >
                 <Link
                   href={`/properties/${p.id}`}
-                  className="flex flex-wrap items-center justify-between gap-2"
+                  className="flex items-center justify-between gap-3 px-[18px] py-[10px] transition-colors duration-100"
+                  style={{ background: "transparent" }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = "var(--card-hover)";
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
                 >
-                  <span className="text-sm font-medium text-foreground hover:underline">
-                    {name}
-                  </span>
-                  <span className={`text-sm font-semibold ${badge}`}>
+                  <div className="min-w-0">
+                    <div
+                      className="text-[12.5px] font-medium truncate"
+                      style={{ color: "var(--foreground)" }}
+                    >
+                      {name}
+                    </div>
+                    {p.nickname && (
+                      <div
+                        className="text-[11px] truncate"
+                        style={{ color: "var(--foreground-muted)" }}
+                      >
+                        {p.addressLine1}
+                      </div>
+                    )}
+                  </div>
+                  <span
+                    className="text-[12px] font-semibold tabular-nums whitespace-nowrap"
+                    style={{ color: statusColor }}
+                  >
                     {getBenchmarkLabel(getPropertyTotalRent(p), marketRentNum(p))}
                   </span>
                 </Link>
@@ -240,25 +328,58 @@ export function RentVsMarketSection({
           return (
             <li
               key={p.id}
-              className="rounded-lg border border-border bg-subtle/40 px-3 py-2 transition-colors duration-150 hover:bg-subtle/70"
+              style={{
+                borderBottom: isLast ? "none" : "1px solid var(--border-subtle)",
+              }}
             >
               <Link
                 href={`/properties/${p.id}`}
-                className="text-sm font-medium text-foreground hover:underline"
+                className="block px-[18px] py-[10px] transition-colors duration-100"
+                style={{ background: "transparent" }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = "var(--card-hover)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = "transparent";
+                }}
               >
-                {name}
+                <div
+                  className="text-[12.5px] font-medium truncate"
+                  style={{ color: "var(--foreground)" }}
+                >
+                  {name}
+                </div>
+                <span
+                  className="mt-0.5 block text-[11.5px]"
+                  style={{
+                    color: status === "failed" ? "var(--negative)" : "var(--foreground-muted)",
+                  }}
+                >
+                  {suffix || "Benchmark unavailable"}
+                </span>
               </Link>
-              <span
-                className={`mt-1 block text-sm ${
-                  status === "failed" ? "text-negative" : "text-muted"
-                }`}
-              >
-                {suffix || "Benchmark unavailable"}
-              </span>
             </li>
           );
         })}
       </ul>
+
+      {showListDisclosure && (
+        <div
+          className="flex justify-center border-t px-[18px] py-2"
+          style={{ borderColor: "var(--border-subtle)" }}
+        >
+          <button
+            type="button"
+            className="flex w-full max-w-md items-center justify-center rounded-lg px-4 text-[12.5px] font-medium transition-colors duration-100 min-h-[44px] hover:bg-card-hover md:min-h-9"
+            style={{ color: "var(--accent)" }}
+            aria-expanded={listExpanded}
+            aria-controls="rent-vs-market-property-list"
+            onClick={() => setListExpanded((v) => !v)}
+          >
+            {listExpanded ? "Show less" : `Show all (${ordered.length})`}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

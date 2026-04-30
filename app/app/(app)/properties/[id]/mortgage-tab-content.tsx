@@ -24,7 +24,7 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import type { MortgageForTabs } from "./property-detail-tabs";
+import type { MortgageForTabs } from "./property-detail-types";
 
 type MortgageRecordLike = {
   originalLoanAmount: number;
@@ -349,7 +349,7 @@ export function MortgageTabContent({
           projections.
         </p>
         <Link
-          href={`/properties/${propertyId}?tab=details#mortgages`}
+          href={`/properties/${propertyId}?edit=mortgage`}
           onClick={(e) => {
             e.preventDefault();
             onNavigateToDetails();
@@ -391,7 +391,7 @@ export function MortgageTabContent({
             </>
           )}
           <Link
-            href={`/properties/${propertyId}?tab=details#mortgages`}
+            href={`/properties/${propertyId}?edit=mortgage`}
             onClick={(e) => {
               e.preventDefault();
               onNavigateToDetails();
@@ -778,7 +778,7 @@ export function MortgageTabContent({
         </p>
         <p>
           <Link
-            href={`/properties/${propertyId}?tab=details#mortgages`}
+            href={`/properties/${propertyId}?edit=mortgage`}
             onClick={(e) => {
               e.preventDefault();
               onNavigateToDetails();
@@ -940,7 +940,7 @@ export function MortgageTabContent({
             <div className="pt-1">
               <div className="flex flex-wrap items-center gap-2 text-xs">
                 <Link
-                  href={`/properties/${propertyId}?tab=details#mortgages`}
+                  href={`/properties/${propertyId}?edit=mortgage`}
                   onClick={(e) => {
                     e.preventDefault();
                     onNavigateToDetails();

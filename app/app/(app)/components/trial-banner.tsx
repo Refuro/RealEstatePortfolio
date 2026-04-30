@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
@@ -18,6 +19,8 @@ export function TrialBanner({
   propertyCount: number;
 }) {
   const [dismissed, setDismissed] = useState(true);
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -36,8 +39,17 @@ export function TrialBanner({
     sessionStorage.setItem(STORAGE_KEY, "1");
     setDismissed(true);
   };
+  const isFirstPropertyQuickAdd =
+    propertyCount === 0 && pathname === "/properties/new" && searchParams.get("mode") === "quick";
+  const isQuickMortgagePage = /^\/properties\/[^/]+\/mortgage\/quick$/.test(pathname ?? "");
 
-  if (!isOnTrial || dismissed || (propertyCount > 1 && (trialDaysRemaining ?? 0) <= 0)) {
+  if (
+    !isOnTrial ||
+    dismissed ||
+    isFirstPropertyQuickAdd ||
+    isQuickMortgagePage ||
+    (propertyCount > 1 && (trialDaysRemaining ?? 0) <= 0)
+  ) {
     return null;
   }
 

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { AnalyticsEvents } from "@/lib/analytics-events";
-import { captureServerEvent } from "@/lib/posthog-server";
+import { captureServerEvents } from "@/lib/posthog-server";
 import {
   ASSUMED_PROPERTIES_PER_USER_FOR_CAPACITY,
   DEFAULT_REFRESH_BATCH_SIZE,
@@ -58,20 +58,22 @@ export async function GET(req: NextRequest) {
       valueAppliedCount += result.valueAppliedCount;
       valueBelowThresholdCount += result.valueBelowThresholdCount;
 
-      await captureServerEvent(user.clerkUserId, AnalyticsEvents.MONTHLY_REFRESH_COMPLETED, {
-        processedProperties: result.processedProperties,
-        snapshotsCreated: result.snapshotsCreated,
-      });
+      const events: Array<{ event: string; properties?: Record<string, unknown> }> = [
+        {
+          event: AnalyticsEvents.MONTHLY_REFRESH_COMPLETED,
+          properties: {
+            processedProperties: result.processedProperties,
+            snapshotsCreated: result.snapshotsCreated,
+          },
+        },
+      ];
       if (result.valueAppliedCount > 0) {
-        await captureServerEvent(user.clerkUserId, AnalyticsEvents.AVM_VALUE_UPDATED, {
-          count: result.valueAppliedCount,
-        });
+        events.push({ event: AnalyticsEvents.AVM_VALUE_UPDATED, properties: { count: result.valueAppliedCount } });
       }
       if (result.valueBelowThresholdCount > 0) {
-        await captureServerEvent(user.clerkUserId, AnalyticsEvents.AVM_VALUE_BELOW_THRESHOLD, {
-          count: result.valueBelowThresholdCount,
-        });
+        events.push({ event: AnalyticsEvents.AVM_VALUE_BELOW_THRESHOLD, properties: { count: result.valueBelowThresholdCount } });
       }
+      await captureServerEvents(user.clerkUserId, events);
     } catch (err) {
       failedUsers += 1;
       Sentry.captureException(err, {

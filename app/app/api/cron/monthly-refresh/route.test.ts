@@ -7,8 +7,8 @@ const { getRefreshEligibleUsersMock, processUserRefreshMock } = vi.hoisted(() =>
   processUserRefreshMock: vi.fn(),
 }));
 
-const { captureServerEventMock } = vi.hoisted(() => ({
-  captureServerEventMock: vi.fn(),
+const { captureServerEventsMock } = vi.hoisted(() => ({
+  captureServerEventsMock: vi.fn(),
 }));
 
 vi.mock("@/lib/refresh", () => ({
@@ -22,7 +22,7 @@ vi.mock("@/lib/refresh", () => ({
 }));
 
 vi.mock("@/lib/posthog-server", () => ({
-  captureServerEvent: (...args: unknown[]) => captureServerEventMock(...args),
+  captureServerEvents: (...args: unknown[]) => captureServerEventsMock(...args),
 }));
 
 function makeRequest(authHeader?: string, query = "") {
@@ -36,7 +36,7 @@ describe("GET /api/cron/monthly-refresh", () => {
   beforeEach(() => {
     getRefreshEligibleUsersMock.mockReset();
     processUserRefreshMock.mockReset();
-    captureServerEventMock.mockReset();
+    captureServerEventsMock.mockReset();
     process.env.CRON_SECRET = "cron-secret-test";
     process.env.RENTCAST_API_KEY = "rentcast-key";
     getRefreshEligibleUsersMock.mockResolvedValue([]);
@@ -47,7 +47,7 @@ describe("GET /api/cron/monthly-refresh", () => {
       valueAppliedCount: 0,
       valueBelowThresholdCount: 0,
     });
-    captureServerEventMock.mockResolvedValue(undefined);
+    captureServerEventsMock.mockResolvedValue(undefined);
   });
 
   it("returns 401 when authorization header is invalid", async () => {
@@ -109,13 +109,22 @@ describe("GET /api/cron/monthly-refresh", () => {
       })
     );
     expect(processUserRefreshMock).toHaveBeenCalledTimes(1);
-    expect(captureServerEventMock).toHaveBeenCalledWith(
+    expect(captureServerEventsMock).toHaveBeenCalledWith(
       "clerk_u1",
-      AnalyticsEvents.MONTHLY_REFRESH_COMPLETED,
-      {
-        processedProperties: 2,
-        snapshotsCreated: 2,
-      }
+      expect.arrayContaining([
+        expect.objectContaining({
+          event: AnalyticsEvents.MONTHLY_REFRESH_COMPLETED,
+          properties: { processedProperties: 2, snapshotsCreated: 2 },
+        }),
+        expect.objectContaining({
+          event: AnalyticsEvents.AVM_VALUE_UPDATED,
+          properties: { count: 1 },
+        }),
+        expect.objectContaining({
+          event: AnalyticsEvents.AVM_VALUE_BELOW_THRESHOLD,
+          properties: { count: 1 },
+        }),
+      ])
     );
   });
 

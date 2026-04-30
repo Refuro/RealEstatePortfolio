@@ -4,9 +4,7 @@ export type PropertyCompletenessInput = {
   cashInvested: number | null;
   mortgageCount: number;
   hasMortgage: boolean | null;
-  bedrooms: number | null;
-  bathrooms: number | null;
-  squareFeet: number | null;
+  mortgagePaidOff: boolean;
 };
 
 export type CompletenessResult = {
@@ -14,33 +12,20 @@ export type CompletenessResult = {
   score: number;
   /** Human-readable labels for metric-ready fields that are still missing. */
   missingFields: string[];
-  /** true when score >= COMPLETENESS_THRESHOLD (60). */
-  isComplete: boolean;
 };
-
-/**
- * Minimum score for a property to be considered "complete".
- * Purchase price differentiated + mortgage status confirmed + profile details = 80 (threshold exceeded).
- */
-export const COMPLETENESS_THRESHOLD = 60;
 
 /**
  * Scores a property's data completeness against metric-ready fields only.
  *
- * Weights:
+ * Weights (per claudeCode/PropertyRedesign decision #3):
  *   Base (address + type + value + rent + expenses — always set):  10
- *   Purchase price differs from estimated value:                   25
- *   Mortgage confirmed (has one, OR explicitly "no mortgage"):     25
- *   Cash invested set:                                             20
- *   Bedroom/bathroom/sqft profile set:                             20
+ *   Purchase price differs from estimated value:                   30
+ *   Mortgage confirmed (active OR no-mortgage OR paid-off):        30
+ *   Cash invested set:                                             30
  *   Max total:                                                    100
  *
- * Bed/bath/sqft do not affect financial formulas directly, but they are still
- * required for profile completeness and should trigger the completion banner
- * when missing.
- *
- * @see docs/policies/property-completeness.md — canonical field classification,
- *   scoring rationale, threshold definition, and banner behavior rules.
+ * Bed/bath/sqft and the rent benchmark are intentionally excluded — they don't
+ * gate any computed metric, so they don't count against completeness.
  */
 export function getPropertyCompleteness(
   input: PropertyCompletenessInput
@@ -49,15 +34,17 @@ export function getPropertyCompleteness(
   let score = 10;
 
   if (Math.round(input.purchasePrice) !== Math.round(input.currentEstimatedValue)) {
-    score += 25;
+    score += 30;
   } else {
     missing.push("actual purchase price");
   }
 
   const mortgageConfirmed =
-    input.mortgageCount > 0 || input.hasMortgage === false;
+    input.mortgageCount > 0 ||
+    input.hasMortgage === false ||
+    input.mortgagePaidOff;
   if (mortgageConfirmed) {
-    score += 25;
+    score += 30;
   } else if (input.hasMortgage === true && input.mortgageCount === 0) {
     missing.push("mortgage details");
   } else {
@@ -65,22 +52,13 @@ export function getPropertyCompleteness(
   }
 
   if (input.cashInvested != null) {
-    score += 20;
+    score += 30;
   } else {
     missing.push("cash invested");
-  }
-
-  if (input.bedrooms != null && input.bathrooms != null && input.squareFeet != null) {
-    score += 20;
-  } else {
-    if (input.bedrooms == null) missing.push("bedrooms");
-    if (input.bathrooms == null) missing.push("bathrooms");
-    if (input.squareFeet == null) missing.push("square feet");
   }
 
   return {
     score,
     missingFields: missing,
-    isComplete: score >= COMPLETENESS_THRESHOLD,
   };
 }

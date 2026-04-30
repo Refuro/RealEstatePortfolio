@@ -13,6 +13,8 @@ import {
   BENCHMARK_UX_MESSAGES,
 } from "@/lib/benchmark-utils";
 
+const MINUS = "−";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 
 export type PropertyTableRow = {
@@ -24,6 +26,7 @@ export type PropertyTableRow = {
   equity: number;
   monthlyCashFlow: number;
   capRate: number | null;
+  ltv: number | null;
   valueDeltaMoM: number | null;
   equityDeltaMoM: number | null;
   cashFlowDeltaMoM: number | null;
@@ -38,6 +41,17 @@ export type PropertyTableRow = {
   needsAttention: boolean;
 };
 
+/** True when the property has a fresh benchmark and rent is below market. */
+function isBelowMarket(row: PropertyTableRow): boolean {
+  if (!row.isRented || row.marketRent == null || row.marketRent <= 0) return false;
+  return row.userRent < row.marketRent;
+}
+
+/** True when LTV is at 80% or above. */
+function isHighLtv(row: PropertyTableRow): boolean {
+  return row.ltv != null && row.ltv >= 0.8;
+}
+
 type SortColumn = "value" | "equity" | "cashFlow" | "capRate" | "updated";
 type SortDirection = "asc" | "desc";
 type SortMode = "value" | "delta";
@@ -48,14 +62,23 @@ type SortState = {
   mode: SortMode;
 };
 
-type FilterKey = "all" | "needs_attention" | "negative_cashflow" | "stale_benchmark" | "incomplete_profile";
+export type FilterKey =
+  | "all"
+  | "negative_cashflow"
+  | "high_ltv"
+  | "below_market"
+  | "stale_benchmark"
+  | "incomplete_profile";
 
-const FILTER_OPTIONS: { key: FilterKey; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "needs_attention", label: "Needs attention" },
-  { key: "negative_cashflow", label: "Negative cash flow" },
-  { key: "stale_benchmark", label: "Stale benchmark" },
-  { key: "incomplete_profile", label: "Incomplete profile" },
+type ChipTone = "default" | "neg" | "warn";
+
+const FILTER_OPTIONS: { key: FilterKey; label: string; tone: ChipTone }[] = [
+  { key: "all", label: "All", tone: "default" },
+  { key: "negative_cashflow", label: "Negative cash flow", tone: "neg" },
+  { key: "high_ltv", label: "LTV above 80%", tone: "warn" },
+  { key: "below_market", label: "Below market rent", tone: "warn" },
+  { key: "stale_benchmark", label: "Stale benchmark", tone: "warn" },
+  { key: "incomplete_profile", label: "Incomplete profile", tone: "warn" },
 ];
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -102,7 +125,42 @@ function sortRows(rows: PropertyTableRow[], sort: SortState): PropertyTableRow[]
   });
 }
 
+function getStatusDot(row: PropertyTableRow): "ok" | "warn" | "bad" {
+  if (row.negativeCashFlow) return "bad";
+  if (row.needsAttention) return "warn";
+  return "ok";
+}
+
+const STATUS_DOT_COLOR: Record<"ok" | "warn" | "bad", string> = {
+  ok: "var(--positive)",
+  warn: "var(--warning)",
+  bad: "var(--negative)",
+};
+
+function fmtSignedMonthly(amount: number): string {
+  if (amount === 0) return formatCurrency(0);
+  const sign = amount < 0 ? MINUS : "+";
+  return `${sign}${formatCurrency(Math.abs(amount))}`;
+}
+
 // ─── Sub-components ──────────────────────────────────────────────────────────
+
+function StatusDot({ status }: { status: "ok" | "warn" | "bad" }) {
+  const color = STATUS_DOT_COLOR[status];
+  return (
+    <span
+      aria-hidden
+      className="inline-block shrink-0"
+      style={{
+        width: "7px",
+        height: "7px",
+        borderRadius: "50%",
+        background: color,
+        boxShadow: `0 0 5px ${color}`,
+      }}
+    />
+  );
+}
 
 function DeltaIndicator({
   delta,
@@ -115,7 +173,7 @@ function DeltaIndicator({
   const positive = delta > 0;
   return (
     <span
-      className={`ml-1 tabular-nums text-xs ${positive ? "text-positive" : "text-negative"}`}
+      className={`ml-1 tabular-nums text-[11px] ${positive ? "text-positive" : "text-negative"}`}
     >
       ({positive ? "+" : ""}
       {prefix}
@@ -131,13 +189,22 @@ function InsightTag({
   label: string;
   tone?: "default" | "negative";
 }) {
+  const styles: React.CSSProperties =
+    tone === "negative"
+      ? {
+          background: "var(--negative-dim)",
+          color: "var(--negative)",
+          border: "1px solid rgba(248,113,113,0.2)",
+        }
+      : {
+          background: "rgba(255,255,255,0.04)",
+          color: "var(--foreground-muted)",
+          border: "1px solid var(--border)",
+        };
   return (
     <span
-      className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
-        tone === "negative"
-          ? "border-negative/40 bg-negative/10 text-negative"
-          : "border-border bg-subtle text-muted"
-      }`}
+      className="rounded-full px-2 py-0.5 text-[10.5px] font-medium whitespace-nowrap"
+      style={styles}
     >
       {label}
     </span>
@@ -157,13 +224,13 @@ function BenchmarkCell({
   });
 
   if (eligibility === "not_rented") {
-    return <span className="text-xs text-muted">{BENCHMARK_UX_MESSAGES.notRented}</span>;
+    return <span className="text-[11px] text-muted">{BENCHMARK_UX_MESSAGES.notRented}</span>;
   }
   if (eligibility === "rent_missing") {
-    return <span className="text-xs text-muted">{BENCHMARK_UX_MESSAGES.rentMissing}</span>;
+    return <span className="text-[11px] text-muted">{BENCHMARK_UX_MESSAGES.rentMissing}</span>;
   }
   if (eligibility === "benchmark_missing" || eligibility === "benchmark_stale") {
-    return <span className="text-xs text-warning">Stale / missing</span>;
+    return <span className="text-[11px] text-warning">Stale / missing</span>;
   }
   if (eligibility === "eligible_fresh" && row.marketRent != null) {
     const tone = getBenchmarkTone(row.userRent, row.marketRent);
@@ -174,12 +241,12 @@ function BenchmarkCell({
           ? "text-negative"
           : "text-muted";
     return (
-      <span className={`text-xs tabular-nums ${colorClass}`}>
+      <span className={`text-[11px] tabular-nums ${colorClass}`}>
         {getBenchmarkLabel(row.userRent, row.marketRent)}
       </span>
     );
   }
-  return <span className="text-xs text-muted">—</span>;
+  return <span className="text-[11px] text-muted">—</span>;
 }
 
 function SortHeader({
@@ -189,6 +256,7 @@ function SortHeader({
   onSort,
   onDeltaSort,
   hasDelta = false,
+  className = "",
 }: {
   label: string;
   column: SortColumn;
@@ -196,6 +264,7 @@ function SortHeader({
   onSort: (col: SortColumn) => void;
   onDeltaSort?: (col: SortColumn) => void;
   hasDelta?: boolean;
+  className?: string;
 }) {
   const isActive = sort.column === column;
   const isValueSort = isActive && sort.mode === "value";
@@ -203,13 +272,17 @@ function SortHeader({
   const SortIcon = isActive && sort.direction === "desc" ? ChevronDown : ChevronUp;
 
   return (
-    <th className="px-3 py-3 text-left">
+    <th
+      className={`px-3 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.05em] ${className}`}
+      style={{ color: "var(--fg-dimmer)" }}
+    >
       <div className="flex items-center gap-1">
         <button
           type="button"
-          className={`inline-flex items-center gap-0.5 text-xs font-semibold uppercase tracking-wide transition-colors duration-150 ${
-            isValueSort ? "text-foreground" : "text-muted hover:text-foreground"
+          className={`inline-flex items-center gap-0.5 transition-colors duration-150 ${
+            isValueSort ? "text-foreground" : "hover:text-foreground"
           }`}
+          style={!isValueSort ? { color: "var(--fg-dimmer)" } : undefined}
           onClick={() => onSort(column)}
         >
           {label}
@@ -221,9 +294,14 @@ function SortHeader({
             title="Sort by month-over-month change"
             className={`rounded px-1 py-0.5 text-[10px] font-medium transition-colors duration-150 ${
               isDeltaSort
-                ? "bg-accent/15 text-foreground"
-                : "text-muted/60 hover:text-muted"
+                ? "text-foreground"
+                : "hover:text-muted"
             }`}
+            style={
+              isDeltaSort
+                ? { background: "var(--accent-dim)" }
+                : { color: "var(--fg-dimmer)" }
+            }
             onClick={() => onDeltaSort(column)}
           >
             MoM{isDeltaSort && <SortIcon className="inline size-2.5 ml-0.5" aria-hidden />}
@@ -234,12 +312,55 @@ function SortHeader({
   );
 }
 
+const CHIP_STYLES: Record<ChipTone, { active: React.CSSProperties; idle: React.CSSProperties }> = {
+  default: {
+    active: {
+      background: "var(--accent-dim)",
+      color: "var(--accent)",
+      borderColor: "rgba(129,140,248,0.25)",
+    },
+    idle: {
+      background: "transparent",
+      color: "var(--foreground-muted)",
+      borderColor: "var(--border)",
+    },
+  },
+  neg: {
+    active: {
+      background: "var(--negative-dim)",
+      color: "var(--negative)",
+      borderColor: "rgba(248,113,113,0.25)",
+    },
+    idle: {
+      background: "transparent",
+      color: "var(--foreground-muted)",
+      borderColor: "var(--border)",
+    },
+  },
+  warn: {
+    active: {
+      background: "var(--warning-dim)",
+      color: "var(--warning)",
+      borderColor: "rgba(251,191,36,0.25)",
+    },
+    idle: {
+      background: "transparent",
+      color: "var(--foreground-muted)",
+      borderColor: "var(--border)",
+    },
+  },
+};
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function PropertyPerformanceTable({
   rows,
+  filter: externalFilter,
+  onFilterChange,
 }: {
   rows: PropertyTableRow[];
+  filter?: FilterKey;
+  onFilterChange?: (f: FilterKey) => void;
 }) {
   const router = useRouter();
   const [sort, setSort] = useState<SortState>({
@@ -247,7 +368,17 @@ export function PropertyPerformanceTable({
     direction: "asc",
     mode: "value",
   });
-  const [activeFilter, setActiveFilter] = useState<FilterKey>("all");
+  const [internalFilter, setInternalFilter] = useState<FilterKey>("all");
+  const isControlled = externalFilter !== undefined;
+  const activeFilter = isControlled ? externalFilter : internalFilter;
+
+  function setActiveFilter(f: FilterKey) {
+    if (isControlled) {
+      onFilterChange?.(f);
+    } else {
+      setInternalFilter(f);
+    }
+  }
 
   function handleSort(column: SortColumn) {
     setSort((prev) => {
@@ -269,8 +400,9 @@ export function PropertyPerformanceTable({
 
   const filteredRows = rows.filter((row) => {
     switch (activeFilter) {
-      case "needs_attention": return row.needsAttention;
       case "negative_cashflow": return row.negativeCashFlow;
+      case "high_ltv": return isHighLtv(row);
+      case "below_market": return isBelowMarket(row);
       case "stale_benchmark": return row.benchmarkStale;
       case "incomplete_profile": return row.incompleteProfile;
       default: return true;
@@ -285,45 +417,70 @@ export function PropertyPerformanceTable({
     if (row.cashFlowDeltaMoM != null && row.cashFlowDeltaMoM !== 0) columnsWithDelta.add("cashFlow");
   }
 
+  // Summary totals (across visible/filtered rows).
+  const summaryTotals = sortedRows.reduce(
+    (acc, r) => ({
+      value: acc.value + r.value,
+      equity: acc.equity + r.equity,
+      monthlyCashFlow: acc.monthlyCashFlow + r.monthlyCashFlow,
+    }),
+    { value: 0, equity: 0, monthlyCashFlow: 0 }
+  );
+  const isFiltered = activeFilter !== "all" && sortedRows.length !== rows.length;
+
   return (
     <div>
-      {/* Filter chips */}
-      <div className="flex flex-wrap gap-2 px-5 py-3 border-b border-border">
-        {FILTER_OPTIONS.map((opt) => (
-          <button
-            key={opt.key}
-            type="button"
-            onClick={() => setActiveFilter(opt.key)}
-            className={`rounded-md border px-3 py-1.5 text-xs font-medium transition-all duration-150 min-h-[32px] ${
-              activeFilter === opt.key
-                ? "border-accent/50 bg-accent/15 text-foreground"
-                : "border-border bg-transparent text-muted hover:bg-subtle hover:text-foreground"
-            }`}
-          >
-            {opt.label}
-            {opt.key !== "all" && (
-              <span className="ml-1.5 tabular-nums text-[10px] opacity-70">
-                {rows.filter((r) => {
+      {/* Command bar — filter chips: horizontal rail on mobile, wrap on desktop */}
+      <div
+        className="flex flex-nowrap items-center gap-2 overflow-x-auto overscroll-x-contain px-4 py-3 scrollbar-thin touch-pan-x border-b [-webkit-overflow-scrolling:touch] md:flex-wrap md:overflow-visible"
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--background-subtle)",
+        }}
+      >
+        {FILTER_OPTIONS.map((opt) => {
+          const isActive = activeFilter === opt.key;
+          const styles = CHIP_STYLES[opt.tone][isActive ? "active" : "idle"];
+          const count =
+            opt.key === "all"
+              ? rows.length
+              : rows.filter((r) => {
                   switch (opt.key) {
-                    case "needs_attention": return r.needsAttention;
                     case "negative_cashflow": return r.negativeCashFlow;
+                    case "high_ltv": return isHighLtv(r);
+                    case "below_market": return isBelowMarket(r);
                     case "stale_benchmark": return r.benchmarkStale;
                     case "incomplete_profile": return r.incompleteProfile;
                     default: return false;
                   }
-                }).length}
-              </span>
-            )}
-          </button>
-        ))}
+                }).length;
+          return (
+            <button
+              key={opt.key}
+              type="button"
+              onClick={() => setActiveFilter(opt.key)}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-2 text-[11.5px] font-medium transition-all duration-150 min-h-[44px] whitespace-nowrap hover:text-foreground md:min-h-[28px] md:py-1"
+              style={styles}
+            >
+              {opt.label}
+              <span className="text-[10.5px] tabular-nums opacity-75">{count}</span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Desktop table */}
       <div className="hidden md:block overflow-x-auto">
-        <table className="w-full text-sm">
+        <table
+          className="w-full text-sm"
+          style={{ borderCollapse: "separate", borderSpacing: 0 }}
+        >
           <thead>
-            <tr className="border-b border-border bg-subtle/40">
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted w-[220px]">
+            <tr style={{ borderBottom: "1px solid var(--border)" }}>
+              <th
+                className="px-4 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.05em]"
+                style={{ color: "var(--fg-dimmer)", width: "26%" }}
+              >
                 Property
               </th>
               <SortHeader
@@ -351,10 +508,16 @@ export function PropertyPerformanceTable({
                 hasDelta={columnsWithDelta.has("cashFlow")}
               />
               <SortHeader label="Cap rate" column="capRate" sort={sort} onSort={handleSort} />
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted">
+              <th
+                className="px-3 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.05em]"
+                style={{ color: "var(--fg-dimmer)" }}
+              >
                 Rent vs. market
               </th>
-              <th className="px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-muted">
+              <th
+                className="px-3 py-2.5 text-left text-[10.5px] font-semibold uppercase tracking-[0.05em]"
+                style={{ color: "var(--fg-dimmer)" }}
+              >
                 Status
               </th>
               <SortHeader label="Updated" column="updated" sort={sort} onSort={handleSort} />
@@ -363,103 +526,187 @@ export function PropertyPerformanceTable({
           <tbody>
             {sortedRows.length === 0 ? (
               <tr>
-                <td colSpan={8} className="px-3 py-8 text-center text-sm text-muted">
+                <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted">
                   No properties match this filter.
                 </td>
               </tr>
             ) : (
-              sortedRows.map((row, i) => (
-                <tr
-                  key={row.id}
-                  className={`cursor-pointer border-b border-border last:border-0 transition-colors duration-150 hover:bg-subtle/40 ${
-                    i % 2 !== 0 ? "bg-subtle/20" : ""
-                  }`}
-                  role="link"
-                  tabIndex={0}
-                  onClick={() => router.push(`/properties/${row.id}`)}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") {
-                      event.preventDefault();
-                      router.push(`/properties/${row.id}`);
-                    }
-                  }}
-                >
-                  {/* Property name */}
-                  <td className="px-3 py-3">
-                    <span className="font-medium text-foreground">{row.name}</span>
-                    <span className="block text-xs text-muted truncate max-w-[200px]">
-                      {row.addressLine1}
-                    </span>
-                  </td>
+              sortedRows.map((row) => {
+                const status = getStatusDot(row);
+                return (
+                  <tr
+                    key={row.id}
+                    className="cursor-pointer transition-colors duration-150"
+                    style={{
+                      borderTop: "1px solid var(--border-subtle)",
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = "var(--card-hover)";
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = "";
+                    }}
+                    role="link"
+                    tabIndex={0}
+                    onClick={() => router.push(`/properties/${row.id}`)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        router.push(`/properties/${row.id}`);
+                      }
+                    }}
+                  >
+                    {/* Property name + status dot + address */}
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <StatusDot status={status} />
+                        <span className="text-[12.5px] font-medium text-foreground truncate">
+                          {row.name}
+                        </span>
+                      </div>
+                      <div
+                        className="text-[11px] truncate max-w-[240px] mt-0.5"
+                        style={{ color: "var(--foreground-muted)", paddingLeft: "15px" }}
+                      >
+                        {row.addressLine1}
+                      </div>
+                    </td>
 
-                  {/* Value */}
-                  <td className="px-3 py-3 tabular-nums whitespace-nowrap">
-                    <span className="text-foreground">{formatCurrency(row.value)}</span>
-                    <DeltaIndicator delta={row.valueDeltaMoM} />
-                  </td>
+                    {/* Value */}
+                    <td className="px-3 py-3 text-[12px] tabular-nums whitespace-nowrap">
+                      <span className="text-foreground">{formatCurrency(row.value)}</span>
+                      <DeltaIndicator delta={row.valueDeltaMoM} />
+                    </td>
 
-                  {/* Equity */}
-                  <td className="px-3 py-3 tabular-nums whitespace-nowrap">
-                    <span className="text-foreground">{formatCurrency(row.equity)}</span>
-                    <DeltaIndicator delta={row.equityDeltaMoM} />
-                  </td>
+                    {/* Equity */}
+                    <td className="px-3 py-3 text-[12px] tabular-nums whitespace-nowrap">
+                      <span className="text-foreground">{formatCurrency(row.equity)}</span>
+                      <DeltaIndicator delta={row.equityDeltaMoM} />
+                    </td>
 
-                  {/* Cash flow */}
-                  <td className="px-3 py-3 tabular-nums whitespace-nowrap">
-                    <span
-                      className={row.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}
+                    {/* Cash flow */}
+                    <td className="px-3 py-3 text-[12px] tabular-nums whitespace-nowrap">
+                      <span
+                        className={row.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}
+                      >
+                        {fmtSignedMonthly(row.monthlyCashFlow)}
+                      </span>
+                      <DeltaIndicator delta={row.cashFlowDeltaMoM} />
+                    </td>
+
+                    {/* Cap rate */}
+                    <td className="px-3 py-3 text-[12px] tabular-nums text-foreground">
+                      {row.capRate != null
+                        ? `${(row.capRate * 100).toFixed(2)}%`
+                        : <span className="text-muted">—</span>}
+                    </td>
+
+                    {/* Benchmark */}
+                    <td className="px-3 py-3">
+                      <BenchmarkCell row={row} />
+                    </td>
+
+                    {/* Status tags */}
+                    <td className="px-3 py-3">
+                      <div className="flex flex-wrap gap-1">
+                        {row.negativeCashFlow && (
+                          <InsightTag label="Negative CF" tone="negative" />
+                        )}
+                        {row.noMortgage && (
+                          <InsightTag label="No mortgage" />
+                        )}
+                        {row.benchmarkStale && (
+                          <InsightTag label="Stale benchmark" />
+                        )}
+                        {row.incompleteProfile && (
+                          <InsightTag label="Incomplete" />
+                        )}
+                        {!row.needsAttention && (
+                          <span className="text-[11px] text-muted">—</span>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* Updated */}
+                    <td
+                      className="px-3 py-3 text-[11px] whitespace-nowrap"
+                      style={{ color: "var(--foreground-muted)" }}
                     >
-                      {formatCurrency(row.monthlyCashFlow)}
-                    </span>
-                    <DeltaIndicator delta={row.cashFlowDeltaMoM} />
-                  </td>
-
-                  {/* Cap rate */}
-                  <td className="px-3 py-3 tabular-nums text-foreground">
-                    {row.capRate != null
-                      ? `${(row.capRate * 100).toFixed(2)}%`
-                      : <span className="text-muted">—</span>}
-                  </td>
-
-                  {/* Benchmark */}
-                  <td className="px-3 py-3">
-                    <BenchmarkCell row={row} />
-                  </td>
-
-                  {/* Status tags */}
-                  <td className="px-3 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      {row.negativeCashFlow && (
-                        <InsightTag label="Negative CF" tone="negative" />
-                      )}
-                      {row.noMortgage && (
-                        <InsightTag label="No mortgage" />
-                      )}
-                      {row.benchmarkStale && (
-                        <InsightTag label="Stale benchmark" />
-                      )}
-                      {row.incompleteProfile && (
-                        <InsightTag label="Incomplete" />
-                      )}
-                      {!row.needsAttention && (
-                        <span className="text-xs text-muted">—</span>
-                      )}
-                    </div>
-                  </td>
-
-                  {/* Updated */}
-                  <td className="px-3 py-3 text-xs text-muted whitespace-nowrap">
-                    {formatTimeAgo(row.updatedAt)}
-                  </td>
-                </tr>
-              ))
+                      {formatTimeAgo(row.updatedAt)}
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
+
+          {/* Summary row — totals across visible rows */}
+          {sortedRows.length > 0 && (
+            <tfoot>
+              <tr
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  background: "var(--background-subtle)",
+                }}
+              >
+                <td className="px-4 py-3">
+                  <span
+                    className="text-[11.5px] font-semibold uppercase tracking-[0.04em]"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
+                    Portfolio total
+                    {isFiltered && (
+                      <span
+                        className="ml-1 font-normal opacity-60"
+                        style={{ textTransform: "none", letterSpacing: 0 }}
+                      >
+                        · {sortedRows.length} shown
+                      </span>
+                    )}
+                  </span>
+                </td>
+                <td className="px-3 py-3 text-[12.5px] font-semibold tabular-nums whitespace-nowrap text-foreground">
+                  {formatCurrency(summaryTotals.value)}
+                </td>
+                <td className="px-3 py-3 text-[12.5px] font-semibold tabular-nums whitespace-nowrap text-foreground">
+                  {formatCurrency(summaryTotals.equity)}
+                </td>
+                <td
+                  className={`px-3 py-3 text-[12.5px] font-semibold tabular-nums whitespace-nowrap ${
+                    summaryTotals.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
+                  }`}
+                >
+                  {fmtSignedMonthly(summaryTotals.monthlyCashFlow)}
+                  <span
+                    className="ml-1 text-[10.5px] font-normal"
+                    style={{ color: "var(--foreground-muted)" }}
+                  >
+                    / mo
+                  </span>
+                </td>
+                <td className="px-3 py-3" style={{ color: "var(--foreground-muted)" }}>
+                  —
+                </td>
+                <td className="px-3 py-3" style={{ color: "var(--foreground-muted)" }}>
+                  —
+                </td>
+                <td className="px-3 py-3" style={{ color: "var(--foreground-muted)" }}>
+                  —
+                </td>
+                <td className="px-3 py-3" style={{ color: "var(--foreground-muted)" }}>
+                  —
+                </td>
+              </tr>
+            </tfoot>
+          )}
         </table>
       </div>
 
       {/* Mobile compact rows */}
-      <ul className="md:hidden divide-y divide-border">
+      <ul
+        className="md:hidden"
+        style={{ borderTop: "1px solid var(--border-subtle)" }}
+      >
         {sortedRows.length === 0 ? (
           <li className="px-5 py-8 text-center text-sm text-muted">
             No properties match this filter.
@@ -501,23 +748,37 @@ export function PropertyPerformanceTable({
                       row.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
                     }`}
                   >
-                    {formatCurrency(row.monthlyCashFlow)}/mo
+                    {fmtSignedMonthly(row.monthlyCashFlow)}/mo
                   </span>
                 );
                 primaryDelta = row.cashFlowDeltaMoM;
             }
 
+            const status = getStatusDot(row);
+
             return (
-              <li key={row.id}>
+              <li
+                key={row.id}
+                style={{ borderBottom: "1px solid var(--border-subtle)" }}
+              >
                 <Link
                   href={`/properties/${row.id}`}
-                  className="flex min-h-[44px] items-center justify-between gap-3 px-5 py-3 transition-colors duration-150 hover:bg-subtle/40"
+                  className="flex min-h-[44px] items-center justify-between gap-3 px-4 py-3 transition-colors duration-150 hover:bg-subtle/40"
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium text-foreground">
-                      {row.name}
-                    </p>
-                    <p className="truncate text-xs text-muted">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <StatusDot status={status} />
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {row.name}
+                      </p>
+                    </div>
+                    <p
+                      className="truncate text-[11px] mt-0.5"
+                      style={{
+                        color: "var(--foreground-muted)",
+                        paddingLeft: "15px",
+                      }}
+                    >
                       {row.addressLine1} · {formatTimeAgo(row.updatedAt)}
                     </p>
                   </div>
@@ -526,7 +787,7 @@ export function PropertyPerformanceTable({
                       {primaryValue}
                       {primaryDelta !== null && primaryDelta !== 0 && (
                         <p
-                          className={`text-xs tabular-nums ${
+                          className={`text-[11px] tabular-nums ${
                             primaryDelta > 0 ? "text-positive" : "text-negative"
                           }`}
                         >
@@ -548,6 +809,39 @@ export function PropertyPerformanceTable({
           })
         )}
       </ul>
+
+      {/* Mobile summary bar */}
+      {sortedRows.length > 0 && (
+        <div
+          className="md:hidden flex items-center justify-between gap-3 px-4 py-3"
+          style={{
+            borderTop: "1px solid var(--border)",
+            background: "var(--background-subtle)",
+          }}
+        >
+          <span
+            className="text-[11px] font-semibold uppercase tracking-[0.04em]"
+            style={{ color: "var(--foreground-muted)" }}
+          >
+            Portfolio total
+            {isFiltered && (
+              <span
+                className="ml-1 font-normal opacity-60"
+                style={{ textTransform: "none", letterSpacing: 0 }}
+              >
+                · {sortedRows.length} shown
+              </span>
+            )}
+          </span>
+          <span
+            className={`text-sm font-semibold tabular-nums ${
+              summaryTotals.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
+            }`}
+          >
+            {fmtSignedMonthly(summaryTotals.monthlyCashFlow)}/mo
+          </span>
+        </div>
+      )}
     </div>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { captureClientEvent } from "@/lib/analytics-client";
 import { AnalyticsEvents } from "@/lib/analytics-events";
@@ -40,16 +40,27 @@ export function OnboardingPanel({
   propertyCount: number;
 }) {
   const router = useRouter();
+  const pathname = usePathname();
   const { user, isLoaded } = useUser();
   const [progress, setProgress] = useState(initialProgress);
   const [busy, setBusy] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  useEffect(() => {
+    setProgress(initialProgress);
+  }, [initialProgress.welcomeSeenAt, initialProgress.dismissedAt]);
+
   // A user who has added a property never sees any onboarding surface again,
   // regardless of dismissal state or snooze expiry.
   const hasNoProperties = propertyCount === 0;
 
-  const showWelcomeModal = hasNoProperties && !progress.welcomeSeenAt && !progress.dismissedAt;
+  // Never show onboarding overlays when the user is already in the add-property flow.
+  const isOnWizardPage = pathname.startsWith("/properties/new");
+  const isOnQuickMortgagePage = /^\/properties\/[^/]+\/mortgage\/quick$/.test(pathname ?? "");
+  const isOnFirstRunPropertyFlow = isOnWizardPage || isOnQuickMortgagePage;
+
+  const showWelcomeModal =
+    hasNoProperties && !progress.welcomeSeenAt && !progress.dismissedAt && !isOnFirstRunPropertyFlow;
 
   const snoozeExpired =
     progress.dismissedAt !== null &&
@@ -60,7 +71,8 @@ export function OnboardingPanel({
     hasNoProperties &&
     progress.welcomeSeenAt !== null &&
     progress.dismissedAt !== null &&
-    snoozeExpired;
+    snoozeExpired &&
+    !isOnFirstRunPropertyFlow;
 
   useEffect(() => {
     if (!isLoaded || !user?.id || !showWelcomeModal) return;
