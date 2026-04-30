@@ -46,6 +46,7 @@ export type PropertyDetailTabsProps = {
     marketRent: number | null;
     marketRentAsOf: Date | string | null;
     hasMortgage: boolean | null;
+    mortgagePaidOff: boolean;
     updatedAt: Date | string;
   };
   address: string;

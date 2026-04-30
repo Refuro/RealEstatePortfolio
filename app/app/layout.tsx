@@ -107,24 +107,30 @@ function JsonLdScript() {
         applicationCategory: "FinanceApplication",
         description:
           "Portfolio analytics for real estate investors. Track equity, cash flow, rent and value estimates. Replace spreadsheets with Veld.",
+        // Rich-result offers: prices shown are monthly (USD). Annual billing and tier limits are on /pricing and /terms; keep FAQ + pricing page as source of truth for full detail.
         offers: [
           {
             "@type": "Offer",
             name: "Free",
             price: "0",
             priceCurrency: "USD",
+            description: "Monthly equivalent; no charge. Annual billing N/A.",
           },
           {
             "@type": "Offer",
             name: "Investor",
             price: String(PRICING_DISPLAY.investorMonthly),
             priceCurrency: "USD",
+            description:
+              "Price shown is monthly billing in USD; lower annual pricing available on the pricing page.",
           },
           {
             "@type": "Offer",
             name: "Pro",
             price: String(PRICING_DISPLAY.proMonthly),
             priceCurrency: "USD",
+            description:
+              "Price shown is monthly billing in USD; lower annual pricing available on the pricing page.",
           },
         ],
       },

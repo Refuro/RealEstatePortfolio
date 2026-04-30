@@ -201,7 +201,10 @@ export async function PATCH(
 
     await recordRateLimit(identifier, "deals:patch");
 
-    return NextResponse.json(serializeDeal(deal));
+    const portfolioPayload = await buildPortfolioSummaryPayload(user);
+    const portfolioContext = toDealPortfolioContext(portfolioPayload);
+
+    return NextResponse.json({ ...serializeDeal(deal), portfolioContext });
   } catch (err) {
     console.error("Deal patch error:", err);
     Sentry.captureException(err instanceof Error ? err : new Error("Deal patch failed"), {

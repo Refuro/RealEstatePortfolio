@@ -27,7 +27,12 @@ function ExpandButton({
       <button
         type="button"
         onClick={() => onToggle(chartKey)}
-        className="rounded-md border border-border px-3 py-1.5 text-xs font-medium text-muted transition-all duration-150 hover:bg-subtle hover:text-foreground"
+        className="rounded-md border px-3 py-1.5 text-[12px] font-medium transition-all duration-150 hover:text-foreground"
+        style={{
+          borderColor: "var(--border)",
+          color: "var(--foreground-muted)",
+          background: "transparent",
+        }}
       >
         {slice.isExpanded ? "Show less" : `Show all ${slice.total}`}
       </button>
@@ -38,8 +43,18 @@ function ExpandButton({
 function ChartLoadingPlaceholder() {
   return (
     <div className="animate-pulse space-y-3">
-      <div className="h-4 w-24 rounded-md bg-subtle" />
-      <div className="flex h-[240px] items-center justify-center rounded-lg border border-dashed border-border bg-subtle/50 text-sm text-muted">
+      <div
+        className="h-4 w-24 rounded-md"
+        style={{ background: "var(--background-subtle)" }}
+      />
+      <div
+        className="flex h-[240px] items-center justify-center rounded-lg border border-dashed text-sm"
+        style={{
+          borderColor: "var(--border)",
+          background: "var(--background-subtle)",
+          color: "var(--foreground-muted)",
+        }}
+      >
         Loading charts…
       </div>
     </div>
@@ -101,50 +116,57 @@ function InlineValueBar({
 
   return (
     <div className="mt-4 space-y-2">
-      <div className="flex h-7 w-full overflow-hidden rounded-md">
+      <div className="flex h-[10px] w-full overflow-hidden rounded-md" style={{ gap: "2px" }}>
         {debtPct > 0 && (
           <div
-            className="flex items-center justify-center text-xs font-medium text-white transition-all"
+            className="transition-all"
             style={{
               width: `${debtPct}%`,
-              backgroundColor: "var(--chart-1)",
+              background: "oklch(0.55 0.15 260)",
+              borderRadius: "5px 0 0 5px",
               minWidth: debtPct > 0 && debtPct < 5 ? "1.5rem" : undefined,
             }}
             title={`Debt: ${formatCurrency(debt)}`}
-          >
-            {debtPct >= 12 && <span className="truncate px-1">Debt</span>}
-          </div>
+          />
         )}
         {equityPct > 0 && (
           <div
-            className="flex items-center justify-center text-xs font-medium text-white transition-all"
+            className="transition-all flex-1"
             style={{
-              width: `${equityPct}%`,
-              backgroundColor: "var(--positive)",
+              background: "oklch(0.65 0.14 162)",
+              borderRadius: "0 5px 5px 0",
               minWidth: equityPct > 0 && equityPct < 5 ? "1.5rem" : undefined,
             }}
             title={`Equity: ${formatCurrency(equity)}`}
-          >
-            {equityPct >= 12 && <span className="truncate px-1">Equity</span>}
-          </div>
+          />
         )}
       </div>
-      <div className="flex flex-wrap gap-3 text-xs">
+      <div className="flex flex-wrap gap-3 text-[11.5px]">
         <span className="flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-sm"
-            style={{ backgroundColor: "var(--chart-1)" }}
+            style={{ backgroundColor: "oklch(0.55 0.15 260)" }}
           />
-          <span className="text-muted">Debt</span>
-          <span className="font-medium text-foreground">{formatCurrency(debt)}</span>
+          <span style={{ color: "var(--foreground-muted)" }}>Debt</span>
+          <span
+            className="font-semibold tabular-nums"
+            style={{ color: "var(--foreground)" }}
+          >
+            {formatCurrency(debt)}
+          </span>
         </span>
         <span className="flex items-center gap-1.5">
           <span
             className="h-2 w-2 rounded-sm"
-            style={{ backgroundColor: "var(--positive)" }}
+            style={{ backgroundColor: "oklch(0.65 0.14 162)" }}
           />
-          <span className="text-muted">Equity</span>
-          <span className="font-medium text-foreground">{formatCurrency(equity)}</span>
+          <span style={{ color: "var(--foreground-muted)" }}>Equity</span>
+          <span
+            className="font-semibold tabular-nums"
+            style={{ color: "var(--foreground)" }}
+          >
+            {formatCurrency(equity)}
+          </span>
         </span>
       </div>
     </div>
@@ -180,154 +202,165 @@ export function DashboardCharts({
   if (isSingleProperty && singleProperty && debtVsValueFirst) {
     return (
       <div className="mt-8">
-        <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+        <div
+          className="rounded-xl border p-5"
+          style={{ background: "var(--card)", borderColor: "var(--border)" }}
+        >
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-foreground">
+            <h3
+              className="text-[13px] font-semibold"
+              style={{ color: "var(--foreground)" }}
+            >
               Property at a glance
             </h3>
             {singlePropertyId && (
               <Link
                 href={`/properties/${singlePropertyId}`}
-                className="font-medium text-foreground hover:underline"
+                className="text-[12px] font-medium hover:underline"
+                style={{ color: "var(--accent)" }}
               >
-                View property
+                View property →
               </Link>
             )}
           </div>
           <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-            {/* Position */}
-            <div>
-              <p className="text-sm font-medium text-muted">Value</p>
-              <p className="mt-0.5 text-lg font-semibold text-foreground">
-                {formatCurrency(debtVsValueFirst.value ?? 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted">Debt</p>
-              <p className="mt-0.5 text-lg font-semibold text-foreground">
-                {formatCurrency(debtVsValueFirst.debt ?? 0)}
-              </p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted">Equity</p>
-              <p className="mt-0.5 text-lg font-semibold text-foreground">
-                {formatCurrency(singleProperty.equity)}
-              </p>
-              {singlePropertyEquityDeltaMoM != null && (
-                <p
-                  className={`mt-0.5 text-xs tabular-nums ${
-                    singlePropertyEquityDeltaMoM > 0
-                      ? "text-positive"
-                      : singlePropertyEquityDeltaMoM < 0
-                        ? "text-negative"
-                        : "text-muted"
-                  }`}
-                >
-                  {singlePropertyEquityDeltaMoM > 0 ? "+" : ""}
-                  {formatCurrency(singlePropertyEquityDeltaMoM)} vs last month
-                </p>
-              )}
-            </div>
-            {/* Income */}
-            <div>
-              <p className="text-sm font-medium text-muted">Monthly cash flow</p>
-              <p
-                className={`mt-0.5 text-lg font-semibold ${
-                  (data.cashFlow[0]?.monthlyCashFlow ?? 0) >= 0
-                    ? "text-positive"
-                    : "text-negative"
-                }`}
-              >
-                {formatCurrency(data.cashFlow[0]?.monthlyCashFlow ?? 0)}
-              </p>
-            </div>
+            <GlanceMetric
+              label="Value"
+              value={formatCurrency(debtVsValueFirst.value ?? 0)}
+            />
+            <GlanceMetric
+              label="Debt"
+              value={formatCurrency(debtVsValueFirst.debt ?? 0)}
+            />
+            <GlanceMetric
+              label="Equity"
+              value={formatCurrency(singleProperty.equity)}
+              footer={
+                singlePropertyEquityDeltaMoM != null ? (
+                  <p
+                    className={`mt-0.5 text-[11px] tabular-nums ${
+                      singlePropertyEquityDeltaMoM > 0
+                        ? "text-positive"
+                        : singlePropertyEquityDeltaMoM < 0
+                          ? "text-negative"
+                          : "text-muted"
+                    }`}
+                  >
+                    {singlePropertyEquityDeltaMoM > 0 ? "+" : ""}
+                    {formatCurrency(singlePropertyEquityDeltaMoM)} vs last month
+                  </p>
+                ) : null
+              }
+            />
+            <GlanceMetric
+              label="Monthly cash flow"
+              value={formatCurrency(data.cashFlow[0]?.monthlyCashFlow ?? 0)}
+              valueColor={
+                (data.cashFlow[0]?.monthlyCashFlow ?? 0) >= 0
+                  ? "var(--positive)"
+                  : "var(--negative)"
+              }
+            />
             {singlePropertyMetrics && (
-              <div>
-                <p className="text-sm font-medium text-muted">Annual rent</p>
-                <p className="mt-0.5 text-lg font-semibold text-foreground">
-                  {formatCurrency(singlePropertyMetrics.totalAnnualRent)}
-                </p>
-              </div>
+              <GlanceMetric
+                label="Annual rent"
+                value={formatCurrency(singlePropertyMetrics.totalAnnualRent)}
+              />
             )}
-            {/* Returns */}
             {singlePropertyMetrics && (
               <>
-                <div>
-                  <p className="text-sm font-medium text-muted">Cap rate</p>
-                  <p className="mt-0.5 text-lg font-semibold text-foreground">
-                    {singlePropertyMetrics.weightedCapRate != null
+                <GlanceMetric
+                  label="Cap rate"
+                  value={
+                    singlePropertyMetrics.weightedCapRate != null
                       ? `${(singlePropertyMetrics.weightedCapRate * 100).toFixed(2)}%`
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted">NOI</p>
-                  <p className="mt-0.5 text-lg font-semibold text-foreground">
-                    {formatCurrency(singlePropertyMetrics.totalNoi)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted">Cash-on-cash return</p>
-                  <p
-                    className={`mt-0.5 text-lg font-semibold ${
-                      singlePropertyMetrics.portfolioCashOnCashReturn != null &&
-                      singlePropertyMetrics.portfolioCashOnCashReturn >= 0
-                        ? "text-positive"
-                        : singlePropertyMetrics.portfolioCashOnCashReturn != null
-                          ? "text-negative"
-                          : "text-foreground"
-                    }`}
-                  >
-                    {singlePropertyMetrics.portfolioCashOnCashReturn != null
+                      : "—"
+                  }
+                />
+                <GlanceMetric
+                  label="NOI"
+                  value={formatCurrency(singlePropertyMetrics.totalNoi)}
+                />
+                <GlanceMetric
+                  label="Cash-on-cash return"
+                  value={
+                    singlePropertyMetrics.portfolioCashOnCashReturn != null
                       ? `${(singlePropertyMetrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`
-                      : "—"}
-                  </p>
-                </div>
-                {/* Leverage */}
-                <div>
-                  <p className="text-sm font-medium text-muted">LTV</p>
-                  <p className="mt-0.5 text-lg font-semibold text-foreground">
-                    {singlePropertyMetrics.portfolioLtv != null
+                      : "—"
+                  }
+                  valueColor={
+                    singlePropertyMetrics.portfolioCashOnCashReturn != null
+                      ? singlePropertyMetrics.portfolioCashOnCashReturn >= 0
+                        ? "var(--positive)"
+                        : "var(--negative)"
+                      : "var(--foreground)"
+                  }
+                />
+                <GlanceMetric
+                  label="LTV"
+                  value={
+                    singlePropertyMetrics.portfolioLtv != null
                       ? `${(singlePropertyMetrics.portfolioLtv * 100).toFixed(1)}%`
-                      : "—"}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted">DSCR</p>
-                  <p
-                    className={`mt-0.5 text-lg font-semibold ${
-                      singlePropertyMetrics.dscr != null
-                        ? singlePropertyMetrics.dscr >= 1
-                          ? "text-positive"
-                          : "text-negative"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {singlePropertyMetrics.dscr != null
+                      : "—"
+                  }
+                  valueColor={
+                    singlePropertyMetrics.portfolioLtv != null &&
+                    singlePropertyMetrics.portfolioLtv > 0.8
+                      ? "var(--warning)"
+                      : "var(--foreground)"
+                  }
+                />
+                <GlanceMetric
+                  label="DSCR"
+                  value={
+                    singlePropertyMetrics.dscr != null
                       ? singlePropertyMetrics.dscr.toFixed(2)
-                      : "—"}
-                  </p>
-                </div>
+                      : "—"
+                  }
+                  valueColor={
+                    singlePropertyMetrics.dscr != null
+                      ? singlePropertyMetrics.dscr >= 1
+                        ? "var(--positive)"
+                        : "var(--negative)"
+                      : "var(--foreground)"
+                  }
+                />
               </>
             )}
-            {/* Benchmark */}
+            {/* Benchmark — wider cell */}
             <div className="col-span-2 min-w-[10rem]">
-              <p className="text-sm font-medium text-muted">Rent vs. market</p>
+              <p
+                className="text-[11px] font-medium uppercase tracking-[0.05em]"
+                style={{ color: "var(--foreground-muted)" }}
+              >
+                Rent vs. market
+              </p>
               {benchmark?.benchmarkLabel ? (
-                <p className="mt-0.5 text-lg font-semibold text-foreground">
+                <p
+                  className="mt-1 text-[17px] font-semibold tabular-nums"
+                  style={{ color: "var(--foreground)" }}
+                >
                   {benchmark.benchmarkLabel}
                 </p>
               ) : benchmark?.benchmarkMessage ? (
-                <p className="mt-0.5 text-sm text-muted">{benchmark.benchmarkMessage}</p>
+                <p
+                  className="mt-1 text-[13px]"
+                  style={{ color: "var(--foreground-muted)" }}
+                >
+                  {benchmark.benchmarkMessage}
+                </p>
               ) : benchmark?.propertyId ? (
-                <p className="mt-0.5">
+                <p className="mt-1">
                   <BenchmarkRefreshButton
                     propertyId={benchmark.propertyId}
                     label="Refresh estimate"
                   />
                 </p>
               ) : (
-                <p className="mt-0.5 text-lg font-semibold text-muted">
+                <p
+                  className="mt-1 text-[17px] font-semibold"
+                  style={{ color: "var(--foreground-muted)" }}
+                >
                   —
                 </p>
               )}
@@ -421,11 +454,17 @@ export function DashboardCharts({
   );
 
   const headerContent = (
-    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4">
-      <h2 className="text-sm font-semibold text-foreground">
+    <div
+      className="flex flex-col items-stretch gap-3 px-[18px] py-[14px] md:flex-row md:flex-wrap md:items-center md:justify-between"
+      style={{ borderBottom: "1px solid var(--border)" }}
+    >
+      <h2
+        className="text-[13px] font-semibold"
+        style={{ color: "var(--foreground)" }}
+      >
         Portfolio charts
       </h2>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap justify-center gap-1 md:justify-start">
         <ChartTabButton
           label="Equity"
           active={activeChart === "equity"}
@@ -456,10 +495,43 @@ export function DashboardCharts({
 
   return (
     <div className="mt-8">
-      <div className="rounded-xl border border-border bg-card shadow-sm">
+      <div
+        className="rounded-xl border"
+        style={{ background: "var(--card)", borderColor: "var(--border)" }}
+      >
         {headerContent}
         <div className="p-5">{activeChartPanel}</div>
       </div>
+    </div>
+  );
+}
+
+function GlanceMetric({
+  label,
+  value,
+  valueColor = "var(--foreground)",
+  footer,
+}: {
+  label: string;
+  value: string;
+  valueColor?: string;
+  footer?: React.ReactNode;
+}) {
+  return (
+    <div>
+      <p
+        className="text-[11px] font-medium uppercase tracking-[0.05em]"
+        style={{ color: "var(--foreground-muted)" }}
+      >
+        {label}
+      </p>
+      <p
+        className="mt-1 text-[17px] font-semibold tabular-nums"
+        style={{ color: valueColor }}
+      >
+        {value}
+      </p>
+      {footer}
     </div>
   );
 }
@@ -477,11 +549,20 @@ function ChartTabButton({
     <button
       type="button"
       onClick={onClick}
-      className={`rounded-md border px-3 py-1.5 text-sm font-medium transition-all duration-150 ${
+      className="rounded-md border px-3 py-1.5 text-[12px] font-medium transition-all duration-150"
+      style={
         active
-          ? "border-accent/50 bg-accent/15 text-foreground"
-          : "border-border bg-transparent text-muted hover:bg-subtle hover:text-foreground"
-      }`}
+          ? {
+              background: "var(--accent-dim)",
+              color: "var(--accent)",
+              borderColor: "rgba(129,140,248,0.2)",
+            }
+          : {
+              background: "transparent",
+              color: "var(--foreground-muted)",
+              borderColor: "transparent",
+            }
+      }
     >
       {label}
     </button>

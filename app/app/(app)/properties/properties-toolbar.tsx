@@ -2,16 +2,15 @@
 
 import { useEffect, useTransition, useState } from "react";
 import { useRouter } from "next/navigation";
-import { LayoutGrid, List } from "lucide-react";
+import { ChevronDown, LayoutGrid, List } from "lucide-react";
+import {
+  PROPERTIES_VIEW_EVENT,
+  dispatchPropertiesViewEvent,
+  type PropertiesViewEventDetail,
+} from "./properties-view-event";
 
-type PropertiesFilter =
-  | "all"
-  | "needs_attention"
-  | "no_mortgage"
-  | "stale_benchmark"
-  | "negative_cashflow"
-  | "incomplete_profile";
-type PropertiesSort = "updated" | "worst_cashflow";
+type PropertiesFilter = "all" | "incomplete" | "cf_negative" | "refi_ready";
+type PropertiesSort = "updated" | "cash_flow" | "cap_rate" | "value_equity";
 type PropertiesView = "grid" | "list";
 
 type Option = { key: string; label: string };
@@ -47,18 +46,31 @@ export function PropertiesToolbar({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // Optimistic state — updates on the same frame as click, before server responds
   const [filter, setFilter] = useState<PropertiesFilter>(serverFilter);
   const [sort, setSort] = useState<PropertiesSort>(serverSort);
+  const [view, setView] = useState<PropertiesView>(activeView);
 
-  // Sync back when server navigation settles (e.g. back/forward button)
   useEffect(() => { setFilter(serverFilter); }, [serverFilter]);
   useEffect(() => { setSort(serverSort); }, [serverSort]);
+  useEffect(() => { setView(activeView); }, [activeView]);
 
-  function navigate(
-    newFilter: PropertiesFilter,
-    newSort: PropertiesSort
-  ) {
+  // Stay in sync if the toggle is changed elsewhere (defense-in-depth — the
+  // toolbar is the only producer today).
+  useEffect(() => {
+    function onView(e: Event) {
+      const detail = (e as CustomEvent<PropertiesViewEventDetail>).detail;
+      if (detail?.view) setView(detail.view);
+    }
+    window.addEventListener(PROPERTIES_VIEW_EVENT, onView);
+    return () => window.removeEventListener(PROPERTIES_VIEW_EVENT, onView);
+  }, []);
+
+  function switchView(next: PropertiesView) {
+    setView(next);
+    dispatchPropertiesViewEvent(next);
+  }
+
+  function navigate(newFilter: PropertiesFilter, newSort: PropertiesSort) {
     setFilter(newFilter);
     setSort(newSort);
     startTransition(() => {
@@ -77,35 +89,46 @@ export function PropertiesToolbar({
     <div
       className={`transition-opacity duration-200 ${isPending ? "opacity-50" : "opacity-100"}`}
     >
-      {/* Mobile */}
+      {/* Mobile: horizontal-scroll chip row + sort dropdown */}
       <div className="md:hidden">
-        <div className="mb-2 flex items-center gap-2">
-          {/* Mobile filter select */}
-          <select
-            value={filter}
-            onChange={(e) => navigate(e.target.value as PropertiesFilter, sort)}
-            className="min-h-[44px] flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-base font-medium text-foreground"
-          >
-            {filterOptions.map((option) => (
-              <option key={option.key} value={option.key}>
+        <div
+          className="-mx-1 flex items-center gap-1.5 overflow-x-auto px-1 pb-1 [&::-webkit-scrollbar]:hidden"
+          style={{ scrollbarWidth: "none" }}
+        >
+          {filterOptions.map((option) => {
+            const active = filter === option.key;
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => navigate(option.key as PropertiesFilter, sort)}
+                className={`${chipBase} ${active ? chipActive : chipInactive}`}
+                aria-pressed={active}
+              >
                 {option.label}
-              </option>
-            ))}
-          </select>
+              </button>
+            );
+          })}
         </div>
-        <div className="flex items-center gap-2">
-          {/* Mobile sort select */}
-          <select
-            value={sort}
-            onChange={(e) => navigate(filter, e.target.value as PropertiesSort)}
-            className="min-h-[44px] flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-base font-medium text-foreground"
-          >
-            {sortOptions.map((option) => (
-              <option key={option.key} value={option.key}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+        <div className="mt-2 flex items-center gap-2">
+          <div className="relative flex-1">
+            <select
+              value={sort}
+              onChange={(e) => navigate(filter, e.target.value as PropertiesSort)}
+              className="min-h-[44px] w-full appearance-none rounded-xl border border-border bg-background py-2.5 pl-3 pr-10 text-base font-medium text-foreground"
+              aria-label="Sort properties"
+            >
+              {sortOptions.map((option) => (
+                <option key={option.key} value={option.key}>
+                  Sort: {option.label}
+                </option>
+              ))}
+            </select>
+            <ChevronDown
+              className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-muted"
+              aria-hidden
+            />
+          </div>
           {(filter !== "all" || sort !== "updated") && (
             <button
               type="button"
@@ -120,7 +143,6 @@ export function PropertiesToolbar({
 
       {/* Desktop */}
       <div className="hidden md:block">
-        {/* Row 1: filter chips */}
         <div className="flex items-center gap-1.5 overflow-x-auto">
           {filterOptions.map((option) => {
             const active = filter === option.key;
@@ -138,7 +160,6 @@ export function PropertiesToolbar({
           })}
         </div>
 
-        {/* Row 2: sort chips + reset */}
         <div className="mt-2 flex items-center gap-3 border-t border-border pt-2">
           <span className="shrink-0 text-xs font-medium text-muted">Sort</span>
           {sortOptions.map((option) => {
@@ -155,79 +176,49 @@ export function PropertiesToolbar({
               </button>
             );
           })}
-          {(filter !== "all" || sort !== "updated") && (
-            <button
-              type="button"
-              onClick={() => navigate("all", "updated")}
-              className="ml-auto shrink-0 text-xs font-medium text-muted transition-colors duration-150 hover:text-foreground"
-            >
-              Reset
-            </button>
-          )}
+          <div className="ml-auto flex shrink-0 items-center gap-3">
+            {(filter !== "all" || sort !== "updated") && (
+              <button
+                type="button"
+                onClick={() => navigate("all", "updated")}
+                className="shrink-0 text-xs font-medium text-muted transition-colors duration-150 hover:text-foreground"
+              >
+                Reset
+              </button>
+            )}
+            <div className="flex overflow-hidden rounded-md border border-border">
+              <button
+                type="button"
+                onClick={() => switchView("grid")}
+                className={`inline-flex h-8 w-8 items-center justify-center transition-all duration-150 ${
+                  view === "grid"
+                    ? "bg-accent/10 text-foreground"
+                    : "bg-transparent text-muted hover:bg-subtle hover:text-foreground"
+                }`}
+                aria-label="Grid view"
+                aria-pressed={view === "grid"}
+              >
+                <LayoutGrid className="size-3.5" aria-hidden />
+              </button>
+              <span className="w-px bg-border" aria-hidden />
+              <button
+                type="button"
+                onClick={() => switchView("list")}
+                className={`inline-flex h-8 w-8 items-center justify-center transition-all duration-150 ${
+                  view === "list"
+                    ? "bg-accent/10 text-foreground"
+                    : "bg-transparent text-muted hover:bg-subtle hover:text-foreground"
+                }`}
+                aria-label="List view"
+                aria-pressed={view === "list"}
+              >
+                <List className="size-3.5" aria-hidden />
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   );
 }
 
-type ViewToggleProps = {
-  activeView: PropertiesView;
-  activeFilter: PropertiesFilter;
-  activeSort: PropertiesSort;
-};
-
-export function PropertiesViewToggle({
-  activeView,
-  activeFilter,
-  activeSort,
-}: ViewToggleProps) {
-  return (
-    <div className="hidden shrink-0 overflow-hidden rounded-md border border-border md:flex">
-      <ViewBtn
-        view="grid"
-        activeView={activeView}
-        activeFilter={activeFilter}
-        activeSort={activeSort}
-      />
-      <span className="w-px bg-border" aria-hidden />
-      <ViewBtn
-        view="list"
-        activeView={activeView}
-        activeFilter={activeFilter}
-        activeSort={activeSort}
-      />
-    </div>
-  );
-}
-
-function ViewBtn({
-  view,
-  activeView,
-  activeFilter,
-  activeSort,
-}: {
-  view: PropertiesView;
-  activeView: PropertiesView;
-  activeFilter: PropertiesFilter;
-  activeSort: PropertiesSort;
-}) {
-  const isActive = activeView === view;
-  return (
-    <a
-      href={buildPropertiesHref(activeFilter, activeSort, view)}
-      className={`inline-flex h-8 w-8 items-center justify-center transition-all duration-150 ${
-        isActive
-          ? "bg-accent/10 text-foreground"
-          : "bg-transparent text-muted hover:bg-subtle hover:text-foreground"
-      }`}
-      aria-label={view === "grid" ? "Grid view" : "List view"}
-      aria-current={isActive ? "page" : undefined}
-    >
-      {view === "grid" ? (
-        <LayoutGrid className="size-3.5" aria-hidden />
-      ) : (
-        <List className="size-3.5" aria-hidden />
-      )}
-    </a>
-  );
-}

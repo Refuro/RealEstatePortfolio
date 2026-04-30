@@ -51,6 +51,10 @@ vi.mock("@/lib/rate-limit", () => ({
   ),
 }));
 
+vi.mock("next/cache", () => ({
+  revalidateTag: vi.fn(),
+}));
+
 const validCreateBody = {
   addressLine1: "123 Main St",
   city: "Austin",

@@ -128,6 +128,7 @@ const HOW_IT_WORKS = [
 
 const VELD_DOES = [
   "Portfolio tracking — equity, cash flow, cap rate, LTV",
+  "Portfolio insights: what's working, what's at risk, what to do next",
   "Deal underwriting — cash flow, DSCR, CoC return, cap rate",
   "Scenario modeling with 5, 10, and 20-year projections",
   "Mortgage amortization and payoff tracking",

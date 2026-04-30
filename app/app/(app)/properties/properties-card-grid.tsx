@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState, type ReactNode } from "react";
-import { LayoutGrid, List } from "lucide-react";
 import { useIsMobile } from "@/lib/use-is-mobile";
+import {
+  PROPERTIES_VIEW_EVENT,
+  type PropertiesViewEventDetail,
+} from "./properties-view-event";
 
 type PropertiesCardGridProps = {
   cards: ReactNode[];
@@ -24,74 +27,45 @@ export function PropertiesCardGrid({
   const isMobile = useIsMobile();
   const [expanded, setExpanded] = useState(false);
 
-  // Local view state — initialised from server (URL param), but toggles instantly
-  // without a server round-trip. URL is kept in sync silently via history.replaceState.
+  // View state lives here for instant client-side switching. The toolbar's
+  // toggle dispatches a custom event we listen for; URL stays in sync via
+  // history.replaceState inside the dispatcher.
   const [view, setView] = useState<"grid" | "list">(serverViewMode);
 
-  // Sync when server-resolved value changes (e.g. after filter/sort navigation)
   useEffect(() => { setView(serverViewMode); }, [serverViewMode]);
+
+  useEffect(() => {
+    function onView(e: Event) {
+      const detail = (e as CustomEvent<PropertiesViewEventDetail>).detail;
+      if (detail?.view) setView(detail.view);
+    }
+    window.addEventListener(PROPERTIES_VIEW_EVENT, onView);
+    return () => window.removeEventListener(PROPERTIES_VIEW_EVENT, onView);
+  }, []);
 
   useEffect(() => {
     if (!isMobile) setExpanded(true);
   }, [isMobile]);
 
-  function switchView(next: "grid" | "list") {
-    setView(next);
-    // Silently update URL so filter/sort navigations carry the current view,
-    // without triggering a server re-render.
-    try {
-      const url = new URL(window.location.href);
-      url.searchParams.set("view", next);
-      window.history.replaceState({}, "", url.toString());
-    } catch {
-      // no-op in environments where history is unavailable
-    }
-  }
+  // Mobile always renders the compact card layout regardless of the stored
+  // toggle preference (the toggle is desktop-only per follow-up #11).
+  const effectiveView = isMobile ? "grid" : view;
 
-  const shouldCollapse = view === "grid" && isMobileDisclosureEligible && !expanded;
+  const shouldCollapse =
+    effectiveView === "grid" && isMobileDisclosureEligible && !expanded;
   const visibleCards = shouldCollapse ? cards.slice(0, MOBILE_INITIAL_COUNT) : cards;
-
-  const segBtnBase =
-    "inline-flex h-8 w-8 items-center justify-center transition-all duration-150";
-  const segActive = "bg-accent/10 text-foreground";
-  const segInactive =
-    "bg-transparent text-muted hover:bg-subtle hover:text-foreground";
 
   return (
     <div>
-      {/* View toggle — floats above the list, right-aligned */}
-      <div className="mb-3 flex items-center justify-end">
-        <div className="flex overflow-hidden rounded-md border border-border">
-          <button
-            type="button"
-            onClick={() => switchView("grid")}
-            className={`${segBtnBase} ${view === "grid" ? segActive : segInactive}`}
-            aria-label="Grid view"
-            aria-pressed={view === "grid"}
-          >
-            <LayoutGrid className="size-3.5" aria-hidden />
-          </button>
-          <span className="w-px bg-border" aria-hidden />
-          <button
-            type="button"
-            onClick={() => switchView("list")}
-            className={`${segBtnBase} ${view === "list" ? segActive : segInactive}`}
-            aria-label="List view"
-            aria-pressed={view === "list"}
-          >
-            <List className="size-3.5" aria-hidden />
-          </button>
-        </div>
-      </div>
-
-      {view === "grid" ? (
+      {effectiveView === "grid" ? (
         <ul className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
           {visibleCards}
         </ul>
       ) : (
-        <ul className="divide-y divide-border overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          {listRows}
-        </ul>
+        <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+          <ListColumnHeader />
+          <ul className="divide-y divide-border">{listRows}</ul>
+        </div>
       )}
 
       {shouldCollapse && (
@@ -105,6 +79,29 @@ export function PropertiesCardGrid({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function ListColumnHeader() {
+  // Header row is desktop-only — at md breakpoint the list rows widen into
+  // five labeled columns. On mobile the list collapses to a single Property
+  // column and we don't render a header (the row content is self-labeling).
+  const cell = "text-right text-xs font-medium uppercase tracking-wide text-muted";
+  return (
+    <div
+      className="hidden border-b border-border bg-subtle/30 px-4 py-2 md:grid md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)_auto] md:items-center md:gap-3"
+      role="row"
+      aria-hidden
+    >
+      <span className="text-xs font-medium uppercase tracking-wide text-muted">
+        Property
+      </span>
+      <span className={cell}>Value / Equity</span>
+      <span className={cell}>Cash flow</span>
+      <span className={cell}>Cap rate</span>
+      <span className={cell}>Status</span>
+      <span className="size-4" aria-hidden />
     </div>
   );
 }

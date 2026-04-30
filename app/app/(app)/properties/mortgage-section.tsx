@@ -340,13 +340,10 @@ function mortgageFormDataFromMortgage(m: Mortgage): MortgageFormData {
   return {
     originalLoanAmount: m.originalLoanAmount,
     currentBalance: m.currentBalance,
-    balanceAsOfDate: m.balanceAsOfDate ?? "",
     interestRatePercent: (Number(m.interestRate) * 100).toString(),
     termYears: m.termYears.toString(),
     startDate: m.startDate,
     monthlyPayment: m.monthlyPayment,
-    paymentEffectiveDate: m.paymentEffectiveDate ?? "",
-    escrowIncluded: m.escrowIncluded,
     escrowAmount: m.escrowAmount ?? "",
     lenderName: m.lenderName ?? "",
     loanType: m.loanType ?? "",
@@ -355,17 +352,16 @@ function mortgageFormDataFromMortgage(m: Mortgage): MortgageFormData {
 
 function mortgageFormDataToPayload(data: MortgageFormData) {
   const interestDecimal = (Number(data.interestRatePercent) / 100).toString();
+  const escrowNum = Number(data.escrowAmount) || 0;
   return {
     originalLoanAmount: data.originalLoanAmount,
     currentBalance: data.currentBalance,
-    balanceAsOfDate: data.balanceAsOfDate?.trim() ? data.balanceAsOfDate : null,
     interestRate: interestDecimal,
     termYears: Number(data.termYears),
     startDate: data.startDate,
     monthlyPayment: data.monthlyPayment,
-    paymentEffectiveDate: data.paymentEffectiveDate?.trim() ? data.paymentEffectiveDate : null,
-    escrowIncluded: data.escrowIncluded,
     escrowAmount: data.escrowAmount?.trim() ? data.escrowAmount : null,
+    escrowIncluded: escrowNum > 0,
     lenderName: data.lenderName.trim() || null,
     loanType: data.loanType.trim() || null,
   };

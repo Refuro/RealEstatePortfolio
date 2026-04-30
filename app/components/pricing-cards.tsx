@@ -50,11 +50,13 @@ const PLANS: {
     features: [
       "Track up to 5 properties",
       "Save up to 20 analyzed deals",
+      "Portfolio insights: what's working, what's at risk",
       "Best fit for active small portfolios",
     ],
     publicBestFor: "Best for active small portfolios",
     publicFeatures: [
       "Manage multiple rentals without spreadsheet sprawl",
+      "See what's working and what's at risk across your properties",
       "Compare more deals as you grow",
       "Keep financing assumptions centralized",
     ],
@@ -68,11 +70,13 @@ const PLANS: {
     features: [
       "Track up to 20 properties",
       "Save up to 50 analyzed deals",
+      "Portfolio insights: what's working, what's at risk",
       "For portfolios up to 20 properties",
     ],
     publicBestFor: "Best for landlords tracking 10–20 properties",
     publicFeatures: [
       "Track up to 20 properties with the same metrics available on smaller plans",
+      "See what's working and what's at risk across your entire portfolio",
       "Underwrite acquisitions and model debt scenarios across more properties",
       "Consolidate analysis across properties",
     ],

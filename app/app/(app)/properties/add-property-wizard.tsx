@@ -894,17 +894,16 @@ function StepIncomeExpenses({
 
 function mortgageFormDataToPayload(data: MortgageFormData) {
   const interestDecimal = (Number(data.interestRatePercent) / 100).toString();
+  const escrowNum = Number(data.escrowAmount) || 0;
   return {
     originalLoanAmount: data.originalLoanAmount,
     currentBalance: data.currentBalance,
-    balanceAsOfDate: data.balanceAsOfDate?.trim() ? data.balanceAsOfDate : null,
     interestRate: interestDecimal,
     termYears: Number(data.termYears),
     startDate: data.startDate,
     monthlyPayment: data.monthlyPayment,
-    paymentEffectiveDate: data.paymentEffectiveDate?.trim() ? data.paymentEffectiveDate : null,
-    escrowIncluded: data.escrowIncluded,
     escrowAmount: data.escrowAmount?.trim() ? data.escrowAmount : null,
+    escrowIncluded: escrowNum > 0,
     lenderName: data.lenderName.trim() || null,
     loanType: data.loanType.trim() || null,
   };
@@ -1282,16 +1281,15 @@ function validateStep4(data: WizardData): Record<string, string> {
   }
   if (data.addMortgage !== true) return {};
   const m = data.mortgage;
+  const escrowNum = Number(m.escrowAmount) || 0;
   const payload = {
     originalLoanAmount: m.originalLoanAmount,
     currentBalance: m.currentBalance,
-    balanceAsOfDate: m.balanceAsOfDate?.trim() ? m.balanceAsOfDate : null,
     interestRate: (Number(m.interestRatePercent) / 100).toString(),
     termYears: Number(m.termYears),
     startDate: m.startDate,
     monthlyPayment: m.monthlyPayment,
-    paymentEffectiveDate: m.paymentEffectiveDate?.trim() ? m.paymentEffectiveDate : null,
-    escrowIncluded: m.escrowIncluded,
+    escrowIncluded: escrowNum > 0,
     escrowAmount: m.escrowAmount?.trim() ? m.escrowAmount : null,
     lenderName: m.lenderName.trim() || null,
     loanType: m.loanType.trim() || null,
@@ -1360,6 +1358,9 @@ export function AddPropertyWizard({
   const [data, setData] = useState<WizardData>(defaultWizardData);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
+  const [quickAddPendingAction, setQuickAddPendingAction] = useState<
+    "create_only" | "create_then_mortgage" | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
   const [valueEstimateLoading, setValueEstimateLoading] = useState(false);
   const [valueEstimateError, setValueEstimateError] = useState<string | null>(null);
@@ -1751,7 +1752,7 @@ export function AddPropertyWizard({
     }, 300);
   }
 
-  async function submitQuickAdd() {
+  async function submitQuickAdd(submitMode: "create_only" | "create_then_mortgage") {
     const nextErrors: Record<string, string> = {};
     if (!data.addressLine1.trim() || !data.city.trim() || !data.state.trim() || !data.zipCode.trim()) {
       nextErrors.addressLine1 =
@@ -1803,6 +1804,7 @@ export function AddPropertyWizard({
 
     setError(null);
     setSubmitting(true);
+    setQuickAddPendingAction(submitMode);
     try {
       const res = await fetch("/api/properties", {
         method: "POST",
@@ -1822,26 +1824,43 @@ export function AddPropertyWizard({
             : resData.error || "Something went wrong"
         );
         setSubmitting(false);
+        setQuickAddPendingAction(null);
         return;
       }
       draft?.clearDraft();
-      if (typeof resData.id === "string") {
+      const createdPropertyId = typeof resData.id === "string" ? resData.id : null;
+      if (createdPropertyId) {
         captureClientEvent(AnalyticsEvents.PROPERTY_CREATED, {
-          property_id: resData.id,
+          property_id: createdPropertyId,
         });
         captureClientEvent(AnalyticsEvents.PROPERTY_QUICK_ADD_COMPLETED, {
-          property_id: resData.id,
+          property_id: createdPropertyId,
         });
       }
-      if (resData.createdFirstProperty) {
+      if (submitMode === "create_then_mortgage") {
+        if (!createdPropertyId) {
+          setError("Property created, but we couldn't open mortgage setup. Open the property and add it there.");
+          setSubmitting(false);
+          setQuickAddPendingAction(null);
+          return;
+        }
+        router.push(`/properties/${createdPropertyId}/mortgage/quick`);
+      } else if (resData.createdFirstProperty) {
         router.push("/dashboard?onboarding=first-property");
       } else {
-        router.push(`/properties/${resData.id}?from=quick-add`);
+        if (!createdPropertyId) {
+          setError("Property created, but we couldn't open it. Please refresh and try again.");
+          setSubmitting(false);
+          setQuickAddPendingAction(null);
+          return;
+        }
+        router.push(`/properties/${createdPropertyId}?from=quick-add`);
       }
       router.refresh();
     } catch {
       setError("Network error");
       setSubmitting(false);
+      setQuickAddPendingAction(null);
     }
   }
 
@@ -2211,7 +2230,11 @@ export function AddPropertyWizard({
   function handleFormSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (quickAdd) {
-      void submitQuickAdd();
+      const nativeEvent = e.nativeEvent as SubmitEvent;
+      const submitter = nativeEvent.submitter as HTMLButtonElement | null;
+      const submitMode =
+        submitter?.value === "create_then_mortgage" ? "create_then_mortgage" : "create_only";
+      void submitQuickAdd(submitMode);
       return;
     }
     if (currentStep < 4) {
@@ -2523,17 +2546,32 @@ export function AddPropertyWizard({
         <div className="mt-8 flex flex-wrap items-center justify-between gap-4 border-t border-border pt-6">
           <Link
             href="/properties"
-            className="inline-flex rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium hover:bg-subtle"
+            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium transition-colors duration-150 hover:bg-subtle"
           >
             Cancel
           </Link>
-          <button
-            type="submit"
-            disabled={submitting}
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover disabled:opacity-50"
-          >
-            {submitting ? "Creating…" : "Create property"}
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="submit"
+              value="create_only"
+              disabled={submitting}
+              className="min-h-[44px] rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground transition-all duration-150 hover:bg-accent-hover disabled:opacity-50"
+            >
+              {submitting && quickAddPendingAction === "create_only"
+                ? "Creating…"
+                : "Create property"}
+            </button>
+            <button
+              type="submit"
+              value="create_then_mortgage"
+              disabled={submitting}
+              className="min-h-[44px] rounded-md border border-border bg-transparent px-4 py-2 text-sm font-medium text-foreground transition-colors duration-150 hover:bg-subtle disabled:opacity-50"
+            >
+              {submitting && quickAddPendingAction === "create_then_mortgage"
+                ? "Creating…"
+                : "Add mortgage info"}
+            </button>
+          </div>
         </div>
       </form>
     );

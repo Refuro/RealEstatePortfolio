@@ -2,7 +2,6 @@ import Link from "next/link";
 import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/format-currency";
-import { MetricCard } from "@/components/metric-card";
 import { getPropertyTotalRent } from "@/lib/property-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import { buildDashboardPortfolioPayload } from "@/lib/server/portfolio-summary-payload";
@@ -11,100 +10,77 @@ import {
   BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
   getBenchmarkLabel,
+  getBenchmarkTone,
 } from "@/lib/benchmark-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
 import { adjustSnapshotCashFlow } from "@/lib/snapshots";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
-import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { DashboardCharts, type DashboardChartData } from "./dashboard-charts";
-import { MetricHelpLink } from "./metric-help-link";
 import { RentVsMarketSection } from "./rent-vs-market-section";
-import { PortfolioOverviewSection } from "./portfolio-overview-section";
 import { PaidIntentCheckoutBanner } from "@/components/growth/paid-intent-checkout-banner";
 import {
   DashboardEmptyStatePrimaryCta,
   DashboardEmptyStateSecondaryLinks,
 } from "./dashboard-empty-state-ctas";
-import { Minus, TrendingDown, TrendingUp } from "lucide-react";
 import type { PropertyTableRow } from "./property-performance-table";
+import { buildDashboardInsightsPayload } from "./build-insights-payload";
+import { pickInsights } from "@/lib/insights";
+import { hasTrialExpired } from "@/lib/plans";
+import { PortfolioSection } from "./portfolio-section";
+import { MetricHelpLink } from "./metric-help-link";
 
-function formatDeltaLabel(value: number | null | undefined): string | null {
-  if (value == null) return null;
-  if (value === 0) return "No change vs last month";
-  const sign = value > 0 ? "+" : "";
-  return `${sign}${formatCurrency(value)} vs last month`;
+import { PortfolioHeroStrip, type HeroMetric } from "@/components/dashboard/portfolio-hero-strip";
+import type { AlertPill } from "@/components/dashboard/alert-pills-row";
+import { InsightsCardsClient } from "@/components/dashboard/insights-cards-client";
+import { InsightsLockedCard } from "@/components/dashboard/insights-locked-card";
+import { SignalStrip, type Signal } from "@/components/dashboard/signal-strip";
+import {
+  PropertyHeaderCard,
+  type PropertyTag,
+} from "@/components/dashboard/property-header-card";
+import { CapitalStructureCard } from "@/components/dashboard/capital-structure-card";
+import { CashFlowBreakdownCard } from "@/components/dashboard/cash-flow-breakdown-card";
+import {
+  SecondaryMetricsStrip,
+  type SecondaryMetric,
+} from "@/components/dashboard/secondary-metrics-strip";
+import { EquityTrendChart } from "@/components/dashboard/equity-trend-chart";
+import { AnnualReturnBar } from "@/components/dashboard/annual-return-bar";
+
+const MINUS = "−";
+
+// ─── Local helpers ───────────────────────────────────────────────────────────
+
+function fmtSignedMonthly(amount: number): string {
+  if (amount === 0) return `${formatCurrency(0)} / mo`;
+  const sign = amount < 0 ? MINUS : "+";
+  return `${sign}${formatCurrency(Math.abs(amount))} / mo`;
 }
 
-function TrendDirectionIcon({ value }: { value: number | null | undefined }) {
-  if (value == null || value === 0) {
-    return <Minus className="size-4 text-muted" aria-hidden />;
-  }
-  if (value > 0) {
-    return <TrendingUp className="size-4 text-positive" aria-hidden />;
-  }
-  return <TrendingDown className="size-4 text-negative" aria-hidden />;
+function fmtSignedAmount(amount: number): string {
+  if (amount === 0) return formatCurrency(0);
+  const sign = amount < 0 ? MINUS : "+";
+  return `${sign}${formatCurrency(Math.abs(amount))}`;
 }
 
-function EquitySparkline({
-  values,
-  labels,
-}: {
-  values: number[];
-  labels: string[];
-}) {
-  if (values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const width = 220;
-  const height = 48;
-  const points = values.map((value, index) => {
-    const x = (index / (values.length - 1)) * width;
-    const y = height - ((value - min) / range) * height;
-    return `${x},${y}`;
-  });
-  const latest = values.at(-1) ?? 0;
-  const previous = values.at(-2) ?? latest;
-  const positive = latest >= previous;
-
-  const strokeColor = positive ? "var(--positive)" : "var(--negative)";
-  const areaPoints = `0,${height} ${points.join(" ")} ${width},${height}`;
-
-  return (
-    <div className="mt-3">
-      <svg
-        viewBox={`0 0 ${width} ${height}`}
-        className="h-12 w-full md:h-auto md:aspect-[6/1]"
-        preserveAspectRatio="none"
-        role="img"
-        aria-label={`Equity trend from ${labels[0]} to ${labels[labels.length - 1]}`}
-      >
-        <defs>
-          <linearGradient id="equityGradient" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={strokeColor} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={strokeColor} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        <polygon
-          fill="url(#equityGradient)"
-          points={areaPoints}
-        />
-        <polyline
-          fill="none"
-          stroke={strokeColor}
-          strokeWidth="2"
-          points={points.join(" ")}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-      <div className="mt-1 flex items-center justify-between text-xs text-muted">
-        <span>{labels[0]}</span>
-        <span>{labels[labels.length - 1]}</span>
-      </div>
-    </div>
-  );
+function pluralProperty(n: number): string {
+  return n === 1 ? "property" : "properties";
 }
+
+function formatPropertyType(type: string | null | undefined): string {
+  if (!type) return "";
+  const lookup: Record<string, string> = {
+    single_family: "Single family",
+    condo: "Condo",
+    townhouse: "Townhouse",
+    manufactured: "Manufactured",
+    multi_family: "Multi-family",
+    apartment: "Apartment",
+  };
+  return lookup[type] ?? type.replace(/_/g, " ");
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage({
   searchParams,
@@ -126,9 +102,7 @@ export default async function DashboardPage({
   const recentSnapshots =
     propertyIds.length > 0
       ? await prisma.propertySnapshot.findMany({
-          where: {
-            propertyId: { in: propertyIds },
-          },
+          where: { propertyId: { in: propertyIds } },
           select: {
             propertyId: true,
             snapshotMonth: true,
@@ -176,6 +150,7 @@ export default async function DashboardPage({
         ? "Your dashboard will show real-time portfolio metrics the moment you add a property."
         : "Add a property to start tracking equity, cash flow, and rent benchmarks.";
 
+  // Property-level inputs for metric computation.
   const portfolioInput = properties.map((p) => {
     const totalMortgageBalance = p.mortgages.reduce(
       (sum, m) => sum + getEffectiveBalance(m),
@@ -199,24 +174,15 @@ export default async function DashboardPage({
     };
   });
 
-  // Single-pass: compute metrics once per property; reuse for charts + table.
   const perPropertyMetrics = portfolioInput.map((p) => ({
     id: p.id,
     name: p.name,
     ...computePropertyMetrics(p, displayMode),
   }));
 
-  const singleProperty = metrics.propertyCount === 1 ? properties[0] : null;
-  const propertyHref = singleProperty ? `/properties/${singleProperty.id}` : "/properties";
-  const modelingHref = singleProperty
-    ? `/modeling?propertyId=${encodeURIComponent(singleProperty.id)}`
-    : "/modeling";
-  const mortgageHref = singleProperty
-    ? `/mortgage?propertyId=${encodeURIComponent(singleProperty.id)}`
-    : "/mortgage";
-
   const fullLiability = displayMode === "full_liability";
 
+  // Chart data shared by Phase 4 components.
   const chartData: DashboardChartData = {
     equity: perPropertyMetrics.map((m) => ({
       name: m.name,
@@ -239,7 +205,7 @@ export default async function DashboardPage({
     })),
   };
 
-  // Attention flags per property (same logic as properties/page.tsx).
+  // Attention flags per property (mirrors properties/page.tsx).
   const perPropertyFlags = properties.map((p) => {
     const m = perPropertyMetrics.find((pm) => pm.id === p.id)!;
     const benchmarkEligibility = getBenchmarkEligibility({
@@ -259,11 +225,9 @@ export default async function DashboardPage({
       cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
       mortgageCount: p.mortgages.length,
       hasMortgage: p.hasMortgage ?? null,
-      bedrooms: p.bedrooms ?? null,
-      bathrooms: p.bathrooms != null ? Number(p.bathrooms) : null,
-      squareFeet: p.squareFeet ?? null,
+      mortgagePaidOff: p.mortgagePaidOff ?? false,
     });
-    const incompleteProfile = !completeness.isComplete;
+    const incompleteProfile = completeness.score < 100;
     return {
       id: p.id,
       noMortgage,
@@ -274,7 +238,6 @@ export default async function DashboardPage({
     };
   });
 
-  // Scale raw propertyValueDeltaMoM by ownership (snapshot value is unscaled).
   const scaledValueDeltas: Record<string, number | null> = {};
   for (const p of portfolioInput) {
     const raw = trends.propertyValueDeltaMoM[p.id] ?? null;
@@ -282,7 +245,6 @@ export default async function DashboardPage({
     scaledValueDeltas[p.id] = raw != null ? raw * scale : null;
   }
 
-  // Build table rows for PortfolioOverviewSection (6+ properties).
   const tableRows: PropertyTableRow[] = properties.map((p) => {
     const pInput = portfolioInput.find((pi) => pi.id === p.id)!;
     const m = perPropertyMetrics.find((pm) => pm.id === p.id)!;
@@ -297,6 +259,7 @@ export default async function DashboardPage({
       equity: m.equity,
       monthlyCashFlow: m.monthlyCashFlow,
       capRate: m.capRate,
+      ltv: m.ltv,
       valueDeltaMoM: scaledValueDeltas[p.id] ?? null,
       equityDeltaMoM: trends.propertyEquityDeltaMoM[p.id] ?? null,
       cashFlowDeltaMoM: trends.propertyCashFlowDeltaMoM[p.id] ?? null,
@@ -311,6 +274,8 @@ export default async function DashboardPage({
       needsAttention: flags.needsAttention,
     };
   });
+
+  // ─── 0-property: empty state ─────────────────────────────────────────────────
 
   if (metrics.propertyCount === 0) {
     return (
@@ -330,337 +295,598 @@ export default async function DashboardPage({
     );
   }
 
+  // ─── Build InsightsContext + run engine (1+ properties) ──────────────────────
+
+  const { context: insightsContext, dismissalTimestamps } = buildDashboardInsightsPayload({
+    properties,
+    perPropertyMetrics,
+    portfolioMetrics: {
+      totalEquity: metrics.totalEquity,
+      totalMonthlyCashFlow: metrics.totalMonthlyCashFlow,
+      totalCashInvested: metrics.totalCashInvested,
+      weightedCapRate: metrics.weightedCapRate,
+      portfolioLtv: metrics.portfolioLtv,
+      dscr: metrics.dscr,
+    },
+    snapshots: recentSnapshots.map((s) => ({
+      propertyId: s.propertyId,
+      snapshotMonth: s.snapshotMonth,
+      estimatedValue: Number(s.estimatedValue),
+      equity: Number(s.equity),
+      monthlyCashFlow: adjustSnapshotCashFlow(
+        Number(s.monthlyCashFlow),
+        s.ownershipPct,
+        s.monthlyPayment != null ? Number(s.monthlyPayment) : null,
+        displayMode
+      ),
+    })),
+    displayMode,
+    nowMs,
+  });
+
+  const insightsUnlocked = effectiveTier !== "free";
+  const insights = insightsUnlocked ? pickInsights(insightsContext) : [];
+  const lockedCardPostTrial = !insightsUnlocked && hasTrialExpired(user);
+  const isSingleProperty = metrics.propertyCount === 1;
+
+  // ─── Title bar (shared) ──────────────────────────────────────────────────────
+
+  const titleBar = (
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
+      <div className="flex gap-2">
+        <Link
+          href="/analyze"
+          className="inline-flex min-h-[36px] items-center rounded-md border border-border px-3 py-1.5 text-[12.5px] font-medium text-foreground transition-colors hover:bg-subtle"
+        >
+          Analyze a deal
+        </Link>
+        <Link
+          href="/properties/new"
+          className="inline-flex min-h-[36px] items-center gap-1.5 rounded-md bg-accent px-3 py-1.5 text-[12.5px] font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
+        >
+          <span aria-hidden>+</span> Add property
+        </Link>
+      </div>
+    </div>
+  );
+
+  const onboardingBanner = onboarding === "first-property" ? (
+    <div
+      className="mt-3 rounded-xl border p-4"
+      style={{ background: "var(--card)", borderColor: "var(--border)" }}
+    >
+      <p className="text-sm font-semibold text-foreground">
+        Property added. Your portfolio is now live.
+      </p>
+      <p className="mt-1 text-sm text-muted">
+        Great start. Add more details to your property to unlock full analytics.
+      </p>
+    </div>
+  ) : null;
+
+  // ─── Single-property layout ──────────────────────────────────────────────────
+
+  if (isSingleProperty) {
+    const p = properties[0]!;
+    const m = perPropertyMetrics[0]!;
+    const flags = perPropertyFlags[0]!;
+    const pInput = portfolioInput[0]!;
+    const ownershipScale = (pInput.ownershipPercent ?? 100) / 100;
+
+    const propertyValue = pInput.estimatedValue * ownershipScale;
+    const propertyEquity = m.equity;
+    const equityPct =
+      propertyValue > 0 ? (propertyEquity / propertyValue) * 100 : 0;
+    const monthlyCashFlow = m.monthlyCashFlow;
+    const capRatePct = m.capRate != null ? m.capRate * 100 : null;
+
+    const heroMetrics: [HeroMetric, HeroMetric, HeroMetric, HeroMetric] = [
+      {
+        label: "Property value",
+        value: formatCurrency(propertyValue),
+        sub: "Estimated value",
+        valueColor: "neutral",
+      },
+      {
+        label: "Your equity",
+        value: formatCurrency(propertyEquity),
+        sub: `${equityPct.toFixed(1)}% of property value`,
+        valueColor: "neutral",
+      },
+      {
+        label: "Monthly cash flow",
+        value: fmtSignedMonthly(monthlyCashFlow).replace(" / mo", ""),
+        sub: monthlyCashFlow >= 0 ? "Positive after costs" : "Below break-even",
+        valueColor: monthlyCashFlow >= 0 ? "pos" : "neg",
+      },
+      {
+        label: "Cap rate",
+        value: capRatePct != null ? `${capRatePct.toFixed(2)}%` : "—",
+        sub: "Annual yield (NOI ÷ value)",
+        valueColor: "neutral",
+      },
+    ];
+
+    // Property header tags
+    const tags: PropertyTag[] = [];
+    if (flags.negativeCashFlow) tags.push({ label: "Cash flow negative", variant: "neg" });
+    if (m.ltv != null) {
+      const ltvPct = m.ltv * 100;
+      if (m.ltv >= 0.9) {
+        tags.push({ label: `LTV ${ltvPct.toFixed(1)}% — refi locked`, variant: "neg" });
+      } else if (m.ltv >= 0.8) {
+        tags.push({ label: `LTV ${ltvPct.toFixed(1)}% — watch`, variant: "warn" });
+      }
+    }
+    // Signals (3 cells)
+    const cfSignal: Signal = {
+      label: "Monthly cash flow",
+      value: fmtSignedMonthly(monthlyCashFlow),
+      detail:
+        monthlyCashFlow < 0
+          ? `Expenses + mortgage exceed rent by ${formatCurrency(Math.abs(monthlyCashFlow))}`
+          : `${formatCurrency(monthlyCashFlow)} net positive after costs`,
+      status: monthlyCashFlow < 0 ? "bad" : "ok",
+    };
+
+    let ltvSignal: Signal;
+    if (m.ltv == null) {
+      ltvSignal = {
+        label: "Loan-to-value (LTV)",
+        value: "No mortgage",
+        detail: "Owned outright",
+        status: "ok",
+      };
+    } else {
+      const ltvPct = m.ltv * 100;
+      const status: Signal["status"] =
+        m.ltv >= 0.9 ? "bad" : m.ltv >= 0.8 ? "warn" : "ok";
+      const detail =
+        m.ltv >= 0.9
+          ? "Refi-locked above 90% — most lenders won't touch it"
+          : m.ltv >= 0.8
+            ? "Above 80% — limited refi flexibility"
+            : "Below 80% — healthy refi terms available";
+      ltvSignal = {
+        label: "Loan-to-value (LTV)",
+        value: `${ltvPct.toFixed(1)}%`,
+        detail,
+        status,
+      };
+    }
+
+    const eligibility = getBenchmarkEligibility({
+      isRented: p.isRented,
+      userRent: getPropertyTotalRent(p),
+      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+      marketRentAsOf: p.marketRentAsOf,
+    });
+    let rentSignal: Signal;
+    if (eligibility === "eligible_fresh" && p.marketRent != null) {
+      const userRent = getPropertyTotalRent(p);
+      const marketRent = Number(p.marketRent);
+      const tone = getBenchmarkTone(userRent, marketRent);
+      const status: Signal["status"] =
+        tone === "negative" ? "warn" : tone === "positive" ? "ok" : "ok";
+      rentSignal = {
+        label: "Rent vs. market",
+        value: getBenchmarkLabel(userRent, marketRent),
+        detail: "Estimate refreshed recently",
+        status,
+      };
+    } else if (eligibility === "not_rented") {
+      rentSignal = {
+        label: "Rent vs. market",
+        value: "Not rented",
+        detail: BENCHMARK_UX_MESSAGES.notRented,
+        status: "ok",
+      };
+    } else if (eligibility === "rent_missing") {
+      rentSignal = {
+        label: "Rent vs. market",
+        value: "Set rent first",
+        detail: BENCHMARK_UX_MESSAGES.rentMissing,
+        status: "warn",
+      };
+    } else {
+      rentSignal = {
+        label: "Rent vs. market",
+        value: "Stale benchmark",
+        detail: "Refresh from property page",
+        status: "warn",
+      };
+    }
+
+    // Secondary metrics
+    const dscrFromCtx = insightsContext.metrics.find((mm) => mm.id === p.id)?.dscr ?? null;
+    const annualPaydownFromCtx =
+      insightsContext.metrics.find((mm) => mm.id === p.id)?.annualPaydown ?? 0;
+    const appreciation =
+      insightsContext.appreciationByPropertyId?.[p.id]?.annualDollars ?? 0;
+
+    const cocPct =
+      m.cashOnCashReturn != null ? m.cashOnCashReturn * 100 : null;
+    const secondaryMetrics: [
+      SecondaryMetric,
+      SecondaryMetric,
+      SecondaryMetric,
+      SecondaryMetric,
+    ] = [
+      {
+        label: "Cash-on-cash",
+        value: cocPct != null ? `${cocPct.toFixed(2)}%` : "—",
+        hint:
+          cocPct == null
+            ? "Add cash invested on the property to see this"
+            : "Annual cash flow ÷ cash invested",
+        valueColor: cocPct == null ? "default" : cocPct < 0 ? "bad" : "ok",
+      },
+      {
+        label: "DSCR",
+        value: dscrFromCtx != null ? dscrFromCtx.toFixed(2) : "—",
+        hint:
+          dscrFromCtx == null
+            ? "No mortgage"
+            : dscrFromCtx >= 1.25
+              ? "At or above 1.25 — competitive refi terms"
+              : dscrFromCtx >= 1.0
+                ? "Above 1.0 — debt service covered"
+                : "Below 1.0 — debt service exceeds NOI",
+        valueColor:
+          dscrFromCtx == null
+            ? "default"
+            : dscrFromCtx < 1.0
+              ? "bad"
+              : dscrFromCtx < 1.25
+                ? "warn"
+                : "default",
+      },
+      {
+        label: "NOI (annual)",
+        value: formatCurrency(m.noi),
+        hint: "Net operating income",
+        valueColor: m.noi < 0 ? "bad" : "default",
+      },
+      {
+        label: "Annual rent",
+        value: formatCurrency(m.grossAnnualRent),
+        hint: `${formatCurrency(m.grossAnnualRent / 12)} / month`,
+      },
+    ];
+
+    // Capital structure inputs
+    const propertyDebt = fullLiability
+      ? pInput.totalMortgageBalance
+      : pInput.totalMortgageBalance * ownershipScale;
+    const gainOnValue =
+      Number(p.currentEstimatedValue) - Number(p.purchasePrice);
+
+    // Cash flow breakdown inputs (use scaled monthly numbers from metrics)
+    const monthlyRentVacancyAdjusted = m.grossAnnualRent / 12;
+    const monthlyExpensesScaled = m.annualExpenses / 12;
+    const monthlyMortgage = fullLiability
+      ? pInput.totalMonthlyPayment
+      : pInput.totalMonthlyPayment * ownershipScale;
+    const annualCashFlow = m.annualCashFlow;
+    const annualTotalReturn = annualCashFlow + appreciation + annualPaydownFromCtx;
+
+    const annualReturnBar = (
+      <AnnualReturnBar
+        cashFlow={annualCashFlow}
+        appreciation={appreciation}
+        paydown={annualPaydownFromCtx}
+        total={annualTotalReturn}
+      />
+    );
+
+    return (
+      <div>
+        <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
+        {titleBar}
+        {onboardingBanner}
+
+        <div className="mt-5 flex flex-col gap-5">
+          <PortfolioHeroStrip metrics={heroMetrics} />
+
+          <PropertyHeaderCard
+            address={p.addressLine1}
+            location={`${p.city}, ${p.state}${p.zipCode ? ` ${p.zipCode}` : ""} · ${formatPropertyType(p.propertyType)}`}
+            tags={tags}
+            propertyHref={`/properties/${p.id}`}
+            centerSlot={annualReturnBar}
+          >
+            <SignalStrip signals={[cfSignal, ltvSignal, rentSignal]} />
+          </PropertyHeaderCard>
+
+          <SecondaryMetricsStrip metrics={secondaryMetrics} />
+
+          {insightsUnlocked ? (
+            <InsightsCardsClient
+              insights={insights}
+              propertyUpdatedAt={dismissalTimestamps.propertyUpdatedAt}
+              portfolioUpdatedAt={dismissalTimestamps.portfolioUpdatedAt}
+            />
+          ) : (
+            <InsightsLockedCard
+              placement="dashboard_single"
+              postTrial={lockedCardPostTrial}
+            />
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <CapitalStructureCard
+              debt={propertyDebt}
+              equity={propertyEquity}
+              purchasePrice={Number(p.purchasePrice)}
+              gainOnValue={gainOnValue}
+            />
+            <CashFlowBreakdownCard
+              monthlyRent={monthlyRentVacancyAdjusted}
+              monthlyExpenses={monthlyExpensesScaled}
+              monthlyMortgage={monthlyMortgage}
+              annualCashFlow={annualCashFlow}
+              annualAppreciation={appreciation}
+              annualPaydown={annualPaydownFromCtx}
+              annualTotalReturn={annualTotalReturn}
+            />
+          </div>
+
+          {/* Compare upsell */}
+          <div
+            className="rounded-xl border p-[18px] flex flex-wrap items-center justify-between gap-4"
+            style={{
+              background:
+                "linear-gradient(135deg, rgba(99,102,241,0.08), rgba(139,92,246,0.05))",
+              borderColor: "rgba(129,140,248,0.18)",
+            }}
+          >
+            <div>
+              <p
+                className="text-[13.5px] font-semibold"
+                style={{ color: "var(--foreground)" }}
+              >
+                Compare properties side by side
+              </p>
+              <p
+                className="text-[12.5px] mt-0.5"
+                style={{ color: "var(--foreground-muted)" }}
+              >
+                Add a second property to unlock portfolio comparison charts and
+                cross-property performance.
+              </p>
+            </div>
+            <Link
+              href="/properties/new"
+              className="inline-flex shrink-0 items-center rounded-md bg-accent px-4 py-2 text-[12px] font-medium text-accent-foreground hover:bg-accent-hover whitespace-nowrap"
+            >
+              Add property
+            </Link>
+          </div>
+
+          <div className="mt-1 flex justify-end">
+            <MetricHelpLink />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ─── Multi-property layout ───────────────────────────────────────────────────
+
+  const propertyCount = metrics.propertyCount;
+
+  // Hero metrics (multi)
+  const portfolioEquityPct =
+    metrics.totalMarketValue > 0
+      ? (metrics.totalEquity / metrics.totalMarketValue) * 100
+      : 0;
+  const positiveCfCount = perPropertyMetrics.filter((m) => m.monthlyCashFlow >= 0).length;
+  const negativeCfCount = perPropertyMetrics.filter((m) => m.monthlyCashFlow < 0).length;
+
+  const multiHeroMetrics: [HeroMetric, HeroMetric, HeroMetric, HeroMetric] = [
+    {
+      label: "Portfolio value",
+      value: formatCurrency(metrics.totalMarketValue),
+      sub: `${propertyCount} ${pluralProperty(propertyCount)} · est. market value`,
+      valueColor: "neutral",
+    },
+    {
+      label: "Total equity",
+      value: formatCurrency(metrics.totalEquity),
+      sub: `${portfolioEquityPct.toFixed(1)}% of portfolio value`,
+      valueColor: "neutral",
+    },
+    {
+      label: "Net cash flow",
+      value: fmtSignedMonthly(metrics.totalMonthlyCashFlow),
+      sub: `${positiveCfCount} positive · ${negativeCfCount} negative`,
+      valueColor: metrics.totalMonthlyCashFlow >= 0 ? "pos" : "neg",
+    },
+    {
+      label: "Avg. cap rate",
+      value:
+        metrics.weightedCapRate != null
+          ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
+          : "—",
+      sub: "Weighted by property value",
+      valueColor: "neutral",
+    },
+  ];
+
+  // Alert pills
+  const highLtvCount = perPropertyMetrics.filter(
+    (m) => m.ltv != null && m.ltv >= 0.8
+  ).length;
+  const belowMarketCount = properties.filter((p) => {
+    const eligibility = getBenchmarkEligibility({
+      isRented: p.isRented,
+      userRent: getPropertyTotalRent(p),
+      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+      marketRentAsOf: p.marketRentAsOf,
+    });
+    if (eligibility !== "eligible_fresh" || p.marketRent == null) return false;
+    return getPropertyTotalRent(p) < Number(p.marketRent);
+  }).length;
+  const dscrAboveCount = insightsContext.metrics.filter(
+    (m) => m.dscr != null && m.dscr >= 1.25
+  ).length;
+
+  const alertPills: AlertPill[] = [];
+  if (negativeCfCount > 0) {
+    alertPills.push({
+      label: `${negativeCfCount} ${pluralProperty(negativeCfCount)} cash flow negative`,
+      variant: "neg",
+      filterKey: "negative_cashflow",
+    });
+  }
+  if (highLtvCount > 0) {
+    alertPills.push({
+      label: `${highLtvCount} ${pluralProperty(highLtvCount)} LTV above 80%`,
+      variant: "warn",
+      filterKey: "high_ltv",
+    });
+  }
+  if (belowMarketCount > 0) {
+    alertPills.push({
+      label: `${belowMarketCount} ${pluralProperty(belowMarketCount)} rent below market`,
+      variant: "warn",
+      filterKey: "below_market",
+    });
+  }
+  if (dscrAboveCount > 0) {
+    alertPills.push({
+      label: `${dscrAboveCount} ${pluralProperty(dscrAboveCount)} DSCR above 1.25`,
+      variant: "ok",
+    });
+  }
+
+  const portfolioLtv = metrics.portfolioLtv;
+  const portfolioDscr = metrics.dscr;
+  const portfolioSecondaryMetrics: [
+    SecondaryMetric,
+    SecondaryMetric,
+    SecondaryMetric,
+    SecondaryMetric,
+  ] = [
+    {
+      label: "Portfolio LTV",
+      value:
+        portfolioLtv != null ? `${(portfolioLtv * 100).toFixed(1)}%` : "—",
+      hint:
+        portfolioLtv == null
+          ? "No mortgages tracked"
+          : portfolioLtv >= 0.8
+            ? "Above 80% — limited refi flexibility"
+            : portfolioLtv >= 0.7
+              ? "Approaching 80% — watch headroom"
+              : "Below 80% — healthy refi terms available",
+      valueColor:
+        portfolioLtv == null
+          ? "default"
+          : portfolioLtv >= 0.8
+            ? "bad"
+            : portfolioLtv >= 0.7
+              ? "warn"
+              : "default",
+    },
+    {
+      label: "DSCR",
+      value: portfolioDscr != null ? portfolioDscr.toFixed(2) : "—",
+      hint:
+        portfolioDscr == null
+          ? "No mortgages tracked"
+          : portfolioDscr >= 1.25
+            ? "At or above 1.25 — competitive refi terms"
+            : portfolioDscr >= 1.0
+              ? "Above 1.0 — debt service covered"
+              : "Below 1.0 — debt service exceeds NOI",
+      valueColor:
+        portfolioDscr == null
+          ? "default"
+          : portfolioDscr < 1.0
+            ? "bad"
+            : portfolioDscr < 1.25
+              ? "warn"
+              : "default",
+    },
+    {
+      label: "NOI (annual)",
+      value: formatCurrency(metrics.totalNoi),
+      hint: "Net operating income",
+      valueColor: metrics.totalNoi < 0 ? "bad" : "default",
+    },
+    {
+      label: "Annual rent",
+      value: formatCurrency(metrics.totalAnnualRent),
+      hint: `${formatCurrency(metrics.totalAnnualRent / 12)} / month`,
+    },
+  ];
+
+  const benchmarkProperties = properties.map((p) => ({
+    id: p.id,
+    nickname: p.nickname,
+    addressLine1: p.addressLine1,
+    marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+    marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
+    currentMonthlyRent: Number(p.currentMonthlyRent),
+    unitRents: p.unitRents,
+    isRented: p.isRented,
+  }));
+
   return (
     <div>
       <PaidIntentCheckoutBanner effectiveTier={effectiveTier} />
-      <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
-      {onboarding === "first-property" && (
-        <div className="mt-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-          <p className="text-sm font-semibold text-foreground">
-            Property added. Your portfolio is now live.
-          </p>
-          <p className="mt-1 text-sm text-muted">
-            Great start. Add more details to your property to unlock full analytics.
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {singleProperty && (
-              <Link
-                href={`/properties/${singleProperty.id}/edit`}
-                className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-              >
-                Complete property details
-              </Link>
-            )}
-            <Link
-              href="/analyze"
-              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Analyze a deal
-            </Link>
-            <Link
-              href={modelingHref}
-              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Run projections
-            </Link>
-            <Link
-              href={mortgageHref}
-              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Simulate mortgage payoff
-            </Link>
-            <Link
-              href="/properties/new"
-              className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Add another property
-            </Link>
-          </div>
-        </div>
-      )}
-      <div className="mt-4 space-y-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/properties/new"
-            className="inline-flex min-h-[44px] items-center rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground transition-colors hover:bg-accent-hover"
-          >
-            Add property
-          </Link>
-          <Link
-            href="/analyze"
-            className="inline-flex min-h-[44px] items-center rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
-          >
-            Analyze a deal
-          </Link>
-        </div>
-        {/* Desktop workspace links */}
-        <div className="hidden flex-wrap gap-2 md:flex">
-          <Link
-            href={propertyHref}
-            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
-          >
-            {singleProperty ? "Property" : "Properties"}
-          </Link>
-          <Link
-            href={modelingHref}
-            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
-          >
-            Modeling
-          </Link>
-          <Link
-            href={mortgageHref}
-            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
-          >
-            Mortgage
-          </Link>
-          <Link
-            href="/export/portfolio-summary"
-            className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle"
-          >
-            Print summary
-          </Link>
-        </div>
-      </div>
+      {titleBar}
+      {onboardingBanner}
 
-      <div className="mt-4 rounded-xl bg-subtle/30 p-2">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
-        <MetricCard
-          label={metrics.propertyCount > 1 ? "Total property value" : "Property value"}
-          value={formatCurrency(metrics.totalMarketValue)}
-          primary
-          compact
-          delta={trends.portfolio.valueDeltaMoM}
-          deltaLabel={formatDeltaLabel(trends.portfolio.valueDeltaMoM)}
-        />
-        <MetricCard
-          label={metrics.propertyCount > 1 ? "Total debt" : "Debt"}
-          value={formatCurrency(metrics.totalDebt)}
-          primary
-          compact
-        />
-        <MetricCard
-          label={metrics.propertyCount > 1 ? "Total equity" : "Equity"}
-          value={formatCurrency(metrics.totalEquity)}
-          primary
-          compact
-          delta={trends.portfolio.equityDeltaMoM}
-          deltaLabel={formatDeltaLabel(trends.portfolio.equityDeltaMoM)}
-        />
-        <MetricCard
-          label="Monthly cash flow"
-          value={formatCurrency(metrics.totalMonthlyCashFlow)}
-          cashFlow={metrics.totalMonthlyCashFlow}
-          compact
-          delta={trends.portfolio.cashFlowDeltaMoM}
-          deltaLabel={formatDeltaLabel(trends.portfolio.cashFlowDeltaMoM)}
-        />
-        <div className="hidden md:flex md:flex-col">
-          <MetricCard
-            label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
-            value={
-              metrics.weightedCapRate != null
-                ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
-                : "—"
-            }
-            compact
+      <div className="mt-5 flex flex-col gap-5">
+        <PortfolioHeroStrip metrics={multiHeroMetrics} />
+
+        <SecondaryMetricsStrip metrics={portfolioSecondaryMetrics} />
+
+        {insightsUnlocked ? (
+          <InsightsCardsClient
+            insights={insights}
+            propertyUpdatedAt={dismissalTimestamps.propertyUpdatedAt}
+            portfolioUpdatedAt={dismissalTimestamps.portfolioUpdatedAt}
           />
-        </div>
-      </div>
-      </div>
+        ) : (
+          <InsightsLockedCard
+            placement="dashboard_multi"
+            postTrial={lockedCardPostTrial}
+          />
+        )}
 
-      <MobileCollapsible label="More metrics">
-        <div className="mt-3 rounded-xl bg-subtle/30 p-2">
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-3 xl:grid-cols-5">
-          <div className="md:hidden">
-            <MetricCard
-              label={metrics.propertyCount > 1 ? "Portfolio cap rate" : "Cap rate"}
-              value={
-                metrics.weightedCapRate != null
-                  ? `${(metrics.weightedCapRate * 100).toFixed(2)}%`
-                  : "—"
-              }
-              compact
+        {trends.portfolio.equitySeries.length >= 2 && (
+          <EquityTrendChart
+            equitySeries={trends.portfolio.equitySeries}
+            monthLabels={trends.portfolio.monthLabels}
+            equityDeltaSinceFirst={trends.portfolio.equityDeltaSinceFirst}
+          />
+        )}
+
+        <PortfolioSection pills={alertPills} tableRows={tableRows} />
+
+        {/* Two-col bottom: charts + RvM */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            className="rounded-xl border overflow-hidden"
+            style={{ background: "var(--card)", borderColor: "var(--border)" }}
+          >
+            <DashboardCharts
+              data={chartData}
+              propertyCount={propertyCount}
+              containerless
             />
           </div>
-          {metrics.portfolioLtv != null && (
-            <MetricCard
-              label={metrics.propertyCount > 1 ? "Portfolio LTV" : "LTV"}
-              value={`${(metrics.portfolioLtv * 100).toFixed(1)}%`}
-              primary={false}
-              compact
-              tone={
-                metrics.portfolioLtv > 0.8
-                  ? "negative"
-                  : metrics.portfolioLtv > 0.7
-                    ? "warning"
-                    : undefined
-              }
-            />
-          )}
-          <MetricCard
-            label="NOI"
-            value={formatCurrency(metrics.totalNoi)}
-            primary={false}
-            compact
-          />
-          {metrics.portfolioCashOnCashReturn != null && (
-            <MetricCard
-              label="Cash-on-cash return"
-              value={`${(metrics.portfolioCashOnCashReturn * 100).toFixed(2)}%`}
-              primary={false}
-              compact
-            />
-          )}
-          <MetricCard
-            label="Annual rent"
-            value={formatCurrency(metrics.totalAnnualRent)}
-            primary={false}
-            compact
-          />
-          {metrics.dscr != null && (
-            <MetricCard
-              label="DSCR"
-              value={metrics.dscr.toFixed(2)}
-              primary={false}
-              compact
-              tone={
-                metrics.dscr < 1
-                  ? "negative"
-                  : metrics.dscr < 1.2
-                    ? "warning"
-                    : "positive"
-              }
-            />
-          )}
+          <RentVsMarketSection properties={benchmarkProperties} />
         </div>
+
+        <div className="mt-1 flex justify-end">
+          <MetricHelpLink />
         </div>
-      </MobileCollapsible>
-      <div className="mt-2">
-        <MetricHelpLink />
       </div>
-
-      {trends.portfolio.equitySeries.length >= 2 && (
-        <div className="mt-4 rounded-xl border border-border bg-card p-4 shadow-sm">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-foreground">Portfolio trend</h2>
-              <p className="text-sm text-muted">
-                Snapshot-based view of how your equity changed over time.
-              </p>
-            </div>
-            <div className="flex items-center gap-1 text-sm">
-              <TrendDirectionIcon value={trends.portfolio.equityDeltaSinceFirst} />
-              <span className="font-medium text-foreground tabular-nums">
-                {formatDeltaLabel(trends.portfolio.equityDeltaSinceFirst)?.replace(
-                  " vs last month",
-                  " since first snapshot"
-                ) ?? "No change since first snapshot"}
-              </span>
-            </div>
-          </div>
-          <EquitySparkline
-            values={trends.portfolio.equitySeries}
-            labels={trends.portfolio.monthLabels}
-          />
-        </div>
-      )}
-
-      {metrics.propertyCount >= 6 ? (
-        <PortfolioOverviewSection
-          rows={tableRows}
-          chartData={chartData}
-          propertyCount={metrics.propertyCount}
-        />
-      ) : (
-        <>
-          {metrics.propertyCount > 1 && (
-            <RentVsMarketSection
-              properties={properties.map((p) => ({
-                id: p.id,
-                nickname: p.nickname,
-                addressLine1: p.addressLine1,
-                marketRent: p.marketRent != null ? Number(p.marketRent) : null,
-                marketRentAsOf: p.marketRentAsOf?.toISOString() ?? null,
-                currentMonthlyRent: Number(p.currentMonthlyRent),
-                unitRents: p.unitRents,
-                isRented: p.isRented,
-              }))}
-            />
-          )}
-          <DashboardCharts
-            data={chartData}
-            propertyCount={metrics.propertyCount}
-            singlePropertyId={metrics.propertyCount === 1 ? properties[0]?.id : undefined}
-            singlePropertyEquityDeltaMoM={
-              metrics.propertyCount === 1 && properties[0]
-                ? trends.propertyEquityDeltaMoM[properties[0].id] ?? null
-                : null
-            }
-            singlePropertyMetrics={
-              metrics.propertyCount === 1
-                ? {
-                    weightedCapRate: metrics.weightedCapRate,
-                    portfolioLtv: metrics.portfolioLtv,
-                    totalNoi: metrics.totalNoi,
-                    portfolioCashOnCashReturn: metrics.portfolioCashOnCashReturn,
-                    totalAnnualRent: metrics.totalAnnualRent,
-                    dscr: metrics.dscr,
-                  }
-                : undefined
-            }
-            benchmark={
-              metrics.propertyCount === 1 && properties[0]
-                ? (() => {
-                    const p = properties[0];
-                    const userRent = getPropertyTotalRent(p);
-                    const marketRentNullable =
-                      p.marketRent != null ? Number(p.marketRent) : null;
-                    const eligibility = getBenchmarkEligibility({
-                      isRented: p.isRented,
-                      userRent,
-                      marketRent: marketRentNullable,
-                      marketRentAsOf: p.marketRentAsOf,
-                    });
-                    if (eligibility === "eligible_fresh") {
-                      return {
-                        benchmarkLabel: getBenchmarkLabel(
-                          userRent,
-                          marketRentNullable ?? 0
-                        ),
-                      };
-                    }
-                    if (eligibility === "not_rented") {
-                      return { benchmarkMessage: BENCHMARK_UX_MESSAGES.notRented };
-                    }
-                    if (eligibility === "rent_missing") {
-                      return { benchmarkMessage: BENCHMARK_UX_MESSAGES.rentMissing };
-                    }
-                    return { propertyId: p.id };
-                  })()
-                : undefined
-            }
-          />
-        </>
-      )}
-
-      {metrics.propertyCount === 1 && (
-        <div className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/20 bg-accent/5 p-4 shadow-sm">
-          <div>
-            <p className="text-sm font-medium text-foreground">
-              Ready to compare performance side by side?
-            </p>
-            <p className="text-sm text-muted">
-              Add another property to unlock portfolio comparison charts.
-            </p>
-          </div>
-          <Link
-            href="/properties/new"
-            className="rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-          >
-            Add property
-          </Link>
-        </div>
-      )}
     </div>
   );
 }

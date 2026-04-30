@@ -1,74 +1,52 @@
 import Link from "next/link";
+import { Building2, ChevronRight, Search } from "lucide-react";
 import { UpgradePlanLink } from "@/components/analytics/upgrade-plan-link";
 import { getAppUser } from "@/lib/auth";
-import { BenchmarkRefreshButton } from "./benchmark-refresh-button";
 import { formatCurrency } from "@/lib/format-currency";
-import { MetricCard } from "@/components/metric-card";
 import { prisma } from "@/lib/db";
 import { getPropertyLimit, getEffectiveTier, hasTrialExpired } from "@/lib/plans";
 import { getPropertyTotalRent, formatPropertyType } from "@/lib/property-utils";
-import { formatTimeAgo, isDataStale } from "@/lib/date-utils";
+import { formatTimeAgo } from "@/lib/date-utils";
 import {
-  BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
-  getBenchmarkLabel,
   getBenchmarkTone,
+  type BenchmarkEligibility,
 } from "@/lib/benchmark-utils";
 import { getEffectiveBalance } from "@/lib/amortization";
 import {
-  computePortfolioMetrics,
-  type PortfolioPropertyInput,
-} from "@/lib/metrics/portfolio-metrics";
-import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
+  computePropertyMetrics,
+  getAnnualDebtService,
+} from "@/lib/metrics/property-metrics";
 import { getPropertyCompleteness } from "@/lib/property-completeness";
-import { Building2, ChevronRight, Search } from "lucide-react";
+import { getPropertyStatus, type PropertyStatus } from "@/lib/property-status";
+import { getRefiReadyStatus } from "@/lib/refi-ready";
+import { hasRecentCashFlowImprovement } from "@/lib/cash-flow-improvement";
 import { PropertiesToolbar } from "./properties-toolbar";
 import { PropertiesCardGrid } from "./properties-card-grid";
+import { TaskCenter } from "@/components/properties/task-center";
+import { PropertyStatusDot } from "@/components/properties/directory/property-status-dot";
+import { BelowMarketIndicator } from "@/components/properties/directory/below-market-indicator";
+import type { IncompleteProfileRow } from "@/components/properties/task-center/incomplete-profiles-card";
+import type { CashFlowNegativeRow } from "@/components/properties/task-center/cash-flow-health-card";
+import type { RefiReadyRow } from "@/components/properties/task-center/refi-ready-card";
 
-function BenchmarkLine({
-  propertyId,
-  userRent,
-  isRented,
-  marketRent,
-  marketRentAsOf,
-}: {
-  propertyId: string;
-  userRent: number;
-  isRented: boolean;
-  marketRent: number | null;
-  marketRentAsOf: Date | null;
-}) {
-  const eligibility = getBenchmarkEligibility({
-    isRented,
-    userRent,
-    marketRent,
-    marketRentAsOf,
-  });
-  if (eligibility === "not_rented") {
-    return (
-      <p className="text-sm text-muted">{BENCHMARK_UX_MESSAGES.notRented}</p>
-    );
-  }
-  if (eligibility === "rent_missing") {
-    return (
-      <p className="text-sm text-muted">{BENCHMARK_UX_MESSAGES.rentMissing}</p>
-    );
-  }
-  if (eligibility === "benchmark_missing") {
-    return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
-  }
-  if (eligibility === "eligible_fresh" && marketRent != null) {
-    const tone = getBenchmarkTone(userRent, marketRent);
-    const colorClass =
-      tone === "positive"
-        ? "text-positive"
-        : tone === "negative"
-          ? "text-negative"
-          : "text-muted";
-    return <p className={`text-sm ${colorClass}`}>{getBenchmarkLabel(userRent, marketRent)}</p>;
-  }
-  return <BenchmarkRefreshButton propertyId={propertyId} label="Refresh estimate" />;
-}
+type PropertiesFilter = "all" | "incomplete" | "cf_negative" | "refi_ready";
+type PropertiesSort = "updated" | "cash_flow" | "cap_rate" | "value_equity";
+type PropertiesView = "grid" | "list";
+
+const FILTER_OPTIONS: { key: PropertiesFilter; label: string }[] = [
+  { key: "all", label: "All" },
+  { key: "incomplete", label: "Incomplete" },
+  { key: "cf_negative", label: "Cash flow negative" },
+  { key: "refi_ready", label: "Refi-ready" },
+];
+
+const SORT_OPTIONS: { key: PropertiesSort; label: string }[] = [
+  { key: "updated", label: "Recently updated" },
+  { key: "cash_flow", label: "Cash flow" },
+  { key: "cap_rate", label: "Cap rate" },
+  { key: "value_equity", label: "Value / Equity" },
+];
 
 function PropertyTypeBadge({
   propertyType,
@@ -85,50 +63,27 @@ function PropertyTypeBadge({
   );
 }
 
-function InsightTag({
-  label,
-  tone = "default",
+function StatusBadge({
+  score,
+  updatedAt,
 }: {
-  label: string;
-  tone?: "default" | "negative";
+  score: number;
+  updatedAt: Date;
 }) {
+  if (score < 100) {
+    return (
+      <span
+        className="inline-flex items-center rounded-md border border-warning/30 bg-warning/10 px-2 py-0.5 text-xs font-medium text-warning"
+        title={`Profile ${score}% complete`}
+      >
+        {score}% complete
+      </span>
+    );
+  }
   return (
-    <span
-      className={`rounded-md border px-2 py-0.5 text-xs font-medium ${
-        tone === "negative"
-          ? "border-negative/40 bg-negative/10 text-negative"
-          : "border-border bg-subtle text-muted"
-      }`}
-    >
-      {label}
-    </span>
+    <span className="text-xs text-muted">Updated {formatTimeAgo(updatedAt)}</span>
   );
 }
-
-type PropertiesFilter =
-  | "all"
-  | "needs_attention"
-  | "no_mortgage"
-  | "stale_benchmark"
-  | "negative_cashflow"
-  | "incomplete_profile";
-type PropertiesSort = "updated" | "worst_cashflow";
-type PropertiesView = "grid" | "list";
-
-const FILTER_OPTIONS: { key: PropertiesFilter; label: string }[] = [
-  { key: "all", label: "All" },
-  { key: "needs_attention", label: "Needs attention" },
-  { key: "no_mortgage", label: "No mortgage" },
-  { key: "stale_benchmark", label: "Stale benchmark" },
-  { key: "negative_cashflow", label: "Negative cash flow" },
-  { key: "incomplete_profile", label: "Incomplete profile" },
-];
-
-const SORT_OPTIONS: { key: PropertiesSort; label: string }[] = [
-  { key: "updated", label: "Recently updated" },
-  { key: "worst_cashflow", label: "Worst cash flow" },
-];
-
 
 export default async function PropertiesPage({
   searchParams,
@@ -152,40 +107,41 @@ export default async function PropertiesPage({
   ]);
   const overLimit = totalCount > propertyLimit;
 
-  type PropertyWithMortgages = (typeof properties)[number];
-  const portfolioInput: PortfolioPropertyInput[] = properties.map(
-    (p: PropertyWithMortgages) => {
-      const totalMortgageBalance = p.mortgages.reduce(
-        (sum: number, m) => sum + getEffectiveBalance(m),
-        0
-      );
-      const totalMonthlyPayment = p.mortgages.reduce(
-        (sum: number, m: { monthlyPayment: unknown }) =>
-          sum + Number(m.monthlyPayment),
-        0
-      );
-      return {
-        id: p.id,
-        monthlyRent: getPropertyTotalRent(p),
-        monthlyExpenses: Number(p.currentMonthlyExpenses),
-        estimatedValue: Number(p.currentEstimatedValue),
-        cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-        totalMortgageBalance,
-        totalMonthlyPayment,
-        ownershipPercent: p.ownershipPercent ?? 100,
-        vacancyPercent: p.vacancyPercent ?? 5,
-      };
-    }
-  );
+  const propertyIds = properties.map((p) => p.id);
+  const recentSnapshots =
+    propertyIds.length > 0
+      ? await prisma.propertySnapshot.findMany({
+          where: { propertyId: { in: propertyIds } },
+          orderBy: [{ propertyId: "asc" }, { snapshotMonth: "desc" }],
+          select: { propertyId: true, monthlyCashFlow: true, snapshotMonth: true },
+        })
+      : [];
 
-  const displayMode = (user.ownershipDisplayMode ?? "proportional") as "proportional" | "full_liability";
-  const portfolioMetrics = computePortfolioMetrics(portfolioInput, displayMode);
+  const snapshotsByProperty = new Map<
+    string,
+    { monthlyCashFlow: number }[]
+  >();
+  for (const row of recentSnapshots) {
+    const existing = snapshotsByProperty.get(row.propertyId);
+    const entry = { monthlyCashFlow: Number(row.monthlyCashFlow) };
+    if (existing) {
+      if (existing.length < 2) existing.push(entry);
+    } else {
+      snapshotsByProperty.set(row.propertyId, [entry]);
+    }
+  }
+
+  type PropertyWithMortgages = (typeof properties)[number];
+  const displayMode = (user.ownershipDisplayMode ?? "proportional") as
+    | "proportional"
+    | "full_liability";
+
   const activeFilter: PropertiesFilter =
-    filter && FILTER_OPTIONS.some((option) => option.key === filter as PropertiesFilter)
+    filter && FILTER_OPTIONS.some((o) => o.key === (filter as PropertiesFilter))
       ? (filter as PropertiesFilter)
       : "all";
   const activeSort: PropertiesSort =
-    sort && SORT_OPTIONS.some((option) => option.key === sort as PropertiesSort)
+    sort && SORT_OPTIONS.some((o) => o.key === (sort as PropertiesSort))
       ? (sort as PropertiesSort)
       : "updated";
   const activeView: PropertiesView =
@@ -195,185 +151,276 @@ export default async function PropertiesPage({
         ? "list"
         : "grid";
 
-  const propertyCards = properties.map((p: PropertyWithMortgages) => {
-    const totalMortgageBalance = p.mortgages.reduce(
-      (sum: number, m) => sum + getEffectiveBalance(m),
-      0
-    );
-    const totalMonthlyPayment = p.mortgages.reduce(
-      (sum: number, m: { monthlyPayment: unknown }) => sum + Number(m.monthlyPayment),
-      0
-    );
-    const metrics = computePropertyMetrics(
-      {
-        monthlyRent: getPropertyTotalRent(p),
-        monthlyExpenses: Number(p.currentMonthlyExpenses),
-        estimatedValue: Number(p.currentEstimatedValue),
+  type DirectoryCard = {
+    property: PropertyWithMortgages;
+    metrics: ReturnType<typeof computePropertyMetrics>;
+    userRent: number;
+    benchmarkEligibility: BenchmarkEligibility;
+    benchmarkBelowMarket: boolean;
+    completenessScore: number;
+    status: PropertyStatus;
+    refiReadyQualifies: boolean;
+    refiEquityPct: number;
+    refiCurrentEquity: number;
+    incompleteProfile: boolean;
+    negativeCashFlow: boolean;
+    recentCashFlowImprovement: boolean;
+  };
+
+  const propertyCards: DirectoryCard[] = properties.map(
+    (p: PropertyWithMortgages): DirectoryCard => {
+      const totalMortgageBalance = p.mortgages.reduce(
+        (sum: number, m) => sum + getEffectiveBalance(m),
+        0
+      );
+      const totalMonthlyPayment = p.mortgages.reduce(
+        (sum: number, m: { monthlyPayment: unknown }) =>
+          sum + Number(m.monthlyPayment),
+        0
+      );
+      const userRent = getPropertyTotalRent(p);
+      const metrics = computePropertyMetrics(
+        {
+          monthlyRent: userRent,
+          monthlyExpenses: Number(p.currentMonthlyExpenses),
+          estimatedValue: Number(p.currentEstimatedValue),
+          cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
+          totalMortgageBalance,
+          totalMonthlyPayment,
+          ownershipPercent: p.ownershipPercent ?? 100,
+          vacancyPercent: p.vacancyPercent ?? 5,
+        },
+        displayMode
+      );
+      const benchmarkInputs = {
+        isRented: p.isRented,
+        userRent,
+        marketRent: p.marketRent != null ? Number(p.marketRent) : null,
+        marketRentAsOf: p.marketRentAsOf,
+      };
+      const benchmarkEligibility = getBenchmarkEligibility(benchmarkInputs);
+      const completenessInput = {
+        purchasePrice: Number(p.purchasePrice),
+        currentEstimatedValue: Number(p.currentEstimatedValue),
         cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-        totalMortgageBalance,
+        mortgageCount: p.mortgages.length,
+        hasMortgage: p.hasMortgage ?? null,
+        mortgagePaidOff: p.mortgagePaidOff ?? false,
+      };
+      const completeness = getPropertyCompleteness(completenessInput);
+      const status = getPropertyStatus(
+        completenessInput,
+        { monthlyCashFlow: metrics.monthlyCashFlow, ltv: metrics.ltv },
+        benchmarkInputs
+      );
+      const annualDebtService = getAnnualDebtService(
         totalMonthlyPayment,
-        ownershipPercent: p.ownershipPercent ?? 100,
-        vacancyPercent: p.vacancyPercent ?? 5,
-      },
-      displayMode
-    );
-    const benchmarkEligibility = getBenchmarkEligibility({
-      isRented: p.isRented,
-      userRent: getPropertyTotalRent(p),
-      marketRent: p.marketRent != null ? Number(p.marketRent) : null,
-      marketRentAsOf: p.marketRentAsOf,
-    });
-    const benchmarkStale =
-      benchmarkEligibility === "benchmark_missing" ||
-      benchmarkEligibility === "benchmark_stale";
-    const noMortgage = p.mortgages.length === 0 && p.hasMortgage !== false;
-    const negativeCashFlow = metrics.monthlyCashFlow < 0;
-    const completeness = getPropertyCompleteness({
-      purchasePrice: Number(p.purchasePrice),
-      currentEstimatedValue: Number(p.currentEstimatedValue),
-      cashInvested: p.cashInvested != null ? Number(p.cashInvested) : null,
-      mortgageCount: p.mortgages.length,
-      hasMortgage: p.hasMortgage ?? null,
-      bedrooms: p.bedrooms ?? null,
-      bathrooms: p.bathrooms != null ? Number(p.bathrooms) : null,
-      squareFeet: p.squareFeet ?? null,
-    });
-    const incompleteProfile = !completeness.isComplete;
-    const needsAttention = noMortgage || benchmarkStale || negativeCashFlow || incompleteProfile;
+        p.ownershipPercent ?? 100,
+        displayMode
+      );
+      const dscr =
+        p.mortgages.length > 0 && annualDebtService > 0
+          ? metrics.noi / annualDebtService
+          : null;
+      const refiReady = getRefiReadyStatus({
+        hasActiveMortgage: p.mortgages.length > 0,
+        estimatedValue: Number(p.currentEstimatedValue),
+        totalMortgageBalance,
+        dscr,
+      });
+      const benchmarkBelowMarket =
+        benchmarkEligibility === "eligible_fresh" &&
+        p.marketRent != null &&
+        getBenchmarkTone(userRent, Number(p.marketRent)) === "negative";
 
-    return {
-      property: p,
-      metrics,
-      userRent: getPropertyTotalRent(p),
-      noMortgage,
-      benchmarkStale,
-      negativeCashFlow,
-      incompleteProfile,
-      needsAttention,
-    };
-  });
+      const snaps = snapshotsByProperty.get(p.id) ?? [];
+      const recentCashFlowImprovement = hasRecentCashFlowImprovement(
+        snaps[0] ?? null,
+        snaps[1] ?? null
+      );
 
+      return {
+        property: p,
+        metrics,
+        userRent,
+        benchmarkEligibility,
+        benchmarkBelowMarket,
+        completenessScore: completeness.score,
+        status,
+        refiReadyQualifies: refiReady.qualifies,
+        refiEquityPct: refiReady.equityPct,
+        refiCurrentEquity: refiReady.currentEquity,
+        incompleteProfile: completeness.score < 100,
+        negativeCashFlow: metrics.monthlyCashFlow < 0,
+        recentCashFlowImprovement,
+      };
+    }
+  );
+
+  // ─── Task center inputs ───────────────────────────────────────────────────
+  const propertyName = (p: PropertyWithMortgages) =>
+    p.nickname || p.addressLine1;
+
+  const incompleteProfileCards = propertyCards
+    .filter((c) => c.incompleteProfile)
+    .sort((a, b) => a.completenessScore - b.completenessScore);
+  const incompleteRows: IncompleteProfileRow[] = incompleteProfileCards.map(
+    (c) => ({
+      propertyId: c.property.id,
+      name: propertyName(c.property),
+      score: c.completenessScore,
+    })
+  );
+
+  const cashFlowNegativeCards = propertyCards
+    .filter((c) => c.negativeCashFlow)
+    .sort((a, b) => a.metrics.monthlyCashFlow - b.metrics.monthlyCashFlow);
+  const cashFlowNegativeRows: CashFlowNegativeRow[] = cashFlowNegativeCards.map(
+    (c) => ({
+      propertyId: c.property.id,
+      name: propertyName(c.property),
+      monthlyCashFlow: c.metrics.monthlyCashFlow,
+    })
+  );
+
+  const recentlyImprovedCard = propertyCards.find(
+    (c) => c.recentCashFlowImprovement
+  );
+
+  const refiReadyCards = propertyCards
+    .filter((c) => c.refiReadyQualifies)
+    .sort((a, b) => b.refiCurrentEquity - a.refiCurrentEquity);
+  const refiReadyRows: RefiReadyRow[] = refiReadyCards.map((c) => ({
+    propertyId: c.property.id,
+    name: propertyName(c.property),
+    equityPct: c.refiEquityPct,
+    currentEquity: c.refiCurrentEquity,
+  }));
+
+  // ─── Filter ───────────────────────────────────────────────────────────────
   const filteredCards = propertyCards.filter((card) => {
     switch (activeFilter) {
-      case "needs_attention":
-        return card.needsAttention;
-      case "no_mortgage":
-        return card.noMortgage;
-      case "stale_benchmark":
-        return card.benchmarkStale;
-      case "negative_cashflow":
-        return card.negativeCashFlow;
-      case "incomplete_profile":
+      case "incomplete":
         return card.incompleteProfile;
+      case "cf_negative":
+        return card.negativeCashFlow;
+      case "refi_ready":
+        return card.refiReadyQualifies;
       default:
         return true;
     }
   });
 
-  const sortedCards =
-    activeSort === "worst_cashflow"
-      ? [...filteredCards].sort((a, b) => a.metrics.monthlyCashFlow - b.metrics.monthlyCashFlow)
-      : filteredCards;
-  const singlePropertyMode = properties.length === 1;
-  const visibleCards = singlePropertyMode ? propertyCards : sortedCards;
+  // ─── Sort with explicit tiebreakers per Decision #8E ─────────────────────
+  const sortedCards = [...filteredCards].sort((a, b) => {
+    const aP = a.property;
+    const bP = b.property;
+    switch (activeSort) {
+      case "cash_flow": {
+        const diff = b.metrics.monthlyCashFlow - a.metrics.monthlyCashFlow;
+        if (diff !== 0) return diff;
+        return Math.abs(b.metrics.monthlyCashFlow) - Math.abs(a.metrics.monthlyCashFlow);
+      }
+      case "cap_rate": {
+        const aRate = a.metrics.capRate ?? -Infinity;
+        const bRate = b.metrics.capRate ?? -Infinity;
+        if (bRate !== aRate) return bRate - aRate;
+        return b.metrics.monthlyCashFlow - a.metrics.monthlyCashFlow;
+      }
+      case "value_equity": {
+        const aVal = Number(aP.currentEstimatedValue);
+        const bVal = Number(bP.currentEstimatedValue);
+        if (bVal !== aVal) return bVal - aVal;
+        const aDate = aP.purchaseDate ? new Date(aP.purchaseDate).getTime() : 0;
+        const bDate = bP.purchaseDate ? new Date(bP.purchaseDate).getTime() : 0;
+        return bDate - aDate;
+      }
+      case "updated":
+      default: {
+        const aUpd = new Date(aP.updatedAt).getTime();
+        const bUpd = new Date(bP.updatedAt).getTime();
+        if (bUpd !== aUpd) return bUpd - aUpd;
+        const aCre = new Date(aP.createdAt).getTime();
+        const bCre = new Date(bP.createdAt).getTime();
+        return bCre - aCre;
+      }
+    }
+  });
+
+  const visibleCards = sortedCards;
   const isMobileDisclosureEligible =
     activeFilter === "all" && visibleCards.length >= 10;
+
+  // ─── Render rows ─────────────────────────────────────────────────────────
   const renderedCards = visibleCards.map((card) => {
     const p = card.property;
     const metrics = card.metrics;
     return (
       <li key={p.id} className="h-full">
-        <div className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-shadow duration-150 hover:shadow-md hover:bg-subtle/40">
+        <Link
+          href={`/properties/${p.id}`}
+          className="flex h-full flex-col rounded-xl border border-border bg-card p-4 shadow-sm transition-all duration-150 hover:border-border-subtle hover:bg-card-hover hover:shadow-md"
+        >
           <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="font-medium text-foreground">
-                {p.nickname || p.addressLine1}
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <PropertyStatusDot status={card.status} />
+                <span className="truncate font-medium text-foreground">
+                  {p.nickname || p.addressLine1}
+                </span>
               </div>
-              <div className="mt-1 min-h-[40px] text-sm text-muted">
+              <div className="mt-1 truncate text-sm text-muted">
                 {p.addressLine1}
                 {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
               </div>
-              <p className="mt-1 min-h-4 text-xs text-muted">
-                Updated {formatTimeAgo(p.updatedAt)}
-              </p>
             </div>
             <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
           </div>
-          <div className="mt-2 flex min-h-6 flex-wrap content-start gap-1.5">
-            {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
-            {card.noMortgage && <InsightTag label="No mortgage" />}
-            {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
-            {card.negativeCashFlow && (
-              <InsightTag label="Negative cash flow" tone="negative" />
-            )}
-            {isDataStale(
-              p.updatedAt instanceof Date ? p.updatedAt : new Date(p.updatedAt)
-            ) && <InsightTag label="Needs update" />}
-          </div>
-          <dl className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">
-            <div className="flex items-center justify-between sm:block">
-              <dt className="font-medium text-muted">Value</dt>
-              <dd className="font-medium text-foreground">
+
+          <dl className="mt-3 grid grid-cols-3 gap-2 text-sm">
+            <div>
+              <dt className="text-xs font-medium text-muted">Value</dt>
+              <dd className="tabular-nums font-medium text-foreground">
                 {formatCurrency(Number(p.currentEstimatedValue))}
               </dd>
-            </div>
-            <div className="flex items-center justify-between sm:block">
-              <dt className="font-medium text-muted">Equity</dt>
-              <dd className="font-medium text-foreground">
-                {formatCurrency(metrics.equity)}
+              <dd className="tabular-nums text-xs text-muted">
+                {formatCurrency(metrics.equity)} eq
               </dd>
             </div>
-            <div className="flex items-center justify-between sm:block">
-              <dt className="font-medium text-muted">Cash flow</dt>
+            <div>
+              <dt className="text-xs font-medium text-muted">Cash flow</dt>
               <dd
-                className={`font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
+                className={`tabular-nums font-medium ${metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"}`}
               >
                 {formatCurrency(metrics.monthlyCashFlow)}
               </dd>
+              {card.benchmarkBelowMarket && p.marketRent != null && (
+                <dd className="mt-0.5">
+                  <BelowMarketIndicator
+                    userRent={card.userRent}
+                    marketRent={Number(p.marketRent)}
+                  />
+                </dd>
+              )}
+            </div>
+            <div>
+              <dt className="text-xs font-medium text-muted">Cap rate</dt>
+              <dd className="tabular-nums font-medium text-foreground">
+                {metrics.capRate != null
+                  ? `${(metrics.capRate * 100).toFixed(2)}%`
+                  : "—"}
+              </dd>
             </div>
           </dl>
-          <div className="mt-3 min-h-[32px]">
-            <BenchmarkLine
-              propertyId={p.id}
-              userRent={card.userRent}
-              isRented={p.isRented}
-              marketRent={p.marketRent != null ? Number(p.marketRent) : null}
-              marketRentAsOf={p.marketRentAsOf}
-            />
+
+          <div className="mt-auto pt-3">
+            <StatusBadge score={card.completenessScore} updatedAt={p.updatedAt} />
           </div>
-          <div className="mt-auto pt-3 flex flex-wrap items-center gap-2">
-            <Link
-              href={`/properties/${p.id}`}
-              className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-            >
-              Open property
-            </Link>
-            <Link
-              href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
-              className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-            >
-              Open Modeling
-            </Link>
-            {p.mortgages.length > 0 ? (
-              <Link
-                href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
-                className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-              >
-                Open Mortgage
-              </Link>
-            ) : (
-              <Link
-                href={`/properties/${p.id}?tab=details#mortgages`}
-                className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-              >
-                Add mortgage
-              </Link>
-            )}
-          </div>
-        </div>
+        </Link>
       </li>
     );
   });
+
   const renderedListRows = visibleCards.map((card) => {
     const p = card.property;
     const metrics = card.metrics;
@@ -382,46 +429,58 @@ export default async function PropertiesPage({
       <li key={p.id}>
         <Link
           href={`/properties/${p.id}`}
-          className="flex min-h-[44px] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-subtle/40"
+          className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 transition-colors duration-150 hover:bg-card-hover md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,0.7fr)_minmax(0,1fr)_auto]"
         >
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-foreground">{p.nickname || p.addressLine1}</p>
-            <p className="truncate text-xs text-muted">
-              {p.addressLine1}
-              {p.city && `, ${p.city} ${p.state}`}
+          <div className="flex min-w-0 items-center gap-2">
+            <PropertyStatusDot status={card.status} />
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">
+                {p.nickname || p.addressLine1}
+              </p>
+              <p className="truncate text-xs text-muted">
+                {p.addressLine1}
+                {p.city && `, ${p.city} ${p.state}`}
+              </p>
+            </div>
+          </div>
+
+          <div className="hidden text-right md:block">
+            <p className="tabular-nums text-sm font-medium text-foreground">
+              {formatCurrency(Number(p.currentEstimatedValue))}
+            </p>
+            <p className="tabular-nums text-xs text-muted">
+              {formatCurrency(metrics.equity)} eq
             </p>
           </div>
 
-          <div className="hidden sm:flex max-w-[220px] flex-wrap justify-end gap-1.5">
-            {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
-            {card.noMortgage && <InsightTag label="No mortgage" />}
-            {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
-            {card.negativeCashFlow && <InsightTag label="Negative cash flow" tone="negative" />}
+          <div className="hidden text-right md:block">
+            <p
+              className={`tabular-nums text-sm font-medium ${
+                metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
+              }`}
+            >
+              {formatCurrency(metrics.monthlyCashFlow)}
+            </p>
+            {card.benchmarkBelowMarket && p.marketRent != null && (
+              <div className="mt-0.5 flex justify-end">
+                <BelowMarketIndicator
+                  userRent={card.userRent}
+                  marketRent={Number(p.marketRent)}
+                />
+              </div>
+            )}
           </div>
 
-          <div className="hidden md:grid grid-cols-3 gap-3 text-right">
-            <div>
-              <p className="text-xs font-medium text-muted">Value</p>
-              <p className="tabular-nums text-sm font-medium text-foreground">
-                {formatCurrency(Number(p.currentEstimatedValue))}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted">Cash flow</p>
-              <p
-                className={`tabular-nums text-sm font-medium ${
-                  metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
-                }`}
-              >
-                {formatCurrency(metrics.monthlyCashFlow)}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs font-medium text-muted">Equity</p>
-              <p className="tabular-nums text-sm font-medium text-foreground">
-                {formatCurrency(metrics.equity)}
-              </p>
-            </div>
+          <div className="hidden text-right md:block">
+            <p className="tabular-nums text-sm font-medium text-foreground">
+              {metrics.capRate != null
+                ? `${(metrics.capRate * 100).toFixed(2)}%`
+                : "—"}
+            </p>
+          </div>
+
+          <div className="hidden text-right md:block">
+            <StatusBadge score={card.completenessScore} updatedAt={p.updatedAt} />
           </div>
 
           <ChevronRight className="size-4 shrink-0 text-muted" aria-hidden />
@@ -449,20 +508,6 @@ export default async function PropertiesPage({
               Quick add
             </Link>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/modeling"
-            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-          >
-            Modeling
-          </Link>
-          <Link
-            href="/mortgage"
-            className="inline-flex min-h-[44px] items-center rounded-md border border-border bg-transparent px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-          >
-            Mortgage
-          </Link>
         </div>
       </div>
 
@@ -509,143 +554,36 @@ export default async function PropertiesPage({
               )}
             </p>
           )}
-          {!singlePropertyMode && (
-            <div className="mb-5">
-              <PropertiesToolbar
-                activeFilter={activeFilter}
-                activeSort={activeSort}
-                activeView={activeView}
-                filterOptions={FILTER_OPTIONS}
-                sortOptions={SORT_OPTIONS}
-              />
-            </div>
-          )}
-          {!singlePropertyMode && properties.length >= 1 && (
-            <div className="mb-6 grid grid-cols-2 gap-4 lg:grid-cols-3">
-              <MetricCard
-                label="Total value"
-                value={formatCurrency(portfolioMetrics.totalMarketValue)}
-                primary
-                compact
-              />
-              <MetricCard
-                label="Total equity"
-                value={formatCurrency(portfolioMetrics.totalEquity)}
-                primary
-                compact
-              />
-              <div className="col-span-2 lg:col-span-1">
-                <MetricCard
-                  label="Monthly cash flow"
-                  value={formatCurrency(portfolioMetrics.totalMonthlyCashFlow)}
-                  cashFlow={portfolioMetrics.totalMonthlyCashFlow}
-                  compact
-                />
-              </div>
-            </div>
-          )}
-          {!singlePropertyMode && visibleCards.length === 0 ? (
+
+          <TaskCenter
+            incompleteRows={incompleteRows}
+            totalIncomplete={incompleteRows.length}
+            cashFlowNegativeRows={cashFlowNegativeRows}
+            recentlyImprovedName={
+              recentlyImprovedCard
+                ? propertyName(recentlyImprovedCard.property)
+                : null
+            }
+            refiReadyRows={refiReadyRows}
+          />
+
+          <div className="mb-5">
+            <PropertiesToolbar
+              activeFilter={activeFilter}
+              activeSort={activeSort}
+              activeView={activeView}
+              filterOptions={FILTER_OPTIONS}
+              sortOptions={SORT_OPTIONS}
+            />
+          </div>
+
+          {visibleCards.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-border px-6 py-12 text-center">
               <Search className="size-10 text-muted/40" aria-hidden />
               <div>
                 <p className="text-sm font-semibold text-foreground">No matching properties</p>
                 <p className="mt-1 text-sm text-muted">Try adjusting your filters.</p>
               </div>
-            </div>
-          ) : singlePropertyMode && visibleCards.length === 1 ? (
-            <div className="rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow duration-150 hover:shadow-md">
-              {(() => {
-                const card = visibleCards[0];
-                const p = card.property;
-                const metrics = card.metrics;
-                return (
-                  <div className="space-y-4">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div>
-                        <h2 className="text-xl font-semibold text-foreground">
-                          {p.nickname || p.addressLine1}
-                        </h2>
-                        <p className="mt-1 text-sm text-muted">
-                          {p.addressLine1}
-                          {p.city && `, ${p.city} ${p.state} ${p.zipCode}`}
-                        </p>
-                        <p className="mt-1 text-xs text-muted">
-                          Updated {formatTimeAgo(p.updatedAt)}
-                        </p>
-                      </div>
-                      <div className="flex flex-wrap items-center gap-1.5">
-                        <PropertyTypeBadge propertyType={p.propertyType} units={p.units} />
-                        {card.incompleteProfile && <InsightTag label="Incomplete profile" />}
-                        {card.noMortgage && <InsightTag label="No mortgage" />}
-                        {card.benchmarkStale && <InsightTag label="Benchmark stale" />}
-                        {card.negativeCashFlow && (
-                          <InsightTag label="Negative cash flow" tone="negative" />
-                        )}
-                      </div>
-                    </div>
-                    <dl className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
-                        <dt className="text-xs font-medium text-muted">Value</dt>
-                        <dd className="mt-1 text-lg font-semibold text-foreground">
-                          {formatCurrency(Number(p.currentEstimatedValue))}
-                        </dd>
-                      </div>
-                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
-                        <dt className="text-xs font-medium text-muted">Equity</dt>
-                        <dd className="mt-1 text-lg font-semibold text-foreground">
-                          {formatCurrency(metrics.equity)}
-                        </dd>
-                      </div>
-                      <div className="rounded-md border border-border bg-subtle/40 px-3 py-2">
-                        <dt className="text-xs font-medium text-muted">Monthly cash flow</dt>
-                        <dd
-                          className={`mt-1 text-lg font-semibold ${
-                            metrics.monthlyCashFlow >= 0 ? "text-positive" : "text-negative"
-                          }`}
-                        >
-                          {formatCurrency(metrics.monthlyCashFlow)}
-                        </dd>
-                      </div>
-                    </dl>
-                    <BenchmarkLine
-                      propertyId={p.id}
-                      userRent={card.userRent}
-                      isRented={p.isRented}
-                      marketRent={p.marketRent != null ? Number(p.marketRent) : null}
-                      marketRentAsOf={p.marketRentAsOf}
-                    />
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/properties/${p.id}`}
-                        className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-accent-foreground hover:bg-accent-hover"
-                      >
-                        Open property
-                      </Link>
-                      <Link
-                        href={`/modeling?propertyId=${encodeURIComponent(p.id)}`}
-                        className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                      >
-                        Open Modeling
-                      </Link>
-                      {p.mortgages.length > 0 ? (
-                        <Link
-                          href={`/mortgage?propertyId=${encodeURIComponent(p.id)}`}
-                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                        >
-                          Open Mortgage
-                        </Link>
-                      ) : (
-                        <Link
-                          href={`/properties/${p.id}?tab=details#mortgages`}
-                          className="rounded-md border border-border px-2.5 py-1 text-sm font-medium text-foreground hover:bg-subtle"
-                        >
-                          Add mortgage
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
           ) : (
             <PropertiesCardGrid

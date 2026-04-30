@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import * as Sentry from "@sentry/nextjs";
 import { getActiveAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -125,6 +126,7 @@ export async function PATCH(
   if (data.vacancyPercent !== undefined) updatePayload.vacancyPercent = data.vacancyPercent;
   if (data.cashInvested !== undefined) updatePayload.cashInvested = data.cashInvested;
   if (data.hasMortgage !== undefined) updatePayload.hasMortgage = data.hasMortgage;
+  if (data.mortgagePaidOff !== undefined) updatePayload.mortgagePaidOff = data.mortgagePaidOff;
   if (data.notes !== undefined) updatePayload.notes = data.notes;
   if (data.marketRent !== undefined) updatePayload.marketRent = data.marketRent;
   if (data.marketRentAsOf !== undefined) updatePayload.marketRentAsOf = data.marketRentAsOf;
@@ -191,6 +193,7 @@ export async function DELETE(
   try {
     await prisma.property.delete({ where: { id, userId: user.id } });
     await recordRateLimit(identifier, "properties:delete");
+    revalidateTag(`layout-banner:${user.id}`, "default");
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error("Property delete error:", err);

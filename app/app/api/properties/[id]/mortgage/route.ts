@@ -135,22 +135,38 @@ export async function POST(
     );
   }
 
-  const mortgage = await prisma.mortgage.create({
-    data: {
-      propertyId,
-      originalLoanAmount: data.originalLoanAmount,
-      currentBalance: data.currentBalance,
-      balanceAsOfDate: data.balanceAsOfDate ?? null,
-      interestRate: data.interestRate,
-      termYears: data.termYears,
-      startDate: data.startDate,
-      monthlyPayment: data.monthlyPayment,
-      paymentEffectiveDate: data.paymentEffectiveDate ?? null,
-      escrowIncluded: data.escrowIncluded,
-      escrowAmount: data.escrowAmount ?? null,
-      lenderName: data.lenderName ?? null,
-      loanType: data.loanType ?? null,
-    },
+  // Form no longer asks the user for "as of" dates — server stamps them with
+  // submission time. Schema fields stay (consumed by balance projection /
+  // amortization). Clients may still send explicit values; we fall back to
+  // `now` when omitted.
+  const now = new Date();
+  const escrowAmount = data.escrowAmount ?? null;
+  const escrowIncluded =
+    escrowAmount != null && parseFloat(escrowAmount) > 0;
+
+  const mortgage = await prisma.$transaction(async (tx) => {
+    const created = await tx.mortgage.create({
+      data: {
+        propertyId,
+        originalLoanAmount: data.originalLoanAmount,
+        currentBalance: data.currentBalance,
+        balanceAsOfDate: data.balanceAsOfDate ?? now,
+        interestRate: data.interestRate,
+        termYears: data.termYears,
+        startDate: data.startDate,
+        monthlyPayment: data.monthlyPayment,
+        paymentEffectiveDate: data.paymentEffectiveDate ?? now,
+        escrowIncluded,
+        escrowAmount,
+        lenderName: data.lenderName ?? null,
+        loanType: data.loanType ?? null,
+      },
+    });
+    await tx.property.update({
+      where: { id: propertyId },
+      data: { hasMortgage: true, mortgagePaidOff: false },
+    });
+    return created;
   });
 
   await recordRateLimit(identifier, "properties:mortgage-post");

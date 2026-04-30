@@ -102,6 +102,7 @@ model Property {
   bathrooms              Decimal? @db.Decimal(4, 2)
   squareFeet             Int?
   hasMortgage            Boolean?
+  mortgagePaidOff        Boolean  @default(false)
   currentMonthlyExpenses Decimal  @db.Decimal(12, 2)
   vacancyPercent         Int      @default(5) // 0-100, expected vacancy; reduces rent in cash flow
   cashInvested           Decimal? @db.Decimal(14, 2)

@@ -30,6 +30,8 @@ const LEGAL_LAST_MODIFIED = new Date("2026-04-09T00:00:00.000Z");
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const APP_URL = getAppOrigin();
+  // Marketing URLs: lastModified tracks the newest CHANGELOG_ENTRIES.date (see changelog-process).
+  // Bump LEGAL_LAST_MODIFIED below when only legal pages change. Do not set arbitrary "today" dates.
   const SITE_LAST_MODIFIED = latestChangelogDate();
 
   const toolLocationPages: MetadataRoute.Sitemap = LOCATION_DATA_US_STATES.flatMap((loc) =>

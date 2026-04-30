@@ -1,31 +1,58 @@
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
+import { getAppUser } from "@/lib/auth";
+import { prisma } from "@/lib/db";
 import { AddPropertyWizard } from "../add-property-wizard";
+import { MarkWelcomeSeen } from "../mark-welcome-seen";
 
 export default async function NewPropertyPage({
   searchParams,
 }: {
   searchParams: Promise<{ from?: string; mode?: string }>;
 }) {
+  const user = await getAppUser();
   const { from: dealId, mode } = await searchParams;
   const quickAdd = mode === "quick";
+  const propertyCount = user
+    ? await prisma.property.count({ where: { userId: user.id } })
+    : 0;
+  // First-time variant applies to the user's first quick-add flow (no properties yet).
+  const isFirstAdd = user !== null && quickAdd && !dealId && propertyCount === 0;
 
   return (
     <div>
-      <div className="mb-6 flex items-center gap-4">
-        <Link
-          href="/properties"
-          className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
-        >
-          <ChevronLeft className="size-4" aria-hidden />
-          Properties
-        </Link>
-      </div>
-      <h1 className="text-2xl font-semibold text-foreground">Add property</h1>
+      {isFirstAdd && (
+        <>
+          <MarkWelcomeSeen />
+          <div className="mb-6">
+            <h1 className="text-2xl font-semibold text-foreground">
+              Add your first property
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm text-muted">
+              Start with the basics. You can add more details later.
+            </p>
+          </div>
+        </>
+      )}
+      {!isFirstAdd && (
+        <>
+          <div className="mb-6 flex items-center gap-4">
+            <Link
+              href="/properties"
+              className="inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              <ChevronLeft className="size-4" aria-hidden />
+              Properties
+            </Link>
+          </div>
+          <h1 className="text-2xl font-semibold text-foreground">Add property</h1>
+        </>
+      )}
       {quickAdd ? (
         <p className="mt-1 text-sm text-muted">
-          Just the essentials — address, value, purchase price, rent, and expenses. You
-          can add full details anytime from the property page.
+          {isFirstAdd
+            ? "Address, value, purchase price, rent, and expenses."
+            : "Just the essentials — address, value, purchase price, rent, and expenses. You can add full details anytime from the property page."}
         </p>
       ) : (
         <p className="mt-1 text-sm text-muted">
@@ -33,10 +60,10 @@ export default async function NewPropertyPage({
           to jump between sections.
         </p>
       )}
-      {quickAdd && (
+      {quickAdd && !isFirstAdd && (
         <div className="mt-4 flex flex-col gap-3 rounded-lg border border-accent/30 bg-accent/10 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4">
           <p className="text-sm text-foreground">
-            Need to add mortgage, purchase history, or property specs?
+            Need to add purchase history or detailed property specs?
           </p>
           <Link
             href="/properties/new"
