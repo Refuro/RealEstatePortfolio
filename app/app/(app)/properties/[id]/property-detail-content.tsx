@@ -198,6 +198,7 @@ export function PropertyDetailContent({
             hasMortgage={property.hasMortgage}
           />
           <DataFreshnessCard
+            propertyId={propertyId}
             propertyUpdatedAt={property.updatedAt}
             estimatedValueAsOf={property.estimatedValueAsOf}
             marketRentAsOf={property.marketRentAsOf}

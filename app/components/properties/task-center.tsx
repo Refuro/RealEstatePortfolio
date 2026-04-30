@@ -35,25 +35,31 @@ export function TaskCenter(props: TaskCenterProps) {
     !showCashFlowNegative && props.recentlyImprovedName != null;
   const showRefiReady = props.refiReadyRows.length > 0;
 
-  const anyVisible =
-    showIncomplete || showCashFlowNegative || showCashFlowPositive || showRefiReady;
-  if (!anyVisible) return null;
+  const visibleCount = [
+    showIncomplete,
+    showCashFlowNegative,
+    showCashFlowPositive,
+    showRefiReady,
+  ].filter(Boolean).length;
+  if (visibleCount === 0) return null;
 
-  // When the incomplete card is the only visible task, drop the 3-col grid so
-  // it spans full width — the lg:col-span-2 leaves a 1/3 gap that looks
-  // awkward when there's nothing to fill it.
-  const hasOtherCards =
-    showCashFlowNegative || showCashFlowPositive || showRefiReady;
+  // A lone card in a 3-col grid leaves an awkward 2/3 gap, so stretch any
+  // single visible card to full width. With 2+ cards, keep the 3-col grid and
+  // let the incomplete card span 2 cols when it shares the row.
+  const isSingleCard = visibleCount === 1;
+  const incompleteAccompanied =
+    showIncomplete &&
+    (showCashFlowNegative || showCashFlowPositive || showRefiReady);
 
   return (
     <section
       aria-label="Tasks"
       className={`mb-6 grid grid-cols-1 gap-4 ${
-        hasOtherCards ? "lg:grid-cols-3" : ""
+        isSingleCard ? "" : "lg:grid-cols-3"
       }`}
     >
       {showIncomplete && (
-        <div className={hasOtherCards ? "lg:col-span-2" : ""}>
+        <div className={incompleteAccompanied ? "lg:col-span-2" : ""}>
           <IncompleteProfilesCard
             rows={props.incompleteRows}
             totalIncomplete={props.totalIncomplete}

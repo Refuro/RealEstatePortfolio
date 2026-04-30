@@ -1,4 +1,4 @@
-import { KpiStrip, type KpiMetricColor } from "@/components/ui/kpi-strip";
+import { KpiStrip, type KpiDelta, type KpiMetricColor } from "@/components/ui/kpi-strip";
 
 export type HeroMetricColor = KpiMetricColor;
 
@@ -7,6 +7,7 @@ export type HeroMetric = {
   value: string;
   sub: string;
   valueColor?: HeroMetricColor;
+  delta?: KpiDelta;
 };
 
 type PortfolioHeroStripProps = {
@@ -22,6 +23,7 @@ export function PortfolioHeroStrip({ metrics }: PortfolioHeroStripProps) {
         value: m.value,
         hint: m.sub,
         valueColor: m.valueColor,
+        delta: m.delta,
       }))}
     />
   );

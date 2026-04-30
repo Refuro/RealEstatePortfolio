@@ -10,6 +10,7 @@ type CashFlowBreakdownCardProps = {
   annualAppreciation: number;
   annualPaydown: number;
   annualTotalReturn: number;
+  appreciationRatePct: number;
 };
 
 function fmtSigned(n: number, suffix = ""): string {
@@ -26,6 +27,7 @@ export function CashFlowBreakdownCard({
   annualAppreciation,
   annualPaydown,
   annualTotalReturn,
+  appreciationRatePct,
 }: CashFlowBreakdownCardProps) {
   const netMonthly = monthlyRent - monthlyExpenses - monthlyMortgage;
   const netIsNeg = netMonthly < 0;
@@ -83,13 +85,9 @@ export function CashFlowBreakdownCard({
       {/* Total return bridge */}
       <div
         style={{
-          marginTop: "12px",
-          paddingTop: "10px",
+          marginTop: "14px",
+          paddingTop: "12px",
           borderTop: "1px solid var(--border)",
-          display: "flex",
-          flexDirection: "column",
-          gap: "5px",
-          fontSize: "12px",
           fontVariantNumeric: "tabular-nums",
         }}
       >
@@ -100,26 +98,57 @@ export function CashFlowBreakdownCard({
             textTransform: "uppercase",
             letterSpacing: "0.05em",
             color: "var(--fg-dimmer)",
-            marginBottom: "2px",
+            marginBottom: "8px",
           }}
         >
           Total return (est. annual)
         </div>
-        <LineItem
-          label="Cash flow"
-          value={fmtSigned(annualCashFlow)}
-          valueColor={annualCashFlow >= 0 ? "var(--positive)" : "var(--negative)"}
-        />
-        <LineItem
-          label="Appreciation (est.)"
-          value={`+${formatCurrency(Math.abs(annualAppreciation))}`}
-        />
-        <LineItem
-          label="Mortgage paydown"
-          value={`+${formatCurrency(Math.abs(annualPaydown))}`}
-        />
-        <div style={{ height: "1px", background: "var(--border)", margin: "3px 0" }} />
-        <div style={{ display: "flex", justifyContent: "space-between", fontWeight: 600 }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gap: "1px",
+            background: "var(--border)",
+            border: "1px solid var(--border)",
+            borderRadius: "8px",
+            overflow: "hidden",
+          }}
+        >
+          <ReturnTile
+            label="Cash flow"
+            value={fmtSigned(annualCashFlow)}
+            valueColor={annualCashFlow >= 0 ? "var(--positive)" : "var(--negative)"}
+          />
+          <ReturnTile
+            label="Appreciation"
+            sublabel={`est. ${appreciationRatePct.toFixed(1)}% / yr`}
+            value={`+${formatCurrency(Math.abs(annualAppreciation))}`}
+            valueColor="var(--positive)"
+          />
+          {monthlyMortgage > 0 ? (
+            <ReturnTile
+              label="Paydown"
+              sublabel="principal / yr"
+              value={`+${formatCurrency(Math.abs(annualPaydown))}`}
+              valueColor="var(--positive)"
+            />
+          ) : (
+            <ReturnTile
+              label="Paydown"
+              value="Paid off"
+              valueColor="var(--foreground-muted)"
+            />
+          )}
+        </div>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            fontWeight: 600,
+            fontSize: "12.5px",
+            marginTop: "10px",
+          }}
+        >
           <span style={{ color: "var(--foreground-muted)" }}>Total return</span>
           <span style={{ color: totalIsPos ? "var(--positive)" : "var(--negative)" }}>
             {fmtSigned(annualTotalReturn)}{" "}
@@ -131,6 +160,60 @@ export function CashFlowBreakdownCard({
           </span>
         </div>
       </div>
+    </div>
+  );
+}
+
+function ReturnTile({
+  label,
+  sublabel,
+  value,
+  valueColor,
+}: {
+  label: string;
+  sublabel?: string;
+  value: string;
+  valueColor: string;
+}) {
+  return (
+    <div
+      style={{
+        background: "var(--card)",
+        padding: "10px 12px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "2px",
+      }}
+    >
+      <div
+        style={{
+          fontSize: "10.5px",
+          color: "var(--foreground-muted)",
+          fontWeight: 500,
+        }}
+      >
+        {label}
+      </div>
+      <div
+        style={{
+          fontSize: "13.5px",
+          fontWeight: 600,
+          color: valueColor,
+          fontVariantNumeric: "tabular-nums",
+        }}
+      >
+        {value}
+      </div>
+      {sublabel && (
+        <div
+          style={{
+            fontSize: "10.5px",
+            color: "var(--foreground-muted)",
+          }}
+        >
+          {sublabel}
+        </div>
+      )}
     </div>
   );
 }
