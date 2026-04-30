@@ -1,5 +1,16 @@
 export type KpiMetricColor = "pos" | "neg" | "neutral";
 
+export type KpiDelta = {
+  /** Signed amount; sign drives the arrow. Use 0 for "no change". */
+  amount: number;
+  /** Pre-formatted display, e.g. "+$5,000" or "−$50 / mo". Caller chooses currency vs percent vs custom suffix. */
+  formatted: string;
+  /** Visual tone. Callers decide semantics (e.g. for debt, "up" should be neg). */
+  tone: KpiMetricColor;
+  /** Optional caption like "vs last month". */
+  caption?: string;
+};
+
 export type KpiMetric = {
   label: string;
   value: string;
@@ -8,6 +19,8 @@ export type KpiMetric = {
   valueColor?: KpiMetricColor;
   /** Drop this metric from the mobile (<md) grid. Used on the property detail strip to drop "Property value" on mobile. */
   hideOnMobile?: boolean;
+  /** Optional MoM delta indicator. Renders below the value with arrow. */
+  delta?: KpiDelta;
 };
 
 export type KpiStripProps = {
@@ -68,6 +81,22 @@ export function KpiStrip({ metrics, desktopCols }: KpiStripProps) {
           >
             {m.value}
           </div>
+          {m.delta && (
+            <div
+              className="mt-1 flex items-center gap-1 text-[10.5px] md:text-[11px]"
+              style={{ fontVariantNumeric: "tabular-nums" }}
+            >
+              <span style={{ color: VALUE_COLOR[m.delta.tone] }}>
+                {m.delta.amount > 0 ? "▲" : m.delta.amount < 0 ? "▼" : "■"}{" "}
+                {m.delta.formatted}
+              </span>
+              {m.delta.caption && (
+                <span style={{ color: "var(--foreground-muted)" }}>
+                  {m.delta.caption}
+                </span>
+              )}
+            </div>
+          )}
           {m.hint && (
             <div
               className="mt-1 text-[10.5px] md:text-[11px]"

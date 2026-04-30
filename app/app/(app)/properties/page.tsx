@@ -145,11 +145,7 @@ export default async function PropertiesPage({
       ? (sort as PropertiesSort)
       : "updated";
   const activeView: PropertiesView =
-    view === "grid" || view === "list"
-      ? view
-      : totalCount >= 6
-        ? "list"
-        : "grid";
+    view === "grid" || view === "list" ? view : "list";
 
   type DirectoryCard = {
     property: PropertyWithMortgages;

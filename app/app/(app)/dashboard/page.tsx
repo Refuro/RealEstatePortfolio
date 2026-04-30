@@ -3,13 +3,17 @@ import { getAppUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { formatCurrency } from "@/lib/format-currency";
 import { getPropertyTotalRent } from "@/lib/property-utils";
-import { getEffectiveBalance } from "@/lib/amortization";
+import {
+  getEffectiveBalance,
+  getPayoffProjection,
+  getPiForAmortization,
+  getProjectedBalanceAsOf,
+} from "@/lib/amortization";
 import { buildDashboardPortfolioPayload } from "@/lib/server/portfolio-summary-payload";
 import { buildDashboardTrends } from "@/lib/dashboard-trends";
 import {
   BENCHMARK_UX_MESSAGES,
   getBenchmarkEligibility,
-  getBenchmarkLabel,
   getBenchmarkTone,
 } from "@/lib/benchmark-utils";
 import { computePropertyMetrics } from "@/lib/metrics/property-metrics";
@@ -38,14 +42,18 @@ import {
   PropertyHeaderCard,
   type PropertyTag,
 } from "@/components/dashboard/property-header-card";
-import { CapitalStructureCard } from "@/components/dashboard/capital-structure-card";
+import {
+  CapitalStructureCard,
+  type MortgageDetail,
+  type PaydownProjection,
+} from "@/components/dashboard/capital-structure-card";
+import { SincePurchasePanel } from "@/components/dashboard/since-purchase-panel";
 import { CashFlowBreakdownCard } from "@/components/dashboard/cash-flow-breakdown-card";
 import {
   SecondaryMetricsStrip,
   type SecondaryMetric,
 } from "@/components/dashboard/secondary-metrics-strip";
 import { EquityTrendChart } from "@/components/dashboard/equity-trend-chart";
-import { AnnualReturnBar } from "@/components/dashboard/annual-return-bar";
 
 const MINUS = "−";
 
@@ -379,32 +387,61 @@ export default async function DashboardPage({
     const equityPct =
       propertyValue > 0 ? (propertyEquity / propertyValue) * 100 : 0;
     const monthlyCashFlow = m.monthlyCashFlow;
-    const capRatePct = m.capRate != null ? m.capRate * 100 : null;
+
+    // Total return components (used by hero + breakdown card)
+    const dscrFromCtx = insightsContext.metrics.find((mm) => mm.id === p.id)?.dscr ?? null;
+    const annualPaydownFromCtx =
+      insightsContext.metrics.find((mm) => mm.id === p.id)?.annualPaydown ?? 0;
+    const appreciation =
+      insightsContext.appreciationByPropertyId?.[p.id]?.annualDollars ?? 0;
+    const annualCashFlow = m.annualCashFlow;
+    const annualTotalReturn = annualCashFlow + appreciation + annualPaydownFromCtx;
+
+    // MoM deltas from snapshots (null when no prior month exists)
+    const valueDeltaMoM = scaledValueDeltas[p.id] ?? null;
+    const equityDeltaMoM = trends.propertyEquityDeltaMoM[p.id] ?? null;
+    const cashFlowDeltaMoM = trends.propertyCashFlowDeltaMoM[p.id] ?? null;
+
+    const buildAmountDelta = (
+      amount: number | null,
+      suffix = ""
+    ): HeroMetric["delta"] => {
+      if (amount == null || Math.abs(amount) < 0.5) return undefined;
+      return {
+        amount,
+        formatted: `${fmtSignedAmount(amount)}${suffix}`,
+        tone: amount > 0 ? "pos" : "neg",
+        caption: "vs last month",
+      };
+    };
 
     const heroMetrics: [HeroMetric, HeroMetric, HeroMetric, HeroMetric] = [
       {
-        label: "Property value",
-        value: formatCurrency(propertyValue),
-        sub: "Estimated value",
-        valueColor: "neutral",
+        label: "Monthly cash flow",
+        value: fmtSignedMonthly(monthlyCashFlow).replace(" / mo", ""),
+        sub: monthlyCashFlow >= 0 ? "Positive after costs" : "Below break-even",
+        valueColor: monthlyCashFlow >= 0 ? "pos" : "neg",
+        delta: buildAmountDelta(cashFlowDeltaMoM, " / mo"),
+      },
+      {
+        label: "Total return",
+        value: fmtSignedAmount(annualTotalReturn),
+        sub: "Cash flow + appreciation + paydown",
+        valueColor: annualTotalReturn >= 0 ? "pos" : "neg",
       },
       {
         label: "Your equity",
         value: formatCurrency(propertyEquity),
         sub: `${equityPct.toFixed(1)}% of property value`,
         valueColor: "neutral",
+        delta: buildAmountDelta(equityDeltaMoM),
       },
       {
-        label: "Monthly cash flow",
-        value: fmtSignedMonthly(monthlyCashFlow).replace(" / mo", ""),
-        sub: monthlyCashFlow >= 0 ? "Positive after costs" : "Below break-even",
-        valueColor: monthlyCashFlow >= 0 ? "pos" : "neg",
-      },
-      {
-        label: "Cap rate",
-        value: capRatePct != null ? `${capRatePct.toFixed(2)}%` : "—",
-        sub: "Annual yield (NOI ÷ value)",
+        label: "Property value",
+        value: formatCurrency(propertyValue),
+        sub: "Estimated value",
         valueColor: "neutral",
+        delta: buildAmountDelta(valueDeltaMoM),
       },
     ];
 
@@ -431,11 +468,11 @@ export default async function DashboardPage({
     };
 
     let ltvSignal: Signal;
-    if (m.ltv == null) {
+    if (m.ltv == null || m.ltv <= 0) {
       ltvSignal = {
         label: "Loan-to-value (LTV)",
-        value: "No mortgage",
-        detail: "Owned outright",
+        value: m.ltv == null ? "No mortgage" : "0.0%",
+        detail: m.ltv == null ? "Owned outright" : "Paid off",
         status: "ok",
       };
     } else {
@@ -469,10 +506,22 @@ export default async function DashboardPage({
       const tone = getBenchmarkTone(userRent, marketRent);
       const status: Signal["status"] =
         tone === "negative" ? "warn" : tone === "positive" ? "ok" : "ok";
+      const monthlyDelta = userRent - marketRent;
+      const headline =
+        Math.abs(monthlyDelta) < 1
+          ? "At market"
+          : `${monthlyDelta > 0 ? "+" : MINUS}${formatCurrency(Math.abs(monthlyDelta))} / mo`;
+      const refreshLabel = p.marketRentAsOf
+        ? `refreshed ${new Intl.DateTimeFormat("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }).format(p.marketRentAsOf)}`
+        : "refresh date unavailable";
       rentSignal = {
         label: "Rent vs. market",
-        value: getBenchmarkLabel(userRent, marketRent),
-        detail: "Estimate refreshed recently",
+        value: headline,
+        detail: `Yours ${formatCurrency(userRent)} · Market ${formatCurrency(marketRent)} · ${refreshLabel}`,
         status,
       };
     } else if (eligibility === "not_rented") {
@@ -499,12 +548,6 @@ export default async function DashboardPage({
     }
 
     // Secondary metrics
-    const dscrFromCtx = insightsContext.metrics.find((mm) => mm.id === p.id)?.dscr ?? null;
-    const annualPaydownFromCtx =
-      insightsContext.metrics.find((mm) => mm.id === p.id)?.annualPaydown ?? 0;
-    const appreciation =
-      insightsContext.appreciationByPropertyId?.[p.id]?.annualDollars ?? 0;
-
     const cocPct =
       m.cashOnCashReturn != null ? m.cashOnCashReturn * 100 : null;
     const secondaryMetrics: [
@@ -568,15 +611,140 @@ export default async function DashboardPage({
     const monthlyMortgage = fullLiability
       ? pInput.totalMonthlyPayment
       : pInput.totalMonthlyPayment * ownershipScale;
-    const annualCashFlow = m.annualCashFlow;
-    const annualTotalReturn = annualCashFlow + appreciation + annualPaydownFromCtx;
 
-    const annualReturnBar = (
-      <AnnualReturnBar
-        cashFlow={annualCashFlow}
-        appreciation={appreciation}
-        paydown={annualPaydownFromCtx}
-        total={annualTotalReturn}
+    // ─── Mortgage detail (folded into Capital Structure card; hidden when no mortgage) ───
+    let mortgageDetail: MortgageDetail | undefined;
+    let totalOriginalFull = 0;
+
+    if (p.mortgages.length > 0) {
+      let totalBalanceFull = 0;
+      let totalPiFull = 0;
+      let totalPaymentFull = 0;
+      let weightedRateBalance = 0;
+      let latestPayoff: Date | null = null;
+      let anyNegativeAmortizing = false;
+
+      for (const mort of p.mortgages) {
+        const balance = getEffectiveBalance(mort);
+        const pi = getPiForAmortization(mort);
+        const original = Number(mort.originalLoanAmount);
+        const payment = Number(mort.monthlyPayment);
+        const rate = Number(mort.interestRate);
+        const projection = getPayoffProjection(mort);
+
+        totalBalanceFull += balance;
+        totalOriginalFull += original;
+        totalPiFull += pi;
+        totalPaymentFull += payment;
+        weightedRateBalance += rate * balance;
+
+        if (projection.payoffDate) {
+          if (!latestPayoff || projection.payoffDate > latestPayoff) {
+            latestPayoff = projection.payoffDate;
+          }
+        } else if (projection.remainingAtTermEnd != null) {
+          anyNegativeAmortizing = true;
+        }
+      }
+
+      const scaledPi = fullLiability ? totalPiFull : totalPiFull * ownershipScale;
+      const scaledPayment = fullLiability
+        ? totalPaymentFull
+        : totalPaymentFull * ownershipScale;
+      const avgRate =
+        totalBalanceFull > 0 ? weightedRateBalance / totalBalanceFull : 0;
+
+      const yearsRemaining = latestPayoff
+        ? Math.max(
+            0,
+            Math.round(
+              (latestPayoff.getTime() - nowMs) /
+                (365.25 * 24 * 60 * 60 * 1000)
+            )
+          )
+        : null;
+
+      mortgageDetail = {
+        rate: avgRate,
+        monthlyPi: scaledPi,
+        monthlyPayment: scaledPayment,
+        payoffDate: latestPayoff,
+        yearsRemaining,
+        negativeAmortizing: anyNegativeAmortizing,
+        loanCount: p.mortgages.length,
+      };
+    }
+
+    // ─── Paydown projection chart (sampled across all mortgages) ───
+    let paydownProjection: PaydownProjection | undefined;
+    if (p.mortgages.length > 0 && totalOriginalFull > 0) {
+      let earliestStart = Infinity;
+      let latestEnd = -Infinity;
+      for (const mort of p.mortgages) {
+        const start = new Date(mort.startDate).getTime();
+        if (start < earliestStart) earliestStart = start;
+        const projection = getPayoffProjection(mort);
+        const end = projection.payoffDate
+          ? projection.payoffDate.getTime()
+          : new Date(
+              new Date(mort.startDate).getFullYear() + mort.termYears,
+              new Date(mort.startDate).getMonth(),
+              1
+            ).getTime();
+        if (end > latestEnd) latestEnd = end;
+      }
+
+      if (earliestStart < latestEnd) {
+        const N = 32;
+        const points: { date: Date; balance: number }[] = [];
+        for (let i = 0; i < N; i++) {
+          const ms = earliestStart + ((latestEnd - earliestStart) * i) / (N - 1);
+          const date = new Date(ms);
+          let balance = 0;
+          for (const mort of p.mortgages) {
+            balance += getProjectedBalanceAsOf(
+              {
+                originalLoanAmount: Number(mort.originalLoanAmount),
+                annualInterestRate: Number(mort.interestRate),
+                termYears: mort.termYears,
+                startDate: new Date(mort.startDate),
+                monthlyPayment: getPiForAmortization(mort),
+              },
+              date
+            );
+          }
+          points.push({
+            date,
+            balance: fullLiability ? balance : balance * ownershipScale,
+          });
+        }
+
+        const originalScaled = fullLiability
+          ? totalOriginalFull
+          : totalOriginalFull * ownershipScale;
+
+        paydownProjection = {
+          points,
+          todayMs: nowMs,
+          originalBalance: originalScaled,
+        };
+      }
+    }
+
+    // ─── Since-purchase panel inputs ───
+    const purchaseValueScaled = Number(p.purchasePrice) * ownershipScale;
+    const originalDebtScaled = fullLiability
+      ? totalOriginalFull
+      : totalOriginalFull * ownershipScale;
+    const downPaymentAtPurchase = purchaseValueScaled - originalDebtScaled;
+
+    const sincePurchasePanel = (
+      <SincePurchasePanel
+        purchaseDate={new Date(p.purchaseDate)}
+        purchasePrice={purchaseValueScaled}
+        downPayment={downPaymentAtPurchase}
+        currentEquity={propertyEquity}
+        nowMs={nowMs}
       />
     );
 
@@ -594,7 +762,7 @@ export default async function DashboardPage({
             location={`${p.city}, ${p.state}${p.zipCode ? ` ${p.zipCode}` : ""} · ${formatPropertyType(p.propertyType)}`}
             tags={tags}
             propertyHref={`/properties/${p.id}`}
-            centerSlot={annualReturnBar}
+            centerSlot={sincePurchasePanel}
           >
             <SignalStrip signals={[cfSignal, ltvSignal, rentSignal]} />
           </PropertyHeaderCard>
@@ -620,6 +788,8 @@ export default async function DashboardPage({
               equity={propertyEquity}
               purchasePrice={Number(p.purchasePrice)}
               gainOnValue={gainOnValue}
+              mortgage={mortgageDetail}
+              paydown={paydownProjection}
             />
             <CashFlowBreakdownCard
               monthlyRent={monthlyRentVacancyAdjusted}
@@ -629,6 +799,11 @@ export default async function DashboardPage({
               annualAppreciation={appreciation}
               annualPaydown={annualPaydownFromCtx}
               annualTotalReturn={annualTotalReturn}
+              appreciationRatePct={
+                pInput.estimatedValue > 0
+                  ? (appreciation / pInput.estimatedValue) * 100
+                  : 0
+              }
             />
           </div>
 
@@ -776,11 +951,13 @@ export default async function DashboardPage({
       hint:
         portfolioLtv == null
           ? "No mortgages tracked"
-          : portfolioLtv >= 0.8
-            ? "Above 80% — limited refi flexibility"
-            : portfolioLtv >= 0.7
-              ? "Approaching 80% — watch headroom"
-              : "Below 80% — healthy refi terms available",
+          : portfolioLtv <= 0
+            ? "All paid off"
+            : portfolioLtv >= 0.8
+              ? "Above 80% — limited refi flexibility"
+              : portfolioLtv >= 0.7
+                ? "Approaching 80% — watch headroom"
+                : "Below 80% — healthy refi terms available",
       valueColor:
         portfolioLtv == null
           ? "default"

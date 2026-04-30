@@ -24,6 +24,30 @@ export function formatTimeAgo(date: Date): string {
   return `${diffYear} years ago`;
 }
 
+/**
+ * Relative label for PostgreSQL `DATE` / Prisma `@db.Date` fields.
+ *
+ * Those values are persisted without a time-of-day; clients typically see them as UTC midnight.
+ * {@link formatTimeAgo} would then report misleading spans like "2 hours ago" on the same
+ * calendar day. This helper compares **UTC calendar dates** only.
+ */
+export function formatDateOnlyRelative(date: Date | string, now: Date = new Date()): string {
+  const d = typeof date === "string" ? new Date(date) : date;
+  const startUtcMs = Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+  const nowUtcMs = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const diffDays = Math.floor((nowUtcMs - startUtcMs) / (24 * 60 * 60 * 1000));
+
+  if (diffDays <= 0) return "today";
+  if (diffDays === 1) return "yesterday";
+  if (diffDays < 30) return `${diffDays} days ago`;
+  const diffMonth = Math.floor(diffDays / 30);
+  if (diffMonth === 1) return "1 month ago";
+  if (diffMonth < 12) return `${diffMonth} months ago`;
+  const diffYear = Math.floor(diffDays / 365);
+  if (diffYear === 1) return "1 year ago";
+  return `${diffYear} years ago`;
+}
+
 const STALE_THRESHOLD_MS = 180 * 24 * 60 * 60 * 1000; // 6 months
 
 /** Returns true if the date is more than 6 months ago (data may be stale). */
