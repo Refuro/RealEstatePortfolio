@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import * as Sentry from "@sentry/nextjs";
 import { Resend } from "resend";
 import { getActiveAppUser } from "@/lib/auth";
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
 import { prisma } from "@/lib/db";
 import { contactFormSchema } from "@/lib/validations/contact";
 
@@ -95,10 +99,10 @@ export async function POST(req: NextRequest) {
 
   if (error) {
     console.error("Resend error:", error);
-    Sentry.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-      { tags: { area: "contact", resend: "send" } }
-    );
+    Sentry.captureException(errorFromResendSdk(error), {
+      tags: { area: "contact", resend: "send" },
+      extra: resendSdkErrorExtra(error),
+    });
     return NextResponse.json(
       { error: "Failed to send message. Please try again later." },
       { status: 500 }

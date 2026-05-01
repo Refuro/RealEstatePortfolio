@@ -2,6 +2,11 @@ import * as crypto from "crypto";
 import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
+
 export interface OnboardingEmailResult {
   success: boolean;
   id?: string;
@@ -220,10 +225,10 @@ export async function sendOnboardingEmail(
 
   if (error) {
     console.error("Resend onboarding email error:", error);
-    Sentry.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-      { tags: { area: "onboarding_email", variant } }
-    );
+    Sentry.captureException(errorFromResendSdk(error), {
+      tags: { area: "onboarding_email", variant },
+      extra: resendSdkErrorExtra(error),
+    });
     return { success: false };
   }
 

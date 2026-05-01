@@ -3,6 +3,10 @@ import * as Sentry from "@sentry/nextjs";
 import {
   buildUnsubscribeUrl,
 } from "@/lib/emails/onboarding-reengagement";
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
 import type { MortgageMilestone } from "@/lib/mortgage-milestones";
 
 export interface MortgageMilestoneEmailResult {
@@ -124,10 +128,10 @@ export async function sendMortgageMilestoneEmail(
 
   if (error) {
     console.error("Resend mortgage milestone email error:", error);
-    Sentry.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-      { tags: { area: "mortgage_milestone_email" } }
-    );
+    Sentry.captureException(errorFromResendSdk(error), {
+      tags: { area: "mortgage_milestone_email" },
+      extra: resendSdkErrorExtra(error),
+    });
     return { success: false };
   }
 
