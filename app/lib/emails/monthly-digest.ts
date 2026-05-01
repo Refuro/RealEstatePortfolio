@@ -1,6 +1,10 @@
 import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 import { buildUnsubscribeUrl } from "@/lib/emails/onboarding-reengagement";
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
 import type { DigestContent } from "@/lib/digest";
 
 export interface MonthlyDigestEmailResult {
@@ -120,10 +124,10 @@ export async function sendMonthlyDigestEmail(
 
   if (error) {
     console.error("Resend monthly digest email error:", error);
-    Sentry.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-      { tags: { area: "monthly_digest_email" } }
-    );
+    Sentry.captureException(errorFromResendSdk(error), {
+      tags: { area: "monthly_digest_email" },
+      extra: resendSdkErrorExtra(error),
+    });
     return { success: false };
   }
 

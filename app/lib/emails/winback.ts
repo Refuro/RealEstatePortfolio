@@ -1,6 +1,10 @@
 import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 import { buildUnsubscribeUrl } from "@/lib/emails/onboarding-reengagement";
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
 
 export interface WinbackEmailResult {
   success: boolean;
@@ -131,8 +135,9 @@ export async function sendWinbackEmail(
 
   if (error) {
     console.error("Resend winback email error:", error);
-    Sentry.captureException(error instanceof Error ? error : new Error(String(error)), {
+    Sentry.captureException(errorFromResendSdk(error), {
       tags: { area: "winback_email", variant },
+      extra: resendSdkErrorExtra(error),
     });
     return { success: false };
   }

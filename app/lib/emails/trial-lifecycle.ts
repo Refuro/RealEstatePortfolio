@@ -1,6 +1,10 @@
 import { Resend } from "resend";
 import * as Sentry from "@sentry/nextjs";
 import { buildUnsubscribeUrl } from "@/lib/emails/onboarding-reengagement";
+import {
+  errorFromResendSdk,
+  resendSdkErrorExtra,
+} from "@/lib/emails/resend-sdk-error";
 
 export interface TrialLifecycleEmailResult {
   success: boolean;
@@ -142,10 +146,10 @@ Unsubscribe: ${unsubscribeUrl}`.trim();
 
   if (error) {
     console.error("Resend trial lifecycle email error:", error);
-    Sentry.captureException(
-      error instanceof Error ? error : new Error(String(error)),
-      { tags: { area: "trial_lifecycle_email", variant } }
-    );
+    Sentry.captureException(errorFromResendSdk(error), {
+      tags: { area: "trial_lifecycle_email", variant },
+      extra: resendSdkErrorExtra(error),
+    });
     return { success: false };
   }
 
