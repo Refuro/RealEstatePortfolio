@@ -4,6 +4,8 @@
 
 **Status:** Active — follow this process when running a Code Audit.
 
+**Cursor rule:** [`.cursor/rules/code-audit-agent.mdc`](../../.cursor/rules/code-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

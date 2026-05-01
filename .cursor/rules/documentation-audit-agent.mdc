@@ -20,5 +20,5 @@ Run in **Agent** mode with writes enabled—not Ask mode, not read-only subagent
 
 ## References
 
-- Process: `docs/process/documentation-audit-process.md`
+- Process: [`docs/process/documentation-audit-process.md`](../../docs/process/documentation-audit-process.md)
 - Reports: `docs/audits/documentation/`

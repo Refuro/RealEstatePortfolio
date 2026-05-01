@@ -14,6 +14,8 @@ The project uses:
 
 Everything the agent needs is in the repo; no Cursor “cloud” config. Cloning the repo and ensuring the hook script is executable is enough for the infrastructure to work.
 
+**Monorepo layout:** This repo is often opened from **`RealEstatePortfolio/`** (the app + `docs/` root). **Cursor rules** and hooks live under **`RealEstatePortfolio/.cursor/`**. **Veld UI / mobile / landing-CTA skills** are maintained at the **workspace parent** — **`RealEstateProject/.cursor/skills/`** (for example `veld-ui`, `veld-mobile`, `veld-landing-cta`) — not under `RealEstatePortfolio/.cursor/`. Open the parent folder in Cursor if you want those skills auto-suggested alongside the portfolio rules.
+
 ---
 
 ## Files and folders to have
@@ -75,6 +77,7 @@ These live under `docs/` and are linked from the rule or the workflow doc:
 | `docs/process/legal-compliance-audit-process.md` | Process for legal/compliance reviews (not a substitute for counsel). |
 | `docs/process/full-audit-synthesis.md` | Synthesis pass when running all audits; produces deduplicated task list. |
 | `docs/process/command-integrity-check.md` | Recurring check that audit rules reference correct process docs. |
+| `docs/process/AVAILABLE_AGENTS.md` | Curated map of `.cursor/rules/*.mdc` slugs to audit process docs and PM/builder rules. |
 | `docs/audits/synthesis/` | Folder for full audit synthesis reports (`YYYY-MM-DD-audit-synthesis.md`). |
 
 If any of these are missing, the PM rule or workflow doc will reference them; add minimal stubs or copy from this repo.
@@ -144,7 +147,7 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 
 **Math & Logic audit:** Say "run math audit" or "math audit" to trigger a math and logic audit. The agent follows `docs/process/math-logic-audit.md` and writes a report to `docs/audits/math/`. Review the report and create tasks in `docs/tasks.md` for any formula or edge-case fixes you want.
 
-**Other focused audits:** You can also run feature/UX, security, performance-cost, reliability-ops, data-integrity, business-valuation, growth-funnel, and agent-governance audits with the matching "run <lane> audit" phrase shown in `docs/audits/README.md`.
+**Other focused audits:** Use **[`docs/audits/README.md`](audits/README.md)** as the single index for all audit lanes: process doc, report folder, and **"run … audit"** trigger phrase for each of the **14** lanes (same set as the full audit, before synthesis). Do not duplicate lane lists here.
 
 **Full audit:** Say "run full audit" or "run all audits" to run all **14** audit lanes (including Mobile experience and SEO) and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
 

@@ -1,6 +1,6 @@
 # Archived docs — reference only
 
-These documents are archived because the work is complete or superseded. Kept for historical reference. **Content may not match the current product** — use [`../tasks.md`](../tasks.md), [`../reference/roadmap.md`](../reference/roadmap.md), and the app for what shipped.
+These documents are archived because the work is complete or superseded. Kept for historical reference. **Content may not match the current product** — use [`../tasks.md`](../tasks.md), [`../reference/roadmap.md`](../reference/roadmap.md), [`../plans/README.md`](../plans/README.md) for **current** execution docs, and the app for what shipped.
 
 ## Proposals (implemented)
 
@@ -26,7 +26,7 @@ Active proposals remaining in `docs/proposals/`: `refinance-payoff-proposal.md`,
 
 ## Plans (shipped or superseded)
 
-Execution plans moved out of [`../plans/`](../plans/): [`plans/README.md`](plans/README.md).
+Execution plans moved out of active [`../plans/`](../plans/) live here: [`plans/README.md`](plans/README.md). **Active** plans index: [`../plans/README.md`](../plans/README.md).
 
 ## Launch — paid-ads readouts (archived)
 

@@ -1,7 +1,7 @@
 # Plan: Close the Quick-Add Completion Gap
 
 **Date:** 2026-04-05  
-**Source audit:** `docs/audits/2026-04-05-quick-add-completion-gap-audit.md`  
+**Source audit:** `docs/audits/feature/2026-04-05-quick-add-completion-gap-audit.md`  
 **Goal:** Ensure users who quick-add a property (a) understand their data is incomplete, (b) know exactly what's missing and why it matters, and (c) have clear, low-friction paths to enrich the property — from the moment of submission through every subsequent visit.
 
 ---

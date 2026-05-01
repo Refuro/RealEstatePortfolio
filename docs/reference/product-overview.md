@@ -1,7 +1,7 @@
 # Veld Portfolio — Product Overview
 
 **A shareable overview of the application.**  
-**Last updated:** April 2026
+**Last updated:** 2026-04-30
 
 ---
 
@@ -147,6 +147,8 @@ Available publicly at `/tools/` and inside the app at `/calculators/`. The in-ap
 
 Annual plans include 2 months free. No credit card required for Free.
 
+**Display pricing** on `/pricing` and `/plans` reads **`NEXT_PUBLIC_PRICE_*`** env vars when set (defaults: Investor **$15** / **$150** yr, Pro **$29** / **$290** yr) via `app/lib/pricing-display.ts` — Stripe Checkout price IDs (`STRIPE_PRICE_ID_*`) must match the marketed amounts (`docs/setup/manual-steps.md`).
+
 ---
 
 ## 7. Key Pages & Routes
@@ -159,8 +161,15 @@ Annual plans include 2 months free. No credit card required for Free.
 | `/tools/brrr` | Public BRRRR calculator |
 | `/tools/fix-and-flip` | Public Fix & Flip calculator |
 | `/tools/str-vs-ltr` | Public STR vs LTR calculator |
+| `/tools/wholesale` | Public wholesale / assignment calculator |
+| `/tools/rent-vs-buy` | Public rent vs buy calculator |
+| `/tools/cap-rate` | Public cap rate calculator |
+| `/tools/cash-on-cash` | Public cash-on-cash calculator |
+| `/tools/dscr` | Public DSCR calculator |
 | `/tools/[calculator]/[location]` | Location-specific calculator landing pages (SEO) |
 | `/investment-property-calculator` | Public investment property calculator landing |
+| `/lp/investment-property-calculator` | LP-focused variant of IPC landing |
+| `/about` | About page |
 | `/resources` | Resources hub |
 | `/resources/[slug]` | Individual resource articles |
 | `/vs/[slug]` | Competitor comparison pages |
@@ -175,6 +184,7 @@ Annual plans include 2 months free. No credit card required for Free.
 | `/properties/new` | Add property (wizard) |
 | `/properties/[id]` | Property detail, metrics, scenario |
 | `/properties/[id]/amortization` | Per-property amortization schedule |
+| `/properties/[id]/mortgage/quick` | Streamlined mortgage quick-entry for a property |
 | `/deals` | Saved deals list |
 | `/deals/[id]` | Saved deal detail |
 | `/analyze` | Deal analyzer (scratchpad) |
@@ -186,6 +196,11 @@ Annual plans include 2 months free. No credit card required for Free.
 | `/calculators/fix-and-flip` | In-app Fix & Flip calculator |
 | `/calculators/str-vs-ltr` | In-app STR vs LTR calculator |
 | `/calculators/investment-property-calculator` | In-app investment property calculator |
+| `/calculators/wholesale` | In-app wholesale calculator |
+| `/calculators/rent-vs-buy` | In-app rent vs buy calculator |
+| `/calculators/cap-rate` | In-app cap rate calculator |
+| `/calculators/cash-on-cash` | In-app cash-on-cash calculator |
+| `/calculators/dscr` | In-app DSCR calculator |
 | `/plans` | In-app pricing (upgrade) |
 | `/settings` | Account, plan, export, delete |
 | `/export/portfolio-summary` | Portfolio summary export view |

@@ -17,3 +17,8 @@ This folder contains feature-layout and UX information-architecture audits.
 ## Reports
 
 Existing historical reports may use legacy names. New reports should use the standard naming above.
+
+### Recommended reading order (2026-04-05 run)
+
+1. [`2026-04-05-feature-ux-audit.md`](2026-04-05-feature-ux-audit.md) and [`2026-04-05-mobile-experience-audit.md`](2026-04-05-mobile-experience-audit.md).
+2. Supplemental same-day analysis: [`2026-04-05-quick-add-completion-gap-audit.md`](2026-04-05-quick-add-completion-gap-audit.md) (property completion nudges after quick-add).

@@ -381,7 +381,7 @@ export default async function HomePage({
                 Underwrite a deal in 30 seconds
               </h2>
               <p className="mt-2 max-w-xl text-sm text-muted">
-                Cash flow, cap rate, DSCR, and cash-on-cash return — right here,
+                Cash flow, cap rate, DSCR, and cash-on-cash return, right here,
                 no account needed. Sign up to save, compare, and track deals
                 over time.
               </p>

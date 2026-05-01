@@ -4,7 +4,7 @@ type: feat
 status: draft
 date: 2026-04-05
 research: docs/research/2026-04-05-edit-page-completion-ux.md
-audit: docs/audits/2026-04-05-onboarding-friction-analysis.md
+audit: docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md
 ---
 
 # feat: Edit page completion guidance — bridging the last mile

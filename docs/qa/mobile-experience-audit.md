@@ -77,9 +77,9 @@ For each criterion: **Pass / Fail / N/A**, note route, viewport, evidence (scree
 
 ### C. Navigation and IA
 
-- [ ] **C1** **App shell:** Hamburger / nav drawer (if present) opens, focuses, and closes without trapping focus or leaving invisible overlay.
+- [ ] **C1** **App chrome:** **`MobileBottomNav`** (Dashboard, Properties, Analyze) plus **More** (dispatches `open-mobile-menu` → full navigation drawer/sheet). Verify drawer opens, focuses, closes without trapping focus or leaving an invisible overlay.
 - [ ] **C2** **Workspace navigation** (dashboard → modeling / mortgage / properties): Reachable in ≤2 taps from common entry points on mobile.
-- [ ] **C3** **Deep links** (`?tab=`, `#anchors`) resolve to correct tab/section on mobile.
+- [ ] **C3** **Deep links** (`?propertyId=`, `?edit=`, `#anchors`, wizard query) resolve to correct workspace or drawer section on mobile.
 - [ ] **C4** **Back behavior:** Browser back from nested flows does not strand user or lose unsaved state without warning (where product promises persistence).
 
 ### D. Touch targets and gestures
@@ -166,7 +166,7 @@ Auditors should cover **at least** these routes on mobile widths:
 | Area | Routes / surfaces |
 |------|-------------------|
 | Public | `/`, `/pricing`, `/sign-in`, `/sign-up`, `/investment-property-calculator`, LP variants if live |
-| App | `/dashboard`, `/properties`, `/properties/new`, `/properties/[id]` (tabs), `/modeling`, `/mortgage`, `/analyze`, `/plans`, `/settings` |
+| App | `/dashboard`, `/properties`, `/properties/new`, `/properties/[id]` (scroll layout + edit drawer), `/modeling`, `/mortgage`, `/refinance`, `/analyze`, **`/tools`** (public calculators hub under marketing route group), `/plans`, `/settings` |
 
 Add **property with mortgage** and **saved deal** fixtures for realistic tool testing.
 
@@ -192,4 +192,4 @@ When executing a formal audit run:
 
 ---
 
-*Last updated: 2026-03-30 — criteria baseline for mobile experience audits.*
+*Last updated: 2026-04-30 — bottom nav + property detail IA aligned with `app/app/(app)/`.*

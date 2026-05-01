@@ -4,6 +4,14 @@ import { useState } from "react";
 
 type Status = { ok: boolean; message: string } | null;
 
+type BackfillResult = {
+  ok: boolean;
+  dryRun: boolean;
+  usersAffected: number;
+  sentinelsAdded: number;
+  message: string;
+} | null;
+
 async function postJson(url: string, body?: object): Promise<{ ok: boolean; message: string }> {
   try {
     const res = await fetch(url, {
@@ -29,6 +37,8 @@ export function AdminEmailTools({
   const [resubStatus, setResubStatus] = useState<Status>(null);
   const [resubBusy, setResubBusy] = useState(false);
   const [optedOut, setOptedOut] = useState(isOptedOut);
+  const [backfillResult, setBackfillResult] = useState<BackfillResult>(null);
+  const [backfillBusy, setBackfillBusy] = useState<"preview" | "sync" | null>(null);
 
   async function sendPreview(variant: "day3" | "day7") {
     if (previewBusy) return;
@@ -41,6 +51,41 @@ export function AdminEmailTools({
         : result
     );
     setPreviewBusy(null);
+  }
+
+  async function runBackfill(dryRun: boolean) {
+    if (backfillBusy) return;
+    setBackfillBusy(dryRun ? "preview" : "sync");
+    setBackfillResult(null);
+    try {
+      const res = await fetch("/api/admin/backfill-milestone-sentinels", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dryRun }),
+      });
+      if (res.ok) {
+        const data = (await res.json()) as BackfillResult;
+        setBackfillResult(data);
+      } else {
+        const data = (await res.json().catch(() => ({}))) as { error?: string };
+        setBackfillResult({
+          ok: false,
+          dryRun,
+          usersAffected: 0,
+          sentinelsAdded: 0,
+          message: data.error ?? `HTTP ${res.status}`,
+        });
+      }
+    } catch {
+      setBackfillResult({
+        ok: false,
+        dryRun,
+        usersAffected: 0,
+        sentinelsAdded: 0,
+        message: "Network error",
+      });
+    }
+    setBackfillBusy(null);
   }
 
   async function resubscribe() {
@@ -127,6 +172,42 @@ export function AdminEmailTools({
               role="status"
             >
               {resubStatus.message}
+            </p>
+          )}
+        </div>
+
+        {/* Milestone sentinel backfill */}
+        <div className="border-t border-border pt-5">
+          <p className="text-sm font-medium text-foreground">Seed milestone sentinels</p>
+          <p className="mt-0.5 text-xs text-muted">
+            Pre-populates the LTV sentinel map for existing properties so the monthly cron does not
+            send false &quot;crossed below X% LTV&quot; emails for users whose properties were added before
+            this fix. Preview shows what would change; Sync executes it.
+          </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => void runBackfill(true)}
+              disabled={backfillBusy !== null}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle disabled:opacity-50"
+            >
+              {backfillBusy === "preview" ? "Previewing…" : "Preview"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void runBackfill(false)}
+              disabled={backfillBusy !== null}
+              className="rounded-md border border-border bg-transparent px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:bg-subtle disabled:opacity-50"
+            >
+              {backfillBusy === "sync" ? "Syncing…" : "Sync now"}
+            </button>
+          </div>
+          {backfillResult && (
+            <p
+              className={`mt-2 text-xs ${backfillResult.ok ? "text-positive" : "text-negative"}`}
+              role="status"
+            >
+              {backfillResult.message}
             </p>
           )}
         </div>

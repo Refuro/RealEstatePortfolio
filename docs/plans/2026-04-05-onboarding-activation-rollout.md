@@ -3,7 +3,7 @@ title: "feat: Onboarding & first-property activation full rollout"
 type: feat
 status: active
 date: 2026-04-05
-audit: docs/audits/2026-04-05-onboarding-friction-analysis.md
+audit: docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md
 ---
 
 # feat: Onboarding & first-property activation full rollout
@@ -1069,7 +1069,7 @@ This expansion would close the gap between "signed up but didn't add a property"
 
 ## Sources & References
 
-- Audit: `docs/audits/2026-04-05-onboarding-friction-analysis.md` — full friction analysis and findings
+- Audit: `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md` — full friction analysis and findings
 - Governance: `.cursor/skills/veld-ui/SKILL.md` — design tokens, typography, motion, component patterns
 - Governance: `.cursor/skills/veld-mobile/SKILL.md` — touch targets, safe-area, responsive patterns
 - Source files: all files listed in §Context & Research

@@ -123,4 +123,70 @@ describe("GET /api/cron/milestone-emails", () => {
       { milestoneCount: 1 }
     );
   });
+
+  it("writes silent sentinel keys to the DB but excludes them from the email and count", async () => {
+    prismaMock.user.findMany.mockResolvedValue([
+      {
+        id: "user-1",
+        clerkUserId: "clerk_1",
+        email: "user1@example.com",
+        mortgageMilestonesSentAt: null,
+        properties: [],
+      },
+    ]);
+    detectNewMortgageMilestonesForUserMock.mockReturnValue([
+      {
+        key: "prop_1__ltv_25",
+        propertyId: "prop_1",
+        propertyLabel: "Pine Cottage",
+        type: "ltv",
+        title: "Pine Cottage: crossed below 25% LTV",
+        details: "Estimated LTV is now 7.2%.",
+      },
+      {
+        key: "prop_1__ltv_50",
+        propertyId: "prop_1",
+        propertyLabel: "Pine Cottage",
+        type: "ltv",
+        title: "Pine Cottage: crossed below 50% LTV",
+        details: "Estimated LTV is now 7.2%.",
+        silent: true,
+      },
+      {
+        key: "prop_1__ltv_75",
+        propertyId: "prop_1",
+        propertyLabel: "Pine Cottage",
+        type: "ltv",
+        title: "Pine Cottage: crossed below 75% LTV",
+        details: "Estimated LTV is now 7.2%.",
+        silent: true,
+      },
+    ]);
+
+    const { GET } = await import("./route");
+    const res = await GET(makeRequest("Bearer cron-secret-test"));
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toEqual({ sentEmails: 1, sentMilestones: 1 });
+
+    expect(sendMortgageMilestoneEmailMock).toHaveBeenCalledWith(
+      "user1@example.com",
+      "user-1",
+      [expect.objectContaining({ key: "prop_1__ltv_25" })]
+    );
+    expect(prismaMock.user.update).toHaveBeenCalledWith({
+      where: { id: "user-1" },
+      data: {
+        mortgageMilestonesSentAt: expect.objectContaining({
+          prop_1__ltv_25: expect.any(String),
+          prop_1__ltv_50: expect.any(String),
+          prop_1__ltv_75: expect.any(String),
+        }),
+      },
+    });
+    expect(captureServerEventMock).toHaveBeenCalledWith(
+      "clerk_1",
+      AnalyticsEvents.MORTGAGE_MILESTONE_EMAIL_SENT,
+      { milestoneCount: 1 }
+    );
+  });
 });

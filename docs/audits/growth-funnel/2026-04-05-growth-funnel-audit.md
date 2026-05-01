@@ -83,7 +83,7 @@
 - `app/components/pricing-cards.tsx` (first 80 lines) — Plan cards + feature copy
 - `app/app/(app)/draft-context.tsx` (lines 260–295) — Wizard abandonment event
 
-**Assumptions / limits:** Audit is static code review; no live PostHog data, Stripe revenue data, or session recordings were available. Activation rate (6 signups, 0 properties added) is cited from the prior onboarding friction analysis (`docs/audits/2026-04-05-onboarding-friction-analysis.md`).
+**Assumptions / limits:** Audit is static code review; no live PostHog data, Stripe revenue data, or session recordings were available. Activation rate (6 signups, 0 properties added) is cited from the prior onboarding friction analysis (`docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md`).
 
 ---
 

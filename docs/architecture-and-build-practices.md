@@ -3,7 +3,7 @@
 **Purpose:** Ensure future features align with design, security, and continuity. Prevent spaghetti code as the codebase evolves.
 
 **Status:** Active — builder and PM must follow these practices.
-**Last reviewed:** 2026-03-28 (Phase 9D observability, public images, export rate limits)
+**Last reviewed:** 2026-04-30 (doc cleanup Phase E: stack pins, `proxy.ts`, cron, health)
 **Review cadence:** Quarterly or after major architecture changes
 
 **Product mantra:** Build features that are **thoughtful** (consider edge cases and user intent), **robust** (handle failures, validate inputs, recover gracefully), **modern** (follow current patterns, avoid deprecated APIs), and **frictionless** (minimal steps, clear CTAs, no unnecessary barriers).
@@ -13,21 +13,27 @@
 ## 1. Current Architecture Summary
 
 ### Tech Stack
-- **Frontend:** Next.js 16, React 19, TypeScript, Tailwind CSS
-- **Backend:** Next.js Route Handlers (API routes), Prisma ORM
-- **Database:** PostgreSQL
-- **Auth:** Clerk
-- **Payments:** Stripe
+- **Frontend:** Next.js **16.1.x**, React **19.2.x**, TypeScript, Tailwind CSS **4.x** (see `app/package.json` for exact pins)
+- **Backend:** Next.js Route Handlers (API routes), Prisma ORM **6.19.x** with **`@prisma/adapter-pg`** against `pg`
+- **Database:** PostgreSQL (connection via `DATABASE_URL`)
+- **Auth:** Clerk **`@clerk/nextjs`**
+- **Payments:** Stripe **`stripe`** Node SDK
+- **Hosting / jobs:** Vercel; cron schedules in `app/vercel.json` call `/api/cron/*` routes
 
 ### Directory Structure
+Portfolio **application root** is `RealEstatePortfolio/app/` (Vercel **Root Directory** = `app` when the git repo root is the parent folder). Layout:
+
 ```
-app/
-├── app/                    # Next.js app router
-│   ├── (app)/              # Protected app routes (dashboard, properties, etc.)
-│   ├── api/                # API routes
-│   ├── sign-in, sign-up/   # Auth pages
+app/                       # package root (next.config, proxy.ts, vercel.json, prisma/)
+├── proxy.ts               # Clerk auth boundary — Next.js 16+ uses proxy.ts (not middleware.ts)
+├── vercel.json            # Vercel Cron → /api/cron/*
+├── app/                   # Next.js `app/` directory (App Router) — nested under package root also named `app/`
+│   ├── (app)/             # Protected app routes (dashboard, properties, etc.)
+│   ├── api/               # API routes
+│   ├── sign-in, sign-up/  # Auth pages
+│   ├── global-error.tsx
 │   └── layout.tsx
-├── components/             # Shared UI components (charts, CurrencyInput, modals)
+├── components/            # Shared UI components (charts, CurrencyInput, modals)
 ├── lib/                   # Business logic, utilities, config
 │   ├── auth.ts            # getAppUser
 │   ├── db.ts              # Prisma client
@@ -36,6 +42,11 @@ app/
 │   └── ...
 └── prisma/
 ```
+
+### Deploy, cron, and health
+- **Production build:** `npm run build` runs **`prisma migrate deploy`** then **`next build`** (`app/package.json`).
+- **Cron:** `app/vercel.json` schedules posts to **`/api/cron/onboarding-emails`**, **`trial-emails`**, **`rate-limit-cleanup`**, **`milestone-emails`**, **`monthly-refresh`**, **`monthly-digest`**, **`winback-emails`**. Handlers verify **`CRON_SECRET`** (see `app/.env.example`); the same routes are listed as **public** in `proxy.ts` so Clerk does not block Vercel’s invocations.
+- **Liveness:** **`GET /api/health`** and **`HEAD /api/health`** return **200** and `{ "status": "ok" }` with **no database probe** — implementation in `app/app/api/health/route.ts`. Also allowed without auth in `proxy.ts`.
 
 ### Property detail, add, and edit (post–add-property overhaul)
 
@@ -127,7 +138,7 @@ Keep initial JS small, defer heavy libraries, and cache static content. Follow t
 - **Sentry:** `@sentry/nextjs` is configured for client and server. Use `Sentry.captureException` for unexpected failures in API routes and critical server paths. Use `Sentry.captureMessage` (typically `level: "warning"`) for operational signals that are not thrown errors (e.g. Stripe webhook cannot resolve an app user from subscription metadata).
 - **Stripe billing:** When subscription sync cannot map Stripe → app user (webhook), emit a **warning** to Sentry with `subscriptionId`, `customerId`, and whether `metadata.appUserId` was present. When `/api/billing/sync` fails talking to Stripe, capture the exception with `userId` and `stripeCustomerId` in `extra`.
 - **Structured logs:** Prefer `console.error` with a single JSON line for ops dashboards where Sentry is not appropriate; include `action`, ids, and timestamps. Do not log secrets or full payment payloads.
-- **Client global errors:** `app/global-error.tsx` reports to Sentry when `NEXT_PUBLIC_SENTRY_DSN` is set and shows an accessible, on-brand fallback (heading, short explanation, try again + home).
+- **Client global errors:** `app/app/global-error.tsx` reports to Sentry when `NEXT_PUBLIC_SENTRY_DSN` is set and shows an accessible, on-brand fallback (heading, short explanation, try again + home).
 
 ---
 

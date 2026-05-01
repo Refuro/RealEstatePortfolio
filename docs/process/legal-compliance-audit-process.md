@@ -5,6 +5,8 @@
 
 **Important disclaimer:** This audit is a product and documentation review aid only. It is **not legal advice**, **not a substitute for licensed counsel**, and **not a guarantee of compliance** in any jurisdiction. Use it to catch obvious issues early, then escalate meaningful legal decisions to a qualified attorney.
 
+**Cursor rule:** [`.cursor/rules/legal-compliance-audit-agent.mdc`](../../.cursor/rules/legal-compliance-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

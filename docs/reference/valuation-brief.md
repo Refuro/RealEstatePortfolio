@@ -2,7 +2,7 @@
 
 **Purpose:** Single-document summary for external evaluation of product maturity, codebase quality, and strategic position.  
 **Audience:** External AI evaluator, advisor, or technical due-diligence reviewer.  
-**Last updated:** April 2026  
+**Last updated:** 2026-04-30  
 **Prepared by:** Owner / operator
 
 ---
@@ -11,7 +11,9 @@
 
 **Veld Portfolio** is a production-deployed SaaS application for small real estate investors (1–20 properties). It is an investor intelligence platform — not a property management tool. Its core job is to help a landlord understand what their properties are doing: equity, cash flow, debt burden, deal potential, and forward-looking projections.
 
-**Current stage:** Early-launch / pre-revenue. The product is fully operational, publicly accessible, and monetization infrastructure is complete (Stripe billing, tiered plans, billing portal). As of April 2026, the user base is 6 total users with 0 paying subscribers. The product is not in a prototype or staging state — it is a production system with a custom domain, error monitoring, analytics, and live billing.
+**Current stage:** Early-launch / pre-revenue (see **§8 honest gaps** — **subscriber counts change** — verify Stripe + dashboards before quoting externally).
+
+**Operational note:** Figures in §§1, 8, and **10 below** describing user counts, funnel completion, outreach, activation, revenue, etc. reflect **historical snapshots from owner records** dated **April 2026**. **Treat as diligence prompts, not authoritative analytics.** **As of 2026-04-30 — verify source** (`PostHog`, Clerk, Stripe, DB) before any external valuation use.
 
 **Positioning:** The product occupies a genuine gap in the market: combining full pre-acquisition deal analysis with ongoing portfolio tracking in a single product, without requiring bank sync or accounting setup. No direct competitor does this cleanly at the same price point.
 
@@ -27,7 +29,7 @@
 | Investor | 5 | 20 | $15/mo | $150/yr |
 | Pro | 20 | 50 | $29/mo | $290/yr |
 
-Annual plans include approximately 2 months free. No credit card required for the Free tier.
+Annual plans include approximately 2 months free. No credit card required for the Free tier. **Displayed dollar amounts on `/pricing`** follow **`NEXT_PUBLIC_PRICE_*`** env vars (`app/lib/pricing-display.ts`); Stripe price IDs must match marketing (`docs/setup/manual-steps.md`).
 
 ### Target ICP
 
@@ -108,6 +110,7 @@ Available publicly at `/tools/` (shareable, SEO-indexed) and inside the app at `
 
 ### Account and billing
 
+- **Reverse trial:** New app users receive **14 days** of Investor-equivalent entitlement before post-trial downshift (**no card** until they choose paid) — aligns with **`/pricing`** copy and **`app/lib/plans`** / **`auth` provisioning**.
 - Auth: email/password and Google OAuth via Clerk
 - Soft delete (deactivate) and permanent delete
 - Account restore from deactivated state
@@ -186,13 +189,12 @@ Two written policy documents govern all metric and analytics definitions:
 
 These exist because metric trust is the product's primary credibility claim. Having explicit contracts means any implementation divergence is a detectable bug, not just a judgment call. This level of documentation is uncommon for a pre-revenue SaaS.
 
-### Testing
+### Testing — Vitest (depth) vs E2E (breadth)
 
-- Vitest unit tests in place (Phases 1–3 complete per `docs/qa/testing-hardening-proposal.md`)
-- Test coverage on: metric calculations, amortization logic, benchmark-eligibility utilities, billing plan state, API route auth guards
-- Pre-push lint + type-check hooks via Husky
-- TypeScript strict mode throughout
-- Correctness-first testing policy: assertions must reflect intended behavior from policy docs, not just current implementation
+- **Vitest:** Run **`npm run test`** from **`RealEstatePortfolio/app/`** to re-verify totals; **counts drift** whenever new tests land — do not cite stale numbers from old audits alone. Snapshot from doc pass **2026-04-30:** **618** passing tests across **85** files (metrics, amortization, benchmark utilities, billing, cron routes, validation, calculators, import/CSV, key UI shells).
+- **E2E / Playwright:** **Not** wired as an always-green PR gate; optional smoke path tracked in **`docs/tasks.md`** (Testing hardening Phase 4) and **`docs/qa/testing-hardening-proposal.md`**.
+
+**Historical:** Older docs calling out “374 tests” or “50 files” are **obsolete** versus the command above — **prefer the command over prose counts**.
 
 ### Audit infrastructure
 
@@ -263,9 +265,9 @@ The metric trust layer — policy-backed formulas, ownership nuance, vacancy-awa
 | Item | Why it matters | Effort |
 |---|---|---|
 | Interactive demo (no sign-up) | Removes largest conversion objection for skeptical investors | S–M |
-| Investor-ready PDF report | Biggest missing output; all competitors have it | M |
+| Investor-ready PDF report | **Partially mitigated:** print-friendly **`/export/portfolio-summary`** + **`GET /api/export/portfolio-summary`** (browser print / save-as-PDF with assumptions footer). **Backlog:** server-generated branded PDFs, richer lender packages | M |
 | Side-by-side deal comparison | No competitor does this; high premium conversion signal | M |
-| Portfolio alerts & insights | Turns passive metrics into actionable intelligence; primary retention driver | M–L |
+| Portfolio alerts & insights | **Interpretive insights** backlog (beyond raw metrics + cron emails); complements shipped digest/refresh/milestone flows | M–L |
 | Read-only share link | Viral mechanism; shareable deals/portfolio to CPA, partner, lender | M |
 | Address autocomplete | Reduces friction at add-property; activation metric improvement | S |
 
@@ -275,9 +277,9 @@ The product's clearest long-term path is to deepen the "investor intelligence wi
 
 ### What would accelerate growth
 
-1. Interactive demo — removes the top pre-signup objection without touching pricing
-2. PDF output — turns the existing analysis into a shareable, professional artifact
-3. Portfolio alerts — creates a reason to return to the product when not actively buying
+1. Interactive demo — **still** high leverage (`roadmap.md` §Deferred until traffic/ROI justify Arcade-style work)
+2. Server-generated **branded** PDF exports + templated lender packages — print **`/export/portfolio-summary`** already covers lightweight share/print scenarios
+3. **Interpretive alerts** — richer “what changed / what to do” layer on top of metrics; **lifecycle email + refresh crons already ship** (`roadmap.md` retention table + `tasks.md` proxy/cron hygiene)
 4. Side-by-side deal comparison — the highest-differentiation premium feature in the near-term backlog
 
 ---
@@ -286,15 +288,15 @@ The product's clearest long-term path is to deepen the "investor intelligence wi
 
 The following are real gaps and should be weighed accurately in any evaluation:
 
-**User and revenue traction:** As of April 2026, the product has 6 users and 0 paying subscribers. The product is pre-revenue. No MRR data exists. The market hypothesis is unvalidated from a revenue standpoint.
+**User and revenue traction:** **As of April 2026 — verify source** (Stripe, DB, analytics). The snapshot in prior versions described **6 signups / 0 paying**; **do not cite these as current** without confirming. If still pre-revenue, the market hypothesis remains unvalidated from a paid-conversion standpoint.
 
 **No native mobile app:** All competitors except DealCheck have native iOS/Android apps. The web app is mobile-responsive, but not native. This will become a more meaningful churn driver as the user base scales.
 
-**No automated test coverage on the full product surface:** Testing hardening Phases 1–3 are complete (unit tests on metrics, amortization, benchmark logic, billing). End-to-end browser test coverage (Playwright) is planned but not yet implemented.
+**Automated test breadth vs. depth:** Deep **Vitest** coverage for metrics, amortization, benchmarks, billing, cron routes, validation, import, and key UI shells — see **§5** and re-verify with **`npm run test`** from **`RealEstatePortfolio/app/`**. **Playwright / E2E** is **not** a required PR gate yet (`docs/tasks.md` Testing hardening Phase 4).
 
-**No interactive demo:** The product currently requires sign-up to experience any value. This is the largest identified conversion gap.
+**Interactive demo / top-of-funnel:** Most value still sits behind sign-up; deferred interactive demo remains the largest *documented* conversion gap (`roadmap.md` §7).
 
-**No PDF/report output:** The product currently has a print-friendly portfolio summary page but no server-generated branded PDF. This is the most commonly cited gap vs. DealCheck and Stessa.
+**Branded vs print reports:** Print/save-as-PDF portfolio summary exists (`/export/portfolio-summary`); **server-generated** branded PDFs and **read-only share links** remain backlog vs incumbents.
 
 **Single-operator development:** The codebase has been built by one owner with AI-assisted tooling. While the governance layer mitigates many risks of this model, bus factor is 1.
 
@@ -306,7 +308,7 @@ The following are real gaps and should be weighed accurately in any evaluation:
 
 **What this codebase is:** A production-grade, full-stack SaaS with a working billing system, meaningful feature depth, real users, and an unusual level of code governance for its stage.
 
-**What it is not:** A high-traction product. It has no paying users and no validated revenue model yet.
+**What it is not:** A high-traction product. **As of the last owner snapshot (verify Stripe)**, there was **no recurring revenue**; revisit before investor conversations.
 
 **Maturity vs. stage:** The codebase's maturity signals are meaningfully ahead of its user/revenue stage. The policy-backed math contracts, structured audit system, AI governance layer, and documentation depth are the kind of infrastructure that appears in products 2–3x larger by user count. This represents significant work that would need to be rebuilt by any acquirer starting fresh.
 
@@ -326,23 +328,23 @@ Answers to the standard questions an external evaluator would ask at this stage.
 
 ### Activation funnel
 
-**Q: What does the activation funnel actually look like? Of the 6 users, how many completed the add-property flow?**
+**Q: What does the activation funnel actually look like? How many signups completed the add-property flow?**
 
-None. Zero of the 6 users have added a property. This means zero users have reached the core product experience — the portfolio dashboard, metrics, or any of the analysis workspaces require at least one property to be meaningful. The current funnel ends at sign-up. The product has not yet been evaluated by any user in its intended use.
+**Internal docs conflict on this point** (dated owner narrative here vs. later **owner QA** notes in `docs/tasks.md` referencing users with multiple properties on trial). **Do not treat the paragraph below as current truth** — reconcile `property_created` / onboarding events in **PostHog** (or the database) before external sharing.
 
-**Context for evaluation:** This is not necessarily an indictment of the product. The user base is 6 people at roughly 1 month post-launch, with no paid acquisition and no interactive demo available. These are likely word-of-mouth or organic-discovery early sign-ups who never received meaningful onboarding pressure. The absence of product engagement data means there is currently no signal on whether the product works for users — only that the sign-up flow works.
-
-**The highest-priority implication:** An interactive demo (no-signup required) and a first-property onboarding push are not nice-to-haves at this stage. They are the most important things the product can do right now.
+*Historical snapshot preserved for continuity:* At the time this section was first drafted, the owner described **zero** of **six** signups as having added a property, implying the funnel ended at sign-up for that cohort. If analytics now show otherwise, **replace this answer wholesale** from dashboard exports rather than layering edits in prose.
 
 ---
 
 ### Conversion and user outreach
 
-**Q: Why haven't any of the 6 converted? Did the owner ask them? Is it price, missing features, or not enough time?**
+**Q: Paid conversion outreach — what's been attempted? Price vs features signal?**
 
-The owner has reached out to 2 of the 6 users directly. Neither has responded. The remaining 4 have not been contacted. No conversion attempt has produced a response, and no user has provided qualitative feedback on price, features, or fit.
+**Verify cohort size and Stripe status externally** — the anecdote below references a **six-user**-era snapshot.
 
-**What this means:** There is currently no disconfirming signal on price or features, but also no confirming signal. The honest reading is that the product has not yet been shown to the right people in the right context. At 6 unactivated users with 2 unreturned outreach attempts, this is too small a sample to draw any conclusions about product-market fit in either direction. It is a distribution and activation problem, not yet a product problem.
+*Historical anecdote:* The owner described outreach to **2** registered users **without responses** while **four** users had **not** been contacted; no qualitative feedback cycle on pricing or roadmap.
+
+**Interpretation:** With **tiny** denominators this is barely diagnostic — revise from CRM + analytics whenever sharing with investors.
 
 ---
 

@@ -28,9 +28,46 @@ export type MortgageMilestone = {
   type: "ltv" | "payoff";
   title: string;
   details: string;
+  silent?: boolean;
 };
 
 export type MortgageMilestoneSentinel = Record<string, string | null | undefined>;
+
+export function seedLtvSentinelsForProperty(
+  propertyId: string,
+  ltvPercent: number,
+  existingSentinels: MortgageMilestoneSentinel,
+  nowIso: string
+): Record<string, string> {
+  const seeds: Record<string, string> = {};
+  for (const threshold of LTV_THRESHOLDS) {
+    const key = `${propertyId}__ltv_${threshold}`;
+    if (ltvPercent <= threshold && !existingSentinels[key]) {
+      seeds[key] = nowIso;
+    }
+  }
+  return seeds;
+}
+
+export function seedPayoffSentinelForMortgage(
+  propertyId: string,
+  mortgageId: string,
+  mortgage: MortgageRecord,
+  existingSentinels: MortgageMilestoneSentinel,
+  nowIso: string
+): Record<string, string> {
+  const key = `${propertyId}__${mortgageId}__payoff_5yr`;
+  if (existingSentinels[key]) return {};
+
+  const projection = getToleranceAwarePayoffProjection(mortgage);
+  if (!projection.payoffDate) return {};
+
+  const now = new Date(nowIso);
+  const monthsUntilPayoff = getMonthsUntil(now, projection.payoffDate);
+  if (monthsUntilPayoff < 0 || monthsUntilPayoff > PAYOFF_WITHIN_MONTHS) return {};
+
+  return { [key]: nowIso };
+}
 
 function toNumber(value: DecimalLike): number {
   if (typeof value === "number") return value;
@@ -66,9 +103,15 @@ export function detectNewMortgageMilestonesForProperty(args: {
 
   if (estimatedValue > 0) {
     const ltvPercent = (totalEffectiveBalance / estimatedValue) * 100;
-    for (const threshold of LTV_THRESHOLDS) {
+    const crossed = LTV_THRESHOLDS.filter((threshold) => {
       const key = `${property.id}__ltv_${threshold}`;
-      if (ltvPercent <= threshold && !sentinels[key]) {
+      return ltvPercent <= threshold && !sentinels[key];
+    });
+    if (crossed.length > 0) {
+      // Sort ascending so the smallest (most impressive) threshold is first
+      const sorted = [...crossed].sort((a, b) => a - b);
+      for (const threshold of sorted) {
+        const key = `${property.id}__ltv_${threshold}`;
         milestones.push({
           key,
           propertyId: property.id,
@@ -76,6 +119,7 @@ export function detectNewMortgageMilestonesForProperty(args: {
           type: "ltv",
           title: `${propertyLabel}: crossed below ${threshold}% LTV`,
           details: `Estimated LTV is now ${ltvPercent.toFixed(1)}%.`,
+          ...(threshold !== sorted[0] ? { silent: true } : {}),
         });
       }
     }

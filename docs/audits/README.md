@@ -4,6 +4,8 @@ Periodic AI-run audits of the product and codebase. Each lane has a process doc 
 
 **Historical note:** Dated files under each lane folder (for example `2026-04-04-*.md`) are **point-in-time artifacts** from the run that created them. When a later audit supersedes findings, add a new dated report rather than editing or deleting older files; synthesis docs in [`synthesis/`](synthesis/) consolidate cross-lane follow-ups.
 
+**Bookmark redirects (2026-04-30 doc cleanup):** Older URLs assumed `docs/audits/2026-04-05-quick-add-completion-gap-audit.md` and `docs/audits/2026-04-05-onboarding-friction-analysis.md` at repo root; canonical paths are [`feature/2026-04-05-quick-add-completion-gap-audit.md`](feature/2026-04-05-quick-add-completion-gap-audit.md) and [`growth-funnel/2026-04-05-onboarding-friction-analysis.md`](growth-funnel/2026-04-05-onboarding-friction-analysis.md).
+
 | Type | Process | Reports |
 |------|---------|---------|
 | **Code** | [code-audit-process.md](../process/code-audit-process.md) | [code/](code/) |

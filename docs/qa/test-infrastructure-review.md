@@ -4,7 +4,7 @@
 
 **Related:** [Testing implementation plan](../proposals/testing-implementation-plan.md), [Ownership metrics policy](../policies/ownership-metrics.md), [Analytics math policy](../policies/analytics-math-policy.md), [Property flow regression matrix](property-flow-regression-matrix.md), [Mobile shell verification](mobile-shell-verification.md) (manual QA + `MobileToolShell` unit tests; math still owned by `lib/` tests).
 
-**Last reviewed:** 2026-03-18 (aligned to repo state at that time).
+**Last reviewed:** 2026-04-30 (Vitest layout + CI vs `app/vitest.config.ts`, `.github/workflows/ci.yml`).
 
 ---
 
@@ -33,35 +33,33 @@
 | `app/package.json` | `test`, `test:watch`, `test:coverage`; `check` = **build + lint only** (tests not part of `check`). |
 | `.github/workflows/ci.yml` | `npm ci` + `npm run lint` + `npm run test` in `app/`; Node 20; concurrency cancel. See [§3.5](#35-ci-lint-test-and-build-strategy). |
 
-### 2.2 Test files (14+)
+### 2.2 Test files (representative layout)
+
+**Scale (re-verify):** Run `npm run test` from `app/` — on the order of **~85** files and **~600+** tests (exact counts drift; roadmap and this doc use the command as source of truth).
 
 **`lib/` — unit / contract**
 
-- `lib/metrics/property-metrics.test.ts` — scaling, debt service, `computePropertyMetrics` (proportional vs `full_liability`, vacancy).
-- `lib/metrics/portfolio-metrics.test.ts` — `computePortfolioMetrics` (empty, multi-property, ownership, DSCR / weighted cap).
-- `lib/amortization.test.ts` — schedule, P&I, projected/effective balance, payoff helpers, tolerance helpers.
-- `lib/benchmark-utils.test.ts` — freshness, days ago, benchmark % / labels (mocked time).
-- `lib/date-utils.test.ts` — `formatTimeAgo`, `isDataStale` (mocked time).
-- `lib/import/csv-parser.test.ts` — dates, numbers, columns, combined address, `parseRow` success/errors.
-- `lib/validations/property.test.ts`, `deal.test.ts`, `mortgage.test.ts`, `checkout.test.ts` — schema behavior.
+- Metrics, amortization, benchmarks, dates, CSV import, validations (property, deal, mortgage, checkout), plans, auth (`isAdmin`), calculator libraries, insights generators, digest/cron helpers, and other pure logic — `lib/**/*.test.ts`.
 
-**`app/api/` — integration-style (mocked I/O)**
+**`app/app/api/` — colocated route tests (mocked I/O)**
 
-- `app/api/properties/route.test.ts` — GET/POST.
-- `app/api/properties/[id]/route.test.ts` — GET/PATCH/DELETE.
-- `app/api/deals/route.test.ts` — GET/POST.
+- Properties, deals, billing (webhook, checkout, sync, portal), portfolio summary/export, import, account delete, places, cron jobs, unsubscribe, CSP report, and others — `app/app/api/**/route.test.ts` (matched by Vitest `app/**/*.test.ts`).
+
+**`app/app/(app)/` — component / wizard**
+
+- e.g. `add-property-wizard.test.tsx` — jsdom where marked.
 
 **`components/` — UI contract (jsdom)**
 
-- `components/mobile-tool-shell.test.tsx` — `MobileToolShell` layout and modes vs children behavior (does not prove page-level math; see `lib/` tests and [mobile-shell-verification.md](mobile-shell-verification.md)).
+- `mobile-tool-shell.test.tsx`, `mobile-bottom-nav.test.tsx`, property/marketing input tests, dashboard cards — `components/**/*.test.tsx`.
 
-**Fixtures**
+**Fixtures / mocks**
 
 - `lib/test/api-route-mocks.ts` — `mockActiveUser` for route tests.
 
 ### 2.3 Approximate scale
 
-On the order of **~190+ tests** (exact count may drift). Full run is **fast** (seconds), suitable for pre-push.
+On the order of **~600+ tests** across **~85 files** — full run is **fast** (tens of seconds), suitable for pre-push. **Re-verify** with `npm run test` in `app/` before citing numbers in other docs.
 
 ### 2.4 Auth module (`lib/auth.ts`)
 
@@ -152,8 +150,7 @@ Mocks:
 | Gap | Risk | Mitigation |
 |-----|------|------------|
 | **Build not in CI** | Type/bundle errors might only show on Vercel or local `npm run build`. | Rely on Vercel preview + local `npm run check` before release; or add CI build when GitHub secrets + DB are available (§3.5). **Lint is now in CI** (Phase 1). |
-| **`npm run check` excludes tests** | Local habit might skip tests. | Document: run `npm run test` before push; or add `test` to `check` when ready. |
-| **Pre-existing lint error** | `add-property-wizard` had a `react-hooks` error historically — `check` may fail locally even if tests pass. | Fix or narrow rule; don’t let it block confidence in test suite. |
+| **Pre-push habit** | Local habit might skip tests. | Document: run `npm run test` before push; `npm run check` remains build + lint only unless extended. |
 | **Mock drift** | If a route stops using `getActiveAppUser` or changes response shape, tests might still pass if mocks are wrong. | Prefer asserting **status + minimal JSON shape**; add a test when changing serializers. |
 | **No E2E** | Auth and multi-step flows can break without unit/API tests failing. | Keep regression matrix; add Playwright smoke later (§8). |
 
@@ -254,6 +251,7 @@ Mocks:
 | 2026-03-30 | **Testing hardening Phase 1 (P0):** Colocated Vitest for `POST /api/billing/webhook`, `POST /api/billing/create-checkout-session`, `GET /api/portfolio/summary`, `GET /api/export/portfolio`, `POST /api/account/delete`, `POST /api/account/delete-permanent` — mocks only; assertions aligned with [`docs/internal/api-list-contract.md`](../internal/api-list-contract.md) slice semantics and route contracts. See `docs/tasks.md` § Testing hardening. |
 | 2026-03-30 | **Testing hardening Phase 2 (P1):** Colocated Vitest for `POST /api/import/portfolio`, `GET`/`PATCH`/`DELETE /api/deals/[id]`, `GET /api/properties/[id]/metrics` — import: success, 400 no file, 403 at cap, 429; deals: auth/404/400/PATCH/DELETE; metrics: response equals `computePropertyMetrics` for same fixture. See `docs/tasks.md` § Testing hardening. |
 | 2026-03-30 | **Testing hardening Phase 3 (P2):** `lib/plans.test.ts` (table-driven tier limits); `lib/auth.test.ts` for `isAdmin` only; `vitest.config.ts` coverage **include** paths corrected to `app/app/api/...` + Phase 1–2 routes; **aggregate coverage thresholds** (statements/lines 80%, branches 58%, functions 78%). §2.4 auth strategy; §3.4 thresholds. |
+| 2026-04-30 | **Doc cleanup Phase F:** §2.2–§2.3 rewritten for current **~85 files / ~600+ tests** layout (`lib/**`, `app/app/api/**`, `components/**`); removed stale add-property ESLint gap row; **last reviewed** bumped. |
 
 ---
 

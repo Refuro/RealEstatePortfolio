@@ -1,6 +1,6 @@
 # Vitest coverage vs Route Handlers inventory
 
-Generated as an onboarding artifact for comparing **API Route Handler** surface area with **co-located `route.test.ts`** files and overall **`*.test.{ts,tsx}`** counts under [`app/`](../app/).
+Generated as an onboarding artifact for comparing **API Route Handler** surface area with **co-located `route.test.ts`** files and overall **`*.test.{ts,tsx}`** counts under [`app/`](../../app/).
 
 See also [Test infrastructure review](../qa/test-infrastructure-review.md) and [Testing hardening proposal](../qa/testing-hardening-proposal.md).
 
@@ -8,12 +8,14 @@ See also [Test infrastructure review](../qa/test-infrastructure-review.md) and [
 
 ## Summary (counts under `app/` excluding `node_modules`)
 
+_Snapshot verified 2026-04-30 — re-run the commands below after adding routes or tests._
+
 | Metric | Count |
 |--------|-------|
-| **`route.ts`** (Route Handlers + `app/llms.txt/route.ts`) | **49** |
-| **`route.test.ts`** (co-located next to a `route.ts`) | **26** |
-| Co-located coverage ratio | **53%** of handlers have a sibling route test |
-| **`*.test.ts` / `*.test.tsx`** (entire app package) | **82** |
+| **`route.ts`** (Route Handlers + `app/llms.txt/route.ts`) | **50** |
+| **`route.test.ts`** (co-located next to a `route.ts`) | **27** |
+| Co-located coverage ratio | **54%** of handlers have a sibling route test |
+| **`*.test.ts` / `*.test.tsx`** (entire app package) | **86** |
 
 Many handlers without dedicated route tests still benefit from **`lib/`** unit tests (metrics, validations, billing helpers, calculators). Route-level gaps below flag places where regressions would only show up at integration/E2E unless covered indirectly.
 
@@ -27,6 +29,7 @@ These pairs live side-by-side under `app/app/`:
 - `api/properties/[id]/route.ts`
 - `api/properties/[id]/metrics/route.ts`
 - `api/properties/[id]/mortgage/route.ts`
+- `api/properties/[id]/data-freshness/refresh/route.ts`
 - `api/export/portfolio/route.ts`
 - `api/import/portfolio/route.ts`
 - `api/portfolio/summary/route.ts`
@@ -57,7 +60,7 @@ These pairs live side-by-side under `app/app/`:
 These **`route.ts`** files have **no** sibling `route.test.ts` as of the last sweep:
 
 | Path | Notes |
-|------|--------|
+|------|-------|
 | `app/api/account/restore/route.ts` | Account lifecycle |
 | `app/api/admin/email-preview/route.ts` | Admin |
 | `app/api/admin/export/users/route.ts` | Admin export |
@@ -86,19 +89,19 @@ These **`route.ts`** files have **no** sibling `route.test.ts` as of the last sw
 
 ## Non-route Vitest files
 
-The remaining **`82 − 26 = 56`** test files exercise **`lib/`**, **`components/`**, and **`app/(app)/`** modules directly—especially calculators, **`lib/metrics/**`**, validations, billing helpers, insights, import parsers, and selected UI components.
+The remaining **`86 − 27 = 59`** test files exercise **`lib/`**, **`components/`**, and **`app/(app)/`** modules directly—especially calculators, **`lib/metrics/**`**, validations, billing helpers, insights, import parsers, and selected UI components.
 
 ---
 
 ## How to refresh these numbers
 
-From repository root (`RealEstatePortfolio/app/`):
+From the app package root (`RealEstatePortfolio/app/`):
 
 ```powershell
-$routes = Get-ChildItem -Recurse -Filter route.ts app
-$tests = Get-ChildItem -Recurse -Filter route.test.ts app
-$alltests = Get-ChildItem -Recurse -Include *.test.ts,*.test.tsx -File . |
-  Where-Object { $_.FullName -notmatch 'node_modules' }
+$routes = Get-ChildItem -LiteralPath . -Recurse -Filter route.ts -File | Where-Object { $_.FullName -notmatch 'node_modules' }
+$tests = Get-ChildItem -LiteralPath . -Recurse -Filter route.test.ts -File | Where-Object { $_.FullName -notmatch 'node_modules' }
+$alltests = Get-ChildItem -LiteralPath . -Recurse -Include *.test.ts,*.test.tsx -File |
+  Where-Object { $_.FullName -notmatch 'node_modules|\\.next\\' }
 ```
 
-Compare each `route.ts` path to the corresponding `route.test.ts` path.
+For each `route.ts`, use **`Test-Path -LiteralPath`** on the sibling `route.test.ts` (paths may contain `[id]` on Windows).

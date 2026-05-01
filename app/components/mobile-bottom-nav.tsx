@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Building2, Calculator, LayoutDashboard, MoreHorizontal } from "lucide-react";
+import { Building2, ClipboardList, LayoutDashboard, MoreHorizontal } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/properties", label: "Properties", icon: Building2 },
-  { href: "/analyze", label: "Analyze", icon: Calculator },
+  { href: "/analyze", label: "Analyze", icon: ClipboardList },
 ] as const;
 
 export function MobileBottomNav() {

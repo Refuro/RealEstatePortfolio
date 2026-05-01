@@ -3,7 +3,7 @@
 ## Executive summary
 
 - **Primary hub links are materially stale:** `docs/README.md` and `docs/audits/synthesis/README.md` still promote `2026-04-03-audit-synthesis.md` as the latest consolidated triage surface, while `2026-04-27-audit-synthesis.md` exists (and additional 2026-04-29 lane reports are landing in parallel). PM and agent workflows risk promoting work from the wrong synthesis generation.
-- **Repeat governance gaps from prior documentation audits remain unresolved:** non–lane-folder reports under `docs/audits/*.md`, a broken `[docs/tasks.md](../../tasks.md)` example inside `full-audit-synthesis.md`, missing `AVAILABLE_AGENTS.md` referenced by active docs, and a draft plan whose `research:` target file does not exist.
+- **Repeat governance gaps from prior documentation audits remain partially addressed:** Some non–lane-folder reports may still live at `docs/audits/*.md` root (e.g. polish-gap). **Phase G (2026-04-30)** relocated the two 2026-04-05 root analyses into `feature/` and `growth-funnel/`. Other gaps noted in this audit may remain: broken `[docs/tasks.md](../../tasks.md)` example inside `full-audit-synthesis.md`, missing `AVAILABLE_AGENTS.md`, draft plan `research:` target.
 - **Discoverability:** The docs hub Process section still omits a direct link to `mobile-experience-audit-process.md` despite Mobile experience being a first-class lane in `docs/audits/README.md`; design-spec hierarchy on the hub remains easy to misread versus `policies/design-spec.md` + `design/design-spec-2026.md`.
 - **Overall recommendation:** Batch documentation cleanup only (no `app/` changes): refresh both synthesis entry points after each full run; fix template + plan frontmatter + orphan audit placement or indexing; add or repoint `AVAILABLE_AGENTS.md`; tighten synthesis README’s cross-reference to the correct process/rule for naming.
 
@@ -19,13 +19,13 @@
 
 - **`docs/audits/synthesis/README.md` “Latest full run” is stale** — Still lists `2026-04-03-audit-synthesis.md` as the PM entry point; does not surface `2026-04-27-audit-synthesis.md`. **Evidence:** `docs/audits/synthesis/README.md` (~L6).
 
-- **Non-lane audit artifacts at `docs/audits/` root** — `docs/audits/2026-04-05-quick-add-completion-gap-audit.md` and `docs/audits/2026-04-05-onboarding-friction-analysis.md` remain outside `docs/audits/<lane>/`, conflicting with the lane structure contract in `docs/audits/README.md` § Lane structure contract. **Evidence:** paths under `docs/audits/`; `docs/audits/README.md` (~L25–36).
+- **Non-lane audit artifacts at `docs/audits/` root (historical)** — At audit time, `2026-04-05-quick-add-completion-gap-audit.md` and `2026-04-05-onboarding-friction-analysis.md` were at repo root. **Update (2026-04-30 Phase G):** Canonical paths are [`docs/audits/feature/2026-04-05-quick-add-completion-gap-audit.md`](../feature/2026-04-05-quick-add-completion-gap-audit.md) and [`docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md`](../growth-funnel/2026-04-05-onboarding-friction-analysis.md). **Evidence:** `docs/audits/README.md` (~L25–36).
 
 - **`docs/process/full-audit-synthesis.md` PM review template embed uses a broken `tasks.md` path** — The fenced example at §4 uses `[docs/tasks.md](../../tasks.md)`; from `docs/process/`, `../../tasks.md` resolves to repo root, where `tasks.md` is not the canonical file (`docs/tasks.md` is). Line 73 in the prose correctly uses `../tasks.md`. **Risk:** Copy/paste from the template yields dead links. **Evidence:** `docs/process/full-audit-synthesis.md` (~L170 vs ~L73).
 
 - **`AVAILABLE_AGENTS.md` referenced but absent** — **Risk:** Tooling/onboarding steps fail immediately. **Evidence:** `docs/tasks-tools-expansion.md` (~L5); `docs/plans/2026-04-09-audit-remediation-plan.md` (~L4); repo-wide search: no `AVAILABLE_AGENTS.md`.
 
-- **Draft plan frontmatter: missing research file** — `docs/plans/2026-04-05-edit-page-completion-guidance.md` lists `research: docs/research/2026-04-05-edit-page-completion-ux.md`; that path does not exist. `audit:` still points at root `docs/audits/2026-04-05-onboarding-friction-analysis.md`. **Risk:** Broken traceability from plan to evidence. **Evidence:** plan frontmatter (~L6–7); glob under repo for `2026-04-05-edit-page-completion-ux.md`: no matches.
+- **Draft plan frontmatter: missing research file** — `docs/plans/2026-04-05-edit-page-completion-guidance.md` lists `research: docs/research/2026-04-05-edit-page-completion-ux.md`; that path does not exist. `audit:` points at `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md` (lane path **as of 2026-04-30**). **Risk:** Broken traceability from plan to research evidence. **Evidence:** plan frontmatter (~L6–7); glob under repo for `2026-04-05-edit-page-completion-ux.md`: no matches.
 
 ### Medium
 
@@ -70,7 +70,7 @@ Unresolved **High** items skew **internal governance and PM throughput**: wrong 
 ## Recommendations (prioritized)
 
 1. **Refresh both synthesis entry points** (`docs/README.md`, `docs/audits/synthesis/README.md`) so “Latest” points at the newest `YYYY-MM-DD-audit-synthesis.md` on disk (`2026-04-27-audit-synthesis.md` at time of review); repeat whenever a new synthesis lands (including after any 2026-04-29 full synthesis).
-2. **Resolve root-audit placement:** Move the two `docs/audits/2026-04-05-*.md` files into an appropriate lane folder **or** add an explicit exception subsection in `docs/audits/README.md`; update inbound `audit:` / citations (e.g. edit-page plan) after any move.
+2. **Resolve root-audit placement:** **Done (Phase G, 2026-04-30)** for the two `docs/audits/2026-04-05-*.md` reports; remaining root strays (e.g. polish-gap) may still need indexing. Confirm inbound `audit:` / citations after any future move.
 3. **Fix `docs/process/full-audit-synthesis.md` §4 embedded example** so the tasks link matches the prose (`../tasks.md` or equivalent valid relative path from `docs/process/`).
 4. **Resolve `AVAILABLE_AGENTS.md`:** add the file where the team expects it **or** replace references in `docs/tasks-tools-expansion.md` and `docs/plans/2026-04-09-audit-remediation-plan.md` with a living substitute (e.g. `AGENTS.md` / documented model table).
 5. **Plan traceability:** Create `docs/research/2026-04-05-edit-page-completion-ux.md` or retarget/remove `research:` in `docs/plans/2026-04-05-edit-page-completion-guidance.md`.
@@ -79,7 +79,7 @@ Unresolved **High** items skew **internal governance and PM throughput**: wrong 
 ## Task candidates (optional)
 
 - [ ] Update `docs/README.md` and `docs/audits/synthesis/README.md` latest synthesis links to `2026-04-27-audit-synthesis.md` (and bump again when newer synthesis exists).
-- [ ] Relocate or formally index `docs/audits/2026-04-05-quick-add-completion-gap-audit.md` and `docs/audits/2026-04-05-onboarding-friction-analysis.md`; fix dependent frontmatter/links.
+- [x] Relocated the 2026-04-05 quick-add and onboarding friction audits into `docs/audits/feature/` and `docs/audits/growth-funnel/`; fixed dependent frontmatter/links (Phase G, 2026-04-30).
 - [ ] Fix embedded `[docs/tasks.md](../../tasks.md)` in `docs/process/full-audit-synthesis.md` PM review example.
 - [ ] Add or replace `AVAILABLE_AGENTS.md` references in tooling docs/plans.
 - [ ] Fix `2026-04-05-edit-page-completion-guidance.md` `research:` target or drop the field with rationale.

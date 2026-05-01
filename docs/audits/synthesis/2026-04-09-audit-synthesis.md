@@ -167,7 +167,7 @@ Classify per `docs/process/full-audit-synthesis.md` §3.5.
 
 ## PM review
 
-Review triage above. Promote **Ship** and **Schedule** items to [docs/tasks.md](../tasks.md) when approved. The builder implements approved items.
+Review triage above. Promote **Ship** and **Schedule** items to [docs/tasks.md](../../tasks.md) when approved. The builder implements approved items.
 
 Individual lane reports under `docs/audits/<lane>/2026-04-09-*-audit.md` contain severity tables, evidence paths, and re-test checklists.
 

@@ -3,7 +3,9 @@
   "private": true,
   "description": "Root package for Husky git hooks only; Next.js app lives in app/",
   "scripts": {
-    "prepare": "husky"
+    "prepare": "husky",
+    "docs:linkcheck": "node docs/process/_maintenance/check-doc-links.mjs",
+    "docs:metrics": "node docs/process/_maintenance/generate-metrics-snapshot.mjs"
   },
   "devDependencies": {
     "husky": "^9.1.7"

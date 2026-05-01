@@ -3,6 +3,8 @@
 **Purpose:** Review the repo's documentation for freshness, discoverability, broken references, archive candidates, and folder hygiene without turning the audit into an implementation pass.
 **Status:** Active.
 
+**Cursor rule:** [`.cursor/rules/documentation-audit-agent.mdc`](../../.cursor/rules/documentation-audit-agent.mdc) — documentation lane + governance alignment; see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

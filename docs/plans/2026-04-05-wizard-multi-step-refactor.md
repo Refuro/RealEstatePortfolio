@@ -4,7 +4,7 @@ type: refactor
 status: active
 date: 2026-04-05
 predecessor: docs/plans/2026-04-05-onboarding-activation-rollout.md
-audit: docs/audits/2026-04-05-onboarding-friction-analysis.md
+audit: docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md
 research: docs/research/2026-04-05-onboarding-form-ux-wizard-vs-scroll.md
 ---
 
@@ -1244,7 +1244,7 @@ Units 1–10 can be implemented with the default model. **Unit 11 should use Cla
 ## Sources & References
 
 - Predecessor plan: `docs/plans/2026-04-05-onboarding-activation-rollout.md`
-- Friction audit: `docs/audits/2026-04-05-onboarding-friction-analysis.md`
+- Friction audit: `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md`
 - Research: `docs/research/2026-04-05-onboarding-form-ux-wizard-vs-scroll.md`
 - Design system: `.cursor/skills/veld-ui/SKILL.md`
 - Mobile patterns: `.cursor/skills/veld-mobile/SKILL.md`

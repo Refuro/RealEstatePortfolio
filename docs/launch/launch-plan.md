@@ -1,7 +1,7 @@
 # Veld Portfolio — Launch plan
 
 **Status:** Living document — update as messaging and channels prove out.  
-**Last reviewed:** 2026-03-28  
+**Last reviewed:** 2026-04-30  
 **Related:** Fulfills **Batch 8** item *Launch plan* (checklist archived in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-30)**).
 
 ---
@@ -228,7 +228,8 @@ Use [`docs/launch/channel-posting-playbook.md`](channel-posting-playbook.md) for
 - [ ] Production env vars verified (Clerk URLs, Stripe webhooks, DB, Sentry, RentCast, PostHog).  
 - [ ] `/api/health` green in prod; incident runbook reviewed.  
 - [ ] Support path tested (support email/contact flow).  
-- [ ] Pricing page copy aligned with Stripe products and display pricing.  
+- [ ] Pricing page copy aligned with Stripe products and **`NEXT_PUBLIC_PRICE_*`** defaults (`app/lib/pricing-display.ts`); spot-check in-app **`/plans`** vs Customer Portal.
+- [ ] **Trial copy:** public pricing states **14-day** full access pre-downgrade — stays consistent with `auth` provisioning + **`getEffectiveTier`** (`app/lib/plans.ts`).
 - [x] Analytics events defined in [`docs/launch/analytics.md`](analytics.md).  
 - [x] External uptime monitor configured (`/api/health`).  
 - [ ] Golden path demo recorded (signup -> add property -> dashboard -> deal analyzer).
@@ -266,5 +267,6 @@ Use [`docs/launch/channel-posting-playbook.md`](channel-posting-playbook.md) for
 | 1.1 | 2026-03-27 | Batch 8 gaps marked shipped (PostHog, Vitest, changelog) |
 | 1.2 | 2026-03-28 | Added rule-safe distribution game plan, account strategy, posting sequence, tone guardrails, and 14-day channel execution plan |
 | 1.3 | 2026-03-28 | Added paid ads execution assets (test plan, campaign build sheet, monitoring runbook, readout template) |
+| 1.4 | 2026-04-30 | Phase D doc pass: pricing/env/trial cross-checks vs `app/lib/pricing-display`, `plans`; launch §9 operational bullets |
 
 When launch assumptions change, update this file and `docs/launch/channel-posting-playbook.md` together.

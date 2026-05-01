@@ -7,9 +7,9 @@
 **Direction (decided):** Collapse to a single canonical math basis — proportional everywhere — and surface joint-liability risk as progressive-disclosure data on the property detail mortgage card. Remove the `ownershipDisplayMode` toggle and column entirely (hard removal). Resurface `ownershipPercent` via an editable field in the property edit drawer and a small chip on relevant pages.
 
 **Canonical references (read first):**
-- `docs/policies/ownership-metrics.md` — formulas, modes, copy expectations (this plan rewrites it)
-- `docs/decisions/ownership-vacancy-percent-schema.md` — `Int` vs `Decimal` (defer)
-- `docs/policies/analytics-math-policy.md` — debt-service source rules, reconciliation expectations
+- [`ownership-metrics.md`](../policies/ownership-metrics.md) — formulas, modes, copy expectations (this plan rewrites it)
+- [`ownership-vacancy-percent-schema.md`](../decisions/ownership-vacancy-percent-schema.md) — `Int` vs `Decimal` (defer)
+- [`analytics-math-policy.md`](../policies/analytics-math-policy.md) — debt-service source rules, reconciliation expectations
 
 ---
 

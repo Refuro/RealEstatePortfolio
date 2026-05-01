@@ -11,6 +11,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
+    "docs:linkcheck": "node ../docs/process/_maintenance/check-doc-links.mjs",
+    "docs:metrics": "node ../docs/process/_maintenance/generate-metrics-snapshot.mjs",
     "db:generate": "dotenv -e .env -- prisma generate",
     "db:migrate": "dotenv -e .env -- prisma migrate dev",
     "db:push": "dotenv -e .env -- prisma db push",

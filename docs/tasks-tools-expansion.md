@@ -2,12 +2,12 @@
 
 **Purpose:** Execute the tools hub SEO expansion plan in isolated, reviewable stages. Each stage is self-contained — the agent running it only needs this document plus the files listed.
 
-**Recommended model per stage:** Listed at the top of each stage. See `AVAILABLE_AGENTS.md` for model descriptions.
+**Recommended model per stage:** Listed at the top of each stage. See [`docs/process/AVAILABLE_AGENTS.md`](process/AVAILABLE_AGENTS.md) for Cursor rule slugs and model-tier notes.
 
-**Skills used across this plan:**
-- `app/.cursor/skills/veld-ui/SKILL.md` — design tokens, component patterns (read before any UI stage)
-- `app/.cursor/skills/veld-mobile/SKILL.md` — MobileToolShell, touch targets (read before any calculator component stage)
-- `app/.cursor/skills/veld-landing-cta/SKILL.md` — CTA hierarchy, public page conversion rules (read before any public tool page stage)
+**Skills used across this plan** (workspace paths — parent of `RealEstatePortfolio/`):
+- `RealEstateProject/.cursor/skills/veld-ui/SKILL.md` — design tokens, component patterns (read before any UI stage)
+- `RealEstateProject/.cursor/skills/veld-mobile/SKILL.md` — MobileToolShell, touch targets (read before any calculator component stage)
+- `RealEstateProject/.cursor/skills/veld-landing-cta/SKILL.md` — CTA hierarchy, public page conversion rules (read before any public tool page stage)
 
 **Architecture reference:** `docs/reference/complete-engineering-reference.md`
 
@@ -22,8 +22,8 @@
 **What this does:** Replaces the vertical list in `CalculatorsHubCards` with a 2-column responsive grid grouped by category. Fixes the `reveal-up-d*` animation class ceiling. Updates hub page metadata to name all calculators.
 
 **Read before starting:**
-- `app/.cursor/skills/veld-ui/SKILL.md`
-- `app/.cursor/skills/veld-landing-cta/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-ui/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-landing-cta/SKILL.md`
 - `app/components/calculators/calculators-hub-cards.tsx` (current component to replace)
 - `app/app/tools/page.tsx` (public hub — metadata update)
 - `app/app/(app)/calculators/page.tsx` (in-app hub — metadata update)
@@ -184,9 +184,9 @@ Add 1 FAQ per new calculator per state. Example:
 **Recommended model:** Composer 2 Fast
 
 **Read before starting:**
-- `app/.cursor/skills/veld-ui/SKILL.md`
-- `app/.cursor/skills/veld-mobile/SKILL.md`
-- `app/.cursor/skills/veld-landing-cta/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-ui/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-mobile/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-landing-cta/SKILL.md`
 - `app/lib/fix-and-flip-calculator.ts` — reference for math lib pattern
 - `app/components/marketing/fix-and-flip-calculator.tsx` — reference for client component pattern (DEFAULTS, state, MobileToolShell, CalculatorMetric)
 - `app/app/tools/fix-and-flip/page.tsx` — reference for public page pattern (metadata, breadcrumb, hero, FAQ, CTA block)
@@ -565,9 +565,9 @@ Same checklist as Stage 3. Additionally:
 **Why Sonnet here:** This is the most complex stage. It requires a Recharts line chart (time-series UX), a year-by-year simulation loop, careful desktop layout for a two-column chart + table output, and the marketing copy is the most nuanced (audience is broader, not pure investors).
 
 **Read before starting:**
-- `app/.cursor/skills/veld-ui/SKILL.md`
-- `app/.cursor/skills/veld-mobile/SKILL.md`
-- `app/.cursor/skills/veld-landing-cta/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-ui/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-mobile/SKILL.md`
+- `RealEstateProject/.cursor/skills/veld-landing-cta/SKILL.md`
 - `app/app/(app)/properties/[id]/projections-tab-content.tsx` — reference for how Recharts `LineChart` is used in this codebase
 - `app/app/(app)/refinance/refinance-workspace.tsx` — another Recharts reference
 - `app/components/marketing/str-ltr-calculator.tsx` — reference for complex calculator component pattern

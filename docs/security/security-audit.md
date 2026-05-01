@@ -1,10 +1,12 @@
 # Security Audit
 
-**Version:** 2.2  
-**Last updated:** 2026-04-04  
-**Last reviewed by:** PM + security review pass  
+**Version:** 2.3  
+**Last updated:** 2026-04-30  
+**Last reviewed by:** PM + documentation alignment pass (Phase F)  
 **Review cadence:** Monthly + pre-launch gate  
 **Scope:** Real Estate Portfolio app — auth, API, data, integrations, and operational security posture.
+
+**Latest lane report:** [`docs/audits/security/2026-04-30-security-audit.md`](../audits/security/2026-04-30-security-audit.md) (findings, evidence, re-test checklist).
 
 ---
 
@@ -27,13 +29,15 @@
 
 ### 1.2 Open gaps & recommendations (current)
 
-| Gap | Risk | Recommendation |
-|-----|------|----------------|
-| **Coverage gap for additional endpoints** | Medium | Extend `RATE_LIMITS` in `lib/rate-limit.ts` to more write-heavy routes as abuse patterns emerge. |
-| **CSP enforcement vs Report-Only** | Low–Medium | Monitor `/api/csp-report` + Sentry before enabling `CSP_ENFORCEMENT=true` in production. |
-| **Security event/audit logging depth** | Medium | Add structured logging for admin-sensitive actions and failed auth-sensitive operations. |
-| **Operational security playbook** | Medium | Add incident response + secret-rotation runbook in docs. |
-| **Dependency/SCA cadence not explicit** | Low-Medium | Add recurring dependency risk scan check in reliability/security audit cadence. |
+| Gap | Risk | Recommendation / tracking |
+|-----|------|---------------------------|
+| **Admin `checkRateLimit` keys missing** (`admin:trial-patch`, `admin:trial-email-send`, `admin:billing-sync`) | Medium | Implement **`RATE_LIMITS`** entries — [`docs/tasks.md`](../tasks.md) **SEC-2026-04-30-1**; evidence in [`2026-04-30-security-audit.md`](../audits/security/2026-04-30-security-audit.md). |
+| **Expanded write-route limits** | Medium | Extend `RATE_LIMITS` as abuse patterns emerge (ongoing judgement). |
+| **CSP enforcement vs Report-Only** | Low–Medium | Monitor `/api/csp-report` + Sentry before enabling `CSP_ENFORCEMENT=true`; rollout: [`docs/policies/csp-rollout.md`](../policies/csp-rollout.md); **Batch 14** in [`docs/tasks.md`](../tasks.md). |
+| **Security event / audit logging depth** | Medium | Align with ship batch **SEC-SHIP-*** (Sentry guards) in [`docs/tasks.md`](../tasks.md). |
+| **Operational security playbook** | Medium | Incident response + key-rotation — backlog unless otherwise assigned. |
+| **Dependency / SCA cadence** | Low–Medium | Recurring dependency risk scan cadence — process item. |
+| **`CRON_SECRET` not validated in `validateEnv()`** | Low (operational) | Misconfig surfaces at first cron invocation; **accepted until** optional assert is promoted — cross-link [`docs/architecture-and-build-practices.md`](../architecture-and-build-practices.md). |
 
 ### 1.3 Security checklist for new features
 
@@ -54,16 +58,16 @@ Before approving security-sensitive changes, verify:
 ### High priority
 
 1. ~~Add baseline CSP policy with deployment-safe defaults.~~ **Done** — see §5; tune enforcement after report review.
-2. Add structured audit logging for admin export and high-risk account actions.
+2. Structured audit logging for admin export and high-risk account actions — **partial / ongoing:** see **`SEC-SHIP-`** items in [`docs/tasks.md`](../tasks.md).
 
 ### Medium priority
 
-3. Expand targeted rate limits to additional write-heavy/sensitive endpoints (baseline in §6).
-4. Add incident response and key-rotation runbook to docs.
+3. Expand targeted rate limits — include **SEC-2026-04-30-1** (admin trial/email/sync keys); broader writes as patterns emerge.
 
 ### Low priority
 
-5. Define periodic dependency/security scanning checklist and owner cadence.
+4. Incident response + key-rotation runbook — still recommended.
+5. Periodic dependency/security scanning checklist — cadence ownership.
 
 ---
 
@@ -116,9 +120,11 @@ Optional: when `NEXT_PUBLIC_APP_URL` is set, the built policy appends **`report-
 
 ---
 
-## 6. API rate limits — `app/lib/rate-limit.ts`
+## 6. Rate limits — DB-backed vs CSP reports
 
-Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLimitEntry`**. If `RATE_LIMITS[action]` is undefined, the route is not limited by this helper.
+### 6.1 `ApiRateLimitEntry` — `app/lib/rate-limit.ts`
+
+Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLimitEntry`**. If `RATE_LIMITS[action]` is undefined, `checkRateLimit` returns **allowed** (no DB row) — **routes must use a defined key** for limits to apply.
 
 | Action key | Limit / hour |
 |------------|----------------|
@@ -132,7 +138,6 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | `deals:patch` | 60 |
 | `deals:delete` | 60 |
 | `admin:tier-patch` | 30 |
-| `csp-report:post` | 240 (per IP; anonymous CSP violation reports) |
 | `import:portfolio` | 5 |
 | `export:portfolio` | 15 |
 | `export:portfolio_summary` | 15 |
@@ -141,10 +146,18 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | `billing:create-checkout` | 10 |
 | `billing:sync` | 60 (`GET /api/billing/sync`) |
 | `billing:portal` | 30 (`POST /api/billing/portal`) |
+| `places:autocomplete` | 120 |
+| `places:details` | 60 |
+
+**Not in this table (defense-in-depth gap):** Admin routes that call `checkRateLimit` with **`admin:trial-patch`**, **`admin:trial-email-send`**, **`admin:billing-sync`** — keys are **not** yet in `RATE_LIMITS` (**SEC-2026-04-30-1** in [`docs/tasks.md`](../tasks.md)).
 
 **RentCast hourly quota** is **not** this table — it uses `RentCastApiCall` counts and `getRentCastHourlyLimit` / `RENTCAST_HOURLY_LIMITS` in `lib/plans.ts`. See [reference/rentcast-quota.md](../reference/rentcast-quota.md).
 
 **Source of truth:** `app/lib/rate-limit.ts` (`RATE_LIMITS`).
+
+### 6.2 CSP violation reports — `app/lib/csp-rate-limit.ts`
+
+`POST /api/csp-report` uses **`checkCspRateLimit`** — **in-memory** sliding window (**240/hour per identifier per server instance**). This is **not** `ApiRateLimitEntry`; in serverless/multi-instance deployments the limit is **per instance** (anti-spam for a single hot source, not a distributed cap). See [`2026-04-30-security-audit.md`](../audits/security/2026-04-30-security-audit.md) if changing approach.
 
 ---
 
@@ -153,6 +166,8 @@ Rolling **one-hour** window per `identifier` + `action`, stored in **`ApiRateLim
 | Aspect | Stance |
 |--------|--------|
 | **Auth** | **Public** — no Clerk session required. Intended for load balancers (e.g. Vercel), uptime monitors, and orchestration probes. |
-| **Information disclosed** | Minimal JSON: `status` and `database` connectivity (`connected` / `disconnected`). No user data, secrets, or stack traces in the response body. |
+| **Information disclosed** | Minimal JSON **`{ status: "ok" }`** only — lightweight liveness; **no** database probe in the handler body (`app/app/api/health/route.ts`). |
 | **Abuse** | Low risk; read-only probe. If abuse or noisy scanning becomes an issue, mitigate at the **edge** (WAF, IP allowlists for internal monitors, or platform-level rate limits) rather than breaking standard health-check semantics. |
 | **Threat model** | Documented here as intentional public exposure for operability; not a secret admin surface. |
+
+**Historical note:** earlier docs referenced a **`database`** field in the JSON; **removed** — do not resurrect without an explicit reliability decision.

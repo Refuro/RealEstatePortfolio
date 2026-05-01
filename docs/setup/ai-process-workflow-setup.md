@@ -47,6 +47,12 @@ For Windows:
 
 ---
 
+## Workspace skills (Veld UI)
+
+Veld **skills** (design system, mobile patterns, landing CTAs) are **not** under `RealEstatePortfolio/.cursor/`. In a typical clone they live at **`RealEstateProject/.cursor/skills/`** next to the `RealEstatePortfolio/` folder. Open the **parent workspace** in Cursor if you want those skill files on the path the agent auto-loads. See also [`docs/cursor-agent-setup.md`](../cursor-agent-setup.md).
+
+---
+
 ## Files you need
 
 ### Cursor files

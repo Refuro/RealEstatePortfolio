@@ -99,6 +99,7 @@ Saved deals and the Deal Analyzer use the same proportional math as portfolio su
 
 ## 6) Implementation guardrails
 
+- **Math verification process:** For audits of amortization, payoff, benchmarks, and metric helpers against this policy, follow [`docs/process/math-logic-audit.md`](../process/math-logic-audit.md) (module inventory and checkpoints).
 - Use shared metric helpers in `app/lib/metrics/`; do not duplicate formulas in components/pages.
 - Property-level inputs (rent, expenses, value, debt) are stored as **full** values. Scaling happens at metric computation, not at input.
 - Personal inputs (cash invested, ownership %) are stored as the user entered them; do not scale them.

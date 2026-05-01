@@ -1,6 +1,6 @@
 # Refinance / Payoff Insights Proposal
 
-**Status:** Proposal  
+**Status:** Proposal — **Phase 1 (payoff timeline) shipped** in app: `app/lib/amortization.ts` (`getPayoffProjection`, covered in `app/lib/amortization.test.ts`); mortgage UI in `app/app/(app)/properties/mortgage-section.tsx`. Phases 2–3 (accelerator, refinance what-if) remain backlog.  
 **Last updated:** March 2026
 
 ---
@@ -207,5 +207,5 @@ Until an overhaul:
 ## 10. References
 
 - `lib/amortization.ts` — `getEffectiveBalance`, `getBalanceSource`, `getProjectedBalanceAsOf`, `getPiForAmortization`, `generateAmortizationSchedule`
-- `app/(app)/properties/[id]/page.tsx` — Property detail layout, passes mortgages to MortgageSection
-- `app/(app)/properties/mortgage-section.tsx` — Mortgage display; payoff insight will be added here
+- `app/app/(app)/properties/[id]/page.tsx` — Property detail layout, passes mortgages to MortgageSection
+- `app/app/(app)/properties/mortgage-section.tsx` — Mortgage display; payoff insight lives here
