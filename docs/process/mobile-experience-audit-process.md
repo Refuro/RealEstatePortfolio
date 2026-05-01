@@ -10,4 +10,6 @@
 
 **Report structure:** Use [`audit-report-template.md`](audit-report-template.md) unless the QA doc requires extra sections.
 
+**Cursor rule:** [`.cursor/rules/mobile-experience-audit-agent.mdc`](../../.cursor/rules/mobile-experience-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 **Rules:** Audit only; findings promote to `docs/tasks.md` via PM review (same as other lanes).

@@ -306,20 +306,22 @@ Requirements:
 
 ## Payments
 
-Stripe integration.
+Stripe integration for subscription billing.
 
-Pricing tiers example:
+**Living prices and property limits** match the product (e.g. Investor **$15/mo**, Pro **$29/mo**, Free 1 property — see `docs/reference/product-overview.md` and `app/lib/plans.ts`). The placeholder figures below are **historical MVP brainstorm only**.
+
+Pricing tiers example (**do not implement from this snippet alone**):
 
 ```
 Free Tier
 1 property
 
 Investor
-$9/month
+~$15/month (Stripe price IDs in env)
 5 properties
 
 Pro
-$19/month
+~$29/month (Stripe price IDs in env)
 20 properties
 ```
 

@@ -18,7 +18,9 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 
 ---
 
-## Roadmap priority (value vs effort — last reviewed 2026-04-04)
+## Roadmap priority (value vs effort — last reviewed **2026-04-30**)
+
+**Living backlog:** `docs/reference/roadmap.md` (reverse trial, retention hooks, tools, exports, insights). This table is a **short Executive PM slice** only — do not treat it as duplicating the whole roadmap.
 
 | Order | Item | Effort | Value | Recommendation |
 |-------|------|--------|-------|----------------|
@@ -27,12 +29,15 @@ Historical completion logs and full checkbox snapshots are in [`docs/tasks-archi
 | — | Benchmarking | ✓ Done | — | Rent vs market, surfacing on list/dashboard, inline refresh. |
 | — | Error tracking (Sentry) | ✓ Done | — | Production error monitoring; set NEXT_PUBLIC_SENTRY_DSN in Vercel. |
 | — | Dashboard single-property | ✓ Done | — | Property at a glance, metrics, Rent vs. Market auto-refresh. |
-| **1** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic. |
-| **3** | Simulation page | High | High | Full modeling; extends scenario concept. |
-| **4** | Report section (PDF) | Medium | Medium | Professional output; share with partners/lenders. |
-| **5** | Automated testing | High | High | Quality foundation; plan per Module M. |
+| — | Automated testing (Vitest Phases **1–3**) | ✓ Done (ongoing) | — | **Re-verify:** `npm run test` in `RealEstatePortfolio/app/`. **E2E** optional — Phase 4 below. |
+| **1** | Refinance / payoff insights | Medium–High | High | Actionable; builds on amortization logic (`roadmap.md`). |
+| **2** | Modeling + “simulation” remainder | See roadmap | High | **Partially shipped** as `/modeling` + projections; portfolio-aggregated/hypothetical property TBD (`roadmap.md` §Simulation). |
+| **3** | Branded PDF / read-only share | Medium | Medium | **Lightweight print path shipped** (`/export/portfolio-summary`); server PDF + snapshots backlog (`roadmap.md` §Investor outputs). |
+| **4** | Portfolio interpretive insights | M–L | High | Ranked actions / health score (`roadmap.md` §1a) — beyond raw metrics + cron emails. |
 
-**Defer:** Rent gap email (cost scales), Referral system (validate first).
+**Defer:** Rent gap as a **standalone** initiative (superseded by retention/insight framing in `roadmap.md`); Referral system — validate first.
+
+**Note:** Open **security / ship** rows (e.g. `SEC-SHIP-*` in this file) are scoped work, not roadmap strategy — track here until archived.
 
 ---
 
@@ -408,6 +413,8 @@ A real user has signed up and added 3 properties on a trial. Before her trial en
 - [ ] **SEC-SHIP-5** — Add try/catch around the final `prisma.$transaction` in `POST /api/account/delete/route.ts` (lines 87–108). Stripe cancel already has a guard; the DB step does not. Failure leaves Stripe subscription canceled but app account still active.
   - *Acceptance:* Simulated DB failure returns 503; no `User` row is deleted; Sentry captures the error.
 
+- [ ] **SEC-2026-04-30-1** — Add `RATE_LIMITS` entries so `checkRateLimit`/`recordRateLimit` apply to **`admin:trial-patch`**, **`admin:trial-email-send`**, **`admin:billing-sync`** (or consolidate keys) — `/api/admin/users/[id]/trial`, `trial-email`, `billing-sync` currently call `checkRateLimit` with undefined actions (**no-op**). See [`docs/audits/security/2026-04-30-security-audit.md`](audits/security/2026-04-30-security-audit.md) § Severity-ranked findings (Medium).
+
 ---
 
 #### UX / Feature
@@ -415,7 +422,7 @@ A real user has signed up and added 3 properties on a trial. Before her trial en
 - [x] **UX-SHIP-1** — Replace the permanent "Maybe later" onboarding modal dismissal with a 7-day snooze. `onboardingDismissedAt` now records dismiss timestamp; re-engagement nudge strip appears after 7 days if `propertyCount === 0`. Users with ≥1 property never see either surface. Dismissing the nudge resets the 7-day clock. Touches: `app/app/(app)/onboarding-panel.tsx`, `app/app/(app)/app-layout-client.tsx`.
   - *Acceptance:* After dismissing and returning past the cooldown period with 0 properties, a re-engagement nudge appears. A user with ≥1 property is never re-shown the modal regardless of cooldown. Existing tests pass.
 
-- [ ] **UX-SHIP-2** — Widen `getPropertyCompleteness` heuristic to flag missing bedrooms/bathrooms/sqft as incomplete (not only when all three of cash invested, mortgage, and purchase price are simultaneously mismatched). Also render "Not set" placeholder text when bedrooms/bathrooms/sqft are all null instead of hiding the row entirely. Touches: `app/lib/property-completeness.ts`, `app/app/(app)/properties/[id]/overview-tab-content.tsx`.
+- [ ] **UX-SHIP-2** — Widen `getPropertyCompleteness` heuristic to flag missing bedrooms/bathrooms/sqft as incomplete (not only when all three of cash invested, mortgage, and purchase price are simultaneously mismatched). Also render "Not set" placeholder text when bedrooms/bathrooms/sqft are all null instead of hiding the row entirely. Touches: `app/lib/property-completeness.ts`, `app/app/(app)/properties/[id]/property-detail-content.tsx` (property facts presentation).
   - *Acceptance:* A quick-add property (address + rent + value only) shows the completion banner and displays "Not set" for the three field groups. A fully-populated property shows no banner. `npm run check` passes.
 
 ---

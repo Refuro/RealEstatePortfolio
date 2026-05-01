@@ -4,6 +4,8 @@
 
 **Companion policy:** Ownership semantics are defined in `docs/policies/ownership-metrics.md`. This document governs broader analytics conventions (time windows, debt-service sourcing, baseline/delta rules, and reconciliation).
 
+**Audit workflow:** When running a focused math/logic audit over `app/lib/amortization.ts`, `app/lib/metrics/*`, and related routes, use [`docs/process/math-logic-audit.md`](../process/math-logic-audit.md) as the execution checklist (policies above remain the normative contracts).
+
 ---
 
 ## 1) Core principles
@@ -126,8 +128,7 @@ When a metric is exposed in multiple surfaces:
 
 For any task touching analytics math, verify:
 
-- Ownership: `100%`, `50%`, `25%`
-- Modes: `proportional`, `full_liability`
+- Ownership: `100%`, `50%`, `25%` (single **proportional** display basis per `ownership-metrics.md`; the legacy `full_liability` / joint-liability lens is removed)
 - Loan setups: escrow included, escrow excluded
 - Horizon/payoff: payoff inside horizon, payoff after horizon
 - Surfaces: at least one UI screen + one API endpoint + export (if affected)

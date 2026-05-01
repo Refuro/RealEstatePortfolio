@@ -8,12 +8,12 @@
 
 | Surface | App file | Routes / context |
 |---------|----------|------------------|
-| Deal Analyzer | `app/(app)/analyze/deal-analyzer-form.tsx` | `/analyze` |
-| Modeling | `app/(app)/properties/[id]/projections-tab-content.tsx` | `/modeling`, property projections tab |
-| Mortgage | `app/(app)/properties/[id]/mortgage-tab-content.tsx` | `/mortgage`, property mortgage tab |
+| Deal Analyzer | `app/app/(app)/analyze/deal-analyzer-form.tsx` | `/analyze` |
+| Modeling | `app/app/(app)/properties/[id]/projections-tab-content.tsx` | `/modeling` (typically `?propertyId=`); projections content may be reused in property flows |
+| Mortgage | `app/app/(app)/properties/[id]/mortgage-tab-content.tsx` | `/mortgage` (typically `?propertyId=`); mortgage content may be reused from property/workspace |
 | Public calculator | `components/marketing/public-calculator.tsx` | `/`, `/investment-property-calculator`, `/lp/investment-property-calculator` |
 
-Shell root uses `md:hidden` (see `components/mobile-tool-shell.tsx`). Mobile detection uses `useIsMobile()` → `(max-width: 767px)` in `lib/use-is-mobile.ts`.
+Shell root uses `md:hidden` (see `app/components/mobile-tool-shell.tsx`). Mobile detection uses `useIsMobile()` → `(max-width: 767px)` in `app/lib/use-is-mobile.ts`.
 
 ---
 

@@ -161,7 +161,7 @@ Tasks are deduplicated across lanes. Source lane shown in `[brackets]`.
 - [ ] **DOC-SCHED-2:** Resolve dangling `research:` reference in `docs/plans/2026-04-05-edit-page-completion-guidance.md` — `docs/research/2026-04-05-edit-page-completion-ux.md` does not exist; create, rename, or remove `[Documentation]`
 - [ ] **DOC-SCHED-3 (DOC-1):** Update `docs/README.md` Reference block — elevate `design/design-spec-2026.md` as primary design source; adjust `policies/design-spec.md` line *(carried from 2026-04-04 Ship tier)* `[Documentation]`
 - [ ] **DOC-SCHED-4 (DOC-2):** Fix broken `docs/...` relative links in `docs/archive/plans/2026-04-04-property-detail-revamp-plan.md` and `docs/archive/plans/2026-04-04-refinance-payoff-insights-plan.md` *(carried from 2026-04-04 Ship tier)* `[Documentation]`
-- [ ] **DOC-SCHED-5 (DOC-3):** Fix `tasks.md` link depth in `docs/process/full-audit-synthesis.md §4` embedded template: `[docs/tasks.md](../../tasks.md)` → `[docs/tasks.md](../tasks.md)` *(carried from 2026-04-04 Ship tier)* `[Documentation]`
+- [ ] **DOC-SCHED-5 (DOC-3):** Fix `tasks.md` link depth in `docs/process/full-audit-synthesis.md §4` embedded template: from `docs/process/` use `../tasks.md`; from `docs/audits/synthesis/` use `../../tasks.md` *(carried from 2026-04-04 Ship tier)* `[Documentation]`
 - [ ] **DOC-OPT-1:** Update `docs/README.md` "Latest audit synthesis" quick link to point to `2026-04-04-audit-synthesis.md` `[Documentation]`
 - [ ] **DOC-OPT-2:** Add hub entries for new directories: `docs/research/`, `docs/test-plans/`, `docs/decisions/`, `docs/prompts/` `[Documentation]`
 - [ ] **DOC-OPT-3:** Create `docs/plans/README.md` — 6 active plan files with no index `[Documentation]`

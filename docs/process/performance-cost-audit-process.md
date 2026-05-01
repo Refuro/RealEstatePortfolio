@@ -4,6 +4,8 @@
 
 **Status:** Active.
 
+**Cursor rule:** [`.cursor/rules/performance-cost-audit-agent.mdc`](../../.cursor/rules/performance-cost-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

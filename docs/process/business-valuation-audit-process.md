@@ -4,6 +4,8 @@
 
 **Status:** Active.
 
+**Cursor rule:** [`.cursor/rules/business-valuation-audit-agent.mdc`](../../.cursor/rules/business-valuation-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

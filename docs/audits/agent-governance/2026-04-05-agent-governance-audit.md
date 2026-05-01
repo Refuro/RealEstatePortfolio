@@ -61,14 +61,11 @@ None.
 
 - **L2 (new) — Informal analysis documents accumulating in `docs/audits/` root without placement policy**
 
-  Three date-stamped analysis documents now exist directly in `docs/audits/` root, outside any lane subfolder:
-  - `docs/audits/2026-04-04-polish-gap-audit.md`
-  - `docs/audits/2026-04-05-quick-add-completion-gap-audit.md`
-  - `docs/audits/2026-04-05-onboarding-friction-analysis.md`
+  At audit time, three date-stamped analysis documents were outside the standard lane layout: `2026-04-04-polish-gap-audit.md` at `docs/audits/` root, plus two 2026-04-05 reports at the same root. **Update (2026-04-30 doc cleanup Phase G):** The 2026-04-05 pair now lives under [`docs/audits/feature/2026-04-05-quick-add-completion-gap-audit.md`](../feature/2026-04-05-quick-add-completion-gap-audit.md) and [`docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md`](../growth-funnel/2026-04-05-onboarding-friction-analysis.md). Polish-gap placement may still need reconciliation.
 
-  These are cross-referenced from plan docs (e.g., `2026-04-05-onboarding-activation-rollout.md` frontmatter: `audit: docs/audits/2026-04-05-onboarding-friction-analysis.md`) and are clearly useful artifacts. However, `docs/audits/README.md` defines only the lane-based structure and does not address ad-hoc discovery or analysis reports. Without a policy for this pattern, the root will accumulate undifferentiated files over time, and future auditors cannot determine whether root-level files are formal lane reports that were misfiled or intentional freeform analyses.
+  These are cross-referenced from plan docs (e.g., `2026-04-05-onboarding-activation-rollout.md` frontmatter: `audit: docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md`) and are clearly useful artifacts. However, `docs/audits/README.md` defines only the lane-based structure and does not address ad-hoc discovery or analysis reports. Without a policy for this pattern, the root will accumulate undifferentiated files over time, and future auditors cannot determine whether root-level files are formal lane reports that were misfiled or intentional freeform analyses.
 
-  **Evidence:** `docs/audits/` glob (4 root-level files — README + 3 dated analysis docs); `docs/audits/README.md` (lane-based structure only, no freeform/discovery category); `docs/plans/2026-04-05-onboarding-activation-rollout.md` frontmatter.
+  **Evidence:** `docs/audits/` glob; `docs/audits/README.md` (lane-based structure only, no freeform/discovery category); `docs/plans/2026-04-05-onboarding-activation-rollout.md` frontmatter.
 
 - **L3 (carried from 2026-04-04 L1) — Lane rename checklist discrepancy**
 

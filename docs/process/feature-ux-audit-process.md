@@ -4,6 +4,8 @@
 
 **Status:** Active.
 
+**Cursor rule:** [`.cursor/rules/feature-audit-agent.mdc`](../../.cursor/rules/feature-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 ---
 
 ## 1. Scope

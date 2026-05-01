@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useId, useMemo, useState } from "react";
 import { MobileCollapsible } from "@/components/mobile-collapsible";
 import { MobileFormGroup } from "@/components/mobile-form-group";
 import { MobilePageSection } from "@/components/mobile-page-section";
@@ -246,6 +246,10 @@ export function ProjectionsTabContent({
   mortgageData,
 }: ProjectionsTabContentProps) {
   const isMobile = useIsMobile();
+  const growthFieldIdPrefix = useId();
+  const rentGrowthFieldId = `${growthFieldIdPrefix}-rent`;
+  const expenseGrowthFieldId = `${growthFieldIdPrefix}-expense`;
+  const valueGrowthFieldId = `${growthFieldIdPrefix}-value`;
   const [activePreset, setActivePreset] = useState<PresetId>("base");
   const [holdYears, setHoldYears] = useState(10);
   const [rentGrowth, setRentGrowth] = useState(2);
@@ -769,52 +773,64 @@ export function ProjectionsTabContent({
           <p className="mb-3 text-xs font-medium text-muted">
             Growth assumptions
           </p>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <label className="block text-xs font-medium text-muted">
+          <div className="grid grid-cols-1 gap-x-3 gap-y-0 sm:grid-cols-3 sm:grid-rows-[auto_auto] sm:gap-y-1.5">
+            <label
+              htmlFor={rentGrowthFieldId}
+              className="row-start-1 text-xs font-medium text-muted sm:col-start-1 sm:row-start-1"
+            >
               Rent growth (%/yr)
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={rentGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setRentGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
-              />
             </label>
-            <label className="block text-xs font-medium text-muted">
+            <input
+              id={rentGrowthFieldId}
+              type="number"
+              min={-5}
+              max={15}
+              step={0.5}
+              value={rentGrowth}
+              onChange={(e) => {
+                setActivePreset("custom");
+                setRentGrowth(Number(e.target.value) || 0);
+              }}
+              className="row-start-2 mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground sm:col-start-1 sm:row-start-2 sm:mt-0"
+            />
+            <label
+              htmlFor={expenseGrowthFieldId}
+              className="row-start-3 mt-3 text-xs font-medium text-muted sm:col-start-2 sm:row-start-1 sm:mt-0"
+            >
               Expense growth (%/yr)
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={expenseGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setExpenseGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
-              />
             </label>
-            <label className="block text-xs font-medium text-muted">
+            <input
+              id={expenseGrowthFieldId}
+              type="number"
+              min={-5}
+              max={15}
+              step={0.5}
+              value={expenseGrowth}
+              onChange={(e) => {
+                setActivePreset("custom");
+                setExpenseGrowth(Number(e.target.value) || 0);
+              }}
+              className="row-start-4 mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground sm:col-start-2 sm:row-start-2 sm:mt-0"
+            />
+            <label
+              htmlFor={valueGrowthFieldId}
+              className="row-start-5 mt-3 text-xs font-medium text-muted sm:col-start-3 sm:row-start-1 sm:mt-0"
+            >
               Value growth (%/yr)
-              <input
-                type="number"
-                min={-5}
-                max={15}
-                step={0.5}
-                value={valueGrowth}
-                onChange={(e) => {
-                  setActivePreset("custom");
-                  setValueGrowth(Number(e.target.value) || 0);
-                }}
-                className="mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground"
-              />
             </label>
+            <input
+              id={valueGrowthFieldId}
+              type="number"
+              min={-5}
+              max={15}
+              step={0.5}
+              value={valueGrowth}
+              onChange={(e) => {
+                setActivePreset("custom");
+                setValueGrowth(Number(e.target.value) || 0);
+              }}
+              className="row-start-6 mt-1.5 w-full rounded-md border border-border bg-background px-2.5 py-2 text-sm text-foreground sm:col-start-3 sm:row-start-2 sm:mt-0"
+            />
           </div>
         </div>
 

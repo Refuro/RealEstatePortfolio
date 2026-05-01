@@ -6,6 +6,8 @@ This document expands the MVP specification into a concrete engineering backlog 
 
 The product is a lightweight SaaS for **small real estate investors (1–20 properties)** to track portfolio performance, analyze returns, and understand their investment position.
 
+**Note (maintenance):** Detailed **route and API surface inventory** is tracked in [`product-overview.md`](product-overview.md) and [`roadmap.md`](roadmap.md). **Module J** Stripe price examples in this file are **conceptual** — live products use env-configured price IDs and `app/lib/pricing-display.ts` (see `docs/reference/mvp-spec.md` payments section footnote).
+
 ---
 
 # 1. Product Boundaries

@@ -4,6 +4,8 @@
 
 **Status:** Active — follow this process when running a Math & Logic Audit.
 
+**Cursor rule:** [`.cursor/rules/math-audit-agent.mdc`](../../.cursor/rules/math-audit-agent.mdc) — see [Audits README § Running audits](../audits/README.md#running-audits).
+
 **Distinct from:** General code audit (`docs/process/code-audit-process.md`) — that covers design, architecture, security, performance. This audit focuses solely on mathematical correctness and logical consistency.
 
 ---
@@ -27,6 +29,8 @@
 ---
 
 ## 2. Reference specifications
+
+**Normative contracts for displayed metrics and copy:** [`docs/policies/ownership-metrics.md`](../policies/ownership-metrics.md), [`docs/policies/analytics-math-policy.md`](../policies/analytics-math-policy.md). This audit checks code against those policies and the module behavior below.
 
 ### 2.1 Amortization (`lib/amortization.ts`)
 

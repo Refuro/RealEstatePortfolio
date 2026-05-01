@@ -10,7 +10,7 @@ From a machine that can reach the deployment:
 curl -sS -o /dev/null -w "%{http_code}" "https://YOUR_DOMAIN/api/health"
 ```
 
-Expect `200` and JSON `{ "status": "ok" }` (see `app/app/api/health/route.ts`).
+Expect `200` and JSON `{ "status": "ok" }` — implementation: [`app/app/api/health/route.ts`](../../app/app/api/health/route.ts).
 
 ## CI (optional)
 

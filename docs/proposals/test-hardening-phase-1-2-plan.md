@@ -1,5 +1,7 @@
 # Test hardening — Phase 1 & 2 implementation plan
 
+**Shipped note (2026-04-30):** Phase **1.1** (ESLint in CI) is live — see `RealEstatePortfolio/.github/workflows/ci.yml` (`npm run lint` alongside tests). Further items below are backlog / process follow-up unless checked off.
+
 **Purpose:** Executable plan for the **P0** and **P1** recommendations in [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md) — CI trust, local/remote alignment, and stronger math/domain coverage before treating tests as the gate on every push.
 
 **Relationship to other docs**

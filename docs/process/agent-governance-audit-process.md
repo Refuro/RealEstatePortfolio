@@ -34,6 +34,12 @@ Reference docs:
 - `.cursor/rules/`
 - `.cursor/hooks.json`
 
+**Cursor rule:** [`.cursor/rules/agent-governance-audit-agent.mdc`](../../.cursor/rules/agent-governance-audit-agent.mdc) — subagent execution; trigger phrases in [Audits README § Running audits](../audits/README.md#running-audits).
+
+### Recurring command integrity
+
+After changing **audit rules**, **process paths**, or **lane names**, walk [`docs/process/command-integrity-check.md`](command-integrity-check.md) so file references and chat triggers stay consistent with [`docs/audits/README.md`](../audits/README.md).
+
 ---
 
 ## 2. Audit dimensions

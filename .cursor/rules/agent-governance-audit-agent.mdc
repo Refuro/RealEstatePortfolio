@@ -24,5 +24,6 @@ Run in **Agent** mode with writes enabled—not Ask mode, not read-only subagent
 
 ## References
 
-- Process: `docs/process/agent-governance-audit-process.md`
+- Process: [`docs/process/agent-governance-audit-process.md`](../../docs/process/agent-governance-audit-process.md)
+- Integrity checklist: [`docs/process/command-integrity-check.md`](../../docs/process/command-integrity-check.md)
 - Reports: `docs/audits/agent-governance/`

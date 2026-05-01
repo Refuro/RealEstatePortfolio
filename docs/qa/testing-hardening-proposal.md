@@ -4,17 +4,17 @@
 
 **Related:** [`test-infrastructure-review.md`](test-infrastructure-review.md) (inventory, CI, coverage thresholds), [`docs/tasks.md`](../tasks.md) § **Testing hardening** (execution checklist), [`mobile-shell-verification.md`](mobile-shell-verification.md), [`property-flow-regression-matrix.md`](property-flow-regression-matrix.md).
 
-**Snapshot (2026-03-30 — post Phases 1–3):**
+**Snapshot (2026-04-30 — re-verify with `npm run test` in `app/`):**
 
 | Area | Count / state |
 |------|----------------|
-| **Vitest test files** | **33** (`lib/**/*.test.ts`, `app/**/*.test.ts`, `components/**/*.test.tsx`) |
-| **Vitest tests** | **~198** (full run seconds) |
-| **CI** | `npm run lint` + `npm run test` in `app/` (no coverage in default CI unless you add a job) |
+| **Vitest test files** | **~85** (`lib/**/*.test.ts`, `app/**/*.test.ts`, `components/**/*.test.tsx` per `vitest.config.ts`) |
+| **Vitest tests** | **~600+** (exact count drifts; CI runs full suite) |
+| **CI** | `npm run lint` + `npm run test` in `app/` (`.github/workflows/ci.yml`; Node 20; no coverage by default) |
 | **Coverage gate** | `npm run test:coverage` — **v8** thresholds on an **explicit include list** (aggregate **~80%** statements/lines on that set; see §3.5) |
-| **Route handlers** (`app/app/api/**/route.ts`) | **~32**; **16** high-value routes in `coverage.include` + colocated tests for Phases 1–2 scope |
+| **Route handlers** (`app/app/api/**/route.ts`) | Many routes; colocated tests for high-value paths (properties, deals, billing, import/export, account, cron, places, etc.) |
 | **Stripe webhook** | **Tested** (success, bad signature, irrelevant event); **branch coverage inside the handler is still low** (~50% statements — more `switch` paths to add) |
-| **UI / component** | **1** file (`MobileToolShell`) — thin vs app surface |
+| **UI / component** | **Multiple** RTL files (`MobileToolShell`, `MobileBottomNav`, wizard, inputs, cards) — still thin vs entire App Router UI |
 | **E2E (Playwright/Cypress)** | **Not in CI** — primary gap for “quality” bar |
 
 ---
@@ -91,7 +91,7 @@ If a test would encode **wrong** behavior, **stop**: fix the implementation, or 
 
 ### 3.3 UI and apps router
 
-- **Single** component test file — **not** quality-grade for UI-heavy product. **Next:** critical **forms** (add property, deal analyzer, checkout) with **RTL** + **validation** paths, **not** full page coverage.
+- **Growing but incomplete** component coverage (`MobileToolShell`, `MobileBottomNav`, wizard, autocomplete, etc.) — **not** quality-grade for the whole UI. **Next:** critical **forms** (deal analyzer, checkout flows) with **RTL** + **validation** paths, **not** full page coverage.
 
 ### 3.4 E2E — mandatory for “high confidence” label
 

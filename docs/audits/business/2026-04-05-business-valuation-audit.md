@@ -21,7 +21,7 @@
 
 ### High
 
-- **Activation at zero — entire product remains unvalidated by users** — 0/6 signed-up users have added a property as of April 5. The product's core intelligence surfaces (portfolio dashboard, metrics, analysis workspaces) require at least one property to be meaningful. No user has yet experienced the product's actual value. This is not a product quality indictment — it is a distribution and onboarding problem. The April 5 rollout plan is the correct response. However, until at least one user activates, all commercial narratives (pricing, retention, PMF) are speculative. — `docs/audits/2026-04-05-onboarding-friction-analysis.md` §1, `docs/reference/valuation-brief.md` §10
+- **Activation at zero — entire product remains unvalidated by users** — 0/6 signed-up users have added a property as of April 5. The product's core intelligence surfaces (portfolio dashboard, metrics, analysis workspaces) require at least one property to be meaningful. No user has yet experienced the product's actual value. This is not a product quality indictment — it is a distribution and onboarding problem. The April 5 rollout plan is the correct response. However, until at least one user activates, all commercial narratives (pricing, retention, PMF) are speculative. — `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md` §1, `docs/reference/valuation-brief.md` §10
 
 - **Revenue proof still absent — valuation remains asset-only** — $0 MRR, 0 paying subscribers. No Stripe revenue events have been captured in reviewed materials. The billing infrastructure is complete and correct (webhook signature verification, idempotency guards, tier sync, plan limits — all verified in code); the problem is no one has converted. Until verified MRR exists, an acquirer prices this on replacement cost only. — `app/lib/stripe-config.ts`, `app/app/api/billing/webhook/route.ts`, `docs/reference/valuation-brief.md` §9
 
@@ -59,7 +59,7 @@
 |--------|--------|
 | **Prior audit** | `docs/audits/business/2026-04-04-business-valuation-audit.md` (Run 2, this audit supersedes for today's pass) |
 | **New plan (2026-04-05)** | `docs/plans/2026-04-05-onboarding-activation-rollout.md` (full read — 20 requirements, Phase 1 + Phase 2, analytics events, DB decisions) |
-| **Friction audit** | `docs/audits/2026-04-05-onboarding-friction-analysis.md` (full read) |
+| **Friction audit** | `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md` (full read) |
 | **Schema migration** | `app/prisma/migrations/20260406120000_completeness_overhaul/migration.sql` (full read) |
 | **Test plan** | `docs/test-plans/2026-04-05-quick-add-completion-gap-test-plan.md` (reviewed — confirms Phase 2 active) |
 | **Analytics** | `app/lib/analytics-events.ts` (full read — 32 events registered, including new Phase 2 events) |

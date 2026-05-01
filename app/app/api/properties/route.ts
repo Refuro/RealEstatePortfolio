@@ -16,6 +16,12 @@ import {
   validateEscrowAmount,
 } from "@/lib/validations/mortgage";
 import { canAddProperty, getEffectiveTier } from "@/lib/plans";
+import { getEffectiveBalance } from "@/lib/amortization";
+import {
+  seedLtvSentinelsForProperty,
+  seedPayoffSentinelForMortgage,
+  type MortgageMilestoneSentinel,
+} from "@/lib/mortgage-milestones";
 
 export async function GET() {
   const user = await getActiveAppUser();
@@ -217,6 +223,51 @@ export async function POST(request: NextRequest) {
     });
     if (!full) {
       return NextResponse.json({ error: "Failed to load property" }, { status: 500 });
+    }
+
+    if (mortgageData && full.mortgages.length > 0) {
+      try {
+        const estimatedValue = Number(full.currentEstimatedValue);
+        if (estimatedValue > 0) {
+          const nowIso = new Date().toISOString();
+          const userRecord = await prisma.user.findUnique({
+            where: { id: user.id },
+            select: { mortgageMilestonesSentAt: true },
+          });
+          const existingSentinels = (
+            userRecord?.mortgageMilestonesSentAt &&
+            typeof userRecord.mortgageMilestonesSentAt === "object"
+              ? userRecord.mortgageMilestonesSentAt
+              : {}
+          ) as MortgageMilestoneSentinel;
+          const totalBalance = full.mortgages.reduce(
+            (sum, m) => sum + getEffectiveBalance(m),
+            0
+          );
+          const ltvPercent = (totalBalance / estimatedValue) * 100;
+          const seeds: Record<string, string> = {
+            ...seedLtvSentinelsForProperty(property.id, ltvPercent, existingSentinels, nowIso),
+          };
+          for (const m of full.mortgages) {
+            Object.assign(
+              seeds,
+              seedPayoffSentinelForMortgage(property.id, m.id, m, existingSentinels, nowIso)
+            );
+          }
+          if (Object.keys(seeds).length > 0) {
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { mortgageMilestonesSentAt: { ...existingSentinels, ...seeds } },
+            });
+          }
+        }
+      } catch (sentinelErr) {
+        console.error("Failed to seed mortgage milestone sentinels for new property:", sentinelErr);
+        Sentry.captureException(
+          sentinelErr instanceof Error ? sentinelErr : new Error("Sentinel seed failed"),
+          { tags: { route: "api/properties", userId: user.id } }
+        );
+      }
     }
 
     revalidateTag(`layout-banner:${user.id}`, "default");

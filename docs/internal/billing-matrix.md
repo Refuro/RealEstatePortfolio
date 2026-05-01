@@ -44,18 +44,24 @@ Use before or immediately after promoting a build to production (Stripe live mod
 - [ ] **Display:** Optional `NEXT_PUBLIC_PRICE_*` values match what marketing/pricing pages should show; spot-check `/pricing` and `/plans`.
 - [ ] **Smoke checkout:** Test mode or small live charge — checkout completes, webhook updates `User.subscriptionTier`, app reflects paid tier and property/deal limits.
 - [ ] **RentCast:** `RENTCAST_API_KEY` set if estimates are required in production; confirm hourly limits align with table (behavior in `app/lib/plans.ts`).
+- [ ] **Vercel Cron:** With **`app/vercel.json`** schedules enabled, set **`CRON_SECRET`** in Vercel (same value the cron route handlers validate — see `app/.env.example` and [`docs/setup/manual-steps.md`](../setup/manual-steps.md) **Hosting & deployment**).
 
 ---
 
-## Auxiliary billing API routes (read paths)
+## Auxiliary billing API routes
 
 | Route | Role |
 |-------|------|
 | `GET /api/billing/status` | JSON for clients: effective tier, property count vs limit, optional `subscription.status` / period end from DB. |
 | `GET /api/billing/sync` | Re-sync subscription from Stripe for users with a Stripe customer id; can downgrade tier if Stripe shows no active subscription (respects admin tier override). |
 | `GET /api/billing/subscription-details` | Richer subscription details (e.g. cancel-at-period-end) after internal Stripe sync — used when refreshing Settings. |
+| `POST /api/billing/create-checkout-session` | Creates Stripe Checkout for Investor/Pro (`app/app/api/billing/create-checkout-session/route.ts`). |
+| `POST /api/billing/portal` | Creates Stripe Customer Portal session (`app/app/api/billing/portal/route.ts`). |
+| `POST /api/billing/webhook` | Stripe webhooks; verifies **`STRIPE_WEBHOOK_SECRET`**. |
 
-Webhook and checkout are covered in [`docs/setup/manual-steps.md`](../setup/manual-steps.md) and `docs/internal/stripe-webhook-posthog-idempotency.md`.
+**Env vars (code usage):** `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, **`NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`** (client checkout), four **`STRIPE_PRICE_ID_*`**, optional **`NEXT_PUBLIC_PRICE_*`** for display (`app/lib/stripe-config.ts`, `app/lib/pricing-display.ts`, `app/lib/env.ts`).
+
+Webhook and dashboard setup steps are covered in [`docs/setup/manual-steps.md`](../setup/manual-steps.md) and `docs/internal/stripe-webhook-posthog-idempotency.md`.
 
 ---
 

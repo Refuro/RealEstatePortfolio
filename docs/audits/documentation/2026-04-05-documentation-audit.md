@@ -3,7 +3,7 @@
 ## Executive summary
 
 - **Coverage and governance:** All 14 audit lanes have process docs, `.cursor/rules/*-audit-agent.mdc` files, and the `docs/audits/README.md` table. Lane wiring is intact and `docs/process/command-integrity-check.md` continues to match the README mapping.
-- **New systemic pattern — audit files at `docs/audits/` root:** Three successive audit-adjacent files from 2026-04-04 and 2026-04-05 are placed at the root of `docs/audits/` rather than in lane subfolders: `2026-04-04-polish-gap-audit.md`, `2026-04-05-quick-add-completion-gap-audit.md`, and `2026-04-05-onboarding-friction-analysis.md`. The prior audit flagged the first instance; it has now become a pattern and risks normalizing non-compliant placement.
+- **New systemic pattern — audit files at `docs/audits/` root:** Three successive audit-adjacent files from 2026-04-04 and 2026-04-05 were placed at the root of `docs/audits/` rather than in lane subfolders: `2026-04-04-polish-gap-audit.md`, `2026-04-05-quick-add-completion-gap-audit.md`, and `2026-04-05-onboarding-friction-analysis.md`. The prior audit flagged the first instance; it has now become a pattern and risks normalizing non-compliant placement. *(**Update 2026-04-30:** The two 2026-04-05 files were relocated to `docs/audits/feature/` and `docs/audits/growth-funnel/`; see H-1.)*
 - **Active plan has a dangling `research:` frontmatter reference:** `docs/plans/2026-04-05-edit-page-completion-guidance.md` points to `docs/research/2026-04-05-edit-page-completion-ux.md`, which does not exist. The research file was either not created or named differently.
 - **Hub and prior open items:** `docs/README.md` "Latest audit synthesis" quick link still points to `2026-04-03-audit-synthesis.md`. DOC-1, DOC-2, and DOC-3 from the 2026-04-04 synthesis (Ship tier) remain unaddressed. Four new undiscovered top-level folders (`docs/research/`, `docs/test-plans/`, `docs/decisions/`, `docs/prompts/`) have no entry in the hub.
 - **Recommendation:** Address the non-lane audit placement pattern before the next full-audit run; fix the dangling research reference; add the new directories and unlisted files to the hub README; carry the Ship-tier DOC-1/2/3 fixes forward.
@@ -22,19 +22,19 @@
 
 **H-1 — Systemic pattern: audit-adjacent files placed at `docs/audits/` root instead of lane subfolders**
 
-Three files from back-to-back dates now sit outside the lane convention:
+At audit time, three files from back-to-back dates sat outside the lane convention (`docs/audits/` root). **Update (2026-04-30 doc cleanup Phase G):** The two 2026-04-05 reports were moved into [`feature/2026-04-05-quick-add-completion-gap-audit.md`](../feature/2026-04-05-quick-add-completion-gap-audit.md) and [`growth-funnel/2026-04-05-onboarding-friction-analysis.md`](../growth-funnel/2026-04-05-onboarding-friction-analysis.md). `2026-04-04-polish-gap-audit.md` may still be at repo root pending a later cleanup pass.
 
-| File | Date | Expected location |
+| File (as of original audit date) | Date | Expected lane folder |
 |------|------|-------------------|
-| `docs/audits/2026-04-04-polish-gap-audit.md` | 2026-04-04 | `docs/audits/feature/` (or relevant lane) |
-| `docs/audits/2026-04-05-quick-add-completion-gap-audit.md` | 2026-04-05 | `docs/audits/feature/` |
-| `docs/audits/2026-04-05-onboarding-friction-analysis.md` | 2026-04-05 | `docs/audits/feature/` or `docs/audits/growth-funnel/` |
+| `2026-04-04-polish-gap-audit.md` | 2026-04-04 | `docs/audits/feature/` (or relevant lane) |
+| `2026-04-05-quick-add-completion-gap-audit.md` | 2026-04-05 | `docs/audits/feature/` (done) |
+| `2026-04-05-onboarding-friction-analysis.md` | 2026-04-05 | `docs/audits/growth-funnel/` (done) |
 
-The 2026-04-04 instance was flagged as Medium in the prior audit with a suggestion to relocate or index it. The pattern has now repeated twice more, indicating that the lane-placement rule is not being applied for targeted / ad-hoc audits created outside the standard full-audit flow.
+The 2026-04-04 instance was flagged as Medium in the prior audit with a suggestion to relocate or index it. The pattern had repeated twice more, indicating that the lane-placement rule was not being applied for targeted / ad-hoc audits created outside the standard full-audit flow.
 
-**Risk:** Readers browsing `docs/audits/<lane>/` will miss these reports. The synthesis lane index only scans lane subfolders. Agent governance audits and full-audit synthesis could miss relevant findings.
+**Risk:** Readers browsing `docs/audits/<lane>/` will miss reports that remain at repo root. The synthesis lane index only scans lane subfolders. Agent governance audits and full-audit synthesis could miss relevant findings.
 
-**Evidence:** [`docs/audits/README.md`](../README.md) § Lane structure contract; [`docs/audits/2026-04-05-quick-add-completion-gap-audit.md`](../2026-04-05-quick-add-completion-gap-audit.md); [`docs/audits/2026-04-05-onboarding-friction-analysis.md`](../2026-04-05-onboarding-friction-analysis.md); [`docs/audits/2026-04-04-polish-gap-audit.md`](../2026-04-04-polish-gap-audit.md).
+**Evidence:** [`docs/audits/README.md`](../README.md) § Lane structure contract; [`docs/audits/2026-04-04-polish-gap-audit.md`](../2026-04-04-polish-gap-audit.md); relocated 2026-04-05 files linked above.
 
 ---
 
@@ -190,7 +190,7 @@ The `docs/audits/synthesis/` subfolder has a `README.md` explaining the synthesi
 
 **L-3 — `docs/plans/2026-04-05-onboarding-activation-rollout.md` frontmatter `audit:` points to non-lane path**
 
-The plan's frontmatter correctly lists `docs/audits/2026-04-05-onboarding-friction-analysis.md` as its source audit. The file exists, but because it is at the root of `docs/audits/` (see H-1), any automated tooling that scans `docs/audits/<lane>/` to find the backing audit will miss it. The reference is technically correct but inherits the H-1 misplacement.
+The plan's frontmatter lists `docs/audits/growth-funnel/2026-04-05-onboarding-friction-analysis.md` as its source audit. **Update (2026-04-30):** That path is lane-compliant; tooling scanning `docs/audits/growth-funnel/` will find it. *(At the time of this audit the file lived at `docs/audits/` root.)*
 
 **Evidence:** [`docs/plans/2026-04-05-onboarding-activation-rollout.md`](../../plans/2026-04-05-onboarding-activation-rollout.md) frontmatter L3; H-1 above.
 

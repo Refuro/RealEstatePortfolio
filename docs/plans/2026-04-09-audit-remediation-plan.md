@@ -1,9 +1,9 @@
 # Audit Remediation Plan — 2026-04-09 batch
 
 **Source tasks:** `docs/tasks.md` § "Full audit remediation — 2026-04-09 synthesis"  
-**Model reference:** `AVAILABLE_AGENTS.md`  
+**Model reference:** [`docs/process/AVAILABLE_AGENTS.md`](../process/AVAILABLE_AGENTS.md)  
 **Architecture reference:** `docs/reference/complete-engineering-reference.md`  
-**Skills:** `app/.cursor/skills/veld-ui/SKILL.md` (any UI phase), `app/.cursor/skills/veld-mobile/SKILL.md` (UX-0409-1)
+**Skills:** `RealEstateProject/.cursor/skills/veld-ui/SKILL.md` (any UI phase), `RealEstateProject/.cursor/skills/veld-mobile/SKILL.md` (UX-0409-1)
 
 All PM decisions are recorded in `docs/tasks.md`. No phase should start until the prior phase's `npm run check` is green and checked off.
 

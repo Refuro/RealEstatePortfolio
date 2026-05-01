@@ -1,6 +1,6 @@
 # Archived plans — reference only
 
-Execution and handoff plans whose work is **shipped or superseded**. Kept for historical context. **Active planning** and gap analysis remain in [`../../plans/`](../plans/) (e.g. [`2026-04-04-product-gap-discovery.md`](../plans/2026-04-04-product-gap-discovery.md)).
+Execution and handoff plans whose work is **shipped or superseded**. Kept for historical context. **Active planning** and gap analysis remain in [`../../plans/`](../../plans/) (e.g. [`2026-04-04-product-gap-discovery.md`](../../plans/2026-04-04-product-gap-discovery.md)).
 
 | File | Notes |
 |------|--------|

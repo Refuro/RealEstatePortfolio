@@ -167,7 +167,7 @@ Classify consolidated items per §3.5. **Ship** and **Schedule** are the default
 
 ## PM review
 
-Review triage above. Promote **Ship** and **Schedule** items to [docs/tasks.md](../../tasks.md) unless explicitly deferred. The builder implements approved items.
+Review triage above. Promote **Ship** and **Schedule** items to [docs/tasks.md](../tasks.md) unless explicitly deferred. The builder implements approved items.
 ```
 
 ---
@@ -193,5 +193,6 @@ When the agent runs a full audit:
 3. Run this synthesis process.
 4. Write output to `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`.
 5. Present synthesis to user for PM review and promotion to tasks.md.
+6. **PM checklist — two-file rule:** In the **same pass**, update both [`docs/README.md`](../README.md) (hub “latest synthesis” / quick links) and [`docs/audits/synthesis/README.md`](../audits/synthesis/README.md) so they point at the new `*-audit-synthesis.md`. Stale hub entries are a recurring documentation audit finding; do not ship synthesis without updating **both** files.
 
 **Execution mode:** Use **Agent** mode with writes enabled (not Ask mode, not read-only subagents). **"No code changes"** applies to product source such as `app/`; writing these markdown files is required.

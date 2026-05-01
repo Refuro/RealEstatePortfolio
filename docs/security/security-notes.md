@@ -2,8 +2,10 @@
 
 Recorded as we build. For manual security steps (e.g. production keys, webhooks), see [manual-steps.md](../setup/manual-steps.md).
 
-**Last reviewed:** 2026-04-01  
+**Last reviewed:** 2026-04-30  
 **Review cadence:** Monthly (or after material auth/billing/security changes)
+
+**Lane audit:** Latest detailed pass: [`docs/audits/security/2026-04-30-security-audit.md`](../audits/security/2026-04-30-security-audit.md). Open **Medium** follow-ups tracked in [`docs/tasks.md`](../tasks.md) (**SEC-2026-04-30-1**) and ship batch (**SEC-SHIP-***).
 
 ---
 
@@ -22,7 +24,7 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 - *Add any new security-related decisions or findings here (e.g. new APIs, auth changes, rate limiting, headers).*
 
 - **Google Ads (gtag)** — When `NEXT_PUBLIC_GOOGLE_ADS_ID` is set, the app is *able* to load `gtag.js` from Google for ads measurement, but only **after** the user accepts optional analytics/ads cookies via the cookie banner (`GoogleAdsGtagClient` gates the script on consent). If the env var is set and the user has not consented, `gtag.js` does not load. ID is public; no secret. See privacy policy for disclosure.
-- **CSP reporting** — `POST /api/csp-report` remains public for anonymous browser submissions. In development it logs compact reports to the server console; in production it forwards grouped, sampled CSP violations to Sentry (tag `signal=csp`) so rollout monitoring is visible without flooding events. **Abuse guard:** request body is capped at **8192 bytes** (`CSP_REPORT_MAX_BODY_BYTES`); oversized bodies return **413**. **Rate limit:** `csp-report:post` (per IP, rolling 1h) via `ApiRateLimitEntry` — see [security-audit.md](./security-audit.md) §6.
+- **CSP reporting** — `POST /api/csp-report` remains public for anonymous browser submissions. **Rate limit:** `app/lib/csp-rate-limit.ts` — **in-memory** sliding window (**240 requests / hour per identifier per server instance**); not persisted in `ApiRateLimitEntry` (by design — see [`docs/security/security-audit.md`](./security-audit.md) §6.2). Development logs compact reports to the console; production forwards sampled violations to Sentry (`signal=csp`). **Body cap:** oversized bodies return **413** (`CSP_REPORT_MAX_BODY_BYTES`).
 
 - **GET `/api/health`** — **Public** (no auth) by design for load balancers and uptime checks. Returns only `{ status: "ok" }` — lightweight liveness check with no DB probe. See [security-audit.md](./security-audit.md) §7.
 
@@ -30,11 +32,11 @@ Recorded as we build. For manual security steps (e.g. production keys, webhooks)
 
 ---
 
-## Security headers + CSP + `ApiRateLimitEntry` (2026-03)
+## Security headers + CSP + rate limits (2026-03, refreshed 2026-04-30)
 
 - **Security headers** — `app/next.config.ts` `headers()` for `/:path*`: X-Frame-Options (DENY), X-Content-Type-Options (nosniff), Referrer-Policy (strict-origin-when-cross-origin), Permissions-Policy (camera, microphone, geolocation disabled).
 - **CSP** — Same file builds a `Content-Security-Policy` string (Clerk, Stripe checkout iframes, Vercel scripts/analytics as needed, Cloudflare Turnstile if used, `connect-src https:`, etc.). Default deployment uses **`Content-Security-Policy-Report-Only`** unless `CSP_ENFORCEMENT=true`, in which case the enforced **`Content-Security-Policy`** header is sent. Optional `report-uri` to `/api/csp-report` when `NEXT_PUBLIC_APP_URL` is set. Full directive list: [security-audit.md](./security-audit.md) §5.
-- **Route rate limits** — Sensitive routes use `lib/rate-limit.ts` (`RATE_LIMITS`, rolling 1h, `ApiRateLimitEntry`). Includes `PATCH` on property/deal resources, admin tier override, and CSP reports. Table of actions: [security-audit.md](./security-audit.md) §6.
+- **Mutating / sensitive API rate limits (`ApiRateLimitEntry`)** — Sensitive routes use `lib/rate-limit.ts` (`RATE_LIMITS`, rolling 1h, `ApiRateLimitEntry`). Includes writes, billing, Places, portfolio import/export, account delete, **`admin:tier-patch`**, etc. **`checkRateLimit` is a no-op** when `RATE_LIMITS[action]` is missing — admin trial / trial-email / billing-sync routes calling `checkRateLimit` without keys are tracked as **SEC-2026-04-30-1** in [`docs/tasks.md`](../tasks.md). Table of keys: [security-audit.md](./security-audit.md) §6. **CSP POSTs** use separate in-memory limiting — see the **CSP reporting** bullet above and [security-audit.md](./security-audit.md) §6.2.
 
 ---
 

@@ -3,7 +3,7 @@
 ## Quick links
 
 - [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-04-03-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-04-03, parallel agents)
+- [Latest audit synthesis](audits/synthesis/2026-05-01-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-05-01)
 - [Roadmap](reference/roadmap.md) — Backlog
 - [Run & smoke test](setup/run-and-smoke-test.md)
 - [Manual steps](setup/manual-steps.md)
@@ -15,8 +15,9 @@
 - [Product overview](reference/product-overview.md)
 - [MVP spec](reference/mvp-spec.md)
 - [Engineering spec](reference/engineering-spec.md)
-- [Design spec](policies/design-spec.md) — **current** UI tokens and patterns for shipped code
-- [Design brief 2026](design/design-brief-2026.md) — **future** visual/marketing overhaul (not yet implemented; does not replace design-spec until PM kicks off migration)
+- [Design spec 2026 (canonical UI)](design/design-spec-2026.md) — visual and interaction rules for new UI work (**wins** on conflicts with the policy file below)
+- [Design specification policy](policies/design-spec.md) — legacy structural patterns and process cross-references; defers to [`design-spec-2026.md`](design/design-spec-2026.md) for canonical visuals
+- [Design brief 2026](design/design-brief-2026.md) — planning record for marketing/visual overhaul direction (not a substitute for the specs above)
 - [Architecture & build practices](architecture-and-build-practices.md)
 
 ## Policies (canonical)
@@ -69,6 +70,7 @@
 - [Math audit process](process/math-logic-audit.md)
 - [Audit report template](process/audit-report-template.md)
 - [Feature/UX audit process](process/feature-ux-audit-process.md)
+- [Mobile experience audit process](process/mobile-experience-audit-process.md)
 - [Security audit process](process/security-audit-process.md)
 - [Performance/cost audit process](process/performance-cost-audit-process.md)
 - [Reliability/ops audit process](process/reliability-ops-audit-process.md)

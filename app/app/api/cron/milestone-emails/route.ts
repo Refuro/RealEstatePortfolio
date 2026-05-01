@@ -79,8 +79,11 @@ export async function GET(req: NextRequest) {
     });
     if (milestones.length === 0) continue;
 
+    const visibleMilestones = milestones.filter((m) => !m.silent);
+    if (visibleMilestones.length === 0) continue;
+
     try {
-      const result = await sendMortgageMilestoneEmail(user.email, user.id, milestones);
+      const result = await sendMortgageMilestoneEmail(user.email, user.id, visibleMilestones);
       if (!result.success) continue;
 
       const nextSentinels: MortgageMilestoneSentinel = { ...sentinels };
@@ -96,11 +99,11 @@ export async function GET(req: NextRequest) {
       });
 
       await captureServerEvent(user.clerkUserId, AnalyticsEvents.MORTGAGE_MILESTONE_EMAIL_SENT, {
-        milestoneCount: milestones.length,
+        milestoneCount: visibleMilestones.length,
       });
 
       sentEmails += 1;
-      sentMilestones += milestones.length;
+      sentMilestones += visibleMilestones.length;
     } catch (err) {
       console.error(`Milestone email error for user ${user.id}:`, err);
       Sentry.captureException(err, {

@@ -16,8 +16,12 @@
 | **Mortgage** | Loans, payoff, amortization on real properties | Standalone BRRR/flip math (→ **Tools hub**) |
 | **Deals** | Saved analyses; convert to property | Portfolio-wide alerts |
 | **Investment property calculator** (public) | Marketing + SEO funnel | Logged-in portfolio truth |
-| **Tools hub** (planned) | Fast calculators; **some routes public** for SEO/acquisition | Full Analyze workspace |
+| **Tools hub** (`/tools`, `/calculators`) | Fast calculators; **public indexable routes** + in-app hub | Full Analyze workspace |
 | **§1a Strategic backlog** | Alerts, deal↔portfolio, exports, comparison UI | Benchmarking v2 (done) or staleness nudges alone |
+
+**App Router inventory (maintainers):** Canonical segments live under `app/app/`. Signed-in **`(app)/` group:** `dashboard`, `properties` (incl. `new`, `[id]`, `amortization`, `mortgage/quick`), `deals`, `deals/[id]`, `analyze`, `modeling`, `mortgage`, `refinance`, `calculators/*`, `export/portfolio-summary`, `settings`, `plans`, `billing/success`, `admin`. **Public / hybrid:** `/` (landing), `pricing`, `about`, `contact`, `changelog`, `resources`, `resources/[slug]`, `vs`, `vs/[slug]`, `alternatives`, `alternatives/[slug]`, `tools`, `tools/[calculator]`, `tools/[calculator]/[location]`, `investment-property-calculator`, `lp/investment-property-calculator`, `privacy`, `terms`, `sign-in`, `sign-up`, `learn/*` (e.g. React labs). Omit from marketing tables unless user-facing.
+
+**Cron / retention-related API (Vercel cron + `CRON_SECRET`):** `GET /api/cron/monthly-digest`, `monthly-refresh`, `milestone-emails`, `trial-emails`, `onboarding-emails`, `winback-emails`, `rate-limit-cleanup` (verify `app/proxy.ts` / middleware allowlists match deployed jobs). Operational detail: **`docs/tasks.md`** maintenance items.
 
 ---
 
@@ -73,7 +77,7 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 **Connection to existing features:**
 - **Property Performance Table** (dashboard, 6+ properties): "Next renewal" becomes a sortable column — "sort by soonest renewal" is a one-click workflow
-- **Retention data hooks** (§2): Renewal reminders are a natural Phase 6 email hook — "3 leases renewing next month, review rent benchmarks"
+- **Retention / lifecycle hooks** (near-term § digest + email crons): Renewal reminders would be a natural follow-on nudge
 - **Portfolio insights** (§1a): Lease-aware alerts are more actionable than static benchmark alerts; connects to the acknowledge/snooze mechanism
 - **Benchmarking** (shipped): Market rent data already exists; this feature adds the *timing* dimension
 
@@ -183,6 +187,8 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 **Shipped (v3):** **`/tools/fix-and-flip`** and **`/calculators/fix-and-flip`** — fix-and-flip profit / ROI calculator (IO hold, sale at ARV).
 
+**Shipped (v4+):** Matching **`/tools/*`** + **`/calculators/*`** pairs for **`wholesale`**, **`rent-vs-buy`**, **`cap-rate`**, **`cash-on-cash`**, **`dscr`** (see `app/app/tools/` and `(app)/calculators/`).
+
 **Future — calculator ↔ workspace continuity (backlog, not scheduled):** Public calculators do **not** persist inputs or push assumptions into **Analyze deal** today; CTAs are aligned to that fact. Later options to promote when ready: (1) **Query-string (or hash) prefill** to `/analyze` for overlapping fields (e.g. purchase, mortgage, LTR rent)—honest per calculator; (2) **Named saved calculator sessions** (per user, per tool); (3) **STR / multi-mode fields** inside the deal analyzer only if ICP justifies the scope. Promote to `docs/tasks.md` when prioritizing.
 
 ---
@@ -191,41 +197,37 @@ Prioritized initiatives (2026). Each has **one** primary purpose; older sections
 
 Post-MVP features in suggested order. Promote to `docs/tasks.md` when ready to build.
 
-### Reverse trial pricing model
+### Reverse trial pricing model — **shipped**
 
-**Priority:** Very near-term — highest-leverage change for conversion
+**Priority:** ~~Very near-term~~ — **live** (reverse trial behavior in code + pricing UX).
 
-**Purpose:** Switch from pure freemium to a **reverse trial**: new signups get full Investor-tier access for 14 days (no CC required), then auto-downgrade to a feature-limited free tier. Users keep their data but lose multi-property access, scenario modeling, and full benchmarking. Leverages loss aversion (2–2.5x stronger than gain motivation) to convert at 3–6x the rate of freemium alone.
+**Implemented behavior:** First-time app user provisioning sets **`trialEndsAt`** ≈ signup + **14 days** and fires `trial_started` analytics (`app/lib/auth.ts`; constants in `app/lib/plans.ts`). **`getEffectiveTier`** maps active trial on an otherwise **free** paid tier to **Investor-equivalent limits** (`app/lib/plans.ts`). Public **`/pricing`** states full Investor access for 14 days with no credit card until post-trial downshift.
 
-**Why now:** Current freemium converts at 2–5%. Reverse trial benchmarks at 8–15%. At low traffic volumes, every signup matters — this is the single highest-leverage change for getting to $1K MRR. No CC requirement means signup friction stays identical to today.
+**Historical intent / experiments:** Bench research and funnel math live in [`docs/research/growth-pricing-research-2026-04.md` §Pricing Model Research](../research/growth-pricing-research-2026-04.md#pricing-model-research).
 
-**Key design decisions:**
-- Free tier after downgrade: 1 property visible (others locked, data preserved), limited deal saves, no scenario modeling, no/limited rent vs market benchmarks
-- Trial countdown visible in UI (subtle, not aggressive)
-- "Your trial ends in X days" email at day 10 and day 13
-- Downgrade is soft — data preserved, upgrade unlocks everything instantly
-
-**Research:** Full analysis, conversion math, benchmarks, and case studies (Databox 10%→25%, Toggl doubled) in [`docs/research/growth-pricing-research-2026-04.md` §Pricing Model Research](../research/growth-pricing-research-2026-04.md#pricing-model-research).
+**Operational:** Tune copy, reminders (`/api/cron/trial-emails`), conversion — measure in analytics; do **not** restate signup conversion percentages here unless sourced from dashboards.
 
 ---
 
 ### Retention data hooks (monthly digest, AVM refresh, alerts)
 
-**Priority:** Very near-term — biggest structural retention gap
+**Priority:** **In progress** — core **cron + lifecycle email** scaffolding **shipped**; still room vs “full Stessa-grade pull loops.”
 
-**Purpose:** Create automated reasons for users to return. Currently, once a user sets up properties, Veld has **zero outbound touchpoints** — no scheduled data refreshes, no email digests, no value change alerts. Stessa/Baselane pull users back via daily bank transaction sync; Veld needs an equivalent pull mechanism built on the data it already has.
+**Purpose:** Reasons to return that do **not** require bank transactions — digest, refreshes, milestones, win-back.
 
-**Phased rollout:**
+**Code vs phased vision (snapshot 2026-04-30):**
 
-| Phase | Hook | Effort | API cost |
-|-------|------|--------|----------|
-| 1 | **Monthly portfolio digest email** — equity, cash flow, cap rate, rent vs market summary per property. Resend already set up. | Low (cron + email template) | $0 — uses stored data |
-| 2 | **Monthly property value re-fetch** — cron calls RentCast AVM for each paid user's properties, updates `currentEstimatedValue`, equity recalculates automatically. | Medium (cron + RentCast calls) | ~$44/mo at $1K MRR scale |
-| 3 | **Value/equity change notification** — after monthly re-fetch, email if equity changed significantly. "Your portfolio equity grew $12,400 this month." | Low (diff + conditional email) | $0 — piggybacks on Phase 2 |
-| 4 | **Rent vs market alert** — if property rent drops >5% below market, email actionable nudge. Infrastructure exists from dashboard benchmarking. | Low–Medium | Included in Phase 2 calls |
-| 5 | **Mortgage milestone notifications** — "You crossed 50% LTV on Pine Cottage." Zero API cost, computed from existing amortization data. | Low | $0 |
+| Phase | Objective | Ships in repo today | Still open |
+|-------|-----------|---------------------|------------|
+| 1 | Monthly portfolio digest | `GET /api/cron/monthly-digest` | Template/ops polish |
+| 2 | Scheduled AVM/rent refresh | `GET /api/cron/monthly-refresh` | Cost gates, eligibility (see route + `lib/refresh`) |
+| 3 | Equity/value change nudges | Overlaps digest/refresh — **confirm product spec** | Dedicated “big move” email if missing |
+| 4 | Rent vs market alert | Benchmark infra exists; **standalone alert TBD** | Threshold + copy |
+| 5 | Mortgage milestones | `GET /api/cron/milestone-emails` | Trigger tuning |
 
-**Research:** Full audit of current state, hook recommendations, RentCast cost analysis, and competitor comparison in [`docs/research/growth-pricing-research-2026-04.md` §Retention & Data Hooks](../research/growth-pricing-research-2026-04.md#retention--data-hooks).
+**Also live:** `onboarding-emails`, `winback-emails`, `trial-emails`, `rate-limit-cleanup` — keep **`app/proxy.ts` (or successor)** allowlists aligned with `vercel.json` schedules.
+
+**Research:** [`docs/research/growth-pricing-research-2026-04.md` §Retention & Data Hooks](../research/growth-pricing-research-2026-04.md#retention--data-hooks).
 
 ---
 
@@ -255,7 +257,7 @@ Post-MVP features in suggested order. Promote to `docs/tasks.md` when ready to b
 | Benchmarking v2 (rental-status-aware) | Done — see §Benchmarking v2 below |
 | Projections / cashflow timeline (single property) | Done — `ProjectionsTabContent` on property + `/modeling` workspace; rent/expense/value growth, hold period, charts, sale option |
 | Refinance workspace (v1 — scenario modeling) | Done — `/refinance` workspace; property/mortgage selector, projection engine, amortization comparison charts, break-even, savings metrics |
-| Automated testing (ongoing) | Done (ongoing) — Vitest, 50 test files, 374 tests across metrics, APIs, validators, calculators, components |
+| Automated testing (ongoing) | Done (ongoing) — Vitest; **re-verify** with `npm run test` from `RealEstatePortfolio/app/` instead of pinning counts in prose. Snapshot 2026-04-30: **85 test files**, **618 tests**, all passing. |
 
 ### Mortgage balance advancement (Phase 1 — amortization projection + manual override) — **Shipped**
 
@@ -356,9 +358,12 @@ See `docs/proposals/refinance-payoff-proposal.md` for original phased approach.
 |------|--------|
 | **BRRRR** | Purchase + rehab + ARV → refi, cash in deal, post-refi CoC. |
 | **Fix-and-flip** | Purchase, rehab, hold, ARV, sell → net profit / ROI. — **Shipped** (`/tools/fix-and-flip`, `/calculators/fix-and-flip`). |
-| **Wholesale / assignment** | ARV, MAO, fee → spread. |
+| **Wholesale / assignment** | ARV, MAO, fee → spread. — **Shipped** (`/tools/wholesale`, `/calculators/wholesale`). |
 | **STR vs LTR** | Bookings, occupancy, fees → vs long-term rent. — **Shipped** (`/tools/str-vs-ltr`, `/calculators/str-vs-ltr`). |
-| **Rent vs buy** | Horizon + appreciation sanity check. |
+| **Rent vs buy** | Horizon + appreciation sanity check. — **Shipped** (`/tools/rent-vs-buy`, `/calculators/rent-vs-buy`). |
+| **Cap rate** | Quick cap calc. — **Shipped** (`/tools/cap-rate`, `/calculators/cap-rate`). |
+| **Cash-on-cash** | Cash-on-cash from income and cash in. — **Shipped** (`/tools/cash-on-cash`, `/calculators/cash-on-cash`). |
+| **DSCR** | Debt service coverage. — **Shipped** (`/tools/dscr`, `/calculators/dscr`). |
 | **Mortgage comparison** | Only if clearly different from **Mortgage** workspace. |
 
 **Navigation:** `/tools` hub; deep links per tool; link **Investment property calculator** as sibling entry. **PDF / lender / read-only sharing:** **§1a Investor outputs** (not duplicated here).
@@ -383,9 +388,9 @@ See `docs/proposals/refinance-payoff-proposal.md` for original phased approach.
 
 **Priority:** ~~15~~ — *Ongoing, no longer a discrete roadmap item.*
 
-**Current state (April 2026):** Vitest configured and running. **50 test files, 374 tests, all passing.** Coverage across metric calculations, amortization logic, API routes (auth, billing, CRUD, cron, import/export), validation schemas, calculator engines (BRRR, STR vs LTR, fix-and-flip), benchmark utilities, CSV parsing, and component tests (mobile shell, address autocomplete, add-property wizard).
+**Current state:** Vitest (`npm run test` in `RealEstatePortfolio/app/`). **Do not treat historical “N tests” in old audits as current** — re-run the command after meaningful suite changes. Last doc refresh: **2026-04-30** — **85** test files, **618** tests, all passing. Coverage targets: metrics, amortization, billing/cron routes, validation, calculators, benchmark utilities, import/csv, selected UI (e.g. mobile shell, address autocomplete, wizard).
 
-**Ongoing:** Tests are added alongside new features. No separate "testing initiative" needed — treat as standard engineering practice.
+**E2E:** Playwright/Cypress smoke path remains **optional / Phase 4** per `docs/tasks.md` + `docs/qa/testing-hardening-proposal.md` — not a substitute for the unit/route depth above.
 
 ---
 
@@ -499,7 +504,7 @@ The owner-facing portal already exists — it's Veld with the direct-to-consumer
 
 Defer until validated or user base justifies:
 
-- **Interactive demo (no-signup required)** — Arcade.so or seeded demo account. Full brief in [`docs/research/interactive-demo-brief-2026-04.md`](../research/interactive-demo-brief-2026-04.md). Revisit after reverse trial and data hooks ship and there's enough traffic to justify the conversion optimization.
+- **Interactive demo (no-signup required)** — Arcade.so or seeded demo account. Full brief in [`docs/research/interactive-demo-brief-2026-04.md`](../research/interactive-demo-brief-2026-04.md). Revisit when analytics show enough top-of-funnel volume to justify Arcade-style spend (reverse trial + cron lifecycle emails are **already** in production).
 - **Plaid (bank integration)** — Cost scales with connected accounts (~$0.30–$1+/account/month). Legal/compliance for storing financial data. Development: 4–8 weeks for Liabilities-only. See `docs/plaid-considerations.md`.
 - **Referral incentives** — Growth lever; validate with realtor feedback.
 - **Advanced analytics** — Defer until core analytics proven.
