@@ -1,8 +1,8 @@
 # QA & regression
 
-Long-lived checklists that outlive individual epics or batches. **Latest vs history:** prefer the indexes here and on [`docs/README.md`](../README.md); one-off or batch-specific QA notes may live under [`docs/archive/`](../archive/) once superseded.
+Long-lived checklists that outlive individual epics or batches. **Latest vs history:** prefer the indexes here and on [`docs/README.md`](../README.md); one-off or batch-specific QA notes may live under `docs/archive/` (internal doc, not in public repo) once superseded.
 
-**Process:** Test/CI follow-up Phases 1–2 are **done** (see [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)**). Ongoing context: [Test infrastructure review](test-infrastructure-review.md).
+**Process:** Test/CI follow-up Phases 1–2 are **done** (see `docs/tasks-archived.md` (internal doc, not in public repo) § **Tasks.md archive (2026-03-20)**). Ongoing context: [Test infrastructure review](test-infrastructure-review.md).
 
 | Doc | Use |
 |-----|-----|

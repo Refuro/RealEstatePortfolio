@@ -147,7 +147,7 @@ Optional: in Cursor Settings, ensure “Rules” (or equivalent) are enabled for
 
 **Math & Logic audit:** Say "run math audit" or "math audit" to trigger a math and logic audit. The agent follows `docs/process/math-logic-audit.md` and writes a report to `docs/audits/math/`. Review the report and create tasks in `docs/tasks.md` for any formula or edge-case fixes you want.
 
-**Other focused audits:** Use **[`docs/audits/README.md`](audits/README.md)** as the single index for all audit lanes: process doc, report folder, and **"run … audit"** trigger phrase for each of the **14** lanes (same set as the full audit, before synthesis). Do not duplicate lane lists here.
+**Other focused audits:** Use **`docs/audits/README.md` (internal doc, not in public repo)** as the single index for all audit lanes: process doc, report folder, and **"run … audit"** trigger phrase for each of the **14** lanes (same set as the full audit, before synthesis). Do not duplicate lane lists here.
 
 **Full audit:** Say "run full audit" or "run all audits" to run all **14** audit lanes (including Mobile experience and SEO) and produce a consolidated, deduplicated synthesis at `docs/audits/synthesis/YYYY-MM-DD-audit-synthesis.md`. PM reviews and promotes approved items to `docs/tasks.md`.
 

@@ -23,5 +23,5 @@ Production smoke is usually redundant if **UptimeRobot** (or similar) already mo
 
 ## Related
 
-- [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-30)**, Batch 14 — optional CI smoke item (completed; historical reference)
+- `docs/tasks-archived.md` (internal doc, not in public repo) § **Tasks.md archive (2026-03-30)**, Batch 14 — optional CI smoke item (completed; historical reference)
 - External uptime: documented in incident response runbook

@@ -4,7 +4,7 @@
 
 Mark rows **Pass / Fail / N/A** when you run the checklist.
 
-**Related entry QA docs:** [`epic-c-entry-qa.md`](../archive/proposals/epic-c-entry-qa.md), [`epic-d-entry-qa.md`](../archive/proposals/epic-d-entry-qa.md), [`epic-e-entry-qa.md`](../archive/proposals/epic-e-entry-qa.md), [`epic-f-overview-qa.md`](../archive/proposals/epic-f-overview-qa.md).
+**Related entry QA docs:** `epic-c-entry-qa.md` (internal doc, not in public repo), `epic-d-entry-qa.md` (internal doc, not in public repo), `epic-e-entry-qa.md` (internal doc, not in public repo), `epic-f-overview-qa.md` (internal doc, not in public repo).
 
 ---
 

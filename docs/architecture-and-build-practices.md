@@ -57,7 +57,7 @@ app/                       # package root (next.config, proxy.ts, vercel.json, p
 | **`/properties/[id]`** | `property-detail-tabs.tsx`, `overview-tab-content.tsx`, `details-tab-content.tsx` | Tabs: **Overview** (metrics + inputs snapshot + health strip) and **Details** (read-only ledger + embedded `MortgageSection`). Shared **`property-health-strip.tsx`**. Types in **`property-detail-types.ts`**. |
 | **Workspaces** | `modeling-workspace.tsx` → `projections-tab-content`; `mortgage-workspace.tsx` → `mortgage-tab-content` | Deep-link with `?propertyId=`. |
 
-**IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see [`docs/archive/proposals/epic-a-discovery.md`](archive/proposals/epic-a-discovery.md) A3). Do not reintroduce triple inline PATCH without an explicit product decision.
+**IA:** Editing property fields is **not** inline on the Details tab—**`/edit`** is the single full editor (see `docs/archive/proposals/epic-a-discovery.md` (internal doc, not in public repo) A3). Do not reintroduce triple inline PATCH without an explicit product decision.
 
 ### Established Patterns
 - **Auth:** Protected API routes use `getActiveAppUser()` (or `getAppUser()` only where soft-deleted users must act, e.g. restore); return 401 if null when appropriate. See `docs/security/security-notes.md`.
@@ -203,7 +203,7 @@ Before implementing a task:
 ### 6.2 Post-Build Checklist (Builder)
 Before marking task complete:
 - [ ] Run `npm run check`; fix errors
-- [ ] Run `npm run test` when the task touches `lib/metrics/`, `lib/amortization.ts`, or `lib/validations/property.ts` (see [`docs/proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md)); understand CI vs local parity via [`docs/qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
+- [ ] Run `npm run test` when the task touches `lib/metrics/`, `lib/amortization.ts`, or `lib/validations/property.ts` (see `docs/proposals/testing-implementation-plan.md` (internal doc, not in public repo)); understand CI vs local parity via [`docs/qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
 - [ ] No new `any` types; no duplicated logic
 - [ ] New API routes follow auth + validation pattern
 - [ ] If ownership behavior changed, verify formulas and copy match `docs/policies/ownership-metrics.md`
@@ -234,7 +234,7 @@ Apply these when the task matches the context:
 - [ ] **Design:** Use semantic tokens from `docs/policies/design-spec.md`; no raw zinc/slate. Typography, spacing, and component patterns per spec.
 - [ ] **Responsive:** Ensure layout works on mobile (stacked grids, adequate touch targets).
 - [ ] **Mobile-also:** Test on both desktop and narrow viewport (375px) or real device. Nav should not be squished on mobile; use hamburger or simplified nav if many links. Touch targets at least 44px. Avoid horizontal overflow.
-- [ ] **Broader checks:** [SEO audit process](process/seo-audit-process.md) and [SEO release checklist](qa/seo-release-checklist.md).
+- [ ] **Broader checks:** SEO audit process (internal doc, not in public repo) and [SEO release checklist](qa/seo-release-checklist.md).
 
 **When adding plan-gated features (properties, deals, etc.):**
 - [ ] Update `lib/plans.ts` if adding new limits or tiers.
@@ -262,9 +262,9 @@ When adding tasks to `docs/tasks.md`:
 ## 7. References
 
 - **Property flow regression:** [`qa/property-flow-regression-matrix.md`](qa/property-flow-regression-matrix.md)
-- **Testing plan (Vitest phases):** [`proposals/testing-implementation-plan.md`](proposals/testing-implementation-plan.md)
+- **Testing plan (Vitest phases):** `proposals/testing-implementation-plan.md` (internal doc, not in public repo)
 - **Test infrastructure review (CI, correctness, next steps):** [`qa/test-infrastructure-review.md`](qa/test-infrastructure-review.md)
-- **Test follow-up tasks (Phase 1 & 2):** [`tasks.md`](tasks.md) — *Active tasks → Test infrastructure follow-up*
+- **Test follow-up tasks (Phase 1 & 2):** `tasks.md` (internal doc, not in public repo) — *Active tasks → Test infrastructure follow-up*
 - **Design:** `docs/policies/design-spec.md`
 - **Security:** `docs/security/security-notes.md`
 - **Manual steps:** `docs/setup/manual-steps.md`

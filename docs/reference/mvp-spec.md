@@ -531,7 +531,7 @@ Early milestone targets:
 
 # Long-Term Vision
 
-**See [roadmap.md](roadmap.md)** — Long-term vision, value-add features, and future initiatives are consolidated there.
+**See roadmap.md (internal doc, not in public repo)** — Long-term vision, value-add features, and future initiatives are consolidated there.
 
 Ultimate goal: Create a **portfolio intelligence platform for real estate investors**.
 

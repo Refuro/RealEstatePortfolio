@@ -108,7 +108,7 @@ npm run test
 npm run test:coverage   # optional — coverage for lib metrics, amortization, property validation, selected API routes
 ```
 
-See [`docs/proposals/testing-implementation-plan.md`](../proposals/testing-implementation-plan.md). CI runs **`npm run lint`** then **`npm run test`** on push/PR ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)). Process notes: [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md).
+See `docs/proposals/testing-implementation-plan.md` (internal doc, not in public repo). CI runs **`npm run lint`** then **`npm run test`** on push/PR ([`.github/workflows/ci.yml`](../../.github/workflows/ci.yml)). Process notes: [`docs/qa/test-infrastructure-review.md`](../qa/test-infrastructure-review.md).
 
 ### Sanity
 

@@ -6,12 +6,12 @@
 
 | Doc | Role |
 |-----|------|
-| [`mobile-experience-audit-process.md`](../process/mobile-experience-audit-process.md) | Formal **lane** process entry for full audits; points here for criteria and checklist. |
+| `mobile-experience-audit-process.md` (internal doc, not in public repo) | Formal **lane** process entry for full audits; points here for criteria and checklist. |
 | [`mobile-shell-verification.md`](mobile-shell-verification.md) | Focused verification of `MobileToolShell` surfaces, math spot-checks, and Phase A unit tests. |
 | [`test-infrastructure-review.md`](test-infrastructure-review.md) | What CI proves (including `MobileToolShell` unit tests). |
-| [`../policies/design-spec.md`](../policies/design-spec.md) | Visual and component standards. |
-| [`../process/feature-ux-audit-process.md`](../process/feature-ux-audit-process.md) | Broader Feature/UX/IA audits; mobile audit **narrows** to narrow viewports and touch. |
-| [`../policies/ownership-metrics.md`](../policies/ownership-metrics.md), [`../policies/analytics-math-policy.md`](../policies/analytics-math-policy.md) | Canonical math and label semantics when auditing metrics. |
+| `../policies/design-spec.md` (internal doc, not in public repo) | Visual and component standards. |
+| `../process/feature-ux-audit-process.md` (internal doc, not in public repo) | Broader Feature/UX/IA audits; mobile audit **narrows** to narrow viewports and touch. |
+| `../policies/ownership-metrics.md` (internal doc, not in public repo), `../policies/analytics-math-policy.md` (internal doc, not in public repo) | Canonical math and label semantics when auditing metrics. |
 
 **When to run:** Before major releases, after large UI refactors, or when mobile-related regressions are suspected. **Audit only** (findings → `docs/tasks.md`); implementation follows PM/builder workflow.
 
@@ -98,12 +98,12 @@ For each criterion: **Pass / Fail / N/A**, note route, viewport, evidence (scree
 ### F. Typography, copy, and density
 
 - [ ] **F1** **Body text** readable without zoom at 320px; line length not excessive in single-column layouts.
-- [ ] **F2** **Labels** for metrics (cap rate, DSCR, etc.) consistent with [`analytics-math-policy.md`](../policies/analytics-math-policy.md) where applicable.
+- [ ] **F2** **Labels** for metrics (cap rate, DSCR, etc.) consistent with `analytics-math-policy.md` (internal doc, not in public repo) where applicable.
 - [ ] **F3** **Abbreviations** in mobile-only UI (e.g. summary chips) remain understandable or tooltipped where needed.
 
 ### G. Visual design and consistency
 
-- [ ] **G1** Alignment with [`design-spec.md`](../policies/design-spec.md): semantic tokens, spacing scale, no ad-hoc colors breaking dark/light intent.
+- [ ] **G1** Alignment with `design-spec.md` (internal doc, not in public repo): semantic tokens, spacing scale, no ad-hoc colors breaking dark/light intent.
 - [ ] **G2** **States:** Loading, empty, and error states present on mobile for async views (properties list, dashboards).
 - [ ] **G3** **Icon + text** pairs remain aligned when text wraps.
 
@@ -176,7 +176,7 @@ Add **property with mortgage** and **saved deal** fixtures for realistic tool te
 
 When executing a formal audit run:
 
-1. Copy the **criteria checklist** (Section 4) into a dated report, e.g. [`docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md`](../audits/feature/README.md).
+1. Copy the **criteria checklist** (Section 4) into a dated report, e.g. `docs/audits/feature/YYYY-MM-DD-mobile-experience-audit.md` (internal doc, not in public repo).
 2. Fill Pass/Fail/N/A, severity, evidence, and **recommended tasks** for `docs/tasks.md`.
 3. Link this criteria doc for traceability.
 

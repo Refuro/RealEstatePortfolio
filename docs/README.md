@@ -1,133 +1,54 @@
 # Documentation
 
-## Quick links
+Some docs below mention internal planning, policy, or audit files that are not part of the public repo. Those references are marked "(internal doc, not in public repo)".
 
-- [Tasks](tasks.md) — Current builder work
-- [Latest audit synthesis](audits/synthesis/2026-05-01-audit-synthesis.md) — consolidated follow-ups (14 lanes; full run 2026-05-01)
-- [Roadmap](reference/roadmap.md) — Backlog
+## Start here
+
+- [Architecture & build practices](architecture-and-build-practices.md)
 - [Run & smoke test](setup/run-and-smoke-test.md)
-- [Manual steps](setup/manual-steps.md)
-- [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add / edit / detail tabs (when those areas change)
+- [Manual steps](setup/manual-steps.md) — third-party setup that can't be scripted (Clerk, Stripe, Vercel, etc.)
+
+## AI-assisted development
+
+- [AI development process](ai-development-process-extraction.md)
+- [Cursor agent setup](cursor-agent-setup.md) — agent roles defined in `.cursor/rules/`
+- [AI process workflow setup](setup/ai-process-workflow-setup.md)
+
+## Decisions
+
+- [Decision log](decisions/README.md)
+- [ownershipPercent / vacancyPercent schema evaluation](decisions/ownership-vacancy-percent-schema.md)
 
 ## Reference
 
-- [Valuation brief](reference/valuation-brief.md) — single-document codebase + product evaluation for external reviewers
 - [Product overview](reference/product-overview.md)
 - [MVP spec](reference/mvp-spec.md)
 - [Engineering spec](reference/engineering-spec.md)
-- [Design spec 2026 (canonical UI)](design/design-spec-2026.md) — visual and interaction rules for new UI work (**wins** on conflicts with the policy file below)
-- [Design specification policy](policies/design-spec.md) — legacy structural patterns and process cross-references; defers to [`design-spec-2026.md`](design/design-spec-2026.md) for canonical visuals
-- [Design brief 2026](design/design-brief-2026.md) — planning record for marketing/visual overhaul direction (not a substitute for the specs above)
-- [Architecture & build practices](architecture-and-build-practices.md)
+- [Complete engineering reference](reference/complete-engineering-reference.md)
+- [Portfolio CSV export](reference/portfolio-csv-export.md)
+- [RentCast quota](reference/rentcast-quota.md)
+- [Location data update (April 2026)](reference/location-data-update-april-2026.md)
 
-## Policies (canonical)
+## Design
 
-- [Ownership metrics](policies/ownership-metrics.md)
-- [Analytics math policy](policies/analytics-math-policy.md)
-- [Shell risk policy](policies/shell-risk-policy.md)
+- [Design spec 2026 (canonical UI)](design/design-spec-2026.md)
+- Design briefs: [2026](design/design-brief-2026.md), [phase 2](design/design-brief-2026-phase2.md), [phase 3](design/design-brief-2026-phase3.md)
+- Implementation guides: [2026](design/implementation-guide-2026.md), [phase 2](design/implementation-guide-2026-phase2.md), [phase 3](design/implementation-guide-2026-phase3.md)
+- [Phase 3 execution playbook](design/phase3-execution-playbook.md)
+- [Mobile redesign](design/mobile-redesign.md)
 
-## Launch & growth
-
-- [Launch plan](launch/launch-plan.md) — audiences, messaging, phased rollout *(Batch 8)*
-- [Pre-live telemetry QA (paid relaunch)](launch/pre-live-telemetry-qa-2026-03-30.md) — env + browser checks before scaling paid spend
-- [Channel posting playbook](launch/channel-posting-playbook.md) — rule-safe templates, moderation scripts, UTM naming
-- [SEO Phase 5 & 6 runbook](launch/seo-phase-5-6-runbook.md) — community UTM links, PostHog checks, monthly Search Console routine (from [`seo-growth-plan.md`](launch/seo-growth-plan.md))
-- [Paid ads test plan](launch/paid-ads-test-plan.md) — 14-day paid experiment, budget tiers, decision gates
-- [Paid ads campaign build sheet](launch/paid-ads-campaign-build-sheet.md) — campaign structure, copy seeds, keyword starters
-- [Paid ads monitoring runbook](launch/paid-ads-monitoring-runbook.md) — day-4/day-7/day-14 kill/iterate/scale operations
-- [Paid ads readout template](launch/paid-ads-test-readout-template.md) — results + week-3 decision template
-- [Archived paid-ads readouts (2026-03-30)](archive/launch/paid-ads-readouts/README.md) — historical campaign notes
-- [Product analytics (PostHog)](launch/analytics.md) — env vars, events, funnel notes; [PostHog views setup](launch/posthog-views-setup.md) — dashboards and insights
-- [Batch 8 builder handoff](launch/batch-8-builder-handoff.md) — instrumentation + changelog + uptime checklist
-
-## Internal (engineering)
-
-- [Properties vertical slice](onboarding/properties-vertical-slice.md) — CRUD → metrics → CSV export map for onboarding
-- [Vitest vs route handlers](onboarding/vitest-vs-route-handlers.md) — co-located API tests vs `route.ts` inventory
-- [Billing matrix](internal/billing-matrix.md) — tiers, Stripe env vars, auxiliary billing routes
-- [`past_due` user path](internal/past-due-user-path.md) — subscription status → banner → portal
-- [Stripe webhook — production verification](internal/stripe-webhook-production-verification.md)
-- [Plan switches & multiple subscriptions (Stripe)](internal/stripe-subscription-switch-behavior.md)
-- [Billing Portal — plan change implementation plan](internal/billing-plan-change-portal-implementation-plan.md) — Portal for tier/interval changes; Checkout for Free→paid
-
-## QA & regression
+## QA & testing
 
 - [QA index](qa/README.md)
-- [SEO release checklist](qa/seo-release-checklist.md) — sitemap, robots, canonical smoke
-- [Test infrastructure review](qa/test-infrastructure-review.md) — suite review, correctness, next coverage, Docker/E2E notes
-- [Testing hardening proposal](qa/testing-hardening-proposal.md) — phased plan (billing, APIs, coverage, optional E2E) for high confidence
-- [Mobile shell verification](qa/mobile-shell-verification.md) — manual QA + `MobileToolShell` tests (math still in `lib/` tests)
-- [Mobile experience audit](qa/mobile-experience-audit.md) — comprehensive criteria for narrow viewports, touch, shells, and desktop parity
-- [Property flow regression matrix](qa/property-flow-regression-matrix.md) — add property, edit, Overview/Details, APIs
-- [Testing implementation plan](proposals/testing-implementation-plan.md) — Vitest phases, what to test when
+- [Test infrastructure review](qa/test-infrastructure-review.md)
+- [Testing hardening proposal](qa/testing-hardening-proposal.md)
+- [Property flow regression matrix](qa/property-flow-regression-matrix.md)
+- [Mobile experience audit criteria](qa/mobile-experience-audit.md)
+- [Mobile shell verification](qa/mobile-shell-verification.md)
+- [SEO release checklist](qa/seo-release-checklist.md)
+- [Quick-add completion gap test plan](test-plans/2026-04-05-quick-add-completion-gap-test-plan.md)
 
-## Process
+## Operations
 
-- [AI process workflow setup](setup/ai-process-workflow-setup.md)
-- [PM agent workflow](process/pm-agent-workflow.md)
-- [PM review checklist](process/pm-review-checklist.md)
-- [Code audit process](process/code-audit-process.md)
-- [Math audit process](process/math-logic-audit.md)
-- [Audit report template](process/audit-report-template.md)
-- [Feature/UX audit process](process/feature-ux-audit-process.md)
-- [Mobile experience audit process](process/mobile-experience-audit-process.md)
-- [Security audit process](process/security-audit-process.md)
-- [Performance/cost audit process](process/performance-cost-audit-process.md)
-- [Reliability/ops audit process](process/reliability-ops-audit-process.md)
-- [Data integrity audit process](process/data-integrity-audit-process.md)
-- [Business/valuation audit process](process/business-valuation-audit-process.md)
-- [Growth funnel audit process](process/growth-funnel-audit-process.md)
-- [SEO audit process](process/seo-audit-process.md)
-- [Agent governance audit process](process/agent-governance-audit-process.md)
-- [Documentation audit process](process/documentation-audit-process.md)
-- [Legal & compliance audit process](process/legal-compliance-audit-process.md)
-- [Full audit synthesis](process/full-audit-synthesis.md)
-
-## Audits
-
-- [Code audits](audits/code/)
-- [Math audits](audits/math/)
-- [Feature/UX audits](audits/feature/)
-- [Security audits](audits/security/)
-- [Performance/cost audits](audits/performance-cost/)
-- [Reliability/ops audits](audits/reliability-ops/)
-- [Data integrity audits](audits/data-integrity/)
-- [Business/valuation audits](audits/business/)
-- [Growth funnel audits](audits/growth-funnel/)
-- [SEO audits](audits/seo/)
-- [Documentation audits](audits/documentation/)
-- [Legal/compliance audits](audits/legal-compliance/)
-- [Agent governance audits](audits/agent-governance/)
-- [Audit synthesis](audits/synthesis/)
-
-## Plans
-
-- [Active plans](plans/) — current execution docs and gap analysis
-- [Archived plans](archive/plans/) — shipped or superseded handoff plans (historical)
-
-## Proposals
-
-- [Refinance / payoff](proposals/refinance-payoff-proposal.md)
-
-## Security
-
-- [Security notes](security/security-notes.md)
-- [Security audit](security/security-audit.md)
-
-## Other
-
-- [Cursor agent setup](cursor-agent-setup.md)
-- [AI development process](ai-development-process-extraction.md)
-- [Visual assets guide](visual-assets-guide.md)
-- [Plaid considerations](plaid-considerations.md)
-- [Business launch checklist](business-launch-checklist.md)
-- [Owner notes](owner_notes/notes.md)
-
-## Internal (owner / operator)
-
-- [Project grounding](internal/project-grounding.md)
-- [Demo preparation guide](internal/demo-preparation-guide.md)
-
-## Archive
-
-Implemented proposals and deprecated docs: [archive/](archive/)
+- [Health check smoke](runbooks/health-check-smoke.md)
+- [Incident response](runbooks/incident-response.md)

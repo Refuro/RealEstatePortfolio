@@ -22,5 +22,5 @@
 
 ## Related
 
-- Phase 16 tracking in [`docs/tasks.md`](../tasks.md) (synthesis phases).
-- SEO audit process: [`docs/process/seo-audit-process.md`](../process/seo-audit-process.md).
+- Phase 16 tracking in `docs/tasks.md` (internal doc, not in public repo) (synthesis phases).
+- SEO audit process: `docs/process/seo-audit-process.md` (internal doc, not in public repo).

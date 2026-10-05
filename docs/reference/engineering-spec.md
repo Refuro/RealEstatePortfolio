@@ -6,7 +6,7 @@ This document expands the MVP specification into a concrete engineering backlog 
 
 The product is a lightweight SaaS for **small real estate investors (1–20 properties)** to track portfolio performance, analyze returns, and understand their investment position.
 
-**Note (maintenance):** Detailed **route and API surface inventory** is tracked in [`product-overview.md`](product-overview.md) and [`roadmap.md`](roadmap.md). **Module J** Stripe price examples in this file are **conceptual** — live products use env-configured price IDs and `app/lib/pricing-display.ts` (see `docs/reference/mvp-spec.md` payments section footnote).
+**Note (maintenance):** Detailed **route and API surface inventory** is tracked in [`product-overview.md`](product-overview.md) and `roadmap.md` (internal doc, not in public repo). **Module J** Stripe price examples in this file are **conceptual** — live products use env-configured price IDs and `app/lib/pricing-display.ts` (see `docs/reference/mvp-spec.md` payments section footnote).
 
 ---
 
@@ -526,7 +526,7 @@ Goal: make development sustainable.
 
 # 6. Calculation Backlog
 
-> **Superseded for product semantics:** Metric definitions, vacancy handling, ownership modes, and reconciliation with API/export are governed by [`docs/policies/ownership-metrics.md`](../policies/ownership-metrics.md) and [`docs/policies/analytics-math-policy.md`](../policies/analytics-math-policy.md). Implementation source of truth: [`app/lib/metrics/property-metrics.ts`](../../app/lib/metrics/property-metrics.ts) and [`app/lib/metrics/portfolio-metrics.ts`](../../app/lib/metrics/portfolio-metrics.ts).
+> **Superseded for product semantics:** Metric definitions, vacancy handling, ownership modes, and reconciliation with API/export are governed by `docs/policies/ownership-metrics.md` (internal doc, not in public repo) and `docs/policies/analytics-math-policy.md` (internal doc, not in public repo). Implementation source of truth: [`app/lib/metrics/property-metrics.ts`](../../app/lib/metrics/property-metrics.ts) and [`app/lib/metrics/portfolio-metrics.ts`](../../app/lib/metrics/portfolio-metrics.ts).
 
 ## Historical MVP formula sketch (do not implement from this list alone)
 
@@ -847,4 +847,4 @@ Overall: the plan supports **incremental, scalable** building—ship a narrow v1
 
 # 20. Planned Features (Post-MVP)
 
-**See [roadmap.md](roadmap.md)** — Medium-term initiatives (property evaluation tool, visual refresh, cashflow simulator, mortgage payment history) and external API integration opportunities are consolidated there.
+**See roadmap.md (internal doc, not in public repo)** — Medium-term initiatives (property evaluation tool, visual refresh, cashflow simulator, mortgage payment history) and external API integration opportunities are consolidated there.

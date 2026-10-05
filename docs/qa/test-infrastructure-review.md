@@ -2,7 +2,7 @@
 
 **Purpose:** Single place to understand how tests are set up, what they actually prove, how they align with product math and intent, and what to do next. Intended as the baseline before relying on CI on every push.
 
-**Related:** [Testing implementation plan](../proposals/testing-implementation-plan.md), [Ownership metrics policy](../policies/ownership-metrics.md), [Analytics math policy](../policies/analytics-math-policy.md), [Property flow regression matrix](property-flow-regression-matrix.md), [Mobile shell verification](mobile-shell-verification.md) (manual QA + `MobileToolShell` unit tests; math still owned by `lib/` tests).
+**Related:** Testing implementation plan (internal doc, not in public repo), Ownership metrics policy (internal doc, not in public repo), Analytics math policy (internal doc, not in public repo), [Property flow regression matrix](property-flow-regression-matrix.md), [Mobile shell verification](mobile-shell-verification.md) (manual QA + `MobileToolShell` unit tests; math still owned by `lib/` tests).
 
 **Last reviewed:** 2026-04-30 (Vitest layout + CI vs `app/vitest.config.ts`, `.github/workflows/ci.yml`).
 
@@ -125,7 +125,7 @@ Mocks:
 
 ### 4.1 Canonical policies
 
-- **Ownership / liability modes:** Tests follow the same vocabulary as [`ownership-metrics.md`](../policies/ownership-metrics.md) (proportional vs full liability, scaling).
+- **Ownership / liability modes:** Tests follow the same vocabulary as `ownership-metrics.md` (internal doc, not in public repo) (proportional vs full liability, scaling).
 - **Portfolio rollups:** `computePortfolioMetrics` tests check totals, debt treatment by mode, and derived ratios (e.g. DSCR, weighted cap) consistent with how the dashboard aggregates property-level outputs.
 
 **Recommendation:** When formulas change in code or policy docs, **update tests in the same PR** and reference the policy section in test comments or PR description.
@@ -201,7 +201,7 @@ Mocks:
 
 ## 8. Recommended coverage — next steps (prioritized)
 
-**Execution:** Phase **1 (P0)** and **2 (P1)** tasks were tracked in [`docs/tasks-archived.md`](../tasks-archived.md) § **Tasks.md archive (2026-03-20)** (*Completed: test infrastructure & hooks*) — all checked. Complete Phase 1 before Phase 2 was the original order. Later items (P2/P3 below) remain backlog until promoted to `tasks.md`.
+**Execution:** Phase **1 (P0)** and **2 (P1)** tasks were tracked in `docs/tasks-archived.md` (internal doc, not in public repo) § **Tasks.md archive (2026-03-20)** (*Completed: test infrastructure & hooks*) — all checked. Complete Phase 1 before Phase 2 was the original order. Later items (P2/P3 below) remain backlog until promoted to `tasks.md`.
 
 ### P0 — Trust and CI hardening *(Phase 1 in tasks.md)*
 
@@ -248,7 +248,7 @@ Mocks:
 | 2026-03-18 | **Phase 1:** CI runs `npm run lint`; ESLint fix in `add-property-wizard` (deferred setState via `queueMicrotask`); §3.5 documents why `npm run build` stays off CI; executive summary updated. |
 | 2026-03-18 | **Phase 2:** `lib/test/fixtures/metrics-golden.ts` + `metrics-golden.test.ts`; amortization extra-payoff edge tests; `POST` 403 `PLAN_LIMIT_REACHED` tests for properties + deals (`mockFreeTierUser`). |
 | 2026-03-19 | **Phase 3 (optional):** Husky **pre-commit** + **pre-push** at repo root run `npm run lint` + `npm run test` from `app/`; see `docs/setup/run-and-smoke-test.md` (Git hooks). |
-| 2026-03-30 | **Testing hardening Phase 1 (P0):** Colocated Vitest for `POST /api/billing/webhook`, `POST /api/billing/create-checkout-session`, `GET /api/portfolio/summary`, `GET /api/export/portfolio`, `POST /api/account/delete`, `POST /api/account/delete-permanent` — mocks only; assertions aligned with [`docs/internal/api-list-contract.md`](../internal/api-list-contract.md) slice semantics and route contracts. See `docs/tasks.md` § Testing hardening. |
+| 2026-03-30 | **Testing hardening Phase 1 (P0):** Colocated Vitest for `POST /api/billing/webhook`, `POST /api/billing/create-checkout-session`, `GET /api/portfolio/summary`, `GET /api/export/portfolio`, `POST /api/account/delete`, `POST /api/account/delete-permanent` — mocks only; assertions aligned with `docs/internal/api-list-contract.md` (internal doc, not in public repo) slice semantics and route contracts. See `docs/tasks.md` § Testing hardening. |
 | 2026-03-30 | **Testing hardening Phase 2 (P1):** Colocated Vitest for `POST /api/import/portfolio`, `GET`/`PATCH`/`DELETE /api/deals/[id]`, `GET /api/properties/[id]/metrics` — import: success, 400 no file, 403 at cap, 429; deals: auth/404/400/PATCH/DELETE; metrics: response equals `computePropertyMetrics` for same fixture. See `docs/tasks.md` § Testing hardening. |
 | 2026-03-30 | **Testing hardening Phase 3 (P2):** `lib/plans.test.ts` (table-driven tier limits); `lib/auth.test.ts` for `isAdmin` only; `vitest.config.ts` coverage **include** paths corrected to `app/app/api/...` + Phase 1–2 routes; **aggregate coverage thresholds** (statements/lines 80%, branches 58%, functions 78%). §2.4 auth strategy; §3.4 thresholds. |
 | 2026-04-30 | **Doc cleanup Phase F:** §2.2–§2.3 rewritten for current **~85 files / ~600+ tests** layout (`lib/**`, `app/app/api/**`, `components/**`); removed stale add-property ESLint gap row; **last reviewed** bumped. |

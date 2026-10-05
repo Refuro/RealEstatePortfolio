@@ -1,3 +1,0 @@
-address,nickname,property type,units,purchase price,purchase date,value,rent,unit rents,expenses,vacancy %,cash invested,ownership %,mortgage balance,original loan amount,balance as of,mortgage rate,mortgage term,monthly payment,escrow amount,lender,loan type
-"2847 Hillcrest Dr, Nashville, TN, 37215",Hillcrest House,Single family,1,310000,2020-08-15,425000,2795,,485,5,68500,100,218100,248000,2026-03-01,3.25,30,1404,325,First Horizon Bank,conventional
-"531 Piedmont Ave, Charlotte, NC, 28205",Piedmont Duplex,Multi family,2,275000,2019-05-01,380000,1610,"805, 805",620,5,81000,100,180200,206250,2026-03-01,4.50,30,1395,350,Truist Bank,conventional

@@ -157,7 +157,7 @@ If you change production domain or DNS, update the monitor URL in UptimeRobot to
 
 ## 5. Support SLA and inbox verification
 
-**SLA (launch):** Aim for **first response within 24 business hours** (Monday–Friday, US business days, excluding holidays) for messages sent via the **contact form** or **support email** (`SUPPORT_EMAIL`). Documented for users on the production **/contact** page and in [`docs/launch/launch-plan.md`](../launch/launch-plan.md) §6.1.
+**SLA (launch):** Aim for **first response within 24 business hours** (Monday–Friday, US business days, excluding holidays) for messages sent via the **contact form** or **support email** (`SUPPORT_EMAIL`). Documented for users on the production **/contact** page and in `docs/launch/launch-plan.md` (internal doc, not in public repo) §6.1.
 
 **Owner:** Designate who monitors `SUPPORT_EMAIL` (founder/ops). UptimeRobot alerts also go to this inbox when configured.
 

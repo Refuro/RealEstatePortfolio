@@ -2,7 +2,7 @@
 
 **Purpose:** Define what **high-confidence** automated testing means for this product—not “startup smoke tests,” but a **quality-grade** bar appropriate for **serious money and user data**: predictable releases, regression safety, and traceability from policy to assertions. Staging, observability, and manual QA remain complementary; tests do not replace them.
 
-**Related:** [`test-infrastructure-review.md`](test-infrastructure-review.md) (inventory, CI, coverage thresholds), [`docs/tasks.md`](../tasks.md) § **Testing hardening** (execution checklist), [`mobile-shell-verification.md`](mobile-shell-verification.md), [`property-flow-regression-matrix.md`](property-flow-regression-matrix.md).
+**Related:** [`test-infrastructure-review.md`](test-infrastructure-review.md) (inventory, CI, coverage thresholds), `docs/tasks.md` (internal doc, not in public repo) § **Testing hardening** (execution checklist), [`mobile-shell-verification.md`](mobile-shell-verification.md), [`property-flow-regression-matrix.md`](property-flow-regression-matrix.md).
 
 **Snapshot (2026-04-30 — re-verify with `npm run test` in `app/`):**
 
@@ -47,7 +47,7 @@ The table below maps **confidence tiers** to maturity. **Today** we sit between 
 
 ### 1.1 Correctness-first — tests lock in *intended* logic
 
-Tests are not an exercise in matching whatever the app does today. **Expected values and status codes should come from** canonical docs and contracts — for example [`policies/ownership-metrics.md`](../policies/ownership-metrics.md), [`policies/analytics-math-policy.md`](../policies/analytics-math-policy.md), [`internal/api-list-contract.md`](../internal/api-list-contract.md), billing/runbook notes, and explicit PM acceptance — **not** from copying the current response into an assertion without checking it.
+Tests are not an exercise in matching whatever the app does today. **Expected values and status codes should come from** canonical docs and contracts — for example `policies/ownership-metrics.md` (internal doc, not in public repo), `policies/analytics-math-policy.md` (internal doc, not in public repo), `internal/api-list-contract.md` (internal doc, not in public repo), billing/runbook notes, and explicit PM acceptance — **not** from copying the current response into an assertion without checking it.
 
 If a test would encode **wrong** behavior, **stop**: fix the implementation, or update the policy/spec first, **then** add or adjust tests so green means “matches the agreed contract,” not “matches yesterday’s bug.” Golden fixtures and route tests should use **traceable** inputs (and, for numbers, comments or links to the formula/policy section) so the next reader can verify intent, not just diff against main.
 
@@ -116,7 +116,7 @@ If a test would encode **wrong** behavior, **stop**: fix the implementation, or 
 | **P1** | Import, `deals/[id]`, `properties/[id]/metrics`. |
 | **P2** | `lib/plans.test.ts`, `lib/auth.test.ts` (`isAdmin`), `vitest` **coverage include** + **aggregate thresholds**; `test-infrastructure-review` §2.4 / §3.4 updated. |
 
-**Track record:** [`docs/tasks.md`](../tasks.md) § Testing hardening.
+**Track record:** `docs/tasks.md` (internal doc, not in public repo) § Testing hardening.
 
 **Alignment with `docs/tasks.md`:** That file lists **Phase 4** (E2E) and **Phase 5** (ongoing process only). This proposal adds **Phase 5** (technical deepen: webhook branches, more routes, form tests) and **Phase 6** (culture — matches the **ongoing** bullets in `tasks.md`). On the next **`tasks.md` edit**, PM may renumber or add a **Phase 5 (deepen)** block so the checklist matches this doc.
 
@@ -171,7 +171,7 @@ If a test would encode **wrong** behavior, **stop**: fix the implementation, or 
 
 ## 7. Recommended next steps
 
-1. **PM / owner:** Treat **Phase 4 (E2E)** as the **next gate** toward the quality bar; keep **[`docs/tasks.md`](../tasks.md)** updated.
+1. **PM / owner:** Treat **Phase 4 (E2E)** as the **next gate** toward the quality bar; keep **`docs/tasks.md` (internal doc, not in public repo)** updated.
 2. **Builder:** Implement **Playwright** smoke + **docs** for test env; then **webhook branch** tests in **Phase 5**.
 3. **CI:** Decide whether **`npm run test:coverage`** runs on **every PR** or **release branches only** — document in [`test-infrastructure-review.md`](test-infrastructure-review.md).
 

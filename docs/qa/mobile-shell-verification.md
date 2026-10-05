@@ -2,7 +2,7 @@
 
 **Purpose:** Verify `MobileToolShell` surfaces behave correctly on narrow viewports, and extend automated tests so shell **structure** is guarded in CI. **Logic and math** for deal analyzer, modeling, mortgage, and public calculator remain validated primarily by existing **`lib/` Vitest suites** and policies — this doc ties UI shells to those guarantees.
 
-**Process (PM Builder):** Tasks live in [`docs/tasks.md`](../tasks.md). The PM promotes work there; the **builder** implements per [`.cursor/rules/builder-agent.mdc`](../../.cursor/rules/builder-agent.mdc). Math/ownership semantics: [`docs/policies/ownership-metrics.md`](../policies/ownership-metrics.md). Projections/analytics: [`docs/policies/analytics-math-policy.md`](../policies/analytics-math-policy.md). Broader test process: [`docs/qa/test-infrastructure-review.md`](test-infrastructure-review.md).
+**Process (PM Builder):** Tasks live in `docs/tasks.md` (internal doc, not in public repo). The PM promotes work there; the **builder** implements per [`.cursor/rules/builder-agent.mdc`](../../.cursor/rules/builder-agent.mdc). Math/ownership semantics: `docs/policies/ownership-metrics.md` (internal doc, not in public repo). Projections/analytics: `docs/policies/analytics-math-policy.md` (internal doc, not in public repo). Broader test process: [`docs/qa/test-infrastructure-review.md`](test-infrastructure-review.md).
 
 **Inventory — where `MobileToolShell` is used**
 
@@ -29,7 +29,7 @@ Run at **320px, 375px, 430px** (devtools or device). Confirm **≥768px** still 
 
 **Logic & math (spot-check against policies)**
 
-- **Deal analyzer:** Changing rent, expenses, vacancy, ownership (in debt section), and optional mortgage fields updates cash flow, cap rate, DSCR, cash-on-cash consistently with [`ownership-metrics.md`](../policies/ownership-metrics.md) proportional semantics.
+- **Deal analyzer:** Changing rent, expenses, vacancy, ownership (in debt section), and optional mortgage fields updates cash flow, cap rate, DSCR, cash-on-cash consistently with `ownership-metrics.md` (internal doc, not in public repo) proportional semantics.
 - **Modeling:** Presets and growth inputs change summary rail and chart; numbers align with projection logic already covered by `lib/` + `projections-tab-content` dependencies (see `analytics-math-policy.md` for windows/labels).
 - **Mortgage:** Extra principal and payoff targets update payoff dates, interest saved, and chart; behavior consistent with `lib/amortization.ts` tests.
 - **Public calculator:** Inputs → live result matches `lib/public-calculator.ts` / `computePublicCalculatorResult` (same math as unit-tested pure function path).

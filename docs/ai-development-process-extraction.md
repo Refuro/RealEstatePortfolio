@@ -1,6 +1,6 @@
 # AI-Assisted Development Process — Extraction Guide
 
-**Purpose:** This document captures the process used to build Veld Portfolio in ~2 days. Use it to replicate the same efficient AI-driven workflow on future projects.
+**Purpose:** This document captures the process used to build Veld Portfolio. Use it to replicate the same efficient AI-driven workflow on future projects.
 
 **Status:** Reference — extract and adapt for new projects.
 
@@ -16,7 +16,7 @@ The process relies on:
 4. **Manual-step boundary** — Docs explicitly list what humans do vs. what agents do
 5. **Design spec compliance** — All UI work references a design spec; no ad-hoc styling
 
-**Result:** A production-ready SaaS (auth, billing, core features, mobile-responsive) built in days instead of months.
+**Result:** A production-ready SaaS (auth, billing, core features, mobile-responsive).
 
 ---
 
